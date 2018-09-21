@@ -22,7 +22,7 @@ type config struct {
 	}
 
 	PollingIntervalSeconds int `yaml:"polling_interval_seconds"`
-	Projects               []Project
+	Projects               []project
 }
 
 type project struct {
