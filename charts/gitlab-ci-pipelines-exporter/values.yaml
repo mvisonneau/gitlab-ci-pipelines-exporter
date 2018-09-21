@@ -1,0 +1,52 @@
+---
+replicas: 1
+deploymentStrategy: RollingUpdate
+
+image:
+  repository: mvisonneau/gitlab-ci-pipelines-exporter
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  annotations: {}
+  labels: {}
+
+resources: {}
+#  limits:
+#    cpu: 50m
+#    memory: 64Mi
+#  requests:
+#    cpu: 50m
+#    memory: 64Mi
+
+## Node labels for pod assignment
+## ref: https://kubernetes.io/docs/user-guide/node-selection/
+#
+nodeSelector: {}
+
+## Tolerations for pod assignment
+## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: []
+
+## Affinity for pod assignment
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+##
+affinity: {}
+
+## Actual configuration of the exporter
+##
+config: {}
+  # gitlab:
+  #   url: https://gitlab.example.com
+  #   token: xrN14n9-ywvAFxxxxxx
+  #
+  # polling_interval_seconds: 30
+  #
+  # projects:
+  #   - name: foo/project
+  #     ref: master
+  #   - name: bar/project
+  #     ref: master

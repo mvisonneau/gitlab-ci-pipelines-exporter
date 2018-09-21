@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### BUGFIXES
 - Fixed linting errors
+- Actually include the helm chart..
 
 ## [0.1.0] - 2018-09-21
 ### FEATURES
