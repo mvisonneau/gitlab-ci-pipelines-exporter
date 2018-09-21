@@ -119,7 +119,7 @@ func main() {
 
   		for {
         pipelines, _, _ := gc.Pipelines.ListProjectPipelines(p.ID, &gitlab.ListProjectPipelinesOptions{Ref:gitlab.String(project.Ref)})
-        if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID {
+        if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
           if lastPipeline != nil {
             runCount.WithLabelValues(project.Name, project.Ref).Inc()
           }
