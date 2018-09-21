@@ -111,9 +111,10 @@ EOF
 
 ## Examples
 
-Here are a couple of [Grafana](https://grafana.com/) dashboards I've been able to use with those metrics
+Here are a couple of [Grafana](https://grafana.com/) dashboards I've been able to craft with those metrics :
 
 ![grafana_dashboard_status](/docs/images/grafana_dashboard_status.png)
+
 ![grafana_dashboard_runs](/docs/images/grafana_dashboard_runs.png)
 
 ## Develop / Test

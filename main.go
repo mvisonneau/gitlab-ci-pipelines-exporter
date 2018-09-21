@@ -15,9 +15,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type Config struct {
+type config struct {
 	Gitlab struct {
-		Url   string
+		URL   string
 		Token string
 	}
 
@@ -25,7 +25,7 @@ type Config struct {
 	Projects               []Project
 }
 
-type Project struct {
+type project struct {
 	Name string
 	Ref  string
 }
@@ -78,7 +78,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	var config Config
+	var config config
 
 	configFile, err := ioutil.ReadFile(*configPath)
 	if err != nil {
@@ -98,14 +98,14 @@ func main() {
 	}
 
 	log.Printf("-> Starting exporter")
-	log.Printf("-> Polling %v every %vs", config.Gitlab.Url, config.PollingIntervalSeconds)
+	log.Printf("-> Polling %v every %vs", config.Gitlab.URL, config.PollingIntervalSeconds)
 	log.Printf("-> %v project(s) configured", len(config.Projects))
 
 	gc := gitlab.NewClient(nil, config.Gitlab.Token)
-	gc.SetBaseURL(config.Gitlab.Url)
+	gc.SetBaseURL(config.Gitlab.URL)
 
 	for _, project := range config.Projects {
-		go func(project Project) {
+		go func(project project) {
 			p, _, err := gc.Projects.GetProject(project.Name)
 			if err != nil {
 				log.Fatalf("Unable to fetch project '%v' from the GitLab API : %v", project.Name, err.Error())
