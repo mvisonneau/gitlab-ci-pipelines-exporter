@@ -50,7 +50,7 @@ You should then be able to see the following logs
 2018/09/21 12:44:05 --> Polling ID: 2 | bar/project:master
 ```
 
-And this is an example of the metrics could expect to retrieve
+And this is an example of the metrics you should expect to retrieve
 
 ```
 ~$ curl -s localhost:8080/metrics | grep gitlab_ci_pipeline
@@ -108,6 +108,13 @@ EOF
 ~$ helm package gitlab-ci-pipelines-exporter
 ~$ helm upgrade -i gitlab-ci-pipelines-exporter ./gitlab-ci-pipelines-exporter-0.0.0.tgz -f values.yml
 ```
+
+## Examples
+
+Here are a couple of [Grafana](https://grafana.com/) dashboards I've been able to use with those metrics
+
+![grafana_dashboard_status](/docs/images/grafana_dashboard_status.png)
+![grafana_dashboard_runs](/docs/images/grafana_dashboard_runs.png)
 
 ## Develop / Test
 
