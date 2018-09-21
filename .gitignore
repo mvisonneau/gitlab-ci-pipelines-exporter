@@ -2,3 +2,4 @@ dist
 vendor
 gitlab-ci-pipelines-exporter
 config.yml
+**/*.tgz
