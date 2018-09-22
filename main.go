@@ -104,44 +104,44 @@ func main() {
 	gc := gitlab.NewClient(nil, config.Gitlab.Token)
 	gc.SetBaseURL(config.Gitlab.URL)
 
-	for _, project := range config.Projects {
-		go func(project project) {
-			p, _, err := gc.Projects.GetProject(project.Name)
+	for _, p := range config.Projects {
+		go func(p project) {
+			gp, _, err := gc.Projects.GetProject(p.Name)
 			if err != nil {
-				log.Fatalf("Unable to fetch project '%v' from the GitLab API : %v", project.Name, err.Error())
+				log.Fatalf("Unable to fetch project '%v' from the GitLab API : %v", p.Name, err.Error())
 				os.Exit(1)
 			}
 
-			log.Printf("--> Polling ID: %v | %v:%v", p.ID, project.Name, project.Ref)
+			log.Printf("--> Polling ID: %v | %v:%v", gp.ID, p.Name, p.Ref)
 
 			var lastPipeline *gitlab.Pipeline
-			runCount.WithLabelValues(project.Name, project.Ref).Set(0)
+			runCount.WithLabelValues(p.Name, p.Ref).Set(0)
 
 			for {
-				pipelines, _, _ := gc.Pipelines.ListProjectPipelines(p.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(project.Ref)})
+				pipelines, _, _ := gc.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(p.Ref)})
 				if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
 					if lastPipeline != nil {
-						runCount.WithLabelValues(project.Name, project.Ref).Inc()
+						runCount.WithLabelValues(p.Name, p.Ref).Inc()
 					}
 
-					lastPipeline, _, _ = gc.Pipelines.GetPipeline(p.ID, pipelines[0].ID)
+					lastPipeline, _, _ = gc.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
 
-					lastRunDuration.WithLabelValues(project.Name, project.Ref).Set(float64(lastPipeline.Duration))
+					lastRunDuration.WithLabelValues(p.Name, p.Ref).Set(float64(lastPipeline.Duration))
 
 					for _, s := range []string{"success", "failed", "running"} {
 						if s == lastPipeline.Status {
-							status.WithLabelValues(project.Name, project.Ref, s).Set(1)
+							status.WithLabelValues(p.Name, p.Ref, s).Set(1)
 						} else {
-							status.WithLabelValues(project.Name, project.Ref, s).Set(0)
+							status.WithLabelValues(p.Name, p.Ref, s).Set(0)
 						}
 					}
 				}
 
-				timeSinceLastRun.WithLabelValues(project.Name, project.Ref).Set(float64(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds()))
+				timeSinceLastRun.WithLabelValues(p.Name, p.Ref).Set(float64(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds()))
 
 				time.Sleep(time.Duration(config.PollingIntervalSeconds) * time.Second)
 			}
-		}(project)
+		}(p)
 	}
 
 	// Expose the registered metrics via HTTP.
