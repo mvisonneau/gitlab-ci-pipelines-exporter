@@ -27,8 +27,9 @@ spec:
       labels:
         app: {{ template "exporter.name" . }}
         release: {{ .Release.Name }}
-{{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+{{- with .Values.podAnnotations }}
 {{ toYaml . | indent 8 }}
 {{- end }}
     spec:
@@ -36,7 +37,7 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: [ "/usr/local/bin/gitlab-ci-pipelines-exporter", "-config", "/etc/config.yml" ] 
+          command: [ "/usr/local/bin/gitlab-ci-pipelines-exporter", "-config", "/etc/config.yml" ]
           volumeMounts:
             - name: config
               mountPath: /etc/config.yml
