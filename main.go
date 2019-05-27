@@ -106,7 +106,7 @@ func main() {
 
 	for _, p := range config.Projects {
 		go func(p project) {
-			gp, _, err := gc.Projects.GetProject(p.Name)
+			gp, _, err := gc.Projects.GetProject(p.Name, &gitlab.GetProjectOptions{})
 			if err != nil {
 				log.Fatalf("Unable to fetch project '%v' from the GitLab API : %v", p.Name, err.Error())
 				os.Exit(1)
@@ -115,7 +115,6 @@ func main() {
 			log.Printf("--> Polling ID: %v | %v:%v", gp.ID, p.Name, p.Ref)
 
 			var lastPipeline *gitlab.Pipeline
-			runCount.WithLabelValues(p.Name, p.Ref).Set(0)
 
 			for {
 				pipelines, _, _ := gc.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(p.Ref)})
