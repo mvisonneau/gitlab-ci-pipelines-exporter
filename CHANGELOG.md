@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### ENHANCEMENTS
 - Switched to go modules
 - Upgraded to go 1.12
+- Rewrote license in markdown
 
 ### BUGFIXES
 - Fixed linting errors
