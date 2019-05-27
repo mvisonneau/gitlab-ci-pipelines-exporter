@@ -2,9 +2,9 @@
 # BUILD CONTAINER
 ##
 
-FROM golang:1.10 as builder
+FROM golang:1.12 as builder
 
-WORKDIR /go/src/github.com/mvisonneau/gitlab-ci-pipelines-exporter
+WORKDIR /build
 
 COPY Makefile .
 RUN \
@@ -12,20 +12,19 @@ make setup
 
 COPY . .
 RUN \
-make deps ;\
 make build-docker
 
 ##
 # RELEASE CONTAINER
 ##
 
-FROM alpine:3.8
+FROM alpine:3.9
 
 WORKDIR /usr/local/bin
 
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
-COPY --from=builder /go/src/github.com/mvisonneau/gitlab-ci-pipelines-exporter/gitlab-ci-pipelines-exporter /usr/local/bin
+COPY --from=builder /build/gitlab-ci-pipelines-exporter /usr/local/bin
 
 EXPOSE 80/tcp
 ENTRYPOINT ["/usr/local/bin/gitlab-ci-pipelines-exporter"]

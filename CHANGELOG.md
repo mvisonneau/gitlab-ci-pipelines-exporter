@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Upgraded to go 1.12
 - Rewrote license in markdown
 - Switched CI to drone
+- Upgraded Docker release to alpine 3.9
 
 ### BUGFIXES
 - Fixed linting errors
