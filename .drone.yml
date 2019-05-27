@@ -1,0 +1,87 @@
+---
+kind: pipeline
+name: test
+
+steps:
+  - name: lint
+    image: golang:1.12
+    commands:
+      - make lint
+  - name: test
+    image: golang:1.12
+    commands:
+      - make test
+  - name: build
+    image: golang:1.12
+    commands:
+      - make build
+  - name: all_ok
+    image: busybox
+    depends_on:
+      - lint
+      - test
+      - build
+    commands:
+      - 'true'
+
+trigger:
+  event:
+    - push
+    - pull_request
+    - tag
+
+---
+kind: pipeline
+name: coverage
+
+steps:
+  - name: coverage
+    image: golang:1.12
+    environment:
+      COVERALLS_TOKEN:
+        from_secret: COVERALLS_TOKEN
+    commands:
+      - make coverage
+      - make publish-coveralls
+
+trigger:
+  repo:
+    - mvisonneau/gitlab-ci-pipelines-exporter
+  event:
+    - push
+    - tag
+
+---
+kind: pipeline
+name: build
+
+steps:
+  - name: fetch
+    image: docker:git
+    commands:
+      - git fetch --tags
+
+  - name: build
+    image: golang:1.12
+    environment:
+      GITHUB_TOKEN:
+        from_secret: GITHUB_TOKEN
+    commands:
+      - make build
+      - make publish-github
+
+trigger:
+  repo:
+    - mvisonneau/gitlab-ci-pipelines-exporter
+  event:
+    - tag
+
+depends_on:
+  - test
+  - coverage
+
+---
+kind: signature
+hmac: 329c30ec0e88bd226787ebf034ed7951d82faab487ddff855d2c4e65dfab0665
+
+...

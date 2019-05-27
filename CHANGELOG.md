@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Switched to go modules
 - Upgraded to go 1.12
 - Rewrote license in markdown
+- Switched CI to drone
 
 ### BUGFIXES
 - Fixed linting errors
