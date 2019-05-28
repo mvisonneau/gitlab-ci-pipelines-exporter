@@ -36,6 +36,11 @@ tolerations: []
 ##
 affinity: {}
 
+## Security context to use for the pod
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+##
+securityContext: {}
+
 ## Actual configuration of the exporter
 ##
 config: {}

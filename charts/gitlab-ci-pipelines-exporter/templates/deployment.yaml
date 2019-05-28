@@ -72,6 +72,10 @@ spec:
       tolerations:
 {{ toYaml . | indent 8 }}
     {{- end }}
+    {{- with .Values.securityContext }}
+    securityContext:
+{{ toYaml . | indent 8 }}
+    {{- end }}
       volumes:
         - name: config
           secret:
