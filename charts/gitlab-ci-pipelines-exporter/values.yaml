@@ -36,10 +36,11 @@ tolerations: []
 ##
 affinity: {}
 
-## Security context to use for the pod
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+## Set the security context of the pods
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context
 ##
-securityContext: {}
+securityContext:
+  runAsUser: 65534  # run as nobody user instead of root
 
 ## Actual configuration of the exporter
 ##

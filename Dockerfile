@@ -8,11 +8,11 @@ WORKDIR /build
 
 COPY Makefile .
 RUN \
-make setup
+  make setup
 
 COPY . .
 RUN \
-make build-docker
+  make build-docker
 
 ##
 # RELEASE CONTAINER
@@ -26,6 +26,9 @@ RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY --from=builder /build/gitlab-ci-pipelines-exporter /usr/local/bin
 
-EXPOSE 80/tcp
-ENTRYPOINT ["/usr/local/bin/gitlab-ci-pipelines-exporter"]
+# Run as nobody user
+USER 65534
+
+EXPOSE 8080/tcp
+ENTRYPOINT ["/usr/local/bin/gitlab-ci-pipelines-exporter", "-listen-addres", ":8080"]
 CMD [""]

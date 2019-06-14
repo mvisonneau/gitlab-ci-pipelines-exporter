@@ -37,23 +37,29 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: [ "/usr/local/bin/gitlab-ci-pipelines-exporter", "-config", "/etc/config.yml" ]
+          command:
+            - /usr/local/bin/gitlab-ci-pipelines-exporter
+          args:
+            - -config
+            - /etc/config.yml
+            - -listen-address
+            - ":8080"
           volumeMounts:
             - name: config
               mountPath: /etc/config.yml
               subPath: config
           ports:
             - name: exporter
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           livenessProbe:
             httpGet:
               path: /metrics
-              port: 80
+              port: 8080
           readinessProbe:
             httpGet:
               path: /metrics
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             timeoutSeconds: 5
             failureThreshold: 3
@@ -73,7 +79,7 @@ spec:
 {{ toYaml . | indent 8 }}
     {{- end }}
     {{- with .Values.securityContext }}
-    securityContext:
+      securityContext:
 {{ toYaml . | indent 8 }}
     {{- end }}
       volumes:

@@ -15,7 +15,7 @@ spec:
   ports:
     - name: metrics
       port: 80
-      targetPort: 80
+      targetPort: 8080
       protocol: TCP
 {{- if .Values.service.externalIPs }}
   externalIPs:
