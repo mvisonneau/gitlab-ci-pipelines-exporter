@@ -30,5 +30,5 @@ COPY --from=builder /build/gitlab-ci-pipelines-exporter /usr/local/bin
 USER 65534
 
 EXPOSE 8080/tcp
-ENTRYPOINT ["/usr/local/bin/gitlab-ci-pipelines-exporter", "-listen-addres", ":8080"]
+ENTRYPOINT ["/usr/local/bin/gitlab-ci-pipelines-exporter", "-listen-address", ":8080"]
 CMD [""]
