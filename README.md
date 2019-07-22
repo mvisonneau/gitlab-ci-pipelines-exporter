@@ -95,16 +95,17 @@ If you want to make it run on [kubernetes](https://kubernetes.io/), there is a [
 ~$ git clone git@github.com:mvisonneau/gitlab-ci-pipelines-exporter.git
 ~$ cd gitlab-ci-pipelines-exporter/charts
 ~$ cat <<EOF > values.yml
-gitlab:
-  url: https://gitlab.example.com
-  token: xrN14n9-ywvAFxxxxxx
-polling_interval_seconds: 30
-projects:
-  - name: foo/project
-    ref: master
-  - name: bar/project
-    ref: master
-EOF
+conifg:
+  gitlab:
+    url: https://gitlab.example.com
+    token: xrN14n9-ywvAFxxxxxx
+  polling_interval_seconds: 30
+  projects:
+    - name: foo/project
+      ref: master
+    - name: bar/project
+      ref: master
+  EOF
 ~$ helm package gitlab-ci-pipelines-exporter
 ~$ helm upgrade -i gitlab-ci-pipelines-exporter ./gitlab-ci-pipelines-exporter-0.0.0.tgz -f values.yml
 ```
