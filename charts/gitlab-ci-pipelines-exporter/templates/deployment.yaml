@@ -54,11 +54,11 @@ spec:
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /metrics
+              path: /health/live
               port: 8080
           readinessProbe:
             httpGet:
-              path: /metrics
+              path: /health/ready
               port: 8080
             initialDelaySeconds: 5
             timeoutSeconds: 5

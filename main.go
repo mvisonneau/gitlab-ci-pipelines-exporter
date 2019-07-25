@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/heptiolabs/healthcheck"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/xanzy/go-gitlab"
@@ -142,8 +143,16 @@ func main() {
 			}
 		}(p)
 	}
-
-	// Expose the registered metrics via HTTP.
-	http.Handle("/metrics", promhttp.Handler())
-	log.Fatal(http.ListenAndServe(*listenAddress, nil))
+	
+	// Configure liveness and readiness probes
+	health := healthcheck.NewHandler()
+	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(len(config.Projects)+20))
+	health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(config.Gitlab.URL + "/users/sign_in", 5*time.Second))
+	
+	// Expose the registered metrics via HTTP
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health/live", health.LiveEndpoint)
+	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
+	mux.Handle("/metrics", promhttp.Handler())
+	log.Fatal(http.ListenAndServe(*listenAddress, mux))
 }

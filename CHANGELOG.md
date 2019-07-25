@@ -10,6 +10,7 @@ and this project adheres to [0ver](https://0ver.org).
 ### Added
 
 - Added `securityContext` configuration capability to the chart
+- Added proper `liveness` and `readiness` checks
 
 ### Changed
 
