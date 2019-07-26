@@ -10,6 +10,12 @@
 
 ## TL:DR
 
+Here is a [Grafana dashboard](https://grafana.com/grafana/dashboards/10620) I've been able to craft, using those metrics:
+
+![grafana_dashboard](/docs/images/grafana_dashboard.png)
+
+## Getting started
+
 ```bash
 # Write your config file somewhere on disk
 ~$ cat <<EOF > $(pwd)/config.yml
@@ -135,14 +141,6 @@ EOF
 ~$ helm package gitlab-ci-pipelines-exporter
 ~$ helm upgrade -i gitlab-ci-pipelines-exporter ./gitlab-ci-pipelines-exporter-0.0.0.tgz -f values.yml
 ```
-
-## Examples
-
-Here are a couple of [Grafana](https://grafana.com/) dashboards I've been able to craft with those metrics :
-
-![grafana_dashboard_status](/docs/images/grafana_dashboard_status.png)
-
-![grafana_dashboard_runs](/docs/images/grafana_dashboard_runs.png)
 
 ## Develop / Test
 
