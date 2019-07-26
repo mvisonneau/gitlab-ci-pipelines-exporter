@@ -28,6 +28,7 @@ type config struct {
 
 type client struct {
 	*gitlab.Client
+	config *config
 }
 
 type project struct {
@@ -82,6 +83,38 @@ func (c *client) getProject(name string) *gitlab.Project {
 	return p
 }
 
+func (c *client) pollProject(p project) {
+	gp := c.getProject(p.Name)
+	log.Printf("--> Polling ID: %v | %v:%v", gp.ID, p.Name, p.Ref)
+
+	var lastPipeline *gitlab.Pipeline
+
+	for {
+		pipelines, _, _ := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(p.Ref)})
+		if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
+			if lastPipeline != nil {
+				runCount.WithLabelValues(p.Name, p.Ref).Inc()
+			}
+
+			lastPipeline, _, _ = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
+
+			lastRunDuration.WithLabelValues(p.Name, p.Ref).Set(float64(lastPipeline.Duration))
+
+			for _, s := range []string{"success", "failed", "running"} {
+				if s == lastPipeline.Status {
+					status.WithLabelValues(p.Name, p.Ref, s).Set(1)
+				} else {
+					status.WithLabelValues(p.Name, p.Ref, s).Set(0)
+				}
+			}
+		}
+
+		timeSinceLastRun.WithLabelValues(p.Name, p.Ref).Set(float64(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds()))
+
+		time.Sleep(time.Duration(c.config.PollingIntervalSeconds) * time.Second)
+	}
+}
+
 func init() {
 	prometheus.MustRegister(timeSinceLastRun)
 	prometheus.MustRegister(lastRunDuration)
@@ -115,41 +148,15 @@ func main() {
 	log.Printf("-> Polling %v every %vs", config.Gitlab.URL, config.PollingIntervalSeconds)
 	log.Printf("-> %v project(s) configured", len(config.Projects))
 
-	c := &client{gitlab.NewClient(nil, config.Gitlab.Token)}
+	c := &client{
+		gitlab.NewClient(nil, config.Gitlab.Token),
+		&config,
+	}
+
 	c.SetBaseURL(config.Gitlab.URL)
 
 	for _, p := range config.Projects {
-		go func(p project) {
-			gp := c.getProject(p.Name)
-			log.Printf("--> Polling ID: %v | %v:%v", gp.ID, p.Name, p.Ref)
-
-			var lastPipeline *gitlab.Pipeline
-
-			for {
-				pipelines, _, _ := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(p.Ref)})
-				if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
-					if lastPipeline != nil {
-						runCount.WithLabelValues(p.Name, p.Ref).Inc()
-					}
-
-					lastPipeline, _, _ = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
-
-					lastRunDuration.WithLabelValues(p.Name, p.Ref).Set(float64(lastPipeline.Duration))
-
-					for _, s := range []string{"success", "failed", "running"} {
-						if s == lastPipeline.Status {
-							status.WithLabelValues(p.Name, p.Ref, s).Set(1)
-						} else {
-							status.WithLabelValues(p.Name, p.Ref, s).Set(0)
-						}
-					}
-				}
-
-				timeSinceLastRun.WithLabelValues(p.Name, p.Ref).Set(float64(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds()))
-
-				time.Sleep(time.Duration(config.PollingIntervalSeconds) * time.Second)
-			}
-		}(p)
+		go c.pollProject(p)
 	}
 
 	// Configure liveness and readiness probes
