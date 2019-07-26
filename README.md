@@ -42,7 +42,7 @@ EOF
 ~$ docker run -d \
    --name gitlab-ci-pipelines-exporter \
    -v $(pwd)/config.yml:/etc/config.yml \
-   -p 8080:80 \
+   -p 8080:8080 \
    mvisonneau/gitlab-ci-pipelines-exporter:latest \
    -config /etc/config.yml
 ```
