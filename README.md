@@ -25,9 +25,17 @@ polling_interval_seconds: 30
 # The list of the projects you want to monitor
 projects:
   - name: foo/project
-    ref: master
+    refs: [master]
   - name: bar/project
-    ref: master
+    refs: [dev,master]
+
+# Dynamically fetch projects to monitor using a wildcard
+wildcards:
+  - owner:
+      name: foo
+      kind: group
+    refs: [master]
+    search: 'bar' # optional
 EOF
 
 # If you have docker installed, it is as easy as :
@@ -41,13 +49,17 @@ EOF
 
 You should then be able to see the following logs
 
-```
+```bash
 ~$ docker logs -f gitlab-ci-pipelines-exporter
 2018/09/21 12:44:05 -> Starting exporter
 2018/09/21 12:44:05 -> Polling https://gitlab.example.com every 30s
-2018/09/21 12:44:05 -> 2 project(s) configured
+2018/09/21 12:44:05 -> Listing all projects using search pattern : 'bar' with owner 'foo' (group)
+2018/09/21 12:44:05 -> Found project : foo/bar
+2018/09/21 12:44:05 -> 3 project(s) configured with a total of 4 refs
 2018/09/21 12:44:05 --> Polling ID: 1 | foo/project:master
+2018/09/21 12:44:05 --> Polling ID: 2 | bar/project:dev
 2018/09/21 12:44:05 --> Polling ID: 2 | bar/project:master
+2018/09/21 12:44:05 --> Polling ID: 3 | foo/bar:master
 ```
 
 And this is an example of the metrics you should expect to retrieve
@@ -58,22 +70,30 @@ And this is an example of the metrics you should expect to retrieve
 # TYPE gitlab_ci_pipeline_last_run_duration_seconds gauge
 gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="master"} 676
 gitlab_ci_pipeline_last_run_duration_seconds{project="foo/project",ref="master"} 33
+gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="dev"} 701
+gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="master"} 570
 # HELP gitlab_ci_pipeline_run_count GitLab CI pipeline run count
 # TYPE gitlab_ci_pipeline_run_count counter
 gitlab_ci_pipeline_run_count{project="bar/project",ref="master"} 0
 gitlab_ci_pipeline_run_count{project="foo/project",ref="master"} 0
+gitlab_ci_pipeline_run_count{project="bar/project",ref="dev"} 0
+gitlab_ci_pipeline_run_count{project="foo/bar",ref="master"} 0
 # HELP gitlab_ci_pipeline_status GitLab CI pipeline current status
 # TYPE gitlab_ci_pipeline_status gauge
 gitlab_ci_pipeline_status{project="bar/project",ref="master",status="failed"} 0
 gitlab_ci_pipeline_status{project="bar/project",ref="master",status="running"} 0
 gitlab_ci_pipeline_status{project="bar/project",ref="master",status="success"} 1
 gitlab_ci_pipeline_status{project="foo/project",ref="master",status="failed"} 0
-gitlab_ci_pipeline_status{project="foo/project",ref="master",status="running"} 0
-gitlab_ci_pipeline_status{project="foo/project",ref="master",status="success"} 1
+gitlab_ci_pipeline_status{project="bar/project",ref="dev",status="running"} 0
+gitlab_ci_pipeline_status{project="bar/project",ref="dev",status="success"} 1
+gitlab_ci_pipeline_status{project="foo/bar",ref="master",status="running"} 0
+gitlab_ci_pipeline_status{project="foo/bar",ref="master",status="success"} 1
 # HELP gitlab_ci_pipeline_time_since_last_run_seconds Elapsed time since most recent GitLab CI pipeline run.
 # TYPE gitlab_ci_pipeline_time_since_last_run_seconds gauge
 gitlab_ci_pipeline_time_since_last_run_seconds{project="bar/project",ref="master"} 87627
 gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/project",ref="master"} 29531
+gitlab_ci_pipeline_time_since_last_run_seconds{project="bar/project",ref="dev"} 2950
+gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/bar",ref="master"} 2951
 ```
 
 ## Usage
@@ -84,7 +104,7 @@ Usage of .gitlab-ci-pipelines-exporter:
   -config string
     	Config file path (default "~/.gitlab-ci-pipelines-exporter.yml")
   -listen-address string
-    	Listening address (default ":80")
+    	Listening address (default ":8080")
 ```
 
 ## HELM
@@ -95,15 +115,22 @@ If you want to make it run on [kubernetes](https://kubernetes.io/), there is a [
 ~$ git clone git@github.com:mvisonneau/gitlab-ci-pipelines-exporter.git
 ~$ cd gitlab-ci-pipelines-exporter/charts
 ~$ cat <<EOF > values.yml
-gitlab:
-  url: https://gitlab.example.com
-  token: xrN14n9-ywvAFxxxxxx
-polling_interval_seconds: 30
-projects:
-  - name: foo/project
-    ref: master
-  - name: bar/project
-    ref: master
+config:
+  gitlab:
+    url: https://gitlab.example.com
+    token: xrN14n9-ywvAFxxxxxx
+  polling_interval_seconds: 30
+  projects:
+    - name: foo/project
+      refs: [master]
+    - name: bar/project
+      refs: [dev,master]
+wildcards:
+  - owner:
+      name: foo
+      kind: group
+    refs: [master]
+    search: 'bar' # optional
 EOF
 ~$ helm package gitlab-ci-pipelines-exporter
 ~$ helm upgrade -i gitlab-ci-pipelines-exporter ./gitlab-ci-pipelines-exporter-0.0.0.tgz -f values.yml

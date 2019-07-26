@@ -48,11 +48,15 @@ config: {}
   # gitlab:
   #   url: https://gitlab.example.com
   #   token: xrN14n9-ywvAFxxxxxx
-  #
   # polling_interval_seconds: 30
-  #
   # projects:
   #   - name: foo/project
-  #     ref: master
+  #     refs: [master]
   #   - name: bar/project
-  #     ref: master
+  #     refs: [dev,master]
+  # wildcards:
+  #   - owner:
+  #       name: foo
+  #       kind: group
+  #     refs: [master]
+  #     search: 'bar' # optional

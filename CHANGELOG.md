@@ -11,10 +11,12 @@ and this project adheres to [0ver](https://0ver.org).
 
 - Added `securityContext` configuration capability to the chart
 - Added proper `liveness` and `readiness` checks
+- Added support for dynamic discovery of the projects using a wildcard
 
 ### Changed
 
-- Updated default `--listen-port` to **8080**
+- Updated default `--listen-port` to **8080** so that you can run it without `root` user
+- Fixed a bug causing a panic when no pipelines were created on a ref
 - Bumped dependencies
 
 ## [0.2.0] - 2019-05-27
