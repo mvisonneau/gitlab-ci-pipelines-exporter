@@ -61,27 +61,27 @@ You should then be able to see the following logs
 
 ```bash
 ~$ docker logs -f gitlab-ci-pipelines-exporter
-2018/09/21 12:44:05 -> Starting exporter
-2018/09/21 12:44:05 -> Configured GitLab endpoint : https://gitlab.example.com
-2018/09/21 12:44:05 -> Polling projects every 15s
-2018/09/21 12:44:05 -> Polling refs every 10s
-2018/09/21 12:44:05 -> Polling pipelines every 60s
-2018/09/21 12:44:05 -> 2 project(s) configured
-2018/09/21 12:44:05 -> Listing all projects using search pattern : 'bar' with owner 'foo' (group)
-2018/09/21 12:44:05 -> Found project : foo/bar
-2018/09/21 12:44:05 -> Polling refs for project : foo/project
-2018/09/21 12:44:05 -> Polling refs for project : bar/project
-2018/09/21 12:44:05 -> Polling refs for project : foo/bar
-2018/09/21 12:44:05 -> Found ref 'master' for project 'foo/project'
-2018/09/21 12:44:05 -> Found ref 'master' for project 'bar/project'
-2018/09/21 12:44:05 -> Found ref 'dev' for project 'bar/project'
-2018/09/21 12:44:05 -> Found ref 'master' for project 'foo/bar'
-2018/09/21 12:44:05 -> Found ref '1.0' for project 'foo/bar'
-2018/09/21 12:44:05 --> Polling foo/project:master (1)
-2018/09/21 12:44:05 --> Polling bar/project:master (2)
-2018/09/21 12:44:05 --> Polling bar/project:dev (2)
-2018/09/21 12:44:05 --> Polling foo/bar:master (1)
-2018/09/21 12:44:05 --> Polling foo/bar:1.0 (1)
+INFO[2019-07-30T18:12:24+01:00] Starting exporter
+INFO[2019-07-30T18:12:24+01:00] Configured GitLab endpoint : https://gitlab.example.com
+INFO[2019-07-30T18:12:24+01:00] Polling projects every 15s
+INFO[2019-07-30T18:12:24+01:00] Polling refs every 10s
+INFO[2019-07-30T18:12:24+01:00] Polling pipelines every 60s
+INFO[2019-07-30T18:12:24+01:00] 2 project(s) configured
+INFO[2019-07-30T18:12:24+01:00] Listing all projects using search pattern : 'bar' with owner 'foo' (group)
+INFO[2019-07-30T18:12:24+01:00] Found project : foo/bar
+INFO[2019-07-30T18:12:24+01:00] Polling refs for project : foo/project
+INFO[2019-07-30T18:12:24+01:00] Polling refs for project : bar/project
+INFO[2019-07-30T18:12:24+01:00] Polling refs for project : foo/bar
+INFO[2019-07-30T18:12:24+01:00] Found ref 'master' for project 'foo/project'
+INFO[2019-07-30T18:12:24+01:00] Found ref 'master' for project 'bar/project'
+INFO[2019-07-30T18:12:24+01:00] Found ref 'dev' for project 'bar/project'
+INFO[2019-07-30T18:12:24+01:00] Found ref 'master' for project 'foo/bar'
+INFO[2019-07-30T18:12:24+01:00] Found ref '1.0' for project 'foo/bar'
+INFO[2019-07-30T18:12:24+01:00] Polling foo/project:master (1)
+INFO[2019-07-30T18:12:24+01:00] Polling bar/project:master (2)
+INFO[2019-07-30T18:12:24+01:00] Polling bar/project:dev (2)
+INFO[2019-07-30T18:12:24+01:00] Polling foo/bar:master (1)
+INFO[2019-07-30T18:12:24+01:00] Polling foo/bar:1.0 (1)
 ```
 
 And this is an example of the metrics you should expect to retrieve
@@ -126,12 +126,23 @@ gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/bar",ref="1.0"} 2900
 ## Usage
 
 ```
-~$ gitlab-ci-pipelines-exporter -h
-Usage of .gitlab-ci-pipelines-exporter:
-  -config string
-    	Config file path (default "~/.gitlab-ci-pipelines-exporter.yml")
-  -listen-address string
-    	Listening address (default ":8080")
+~$ gitlab-ci-pipelines-exporter --help
+NAME:
+   gitlab-ci-pipelines-exporter - Export metrics about GitLab CI pipeliens statuses
+
+USAGE:
+   cli [global options] command [command options] [arguments...]
+
+COMMANDS:
+     help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --log-level level              log level (debug,info,warn,fatal,panic) (default: "info") [$GCPE_LOG_LEVEL]
+   --log-format format            log format (json,text) (default: "text") [$GCPE_LOG_FORMAT]
+   --listen-address address:port  listen-address address:port (default: ":8080") [$GCPE_LISTEN_ADDRESS]
+   --config file                  config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
+   --help, -h                     show help
+   --version, -v                  print the version
 ```
 
 ## HELM

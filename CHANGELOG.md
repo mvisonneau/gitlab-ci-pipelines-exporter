@@ -12,6 +12,11 @@ and this project adheres to [0ver](https://0ver.org).
 - Added automatic refresh of available projects when using wildcards
 - Added support for wildcard on refs (branches & tags) with automatic refresh of available ones
 
+### Changed
+
+- Replaced cli with `urfave/cli`
+- Replaced log with `sirupsen/logrus`
+
 ## [0.2.1] - 2019-07-26
 
 ### Added
