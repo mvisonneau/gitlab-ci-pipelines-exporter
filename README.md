@@ -25,22 +25,26 @@ gitlab:
   url: https://gitlab.example.com
   token: xrN14n9-ywvAFxxxxxx
 
-# Waiting time between polls for each projects
-polling_interval_seconds: 30
+# Custom waiting time between polls for projects, their refs and pipelines (in seconds, optional)
+projects_polling_interval_seconds: 1800 # only used for wildcards
+refs_polling_interval_seconds: 300
+pipelines_polling_interval_seconds: 60
+
+# Default regexp for parsing the refs (branches and tags) to monitor (optional, default to master)
+# default_refs: "^master$"
 
 # The list of the projects you want to monitor
 projects:
   - name: foo/project
-    refs: [master]
   - name: bar/project
-    refs: [dev,master]
+    refs: "^master|dev$"
 
 # Dynamically fetch projects to monitor using a wildcard
 wildcards:
   - owner:
       name: foo
       kind: group
-    refs: [master]
+    refs: "^master|1.0$"
     search: 'bar' # optional
 EOF
 
@@ -100,6 +104,7 @@ gitlab_ci_pipeline_time_since_last_run_seconds{project="bar/project",ref="master
 gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/project",ref="master"} 29531
 gitlab_ci_pipeline_time_since_last_run_seconds{project="bar/project",ref="dev"} 2950
 gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/bar",ref="master"} 2951
+gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/bar",ref="1.0"} 2900
 ```
 
 ## Usage

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
@@ -22,9 +23,14 @@ type config struct {
 		Token string
 	}
 
-	PollingIntervalSeconds int `yaml:"polling_interval_seconds"`
-	Projects               []project
-	Wildcards              []wildcard
+	ProjectsPollingIntervalSeconds  int `yaml:"projects_polling_interval_seconds"`
+	RefsPollingIntervalSeconds      int `yaml:"refs_polling_interval_seconds"`
+	PipelinesPollingIntervalSeconds int `yaml:"pipelines_polling_interval_seconds"`
+
+	DefaultRefsRegexp string `yaml:"default_refs"`
+
+	Projects  []project
+	Wildcards []wildcard
 }
 
 type client struct {
@@ -34,7 +40,7 @@ type client struct {
 
 type project struct {
 	Name string
-	Refs []string
+	Refs string
 }
 
 type wildcard struct {
@@ -43,7 +49,7 @@ type wildcard struct {
 		Name string
 		Kind string
 	}
-	Refs []string
+	Refs string
 }
 
 var (
@@ -93,12 +99,25 @@ func (c *client) getProject(name string) *gitlab.Project {
 	return p
 }
 
-func (c *client) fetchProjectsFromWildcards() {
+func (c *client) pollProjectsFromWildcards() {
 	for _, w := range c.config.Wildcards {
 		for _, p := range c.listProjects(&w) {
-			c.config.Projects = append(c.config.Projects, p)
+			if !c.projectExists(p) {
+				log.Printf("-> Found project : %s", p.Name)
+				go c.pollProject(p)
+				c.config.Projects = append(c.config.Projects, p)
+			}
 		}
 	}
+}
+
+func (c *client) projectExists(p project) bool {
+	for _, cp := range c.config.Projects {
+		if p == cp {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *client) listProjects(w *wildcard) (projects []project) {
@@ -139,7 +158,6 @@ func (c *client) listProjects(w *wildcard) (projects []project) {
 	}
 
 	for _, gp := range gps {
-		log.Printf("-> Found project : %s", gp.PathWithNamespace)
 		projects = append(
 			projects,
 			project{
@@ -152,63 +170,143 @@ func (c *client) listProjects(w *wildcard) (projects []project) {
 	return
 }
 
+func (c *client) pollRefs(projectID int, refsRegexp string) (refs []*string, err error) {
+	if len(refsRegexp) == 0 {
+		if len(c.config.DefaultRefsRegexp) > 0 {
+			refsRegexp = c.config.DefaultRefsRegexp
+		} else {
+			refsRegexp = "^master$"
+		}
+	}
+
+	re := regexp.MustCompile(refsRegexp)
+
+	branches, err := c.pollBranchNames(projectID)
+	if err != nil {
+		return
+	}
+
+	for _, branch := range branches {
+		if re.MatchString(*branch) {
+			refs = append(refs, branch)
+		}
+	}
+
+	tags, err := c.pollTagNames(projectID)
+	if err != nil {
+		return
+	}
+
+	for _, tag := range tags {
+		if re.MatchString(*tag) {
+			refs = append(refs, tag)
+		}
+	}
+
+	return
+}
+
+func (c *client) pollBranchNames(projectID int) (names []*string, err error) {
+	var branches []*gitlab.Branch
+	branches, _, err = c.Branches.ListBranches(projectID, &gitlab.ListBranchesOptions{})
+	for _, branch := range branches {
+		names = append(names, &branch.Name)
+	}
+
+	return
+}
+
+func (c *client) pollTagNames(projectID int) (names []*string, err error) {
+	var tags []*gitlab.Tag
+	tags, _, err = c.Tags.ListTags(projectID, &gitlab.ListTagsOptions{})
+	for _, tag := range tags {
+		names = append(names, &tag.Name)
+	}
+	return
+}
+
 func (c *client) pollProject(p project) {
-	for _, ref := range p.Refs {
-		go c.pollProjectRef(p.Name, ref)
+	var polledRefs []string
+	for {
+		gp := c.getProject(p.Name)
+		log.Printf("-> Polling refs for project : %s", p.Name)
+
+		refs, err := c.pollRefs(gp.ID, p.Refs)
+		if err != nil {
+			log.Printf("-> Could not fetch refs for project '%s'", p.Name)
+		}
+
+		if len(refs) == 0 {
+			log.Printf("-> No refs found for for project '%s'", p.Name)
+			return
+		}
+
+		for _, ref := range refs {
+			if !refExists(polledRefs, *ref) {
+				log.Printf("-> Found ref '%s' for project '%s'", *ref, p.Name)
+				go c.pollProjectRef(gp, *ref)
+				polledRefs = append(polledRefs, *ref)
+			}
+		}
+
+		time.Sleep(time.Duration(c.config.RefsPollingIntervalSeconds) * time.Second)
 	}
 }
 
-func (c *client) pollProjectRef(name, ref string) {
-	gp := c.getProject(name)
-	log.Printf("--> Polling ID: %v | %v:%v", gp.ID, name, ref)
+func refExists(refs []string, r string) bool {
+	for _, ref := range refs {
+		if r == ref {
+			return true
+		}
+	}
+	return false
+}
 
+func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
+	log.Printf("--> Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
 	var lastPipeline *gitlab.Pipeline
 
 	for {
 		pipelines, _, _ := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
 		if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
 			if lastPipeline != nil {
-				runCount.WithLabelValues(name, ref).Inc()
+				runCount.WithLabelValues(gp.PathWithNamespace, ref).Inc()
 			}
 
 			if len(pipelines) > 0 {
 				lastPipeline, _, _ = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
-				lastRunDuration.WithLabelValues(name, ref).Set(float64(lastPipeline.Duration))
+				lastRunDuration.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.Duration))
 
 				for _, s := range []string{"success", "failed", "running"} {
 					if s == lastPipeline.Status {
-						status.WithLabelValues(name, ref, s).Set(1)
+						status.WithLabelValues(gp.PathWithNamespace, ref, s).Set(1)
 					} else {
-						status.WithLabelValues(name, ref, s).Set(0)
+						status.WithLabelValues(gp.PathWithNamespace, ref, s).Set(0)
 					}
 				}
 			} else {
-				log.Printf("Could not find any pipeline for %s:%s", name, ref)
+				log.Printf("Could not find any pipeline for %s:%s", gp.PathWithNamespace, ref)
 			}
 		}
 
 		if lastPipeline != nil {
-			timeSinceLastRun.WithLabelValues(name, ref).Set(float64(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds()))
+			timeSinceLastRun.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds()))
 		}
 
-		time.Sleep(time.Duration(c.config.PollingIntervalSeconds) * time.Second)
+		time.Sleep(time.Duration(c.config.PipelinesPollingIntervalSeconds) * time.Second)
 	}
 }
 
 func (c *client) pollProjects() {
-	c.fetchProjectsFromWildcards()
-	log.Printf("-> %d project(s) configured with a total of %d ref(s)", len(c.config.Projects), c.sumTotalRefs())
+	log.Printf("-> %d project(s) configured", len(c.config.Projects))
 	for _, p := range c.config.Projects {
-		c.pollProject(p)
+		go c.pollProject(p)
 	}
-}
 
-func (c *client) sumTotalRefs() (refs int) {
-	refs = 0
-	for _, p := range c.config.Projects {
-		refs += len(p.Refs)
+	for {
+		c.pollProjectsFromWildcards()
+		time.Sleep(time.Duration(c.config.ProjectsPollingIntervalSeconds) * time.Second)
 	}
-	return
 }
 
 func init() {
@@ -240,8 +338,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Defining defaults polling intervals
+	if config.ProjectsPollingIntervalSeconds == 0 {
+		config.ProjectsPollingIntervalSeconds = 1800
+	}
+
+	if config.RefsPollingIntervalSeconds == 0 {
+		config.RefsPollingIntervalSeconds = 300
+	}
+
+	if config.PipelinesPollingIntervalSeconds == 0 {
+		config.PipelinesPollingIntervalSeconds = 30
+	}
+
 	log.Printf("-> Starting exporter")
-	log.Printf("-> Polling %v every %vs", config.Gitlab.URL, config.PollingIntervalSeconds)
+	log.Printf("-> Configured GitLab endpoint : %s", config.Gitlab.URL)
+	log.Printf("-> Polling projects every %vs", config.ProjectsPollingIntervalSeconds)
+	log.Printf("-> Polling refs every %vs", config.RefsPollingIntervalSeconds)
+	log.Printf("-> Polling pipelines every %vs", config.PipelinesPollingIntervalSeconds)
 
 	c := &client{
 		gitlab.NewClient(nil, config.Gitlab.Token),
