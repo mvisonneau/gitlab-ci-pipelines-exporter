@@ -3,3 +3,4 @@ vendor
 config.yml
 **/*.tgz
 .gitlab-ci-pipelines-exporter.yml
+**/.DS_Store
