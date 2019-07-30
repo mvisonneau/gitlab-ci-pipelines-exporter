@@ -10,9 +10,9 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/xanzy/go-gitlab"
-	log "github.com/sirupsen/logrus"
 
 	"gopkg.in/yaml.v2"
 )
@@ -98,7 +98,7 @@ func (c *client) pollProjectsFromWildcards() {
 	for _, w := range c.config.Wildcards {
 		for _, p := range c.listProjects(&w) {
 			if !c.projectExists(p) {
-				log.Infof("-> Found project : %s", p.Name)
+				log.Infof("Found project : %s", p.Name)
 				go c.pollProject(p)
 				c.config.Projects = append(c.config.Projects, p)
 			}
@@ -116,7 +116,7 @@ func (c *client) projectExists(p project) bool {
 }
 
 func (c *client) listProjects(w *wildcard) (projects []project) {
-	log.Infof("-> Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
+	log.Infof("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
 
 	trueVal := true
 	falseVal := false
@@ -224,21 +224,21 @@ func (c *client) pollProject(p project) {
 	var polledRefs []string
 	for {
 		gp := c.getProject(p.Name)
-		log.Infof("-> Polling refs for project : %s", p.Name)
+		log.Infof("Polling refs for project : %s", p.Name)
 
 		refs, err := c.pollRefs(gp.ID, p.Refs)
 		if err != nil {
-			log.Warnf("-> Could not fetch refs for project '%s'", p.Name)
+			log.Warnf("Could not fetch refs for project '%s'", p.Name)
 		}
 
 		if len(refs) == 0 {
-			log.Warnf("-> No refs found for for project '%s'", p.Name)
+			log.Warnf("No refs found for for project '%s'", p.Name)
 			return
 		}
 
 		for _, ref := range refs {
 			if !refExists(polledRefs, *ref) {
-				log.Infof("-> Found ref '%s' for project '%s'", *ref, p.Name)
+				log.Infof("Found ref '%s' for project '%s'", *ref, p.Name)
 				go c.pollProjectRef(gp, *ref)
 				polledRefs = append(polledRefs, *ref)
 			}
@@ -258,7 +258,7 @@ func refExists(refs []string, r string) bool {
 }
 
 func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
-	log.Infof("--> Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
+	log.Infof("Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
 	var lastPipeline *gitlab.Pipeline
 
 	for {
@@ -293,7 +293,7 @@ func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
 }
 
 func (c *client) pollProjects() {
-	log.Infof("-> %d project(s) configured", len(c.config.Projects))
+	log.Infof("%d project(s) configured", len(c.config.Projects))
 	for _, p := range c.config.Projects {
 		go c.pollProject(p)
 	}
@@ -346,11 +346,11 @@ func run(ctx *cli.Context) error {
 		config.PipelinesPollingIntervalSeconds = 30
 	}
 
-	log.Infof("-> Starting exporter")
-	log.Infof("-> Configured GitLab endpoint : %s", config.Gitlab.URL)
-	log.Infof("-> Polling projects every %vs", config.ProjectsPollingIntervalSeconds)
-	log.Infof("-> Polling refs every %vs", config.RefsPollingIntervalSeconds)
-	log.Infof("-> Polling pipelines every %vs", config.PipelinesPollingIntervalSeconds)
+	log.Infof("Starting exporter")
+	log.Infof("Configured GitLab endpoint : %s", config.Gitlab.URL)
+	log.Infof("Polling projects every %vs", config.ProjectsPollingIntervalSeconds)
+	log.Infof("Polling refs every %vs", config.RefsPollingIntervalSeconds)
+	log.Infof("Polling pipelines every %vs", config.PipelinesPollingIntervalSeconds)
 
 	c := &client{
 		gitlab.NewClient(nil, config.Gitlab.Token),
