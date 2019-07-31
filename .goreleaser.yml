@@ -1,0 +1,47 @@
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - 386
+      - amd64
+      - arm64
+
+archives:
+  - format_overrides:
+      - goos: windows
+        format: zip
+
+brews:
+  - description: &description
+      GitLab CI pipelines exporter (prometheus/open-metrics)
+    homepage: &homepage
+      https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
+    folder: Formula
+    github:
+      owner: mvisonneau
+      name: homebrew-tap
+
+scoop:
+  description: *description
+  homepage: *homepage
+  license: Apache 2.0
+  bucket:
+    owner: mvisonneau
+    name: scoops
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  name_template: "{{ .Tag }}-{{ .ShortCommit }}"
+
+changelog:
+  skip: true

@@ -2,33 +2,31 @@
 # BUILD CONTAINER
 ##
 
-FROM golang:1.12 as builder
+FROM goreleaser/goreleaser:v0.112.2 as builder
 
 WORKDIR /build
 
 COPY Makefile .
 RUN \
-  make setup
+apk add --no-cache make ;\
+make setup
 
 COPY . .
 RUN \
-  make build-docker
+make build
 
 ##
 # RELEASE CONTAINER
 ##
 
-FROM alpine:3.9
+FROM busybox:1.31-glibc
 
-WORKDIR /usr/local/bin
+WORKDIR /
 
-RUN apk add --no-cache ca-certificates && update-ca-certificates
-
-COPY --from=builder /build/gitlab-ci-pipelines-exporter /usr/local/bin
+COPY --from=builder /build/dist/gitlab-ci-pipelines-exporter_linux_amd64/gitlab-ci-pipelines-exporter /usr/local/bin/
 
 # Run as nobody user
 USER 65534
 
-EXPOSE 8080/tcp
 ENTRYPOINT ["/usr/local/bin/gitlab-ci-pipelines-exporter"]
 CMD [""]

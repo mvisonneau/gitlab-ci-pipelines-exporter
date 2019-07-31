@@ -7,6 +7,14 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- Released packages for `Mac OS X`, `Linux` & `Windows` and updated documentation
+
+### Changed
+
+- Replaced alpine/musl with a busybox/glibc based container image
+
 ### Removed
 
 - Liveness check around goroutines

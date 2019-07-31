@@ -54,7 +54,22 @@ EOF
    -v $(pwd)/config.yml:/etc/config.yml \
    -p 8080:8080 \
    mvisonneau/gitlab-ci-pipelines-exporter:latest \
-   -config /etc/config.yml
+   --config /etc/config.yml
+
+# Otherwise for Mac OS X
+~$ brew install mvisonneau/tap/gitlab-ci-pipelines-exporter
+~$ gitlab-ci-pipelines-exporter --config /etc/config.yml
+
+# Linux
+~$ export GCPE_VERSION=$(curl -s "https://api.github.com/repos/mvisonneau/s5/gitlab-ci-pipelines-exporter/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+~$ wget https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/releases/download/${GCPE_VERSION}/gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_amd64.deb
+~$ tar zxvf gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_amd64.deb -C /usr/local/bin
+~$ gitlab-ci-pipelines-exporter --config /etc/config.yml
+
+# Windows
+~$ scoop bucket add https://github.com/mvisonneau/scoops
+~$ scoop install gitlab-ci-pipelines-exporter
+~$ gitlab-ci-pipelines-exporter --config <path_to_config_file>
 ```
 
 You should then be able to see the following logs

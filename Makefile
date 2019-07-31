@@ -10,8 +10,6 @@ export GO111MODULE=on
 .PHONY: setup
 setup: ## Install required libraries/tools for build tasks
 	@command -v goveralls 2>&1 >/dev/null || GO111MODULE=off go get -u -v github.com/mattn/goveralls
-	@command -v gox 2>&1 >/dev/null       || GO111MODULE=off go get -u -v github.com/mitchellh/gox
-	@command -v ghr 2>&1 >/dev/null       || GO111MODULE=off go get -u -v github.com/tcnksm/ghr
 	@command -v golint 2>&1 >/dev/null    || GO111MODULE=off go get -u -v golang.org/x/lint/golint
 	@command -v cover 2>&1 >/dev/null     || GO111MODULE=off go get -u -v golang.org/x/tools/cmd/cover
 	@command -v goimports 2>&1 >/dev/null || GO111MODULE=off go get -u -v golang.org/x/tools/cmd/goimports
@@ -37,19 +35,12 @@ install: ## Build and install locally the binary (dev purpose)
 	go install .
 
 .PHONY: build
-build: setup ## Build the binary
-	mkdir -p dist; rm -rf dist/*
-	CGO_ENABLED=0 gox -osarch "linux/386 linux/amd64 linux/arm64" -ldflags "$(LDFLAGS)" -output dist/$(NAME)_{{.OS}}_{{.Arch}}
-	strip dist/*_linux_amd64 dist/*_linux_386
+build: setup ## Build the binaries
+	goreleaser release --snapshot --skip-publish --rm-dist
 
-.PHONY: build-docker
-build-docker:
-	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" .
-	strip $(NAME)
-
-.PHONY: publish-github-release-binaries
-publish-github: setup ## Upload the binaries onto the GitHub release
-	ghr -u mvisonneau -replace $(VERSION) dist
+.PHONY: release
+release: setup ## Build & release the binaries
+	goreleaser release --rm-dist
 
 .PHONY: publish-coveralls
 publish-coveralls: setup ## Publish coverage results on coveralls
@@ -69,7 +60,7 @@ dev-env: ## Build a local development environment using Docker
 	@docker run -it --rm \
 		-v $(shell pwd):/go/src/github.com/mvisonneau/$(NAME) \
 		-w /go/src/github.com/mvisonneau/$(NAME) \
-		-p 8080:80 \
+		-p 8080:8080 \
 		golang:1.12 \
 		/bin/bash -c 'make setup; make install; bash'
 
