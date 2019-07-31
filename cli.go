@@ -38,7 +38,7 @@ func runCli() (app *cli.App) {
 			Value:  "~/.gitlab-ci-pipelines-exporter.yml",
 		},
 	}
-	
+
 	app.Action = run
 
 	return
