@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Removed
+
+- Liveness check around goroutines
+
 ## [0.2.2] - 2019-07-30
 
 ### Added

@@ -362,7 +362,6 @@ func run(ctx *cli.Context) error {
 
 	// Configure liveness and readiness probes
 	health := healthcheck.NewHandler()
-	health.AddLivenessCheck("goroutine-threshold", healthcheck.GoroutineCountCheck(len(config.Projects)+20))
 	health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(config.Gitlab.URL+"/users/sign_in", 5*time.Second))
 
 	// Expose the registered metrics via HTTP
