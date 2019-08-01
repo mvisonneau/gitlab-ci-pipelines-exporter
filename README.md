@@ -146,7 +146,7 @@ NAME:
    gitlab-ci-pipelines-exporter - Export metrics about GitLab CI pipeliens statuses
 
 USAGE:
-   cli [global options] command [command options] [arguments...]
+   gitlab-ci-pipelines-exporter [global options] command [command options] [arguments...]
 
 COMMANDS:
      help, h  Shows a list of commands or help for one command
