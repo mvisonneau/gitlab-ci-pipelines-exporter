@@ -4,8 +4,8 @@ deploymentStrategy: RollingUpdate
 
 image:
   repository: mvisonneau/gitlab-ci-pipelines-exporter
-  tag: latest
   pullPolicy: IfNotPresent
+  # tag: <default to chart version>
 
 service:
   type: ClusterIP
@@ -40,7 +40,7 @@ affinity: {}
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context
 ##
 securityContext:
-  runAsUser: 65534  # run as nobody user instead of root
+  # runAsUser: 65534  # run as nobody user
 
 ## Actual configuration of the exporter
 ##
@@ -60,3 +60,11 @@ config: {}
   #       kind: group
   #     refs: [master]
   #     search: 'bar' # optional
+
+## Environment variables for the container
+##
+envVariables: []
+  # - name: GCPE_LOG_FORMAT
+  #   value: json
+  # - name: GCPE_LOG_LEVEL
+  #   value: debug

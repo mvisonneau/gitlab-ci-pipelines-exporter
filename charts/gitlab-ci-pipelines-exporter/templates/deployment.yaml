@@ -35,15 +35,17 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: {{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /usr/local/bin/gitlab-ci-pipelines-exporter
           args:
-            - -config
+            - --config
             - /etc/config.yml
-            - -listen-address
-            - ":8080"
+        {{- with .Values.envVariables }}
+          env:
+{{ toYaml . | indent 16 }}
+        {{- end }}
           volumeMounts:
             - name: config
               mountPath: /etc/config.yml

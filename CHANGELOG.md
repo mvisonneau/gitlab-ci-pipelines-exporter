@@ -10,6 +10,7 @@ and this project adheres to [0ver](https://0ver.org).
 ### Added
 
 - Released packages for `Mac OS X`, `Linux` & `Windows` and updated documentation
+- Support for customisable environment variables on the chart
 
 ### Changed
 
