@@ -358,7 +358,7 @@ func run(ctx *cli.Context) error {
 	}
 
 	c.SetBaseURL(config.Gitlab.URL)
-	c.pollProjects()
+	go c.pollProjects()
 
 	// Configure liveness and readiness probes
 	health := healthcheck.NewHandler()

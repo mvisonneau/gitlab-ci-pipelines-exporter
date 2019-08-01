@@ -15,6 +15,7 @@ and this project adheres to [0ver](https://0ver.org).
 ### Changed
 
 - Replaced alpine/musl with a busybox/glibc based container image
+- Fixed a bug introduced with the wildcard support preventing mux from starting correctly
 
 ### Removed
 
