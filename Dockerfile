@@ -6,14 +6,10 @@ FROM goreleaser/goreleaser:v0.112.2 as builder
 
 WORKDIR /build
 
-COPY Makefile .
-RUN \
-apk add --no-cache make ;\
-make setup
-
 COPY . .
 RUN \
-make build
+apk add --no-cache make ca-certificates ;\
+make build-linux-amd64
 
 ##
 # RELEASE CONTAINER

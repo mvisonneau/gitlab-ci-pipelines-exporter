@@ -1,7 +1,6 @@
 NAME          := gitlab-ci-pipelines-exporter
 VERSION       := $(shell git describe --tags --abbrev=1)
 FILES         := $(shell git ls-files '*.go')
-LDFLAGS       := -w -extldflags "-static" -X 'main.version=$(VERSION)'
 REPOSITORY    := mvisonneau/$(NAME)
 .DEFAULT_GOAL := help
 
@@ -35,11 +34,15 @@ install: ## Build and install locally the binary (dev purpose)
 	go install .
 
 .PHONY: build
-build: setup ## Build the binaries
+build: ## Build the binaries
 	goreleaser release --snapshot --skip-publish --rm-dist
 
+.PHONY: build-linux-amd64
+build-linux-amd64: ## Build the binaries
+	goreleaser release --snapshot --skip-publish --rm-dist -f .goreleaser.linux-amd64.yml
+
 .PHONY: release
-release: setup ## Build & release the binaries
+release: ## Build & release the binaries
 	goreleaser release --rm-dist
 
 .PHONY: publish-coveralls

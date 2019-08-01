@@ -1,0 +1,13 @@
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+snapshot:
+  name_template: "{{ .Tag }}-{{ .ShortCommit }}"
+
+changelog:
+  skip: true
