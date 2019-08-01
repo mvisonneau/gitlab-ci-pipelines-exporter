@@ -101,7 +101,7 @@ INFO[2019-07-30T18:12:24+01:00] Polling foo/bar:1.0 (1)
 
 And this is an example of the metrics you should expect to retrieve
 
-```
+```bash
 ~$ curl -s localhost:8080/metrics | grep gitlab_ci_pipeline
 # HELP gitlab_ci_pipeline_last_run_duration_seconds Duration of last pipeline run
 # TYPE gitlab_ci_pipeline_last_run_duration_seconds gauge
@@ -140,7 +140,7 @@ gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/bar",ref="1.0"} 2900
 
 ## Usage
 
-```
+```bash
 ~$ gitlab-ci-pipelines-exporter --help
 NAME:
    gitlab-ci-pipelines-exporter - Export metrics about GitLab CI pipeliens statuses
@@ -164,7 +164,7 @@ GLOBAL OPTIONS:
 
 If you want to make it run on [kubernetes](https://kubernetes.io/), there is a [helm chart](https://docs.helm.sh/) for that!
 
-```
+```bash
 ~$ git clone git@github.com:mvisonneau/gitlab-ci-pipelines-exporter.git
 ~$ cd gitlab-ci-pipelines-exporter/charts
 ~$ cat <<EOF > values.yml
