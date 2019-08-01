@@ -166,7 +166,6 @@ If you want to make it run on [kubernetes](https://kubernetes.io/), there is a [
 
 ```bash
 ~$ git clone git@github.com:mvisonneau/gitlab-ci-pipelines-exporter.git
-~$ cd gitlab-ci-pipelines-exporter/charts
 ~$ cat <<EOF > values.yml
 config:
   gitlab:
@@ -180,8 +179,7 @@ config:
         name: foo
         kind: group
 EOF
-~$ helm package gitlab-ci-pipelines-exporter
-~$ helm upgrade -i gitlab-ci-pipelines-exporter ./gitlab-ci-pipelines-exporter-0.0.0.tgz -f values.yml
+~$ helm upgrade -i gitlab-ci-pipelines-exporter ./chart -f values.yml
 ```
 
 ## Develop / Test
