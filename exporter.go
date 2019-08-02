@@ -120,46 +120,62 @@ func (c *client) listProjects(w *wildcard) (projects []project) {
 
 	trueVal := true
 	falseVal := false
-	var gps []*gitlab.Project
-	var err error
-
-	switch w.Owner.Kind {
-	case "user":
-		gps, _, err = c.Projects.ListUserProjects(
-			w.Owner.Name,
-			&gitlab.ListProjectsOptions{
-				Archived: &falseVal,
-				Simple:   &trueVal,
-				Search:   &w.Search,
-			},
-		)
-	case "group":
-		gps, _, err = c.Groups.ListGroupProjects(
-			w.Owner.Name,
-			&gitlab.ListGroupProjectsOptions{
-				Archived: &falseVal,
-				Simple:   &trueVal,
-				Search:   &w.Search,
-			},
-		)
-	default:
-		log.Fatalf("Invalid owner kind '%s' must be either 'user' or 'group'", w.Owner.Kind)
-		os.Exit(1)
+	listOptions := gitlab.ListOptions{
+		PerPage: 20,
+		Page:    1,
 	}
 
-	if err != nil {
-		log.Fatalf("Unable to list projects with search pattern '%s' from the GitLab API : %v", w.Search, err.Error())
-		os.Exit(1)
-	}
+	for {
+		var gps []*gitlab.Project
+		var resp *gitlab.Response
+		var err error
 
-	for _, gp := range gps {
-		projects = append(
-			projects,
-			project{
-				Name: gp.PathWithNamespace,
-				Refs: w.Refs,
-			},
-		)
+		switch w.Owner.Kind {
+		case "user":
+			gps, resp, err = c.Projects.ListUserProjects(
+				w.Owner.Name,
+				&gitlab.ListProjectsOptions{
+					ListOptions: listOptions,
+					Archived:    &falseVal,
+					Simple:      &trueVal,
+					Search:      &w.Search,
+				},
+			)
+		case "group":
+			gps, resp, err = c.Groups.ListGroupProjects(
+				w.Owner.Name,
+				&gitlab.ListGroupProjectsOptions{
+					ListOptions: listOptions,
+					Archived:    &falseVal,
+					Simple:      &trueVal,
+					Search:      &w.Search,
+				},
+			)
+		default:
+			log.Fatalf("Invalid owner kind '%s' must be either 'user' or 'group'", w.Owner.Kind)
+			os.Exit(1)
+		}
+
+		if err != nil {
+			log.Fatalf("Unable to list projects with search pattern '%s' from the GitLab API : %v", w.Search, err.Error())
+			os.Exit(1)
+		}
+
+		for _, gp := range gps {
+			projects = append(
+				projects,
+				project{
+					Name: gp.PathWithNamespace,
+					Refs: w.Refs,
+				},
+			)
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		listOptions.Page = resp.NextPage
 	}
 
 	return
@@ -201,23 +217,62 @@ func (c *client) pollRefs(projectID int, refsRegexp string) (refs []*string, err
 	return
 }
 
-func (c *client) pollBranchNames(projectID int) (names []*string, err error) {
-	var branches []*gitlab.Branch
-	branches, _, err = c.Branches.ListBranches(projectID, &gitlab.ListBranchesOptions{})
-	for _, branch := range branches {
-		names = append(names, &branch.Name)
+func (c *client) pollBranchNames(projectID int) ([]*string, error) {
+	var names []*string
+
+	options := &gitlab.ListBranchesOptions{
+		PerPage: 20,
+		Page:    1,
 	}
 
-	return
+	for {
+		branches, resp, err := c.Branches.ListBranches(projectID, options)
+		if err != nil {
+			return names, err
+		}
+
+		for _, branch := range branches {
+			names = append(names, &branch.Name)
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		options.Page = resp.NextPage
+	}
+
+	return names, nil
 }
 
-func (c *client) pollTagNames(projectID int) (names []*string, err error) {
-	var tags []*gitlab.Tag
-	tags, _, err = c.Tags.ListTags(projectID, &gitlab.ListTagsOptions{})
-	for _, tag := range tags {
-		names = append(names, &tag.Name)
+func (c *client) pollTagNames(projectID int) ([]*string, error) {
+	var names []*string
+
+	options := &gitlab.ListTagsOptions{
+		ListOptions: gitlab.ListOptions{
+			PerPage: 20,
+			Page:    1,
+		},
 	}
-	return
+
+	for {
+		tags, resp, err := c.Tags.ListTags(projectID, options)
+		if err != nil {
+			return names, err
+		}
+
+		for _, tag := range tags {
+			names = append(names, &tag.Name)
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		options.Page = resp.NextPage
+	}
+
+	return names, nil
 }
 
 func (c *client) pollProject(p project) {

@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Changed
+
+- Fixed an issue that prevented from loading all projects and branches/tags when using wildcard definitions #10
+
 ## [0.2.3] - 2019-08-01
 
 ### Added
