@@ -14,6 +14,8 @@ Here is a [Grafana dashboard](https://grafana.com/grafana/dashboards/10620) I've
 
 ![grafana_dashboard](/docs/images/grafana_dashboard.png)
 
+If you are solely interested into trying it out, have a look into the [example/](./example) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in ~5min. 
+
 ## Getting started
 
 ```bash
