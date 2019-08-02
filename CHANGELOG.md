@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- Added an `example/` folder that allow people to get a fully working test environment in a few minutes using **docker-compose**.
+
 ### Changed
 
 - Fixed an issue that prevented from loading all projects and branches/tags when using wildcard definitions #10
