@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+## [0.2.4] - 2019-08-02
+
 ### Added
 
 - Added an `example/` folder that allow people to get a fully working test environment in a few minutes using **docker-compose**.
@@ -89,7 +91,8 @@ and this project adheres to [0ver](https://0ver.org).
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.3...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.4...HEAD
+[0.2.4]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.4
 [0.2.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.3
 [0.2.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.2
 [0.2.1]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.1
