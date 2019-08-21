@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"time"
+	"crypto/tls"
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/prometheus/client_golang/prometheus"
@@ -21,6 +22,7 @@ type config struct {
 	Gitlab struct {
 		URL   string
 		Token string
+		SkipTLSVerify bool `yaml:"skip_tls_verify"`
 	}
 
 	ProjectsPollingIntervalSeconds  int `yaml:"projects_polling_interval_seconds"`
@@ -407,8 +409,13 @@ func run(ctx *cli.Context) error {
 	log.Infof("Polling refs every %vs", config.RefsPollingIntervalSeconds)
 	log.Infof("Polling pipelines every %vs", config.PipelinesPollingIntervalSeconds)
 
+	// Configure GitLab client
+	httpTransport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: config.Gitlab.SkipTLSVerify},
+	}
+
 	c := &client{
-		gitlab.NewClient(nil, config.Gitlab.Token),
+		gitlab.NewClient(&http.Client{Transport: httpTransport}, config.Gitlab.Token),
 		&config,
 	}
 

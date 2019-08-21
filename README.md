@@ -26,6 +26,7 @@ If you are solely interested into trying it out, have a look into the [example/]
 gitlab:
   url: https://gitlab.example.com
   token: xrN14n9-ywvAFxxxxxx
+  # skip_tls_verify: false
 
 # Custom waiting time between polls for projects, their refs and pipelines (in seconds, optional)
 projects_polling_interval_seconds: 1800 # only used for wildcards
