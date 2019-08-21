@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- Added `skip_tls_verify` config parameter for the GitLab client
+
 ## [0.2.4] - 2019-08-02
 
 ### Added
