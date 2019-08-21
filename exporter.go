@@ -1,12 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"regexp"
 	"time"
-	"crypto/tls"
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/prometheus/client_golang/prometheus"
@@ -20,8 +20,8 @@ import (
 
 type config struct {
 	Gitlab struct {
-		URL   string
-		Token string
+		URL           string
+		Token         string
 		SkipTLSVerify bool `yaml:"skip_tls_verify"`
 	}
 
