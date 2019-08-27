@@ -26,13 +26,13 @@ func runCli() (app *cli.App) {
 			Value:  "text",
 		},
 		cli.StringFlag{
-			Name:   "listen-address",
+			Name:   "listen-address, l",
 			EnvVar: "GCPE_LISTEN_ADDRESS",
 			Usage:  "listen-address `address:port`",
 			Value:  ":8080",
 		},
 		cli.StringFlag{
-			Name:   "config",
+			Name:   "config, c",
 			EnvVar: "GCPE_CONFIG",
 			Usage:  "config `file`",
 			Value:  "~/.gitlab-ci-pipelines-exporter.yml",
