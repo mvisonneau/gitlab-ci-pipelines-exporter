@@ -113,6 +113,25 @@ gitlab_ci_pipeline_last_run_duration_seconds{project="foo/project",ref="master"}
 gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="dev"} 701
 gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="master"} 570
 gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="1.0"} 571
+# HELP gitlab_ci_pipeline_last_run_id ID of the most recent pipeline
+# TYPE gitlab_ci_pipeline_last_run_id gauge
+gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="master"} 2.2772738e+07
+gitlab_ci_pipeline_last_run_duration_seconds{project="foo/project",ref="master"} 3.0094592e+07
+gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="dev"} 4.0059611e+07
+gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="master"} 4.082622e+07
+gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="1.0"} 6.8400336e+07
+# HELP gitlab_ci_pipeline_last_run_status Status of the most recent pipeline
+# TYPE gitlab_ci_pipeline_last_run_status gauge
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="failed"} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="running"} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="success"} 1
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="master",status="failed"} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="dev",status="running"} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="dev",status="success"} 1
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="running"} 0
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="success"} 1
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="1.0",status="running"} 0
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="1.0",status="success"} 1
 # HELP gitlab_ci_pipeline_run_count GitLab CI pipeline run count
 # TYPE gitlab_ci_pipeline_run_count counter
 gitlab_ci_pipeline_run_count{project="bar/project",ref="master"} 0
@@ -120,18 +139,6 @@ gitlab_ci_pipeline_run_count{project="foo/project",ref="master"} 0
 gitlab_ci_pipeline_run_count{project="bar/project",ref="dev"} 0
 gitlab_ci_pipeline_run_count{project="foo/bar",ref="master"} 0
 gitlab_ci_pipeline_run_count{project="foo/bar",ref="1.0"} 0
-# HELP gitlab_ci_pipeline_status GitLab CI pipeline current status
-# TYPE gitlab_ci_pipeline_status gauge
-gitlab_ci_pipeline_status{project="bar/project",ref="master",status="failed"} 0
-gitlab_ci_pipeline_status{project="bar/project",ref="master",status="running"} 0
-gitlab_ci_pipeline_status{project="bar/project",ref="master",status="success"} 1
-gitlab_ci_pipeline_status{project="foo/project",ref="master",status="failed"} 0
-gitlab_ci_pipeline_status{project="bar/project",ref="dev",status="running"} 0
-gitlab_ci_pipeline_status{project="bar/project",ref="dev",status="success"} 1
-gitlab_ci_pipeline_status{project="foo/bar",ref="master",status="running"} 0
-gitlab_ci_pipeline_status{project="foo/bar",ref="master",status="success"} 1
-gitlab_ci_pipeline_status{project="foo/bar",ref="1.0",status="running"} 0
-gitlab_ci_pipeline_status{project="foo/bar",ref="1.0",status="success"} 1
 # HELP gitlab_ci_pipeline_time_since_last_run_seconds Elapsed time since most recent GitLab CI pipeline run.
 # TYPE gitlab_ci_pipeline_time_since_last_run_seconds gauge
 gitlab_ci_pipeline_time_since_last_run_seconds{project="bar/project",ref="master"} 87627
