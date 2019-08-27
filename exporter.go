@@ -55,14 +55,6 @@ type wildcard struct {
 }
 
 var (
-	timeSinceLastRun = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_time_since_last_run_seconds",
-			Help: "Elapsed time since most recent GitLab CI pipeline run.",
-		},
-		[]string{"project", "ref"},
-	)
-
 	lastRunDuration = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_last_run_duration_seconds",
@@ -70,6 +62,23 @@ var (
 		},
 		[]string{"project", "ref"},
 	)
+
+	lastRunID = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_last_run_id",
+			Help: "ID of the most recent pipeline",
+		},
+		[]string{"project", "ref"},
+	)
+
+	lastRunStatus = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_last_run_status",
+			Help: "Status of the most recent pipeline",
+		},
+		[]string{"project", "ref", "status"},
+	)
+
 	runCount = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "gitlab_ci_pipeline_run_count",
@@ -78,12 +87,12 @@ var (
 		[]string{"project", "ref"},
 	)
 
-	status = prometheus.NewGaugeVec(
+	timeSinceLastRun = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_status",
-			Help: "GitLab CI pipeline current status",
+			Name: "gitlab_ci_pipeline_time_since_last_run_seconds",
+			Help: "Elapsed time since most recent GitLab CI pipeline run.",
 		},
-		[]string{"project", "ref", "status"},
+		[]string{"project", "ref"},
 	)
 )
 
@@ -328,12 +337,13 @@ func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
 			if len(pipelines) > 0 {
 				lastPipeline, _, _ = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
 				lastRunDuration.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.Duration))
+				lastRunID.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.ID))
 
 				for _, s := range []string{"success", "failed", "running"} {
 					if s == lastPipeline.Status {
-						status.WithLabelValues(gp.PathWithNamespace, ref, s).Set(1)
+						lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(1)
 					} else {
-						status.WithLabelValues(gp.PathWithNamespace, ref, s).Set(0)
+						lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(0)
 					}
 				}
 			} else {
@@ -362,10 +372,11 @@ func (c *client) pollProjects() {
 }
 
 func init() {
-	prometheus.MustRegister(timeSinceLastRun)
 	prometheus.MustRegister(lastRunDuration)
+	prometheus.MustRegister(lastRunID)
+	prometheus.MustRegister(lastRunStatus)
 	prometheus.MustRegister(runCount)
-	prometheus.MustRegister(status)
+	prometheus.MustRegister(timeSinceLastRun)
 }
 
 func run(ctx *cli.Context) error {

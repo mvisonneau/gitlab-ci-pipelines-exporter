@@ -9,7 +9,12 @@ and this project adheres to [0ver](https://0ver.org).
 
 ### Added
 
+- New `gitlab_ci_pipeline_last_run_id` metric
 - Added `skip_tls_verify` config parameter for the GitLab client
+
+### Changed
+
+- Renamed `gitlab_ci_pipeline_status` metric into `gitlab_ci_pipeline_last_run_status`
 
 ## [0.2.4] - 2019-08-02
 
