@@ -15,6 +15,7 @@ and this project adheres to [0ver](https://0ver.org).
 ### Changed
 
 - Renamed `gitlab_ci_pipeline_status` metric into `gitlab_ci_pipeline_last_run_status`
+- Initialize `gitlab_ci_pipeline_run_count` with a value of `0` when the exporter starts
 
 ## [0.2.4] - 2019-08-02
 

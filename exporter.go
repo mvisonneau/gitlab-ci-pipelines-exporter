@@ -327,6 +327,8 @@ func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
 	log.Infof("Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
 	var lastPipeline *gitlab.Pipeline
 
+	runCount.WithLabelValues(gp.PathWithNamespace, ref).Add(0)
+
 	for {
 		pipelines, _, _ := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
 		if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
