@@ -12,7 +12,8 @@ and this project adheres to [0ver](https://0ver.org).
 - New `gitlab_ci_pipeline_last_run_id` metric
 - Added `skip_tls_verify` config parameter for the GitLab client
 - Added `-c` and `-l` aliases for `config` and `listen-adress` flags
- 
+- Backoff mechanism for pollings refs with no pipelines
+
 ### Changed
 
 - Renamed `gitlab_ci_pipeline_status` metric into `gitlab_ci_pipeline_last_run_status`

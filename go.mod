@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
+	github.com/jpillora/backoff v0.0.0-20180909062703-3050d21c67d7
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/prometheus/client_golang v1.0.0

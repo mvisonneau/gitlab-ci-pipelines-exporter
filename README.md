@@ -32,6 +32,7 @@ gitlab:
 projects_polling_interval_seconds: 1800 # only used for wildcards
 refs_polling_interval_seconds: 300
 pipelines_polling_interval_seconds: 60
+pipelines_max_polling_interval_seconds: 1800 # when no pipeline exists for a given ref, the exporter will exponentially backoff up to this value
 
 # Default regexp for parsing the refs (branches and tags) to monitor (optional, default to master)
 # default_refs: "^master$"

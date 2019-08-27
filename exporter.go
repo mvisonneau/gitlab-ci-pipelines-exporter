@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
+	"github.com/jpillora/backoff"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -25,9 +26,10 @@ type config struct {
 		SkipTLSVerify bool `yaml:"skip_tls_verify"`
 	}
 
-	ProjectsPollingIntervalSeconds  int `yaml:"projects_polling_interval_seconds"`
-	RefsPollingIntervalSeconds      int `yaml:"refs_polling_interval_seconds"`
-	PipelinesPollingIntervalSeconds int `yaml:"pipelines_polling_interval_seconds"`
+	ProjectsPollingIntervalSeconds     int `yaml:"projects_polling_interval_seconds"`
+	RefsPollingIntervalSeconds         int `yaml:"refs_polling_interval_seconds"`
+	PipelinesPollingIntervalSeconds    int `yaml:"pipelines_polling_interval_seconds"`
+	PipelinesMaxPollingIntervalSeconds int `yaml:"pipelines_max_polling_interval_seconds"`
 
 	DefaultRefsRegexp string `yaml:"default_refs"`
 
@@ -329,6 +331,13 @@ func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
 
 	runCount.WithLabelValues(gp.PathWithNamespace, ref).Add(0)
 
+	b := &backoff.Backoff{
+		Min:    time.Duration(c.config.PipelinesPollingIntervalSeconds) * time.Second,
+		Max:    time.Duration(c.config.PipelinesMaxPollingIntervalSeconds) * time.Second,
+		Factor: 1.4,
+		Jitter: false,
+	}
+
 	for {
 		pipelines, _, _ := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
 		if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
@@ -355,9 +364,10 @@ func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
 
 		if lastPipeline != nil {
 			timeSinceLastRun.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds()))
+			b.Reset()
 		}
 
-		time.Sleep(time.Duration(c.config.PipelinesPollingIntervalSeconds) * time.Second)
+		time.Sleep(b.Duration())
 	}
 }
 
@@ -414,6 +424,10 @@ func run(ctx *cli.Context) error {
 
 	if config.PipelinesPollingIntervalSeconds == 0 {
 		config.PipelinesPollingIntervalSeconds = 30
+	}
+
+	if config.PipelinesMaxPollingIntervalSeconds == 0 {
+		config.PipelinesMaxPollingIntervalSeconds = 3600
 	}
 
 	log.Infof("Starting exporter")
