@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- Missing pipelines statuses from the API spec
+
 ## [0.2.5] - 2019-08-27
 
 ### Added

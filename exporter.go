@@ -350,7 +350,9 @@ func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
 				lastRunDuration.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.Duration))
 				lastRunID.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.ID))
 
-				for _, s := range []string{"success", "failed", "running"} {
+				// List of available statuses from the API spec
+				// ref: https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines
+				for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped"} {
 					if s == lastPipeline.Status {
 						lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(1)
 					} else {
