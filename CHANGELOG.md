@@ -15,6 +15,7 @@ and this project adheres to [0ver](https://0ver.org).
 
 - Fix nil pointer dereference on pollProjectRef function
 - Refactored codebase with `cli`, `cmd` and `logger` packages
+- Refactored the config and client structures, exported them
 
 ## [0.2.5] - 2019-08-27
 

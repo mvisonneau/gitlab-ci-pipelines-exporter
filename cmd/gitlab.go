@@ -10,7 +10,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-func (c *client) getProject(name string) *gitlab.Project {
+func (c *Client) getProject(name string) *gitlab.Project {
 	p, _, err := c.Projects.GetProject(name, &gitlab.GetProjectOptions{})
 	if err != nil {
 		log.Fatalf("Unable to fetch project '%v' from the GitLab API : %v", name, err.Error())
@@ -19,20 +19,20 @@ func (c *client) getProject(name string) *gitlab.Project {
 	return p
 }
 
-func (c *client) pollProjectsFromWildcards() {
-	for _, w := range c.config.Wildcards {
+func (c *Client) pollProjectsFromWildcards() {
+	for _, w := range cfg.Wildcards {
 		for _, p := range c.listProjects(&w) {
 			if !c.projectExists(p) {
 				log.Infof("Found project : %s", p.Name)
 				go c.pollProject(p)
-				c.config.Projects = append(c.config.Projects, p)
+				cfg.Projects = append(cfg.Projects, p)
 			}
 		}
 	}
 }
 
-func (c *client) projectExists(p project) bool {
-	for _, cp := range c.config.Projects {
+func (c *Client) projectExists(p Project) bool {
+	for _, cp := range cfg.Projects {
 		if p == cp {
 			return true
 		}
@@ -40,7 +40,7 @@ func (c *client) projectExists(p project) bool {
 	return false
 }
 
-func (c *client) listProjects(w *wildcard) (projects []project) {
+func (c *Client) listProjects(w *Wildcard) (projects []Project) {
 	log.Infof("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
 
 	trueVal := true
@@ -89,7 +89,7 @@ func (c *client) listProjects(w *wildcard) (projects []project) {
 		for _, gp := range gps {
 			projects = append(
 				projects,
-				project{
+				Project{
 					Name: gp.PathWithNamespace,
 					Refs: w.Refs,
 				},
@@ -106,10 +106,10 @@ func (c *client) listProjects(w *wildcard) (projects []project) {
 	return
 }
 
-func (c *client) pollRefs(projectID int, refsRegexp string) (refs []*string, err error) {
+func (c *Client) pollRefs(projectID int, refsRegexp string) (refs []*string, err error) {
 	if len(refsRegexp) == 0 {
-		if len(c.config.DefaultRefsRegexp) > 0 {
-			refsRegexp = c.config.DefaultRefsRegexp
+		if len(cfg.DefaultRefsRegexp) > 0 {
+			refsRegexp = cfg.DefaultRefsRegexp
 		} else {
 			refsRegexp = "^master$"
 		}
@@ -142,7 +142,7 @@ func (c *client) pollRefs(projectID int, refsRegexp string) (refs []*string, err
 	return
 }
 
-func (c *client) pollBranchNames(projectID int) ([]*string, error) {
+func (c *Client) pollBranchNames(projectID int) ([]*string, error) {
 	var names []*string
 
 	options := &gitlab.ListBranchesOptions{
@@ -170,7 +170,7 @@ func (c *client) pollBranchNames(projectID int) ([]*string, error) {
 	return names, nil
 }
 
-func (c *client) pollTagNames(projectID int) ([]*string, error) {
+func (c *Client) pollTagNames(projectID int) ([]*string, error) {
 	var names []*string
 
 	options := &gitlab.ListTagsOptions{
@@ -200,7 +200,7 @@ func (c *client) pollTagNames(projectID int) ([]*string, error) {
 	return names, nil
 }
 
-func (c *client) pollProject(p project) {
+func (c *Client) pollProject(p Project) {
 	var polledRefs []string
 	for {
 		gp := c.getProject(p.Name)
@@ -224,7 +224,7 @@ func (c *client) pollProject(p project) {
 			}
 		}
 
-		time.Sleep(time.Duration(c.config.RefsPollingIntervalSeconds) * time.Second)
+		time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
 	}
 }
 
@@ -237,15 +237,15 @@ func refExists(refs []string, r string) bool {
 	return false
 }
 
-func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
+func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 	log.Infof("Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
 	var lastPipeline *gitlab.Pipeline
 
 	runCount.WithLabelValues(gp.PathWithNamespace, ref).Add(0)
 
 	b := &backoff.Backoff{
-		Min:    time.Duration(c.config.PipelinesPollingIntervalSeconds) * time.Second,
-		Max:    time.Duration(c.config.PipelinesMaxPollingIntervalSeconds) * time.Second,
+		Min:    time.Duration(cfg.PipelinesPollingIntervalSeconds) * time.Second,
+		Max:    time.Duration(cfg.PipelinesMaxPollingIntervalSeconds) * time.Second,
 		Factor: 1.4,
 		Jitter: false,
 	}
@@ -295,14 +295,14 @@ func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
 	}
 }
 
-func (c *client) pollProjects() {
-	log.Infof("%d project(s) configured", len(c.config.Projects))
-	for _, p := range c.config.Projects {
+func (c *Client) pollProjects() {
+	log.Infof("%d project(s) configured", len(cfg.Projects))
+	for _, p := range cfg.Projects {
 		go c.pollProject(p)
 	}
 
 	for {
 		c.pollProjectsFromWildcards()
-		time.Sleep(time.Duration(c.config.ProjectsPollingIntervalSeconds) * time.Second)
+		time.Sleep(time.Duration(cfg.ProjectsPollingIntervalSeconds) * time.Second)
 	}
 }

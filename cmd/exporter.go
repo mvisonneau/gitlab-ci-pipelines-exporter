@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"crypto/tls"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -14,13 +12,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/xanzy/go-gitlab"
-
-	"gopkg.in/yaml.v2"
 )
 
-type client struct {
+// Client holds a GitLab client
+type Client struct {
 	*gitlab.Client
-	config *config
 }
 
 var (
@@ -88,37 +84,19 @@ func configureLogging(ctx *cli.Context) error {
 
 // Run launches the exporter
 func Run(ctx *cli.Context) error {
-	configureLogging(ctx)
-
-	configFile, err := ioutil.ReadFile(ctx.GlobalString("config"))
-	if err != nil {
-		return exit(fmt.Errorf("Couldn't open config file : %v", err.Error()), 1)
+	// Configure logger
+	lc := &logger.Config{
+		Level:  ctx.GlobalString("log-level"),
+		Format: ctx.GlobalString("log-format"),
 	}
 
-	err = yaml.Unmarshal(configFile, &cfg)
-	if err != nil {
-		return exit(fmt.Errorf("Unable to parse config file: %v", err.Error()), 1)
+	if err := lc.Configure(); err != nil {
+		return exit(err, 1)
 	}
 
-	if len(cfg.Projects) < 1 && len(cfg.Wildcards) < 1 {
-		return exit(fmt.Errorf("You need to configure at least one project/wildcard to poll, none given"), 1)
-	}
-
-	// Defining defaults polling intervals
-	if cfg.ProjectsPollingIntervalSeconds == 0 {
-		cfg.ProjectsPollingIntervalSeconds = 1800
-	}
-
-	if cfg.RefsPollingIntervalSeconds == 0 {
-		cfg.RefsPollingIntervalSeconds = 300
-	}
-
-	if cfg.PipelinesPollingIntervalSeconds == 0 {
-		cfg.PipelinesPollingIntervalSeconds = 30
-	}
-
-	if cfg.PipelinesMaxPollingIntervalSeconds == 0 {
-		cfg.PipelinesMaxPollingIntervalSeconds = 3600
+	// Parse config file
+	if err := cfg.Parse(ctx.GlobalString("config")); err != nil {
+		return exit(err, 1)
 	}
 
 	log.Infof("Starting exporter")
@@ -132,12 +110,11 @@ func Run(ctx *cli.Context) error {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.SkipTLSVerify},
 	}
 
-	c := &client{
+	c := &Client{
 		gitlab.NewClient(&http.Client{Transport: httpTransport}, cfg.Gitlab.Token),
-		&cfg,
 	}
-
 	c.SetBaseURL(cfg.Gitlab.URL)
+
 	go c.pollProjects()
 
 	// Configure liveness and readiness probes
