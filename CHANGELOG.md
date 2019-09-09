@@ -10,7 +10,7 @@ and this project adheres to [0ver](https://0ver.org).
 ### Added
 
 - Missing pipelines statuses from the API spec
-- Tests for config file parsing
+- Tests for config file parsing and some gitlab related functions
 
 ### Changed
 

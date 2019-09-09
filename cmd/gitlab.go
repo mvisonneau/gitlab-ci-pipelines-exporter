@@ -1,48 +1,44 @@
 package cmd
 
 import (
-	"os"
+	"fmt"
 	"regexp"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/jpillora/backoff"
-	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
+
+	log "github.com/sirupsen/logrus"
 )
 
-func (c *Client) getProject(name string) *gitlab.Project {
-	p, _, err := c.Projects.GetProject(name, &gitlab.GetProjectOptions{})
-	if err != nil {
-		log.Fatalf("Unable to fetch project '%v' from the GitLab API : %v", name, err.Error())
-		os.Exit(1)
-	}
-	return p
-}
-
-func (c *Client) pollProjectsFromWildcards() {
-	for _, w := range cfg.Wildcards {
-		for _, p := range c.listProjects(&w) {
-			if !c.projectExists(p) {
-				log.Infof("Found project : %s", p.Name)
-				go c.pollProject(p)
-				cfg.Projects = append(cfg.Projects, p)
-			}
-		}
-	}
-}
-
-func (c *Client) projectExists(p Project) bool {
+func projectExists(p Project) bool {
 	for _, cp := range cfg.Projects {
-		if p == cp {
+		if cmp.Equal(p, cp) {
 			return true
 		}
 	}
 	return false
 }
 
-func (c *Client) listProjects(w *Wildcard) (projects []Project) {
-	log.Infof("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
+func refExists(refs []string, r string) bool {
+	for _, ref := range refs {
+		if cmp.Equal(r, ref) {
+			return true
+		}
+	}
+	return false
+}
 
+func (c *Client) getProject(name string) (*gitlab.Project, error) {
+	p, _, err := c.Projects.GetProject(name, &gitlab.GetProjectOptions{})
+	return p, err
+}
+
+func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
+	log.Infof("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
+	
+	projects := []Project{}
 	trueVal := true
 	falseVal := false
 	listOptions := gitlab.ListOptions{
@@ -77,13 +73,11 @@ func (c *Client) listProjects(w *Wildcard) (projects []Project) {
 				},
 			)
 		default:
-			log.Fatalf("Invalid owner kind '%s' must be either 'user' or 'group'", w.Owner.Kind)
-			os.Exit(1)
+			return projects, fmt.Errorf("Invalid owner kind '%s' must be either 'user' or 'group'", w.Owner.Kind)
 		}
 
 		if err != nil {
-			log.Fatalf("Unable to list projects with search pattern '%s' from the GitLab API : %v", w.Search, err.Error())
-			os.Exit(1)
+			return projects, fmt.Errorf("Unable to list projects with search pattern '%s' from the GitLab API : %v", w.Search, err.Error())
 		}
 
 		for _, gp := range gps {
@@ -103,7 +97,24 @@ func (c *Client) listProjects(w *Wildcard) (projects []Project) {
 		listOptions.Page = resp.NextPage
 	}
 
-	return
+	return projects, nil
+}
+
+func (c *Client) pollProjectsFromWildcards() {
+	for _, w := range cfg.Wildcards {
+		foundProjects, err := c.listProjects(&w)
+		if err != nil {
+			log.Error(err.Error())
+		} else {
+			for _, p := range foundProjects {
+				if !projectExists(p) {
+					log.Infof("Found project : %s", p.Name)
+					go c.pollProject(p)
+					cfg.Projects = append(cfg.Projects, p)
+				}
+			}
+		}
+	}
 }
 
 func (c *Client) pollRefs(projectID int, refsRegexp string) (refs []*string, err error) {
@@ -203,7 +214,14 @@ func (c *Client) pollTagNames(projectID int) ([]*string, error) {
 func (c *Client) pollProject(p Project) {
 	var polledRefs []string
 	for {
-		gp := c.getProject(p.Name)
+		log.Infof("Fetching project : %s", p.Name)
+		gp, err := c.getProject(p.Name)
+		if err != nil {
+			log.Errorf("Unable to fetch project '%s' from the GitLab API : %v", p.Name, err.Error())
+			time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
+			continue
+		}
+
 		log.Infof("Polling refs for project : %s", p.Name)
 
 		refs, err := c.pollRefs(gp.ID, p.Refs)
@@ -211,30 +229,20 @@ func (c *Client) pollProject(p Project) {
 			log.Warnf("Could not fetch refs for project '%s'", p.Name)
 		}
 
-		if len(refs) == 0 {
-			log.Warnf("No refs found for for project '%s'", p.Name)
-			return
-		}
-
-		for _, ref := range refs {
-			if !refExists(polledRefs, *ref) {
-				log.Infof("Found ref '%s' for project '%s'", *ref, p.Name)
-				go c.pollProjectRef(gp, *ref)
-				polledRefs = append(polledRefs, *ref)
+		if len(refs) > 0 {
+			for _, ref := range refs {
+				if !refExists(polledRefs, *ref) {
+					log.Infof("Found ref '%s' for project '%s'", *ref, p.Name)
+					go c.pollProjectRef(gp, *ref)
+					polledRefs = append(polledRefs, *ref)
+				}
 			}
+		} else {
+			log.Warnf("No refs found for for project '%s'", p.Name)
 		}
 
 		time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
 	}
-}
-
-func refExists(refs []string, r string) bool {
-	for _, ref := range refs {
-		if r == ref {
-			return true
-		}
-	}
-	return false
 }
 
 func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
