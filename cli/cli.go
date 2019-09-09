@@ -1,15 +1,16 @@
-package main
+package cli
 
 import (
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/cmd"
 	"github.com/urfave/cli"
 )
 
-// runCli : Generates cli configuration for the application
-func runCli() (app *cli.App) {
+// Init : Generates CLI configuration for the application
+func Init(version *string) (app *cli.App) {
 	app = cli.NewApp()
 	app.Name = "gitlab-ci-pipelines-exporter"
-	app.Version = version
-	app.Usage = "Export metrics about GitLab CI pipeliens statuses"
+	app.Version = *version
+	app.Usage = "Export metrics about GitLab CI pipelines statuses"
 	app.EnableBashCompletion = true
 
 	app.Flags = []cli.Flag{
@@ -39,7 +40,7 @@ func runCli() (app *cli.App) {
 		},
 	}
 
-	app.Action = run
+	app.Action = cmd.Run
 
 	return
 }

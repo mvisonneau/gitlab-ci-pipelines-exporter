@@ -1,101 +1,13 @@
-package main
+package cmd
 
 import (
-	"crypto/tls"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"regexp"
 	"time"
 
-	"github.com/heptiolabs/healthcheck"
 	"github.com/jpillora/backoff"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 	"github.com/xanzy/go-gitlab"
-
-	"gopkg.in/yaml.v2"
-)
-
-type config struct {
-	Gitlab struct {
-		URL           string
-		Token         string
-		SkipTLSVerify bool `yaml:"skip_tls_verify"`
-	}
-
-	ProjectsPollingIntervalSeconds     int `yaml:"projects_polling_interval_seconds"`
-	RefsPollingIntervalSeconds         int `yaml:"refs_polling_interval_seconds"`
-	PipelinesPollingIntervalSeconds    int `yaml:"pipelines_polling_interval_seconds"`
-	PipelinesMaxPollingIntervalSeconds int `yaml:"pipelines_max_polling_interval_seconds"`
-
-	DefaultRefsRegexp string `yaml:"default_refs"`
-
-	Projects  []project
-	Wildcards []wildcard
-}
-
-type client struct {
-	*gitlab.Client
-	config *config
-}
-
-type project struct {
-	Name string
-	Refs string
-}
-
-type wildcard struct {
-	Search string
-	Owner  struct {
-		Name string
-		Kind string
-	}
-	Refs string
-}
-
-var (
-	lastRunDuration = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_run_duration_seconds",
-			Help: "Duration of last pipeline run",
-		},
-		[]string{"project", "ref"},
-	)
-
-	lastRunID = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_run_id",
-			Help: "ID of the most recent pipeline",
-		},
-		[]string{"project", "ref"},
-	)
-
-	lastRunStatus = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_run_status",
-			Help: "Status of the most recent pipeline",
-		},
-		[]string{"project", "ref", "status"},
-	)
-
-	runCount = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "gitlab_ci_pipeline_run_count",
-			Help: "GitLab CI pipeline run count",
-		},
-		[]string{"project", "ref"},
-	)
-
-	timeSinceLastRun = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_time_since_last_run_seconds",
-			Help: "Elapsed time since most recent GitLab CI pipeline run.",
-		},
-		[]string{"project", "ref"},
-	)
 )
 
 func (c *client) getProject(name string) *gitlab.Project {
@@ -393,84 +305,4 @@ func (c *client) pollProjects() {
 		c.pollProjectsFromWildcards()
 		time.Sleep(time.Duration(c.config.ProjectsPollingIntervalSeconds) * time.Second)
 	}
-}
-
-func init() {
-	prometheus.MustRegister(lastRunDuration)
-	prometheus.MustRegister(lastRunID)
-	prometheus.MustRegister(lastRunStatus)
-	prometheus.MustRegister(runCount)
-	prometheus.MustRegister(timeSinceLastRun)
-}
-
-func run(ctx *cli.Context) error {
-	configureLogging(ctx.GlobalString("log-level"), ctx.GlobalString("log-format"))
-
-	var config config
-
-	configFile, err := ioutil.ReadFile(ctx.GlobalString("config"))
-	if err != nil {
-		log.Fatalf("Couldn't open config file : %v", err.Error())
-		os.Exit(1)
-	}
-
-	err = yaml.Unmarshal(configFile, &config)
-	if err != nil {
-		log.Fatalf("Unable to parse config file: %v", err.Error())
-		os.Exit(1)
-	}
-
-	if len(config.Projects) < 1 && len(config.Wildcards) < 1 {
-		log.Fatalf("You need to configure at least one project/wildcard to poll, none given")
-		os.Exit(1)
-	}
-
-	// Defining defaults polling intervals
-	if config.ProjectsPollingIntervalSeconds == 0 {
-		config.ProjectsPollingIntervalSeconds = 1800
-	}
-
-	if config.RefsPollingIntervalSeconds == 0 {
-		config.RefsPollingIntervalSeconds = 300
-	}
-
-	if config.PipelinesPollingIntervalSeconds == 0 {
-		config.PipelinesPollingIntervalSeconds = 30
-	}
-
-	if config.PipelinesMaxPollingIntervalSeconds == 0 {
-		config.PipelinesMaxPollingIntervalSeconds = 3600
-	}
-
-	log.Infof("Starting exporter")
-	log.Infof("Configured GitLab endpoint : %s", config.Gitlab.URL)
-	log.Infof("Polling projects every %vs", config.ProjectsPollingIntervalSeconds)
-	log.Infof("Polling refs every %vs", config.RefsPollingIntervalSeconds)
-	log.Infof("Polling pipelines every %vs", config.PipelinesPollingIntervalSeconds)
-
-	// Configure GitLab client
-	httpTransport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: config.Gitlab.SkipTLSVerify},
-	}
-
-	c := &client{
-		gitlab.NewClient(&http.Client{Transport: httpTransport}, config.Gitlab.Token),
-		&config,
-	}
-
-	c.SetBaseURL(config.Gitlab.URL)
-	go c.pollProjects()
-
-	// Configure liveness and readiness probes
-	health := healthcheck.NewHandler()
-	health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(config.Gitlab.URL+"/users/sign_in", 5*time.Second))
-
-	// Expose the registered metrics via HTTP
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health/live", health.LiveEndpoint)
-	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
-	mux.Handle("/metrics", promhttp.Handler())
-	log.Fatal(http.ListenAndServe(ctx.GlobalString("listen-address"), mux))
-
-	return nil
 }
