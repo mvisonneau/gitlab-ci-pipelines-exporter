@@ -70,19 +70,6 @@ func init() {
 	prometheus.MustRegister(timeSinceLastRun)
 }
 
-func configureLogging(ctx *cli.Context) error {
-	lc := &logger.Config{
-		Level:  ctx.GlobalString("log-level"),
-		Format: ctx.GlobalString("log-format"),
-	}
-
-	if err := lc.Configure(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Run launches the exporter
 func Run(ctx *cli.Context) error {
 	// Configure logger
