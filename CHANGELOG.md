@@ -10,12 +10,14 @@ and this project adheres to [0ver](https://0ver.org).
 ### Added
 
 - Missing pipelines statuses from the API spec
+- Tests for config file parsing
 
 ### Changed
 
 - Fix nil pointer dereference on pollProjectRef function
 - Refactored codebase with `cli`, `cmd` and `logger` packages
 - Refactored the config and client structures, exported them
+- Switched from yaml.v2 to yaml.v3
 
 ## [0.2.5] - 2019-08-27
 

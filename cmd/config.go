@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Config represents what can be defined as a yaml config file
@@ -40,6 +40,7 @@ type Wildcard struct {
 	Refs string
 }
 
+// Default values
 const (
 	defaultProjectsPollingIntervalSeconds     = 1800
 	defaultRefsPollingIntervalSeconds         = 300
@@ -53,12 +54,12 @@ var cfg *Config
 func (cfg *Config) Parse(path string) error {
 	configFile, err := ioutil.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("Couldn't open config file : %v", err.Error())
+		return fmt.Errorf("Couldn't open config file : %s", err.Error())
 	}
 
 	err = yaml.Unmarshal(configFile, cfg)
 	if err != nil {
-		return fmt.Errorf("Unable to parse config file: %v", err.Error())
+		return fmt.Errorf("Unable to parse config file: %s", err.Error())
 	}
 
 	if len(cfg.Projects) < 1 && len(cfg.Wildcards) < 1 {

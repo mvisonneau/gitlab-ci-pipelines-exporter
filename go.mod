@@ -3,6 +3,7 @@ module github.com/mvisonneau/gitlab-ci-pipelines-exporter
 go 1.12
 
 require (
+	github.com/google/go-cmp v0.3.0
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/jpillora/backoff v0.0.0-20180909062703-3050d21c67d7
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -12,4 +13,5 @@ require (
 	github.com/urfave/cli v1.21.0
 	github.com/xanzy/go-gitlab v0.20.1
 	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v3 v3.0.0-20190905181640-827449938966
 )

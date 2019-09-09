@@ -62,6 +62,7 @@ var (
 )
 
 func init() {
+	cfg = &Config{}
 	prometheus.MustRegister(lastRunDuration)
 	prometheus.MustRegister(lastRunID)
 	prometheus.MustRegister(lastRunStatus)
