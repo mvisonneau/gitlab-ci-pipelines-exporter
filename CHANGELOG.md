@@ -11,6 +11,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 - Missing pipelines statuses from the API spec
 
+### Changed
+
+- Fix nil pointer dereference on pollProjectRef function
+
 ## [0.2.5] - 2019-08-27
 
 ### Added

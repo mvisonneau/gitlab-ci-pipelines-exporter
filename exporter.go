@@ -339,24 +339,34 @@ func (c *client) pollProjectRef(gp *gitlab.Project, ref string) {
 	}
 
 	for {
-		pipelines, _, _ := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
+		pipelines, _, err := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
+		if err != nil {
+			log.Errorf("ListProjectPipelines: %s", err.Error())
+		}
+
 		if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
 			if lastPipeline != nil {
 				runCount.WithLabelValues(gp.PathWithNamespace, ref).Inc()
 			}
 
 			if len(pipelines) > 0 {
-				lastPipeline, _, _ = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
-				lastRunDuration.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.Duration))
-				lastRunID.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.ID))
+				lastPipeline, _, err = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
+				if err != nil {
+					log.Errorf("GetPipeline: %s", err.Error())
+				}
 
-				// List of available statuses from the API spec
-				// ref: https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines
-				for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped"} {
-					if s == lastPipeline.Status {
-						lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(1)
-					} else {
-						lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(0)
+				if lastPipeline != nil {
+					lastRunDuration.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.Duration))
+					lastRunID.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.ID))
+
+					// List of available statuses from the API spec
+					// ref: https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines
+					for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped"} {
+						if s == lastPipeline.Status {
+							lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(1)
+						} else {
+							lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(0)
+						}
 					}
 				}
 			} else {
