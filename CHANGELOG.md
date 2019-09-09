@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+## [0.2.6] - 2019-09-09
+
 ### Added
 
 - Missing pipelines statuses from the API spec
@@ -117,7 +119,8 @@ and this project adheres to [0ver](https://0ver.org).
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.5...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.6...HEAD
+[0.2.6]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.6
 [0.2.5]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.5
 [0.2.4]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.4
 [0.2.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.3
