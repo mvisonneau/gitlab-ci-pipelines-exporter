@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"testing"
 	"net/http"
 	"net/http/httptest"
+	"testing"
+
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -27,9 +28,9 @@ func testMethod(t *testing.T, r *http.Request, want string) {
 
 // Functions testing
 func TestProjectExists(t *testing.T) {
-	foo := Project{	Name: "foo"}
-	bar := Project{	Name: "bar"}
-	
+	foo := Project{Name: "foo"}
+	bar := Project{Name: "bar"}
+
 	cfg = &Config{
 		Projects: []Project{foo},
 	}
@@ -60,7 +61,7 @@ func TestGetProject(t *testing.T) {
 	defer server.Close()
 
 	project := "foo/bar"
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/%s",project),
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/%s", project),
 		func(w http.ResponseWriter, r *http.Request) {
 			testMethod(t, r, "GET")
 			fmt.Fprint(w, `{"id":1}`)
@@ -96,7 +97,7 @@ func TestListUserProjects(t *testing.T) {
 		Refs: "^master|1.0$",
 	}
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects",w.Owner.Name),
+	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
 			testMethod(t, r, "GET")
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
@@ -108,7 +109,6 @@ func TestListUserProjects(t *testing.T) {
 	}
 
 	if len(projects) != 2 {
-		t.Fatalf("Expected to get 2 projects, got %d", len(projects) )
+		t.Fatalf("Expected to get 2 projects, got %d", len(projects))
 	}
 }
-

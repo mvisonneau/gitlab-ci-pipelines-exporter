@@ -37,7 +37,7 @@ func (c *Client) getProject(name string) (*gitlab.Project, error) {
 
 func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 	log.Infof("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
-	
+
 	projects := []Project{}
 	trueVal := true
 	falseVal := false
