@@ -71,7 +71,7 @@ func init() {
 }
 
 // Run launches the exporter
-func Run(ctx *cli.Context) error {
+func Run(ctx *cli.Context) *cli.ExitError {
 	// Configure logger
 	lc := &logger.Config{
 		Level:  ctx.GlobalString("log-level"),
