@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/xanzy/go-gitlab"
@@ -110,5 +111,91 @@ func TestListUserProjects(t *testing.T) {
 
 	if len(projects) != 2 {
 		t.Fatalf("Expected to get 2 projects, got %d", len(projects))
+	}
+}
+
+func TestListGroupProjects(t *testing.T) {
+	mux, server, c := getMockedGitlabClient()
+	defer server.Close()
+
+	w := &Wildcard{
+		Search: "bar",
+		Owner: struct {
+			Name string
+			Kind string
+		}{
+			Name: "foo",
+			Kind: "group",
+		},
+		Refs: "^master|1.0$",
+	}
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/groups/%s/projects", w.Owner.Name),
+		func(w http.ResponseWriter, r *http.Request) {
+			testMethod(t, r, "GET")
+			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
+		})
+
+	projects, err := c.listProjects(w)
+	if err != nil {
+		t.Fatalf("Did not expect this error %v", err)
+	}
+
+	if len(projects) != 2 {
+		t.Fatalf("Expected to get 2 projects, got %d", len(projects))
+	}
+}
+
+func TestListProjectsInvalidOwnerKind(t *testing.T) {
+	_, server, c := getMockedGitlabClient()
+	defer server.Close()
+
+	w := &Wildcard{
+		Search: "bar",
+		Owner: struct {
+			Name string
+			Kind string
+		}{
+			Name: "foo",
+			Kind: "blah",
+		},
+		Refs: "",
+	}
+
+	_, err := c.listProjects(w)
+	if err.Error() != "Invalid owner kind 'blah' must be either 'user' or 'group'" {
+		t.Fatalf("Did not expect this error %v", err)
+	}
+}
+
+func TestListProjectsAPIError(t *testing.T) {
+	mux, server, c := getMockedGitlabClient()
+	defer server.Close()
+
+	w := &Wildcard{
+		Search: "bar",
+		Owner: struct {
+			Name string
+			Kind string
+		}{
+			Name: "foo",
+			Kind: "user",
+		},
+		Refs: "",
+	}
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500 - Something bad happened!"))
+		})
+
+	_, err := c.listProjects(w)
+	if err == nil {
+		t.Fatal("Expected an error, got nil")
+	}
+
+	if !strings.HasPrefix(err.Error(), "Unable to list projects with search pattern") {
+		t.Fatalf("Did not expect this error %v", err)
 	}
 }
