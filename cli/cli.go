@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"io/ioutil"
+
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/cmd"
 	"github.com/urfave/cli"
 )
@@ -41,6 +43,9 @@ func Init(version *string) (app *cli.App) {
 	}
 
 	app.Action = cmd.Run
+
+	// Disable error handling from urfave/cli
+	cli.ErrWriter = ioutil.Discard
 
 	return
 }

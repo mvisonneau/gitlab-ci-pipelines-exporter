@@ -31,7 +31,7 @@ test: ## Run the tests against the codebase
 
 .PHONY: install
 install: ## Build and install locally the binary (dev purpose)
-	go install .
+	go build .
 
 .PHONY: build
 build: ## Build the binaries

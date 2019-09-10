@@ -1,8 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
@@ -71,7 +75,7 @@ func init() {
 }
 
 // Run launches the exporter
-func Run(ctx *cli.Context) *cli.ExitError {
+func Run(ctx *cli.Context) error {
 	// Configure logger
 	lc := &logger.Config{
 		Level:  ctx.GlobalString("log-level"),
@@ -109,12 +113,37 @@ func Run(ctx *cli.Context) *cli.ExitError {
 	health := healthcheck.NewHandler()
 	health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(cfg.Gitlab.URL+"/users/sign_in", 5*time.Second))
 
+	// Graceful shutdowns
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
 	// Expose the registered metrics via HTTP
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health/live", health.LiveEndpoint)
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
 	mux.Handle("/metrics", promhttp.Handler())
-	log.Fatal(http.ListenAndServe(ctx.GlobalString("listen-address"), mux))
+
+	srv := &http.Server{
+		Addr:    ctx.GlobalString("listen-address"),
+		Handler: mux,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+	log.Info("exporter started!")
+
+	<-done
+	log.Print("exporter stopped!")
+
+	ctxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctxt); err != nil {
+		log.Fatalf("exporter shutdown failed: %+v", err)
+	}
 
 	return exit(nil, 0)
 }
@@ -122,8 +151,8 @@ func Run(ctx *cli.Context) *cli.ExitError {
 func exit(err error, exitCode int) *cli.ExitError {
 	if err != nil {
 		log.Error(err.Error())
-		return cli.NewExitError("", exitCode)
+		return cli.NewExitError(err.Error(), exitCode)
 	}
 
-	return cli.NewExitError("", 0)
+	return cli.NewExitError("", exitCode)
 }

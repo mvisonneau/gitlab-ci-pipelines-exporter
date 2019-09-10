@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
+	"strings"
 
 	"testing"
 
@@ -12,8 +14,9 @@ func TestRunWrongLogLevel(t *testing.T) {
 	set := flag.NewFlagSet("", 0)
 	set.String("log-level", "foo", "")
 	set.String("log-format", "json", "")
-	if err := Run(cli.NewContext(nil, set, nil)); err.ExitCode() != 1 {
-		t.Fatal("Expected to get a non-zero exit code")
+	fmt.Println(Run(cli.NewContext(nil, set, nil)))
+	if err := Run(cli.NewContext(nil, set, nil)); !strings.HasPrefix(err.Error(), "not a valid logrus Level") {
+		t.Fatalf("Unexpected error : %v", err)
 	}
 }
 
@@ -21,8 +24,8 @@ func TestRunWrongLogType(t *testing.T) {
 	set := flag.NewFlagSet("", 0)
 	set.String("log-level", "debug", "")
 	set.String("log-format", "foo", "")
-	if err := Run(cli.NewContext(nil, set, nil)); err.ExitCode() != 1 {
-		t.Fatal("Expected to get a non-zero exit code")
+	if err := Run(cli.NewContext(nil, set, nil)); !strings.HasPrefix(err.Error(), "Invalid log format") {
+		t.Fatalf("Unexpected error : %v", err)
 	}
 }
 
@@ -31,7 +34,7 @@ func TestRunInvalidConfigFile(t *testing.T) {
 	set.String("log-level", "debug", "")
 	set.String("log-format", "json", "")
 	set.String("config", "path_does_not_exist", "")
-	if err := Run(cli.NewContext(nil, set, nil)); err.ExitCode() != 1 {
-		t.Fatal("Expected to get a non-zero exit code")
+	if err := Run(cli.NewContext(nil, set, nil)); !strings.HasPrefix(err.Error(), "Couldn't open config file :") {
+		t.Fatalf("Unexpected error : %v", err)
 	}
 }

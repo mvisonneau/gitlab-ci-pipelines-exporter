@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- Graceful shutdowns
+
 ## [0.2.6] - 2019-09-09
 
 ### Added
