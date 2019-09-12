@@ -10,6 +10,8 @@ and this project adheres to [0ver](https://0ver.org).
 ### Added
 
 - Graceful shutdowns
+- Configurable health URLs for readiness checks
+- Disabled readiness checks if SkipTLSVerification is set
 
 ### Changed
 

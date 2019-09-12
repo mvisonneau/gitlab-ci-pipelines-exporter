@@ -26,7 +26,8 @@ If you are solely interested into trying it out, have a look into the [example/]
 gitlab:
   url: https://gitlab.example.com
   token: xrN14n9-ywvAFxxxxxx
-  # skip_tls_verify: false
+  # health_url: https://gitlab.example.com/-/health  # Alternative URL for determining health of GitLab API (readiness probe)
+  # skip_tls_verify: false                           # disable TLS verification
 
 # Custom waiting time between polls for projects, their refs and pipelines (in seconds, optional)
 projects_polling_interval_seconds: 1800 # only used for wildcards

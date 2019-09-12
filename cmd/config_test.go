@@ -67,6 +67,7 @@ func TestParseValidConfig(t *testing.T) {
 gitlab:
   url: https://gitlab.example.com
   token: xrN14n9-ywvAFxxxxxx
+  health_url: https://gitlab.example.com/-/health
   skip_tls_verify: true
 
 projects_polling_interval_seconds: 1
@@ -100,9 +101,11 @@ wildcards:
 		Gitlab: struct {
 			URL           string "yaml:\"url\""
 			Token         string "yaml:\"token\""
+			HealthURL     string "yaml:\"health_url\""
 			SkipTLSVerify bool   "yaml:\"skip_tls_verify\""
 		}{
 			URL:           "https://gitlab.example.com",
+			HealthURL:     "https://gitlab.example.com/-/health",
 			Token:         "xrN14n9-ywvAFxxxxxx",
 			SkipTLSVerify: true,
 		},
@@ -168,10 +171,12 @@ projects:
 		Gitlab: struct {
 			URL           string "yaml:\"url\""
 			Token         string "yaml:\"token\""
+			HealthURL     string "yaml:\"health_url\""
 			SkipTLSVerify bool   "yaml:\"skip_tls_verify\""
 		}{
-			URL:           "",
+			URL:           "https://gitlab.com",
 			Token:         "",
+			HealthURL:     "https://gitlab.com/users/sign_in",
 			SkipTLSVerify: false,
 		},
 		ProjectsPollingIntervalSeconds:     defaultProjectsPollingIntervalSeconds,

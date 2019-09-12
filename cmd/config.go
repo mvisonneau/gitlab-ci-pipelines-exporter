@@ -10,8 +10,9 @@ import (
 // Config represents what can be defined as a yaml config file
 type Config struct {
 	Gitlab struct {
-		URL           string `yaml:"url"`             // The URL of the GitLab server/api
+		URL           string `yaml:"url"`             // The URL of the GitLab server/api (default to https://gitlab.com)
 		Token         string `yaml:"token"`           // Token to use to authenticate against the API
+		HealthURL     string `yaml:"health_url"`      // The URL of the GitLab server/api health endpoint (default to /users/sign_in which is publicly available on gitlab.com)
 		SkipTLSVerify bool   `yaml:"skip_tls_verify"` // Whether to validate TLS certificates or not
 	}
 
@@ -81,6 +82,15 @@ func (cfg *Config) Parse(path string) error {
 
 	if cfg.PipelinesMaxPollingIntervalSeconds == 0 {
 		cfg.PipelinesMaxPollingIntervalSeconds = defaultPipelinesMaxPollingIntervalSeconds
+	}
+
+	// Default GitLab URLs
+	if cfg.Gitlab.URL == "" {
+		cfg.Gitlab.URL = "https://gitlab.com"
+	}
+
+	if cfg.Gitlab.HealthURL == "" {
+		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/users/sign_in", cfg.Gitlab.URL)
 	}
 
 	return nil

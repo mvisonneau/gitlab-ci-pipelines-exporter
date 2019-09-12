@@ -111,7 +111,11 @@ func Run(ctx *cli.Context) error {
 
 	// Configure liveness and readiness probes
 	health := healthcheck.NewHandler()
-	health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(cfg.Gitlab.URL+"/users/sign_in", 5*time.Second))
+	if !cfg.Gitlab.SkipTLSVerify {
+		health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(cfg.Gitlab.HealthURL, 5*time.Second))
+	} else {
+		log.Warn("TLS verification has been disabled. Readiness checks won't be operated.")
+	}
 
 	// Graceful shutdowns
 	done := make(chan os.Signal, 1)
