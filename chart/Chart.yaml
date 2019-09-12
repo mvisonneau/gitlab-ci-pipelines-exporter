@@ -1,4 +1,4 @@
 name: gitlab-ci-pipelines-exporter
-version: 0.2.6
-appVersion: 0.2.6
+version: 0.2.7
+appVersion: 0.2.7
 description: Prometheus / OpenMetrics exporter for GitLab CI pipelines insights
