@@ -1,6 +1,5 @@
 ---
 replicas: 1
-deploymentStrategy: RollingUpdate
 
 image:
   repository: mvisonneau/gitlab-ci-pipelines-exporter
@@ -13,6 +12,8 @@ service:
   annotations: {}
   labels: {}
 
+## Resources to allocate to the pods
+##
 resources: {}
 #  limits:
 #    cpu: 50m
@@ -20,6 +21,27 @@ resources: {}
 #  requests:
 #    cpu: 50m
 #    memory: 64Mi
+
+## Deployment strategy
+##
+strategy:
+  type: RollingUpdate
+
+## Liveness and Readiness probes
+##
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 8080
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8080
+  initialDelaySeconds: 5
+  timeoutSeconds: 5
+  failureThreshold: 3
+  periodSeconds: 30
 
 ## Node labels for pod assignment
 ## ref: https://kubernetes.io/docs/user-guide/node-selection/
@@ -41,6 +63,14 @@ affinity: {}
 ##
 securityContext:
   # runAsUser: 65534  # run as nobody user
+
+## Arguments for the exporter binary
+##
+args:
+  - --config
+  - /etc/config.yml
+  - --log-format
+  - json
 
 ## Actual configuration of the exporter
 ##

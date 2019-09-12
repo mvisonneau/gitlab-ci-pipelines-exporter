@@ -7,20 +7,17 @@ metadata:
     chart: {{ template "exporter.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-{{- with .Values.annotations }}
-  annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
+  {{- with .Values.annotations }}
+  annotations: {{ toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: {{ template "exporter.name" . }}
       release: {{ .Release.Name }}
-  strategy:
-    type: {{ .Values.deploymentStrategy }}
-  {{- if ne .Values.deploymentStrategy "RollingUpdate" }}
-    rollingUpdate: null
+  {{- with .Values.strategy }}
+  strategy: {{ toYaml . | nindent 4 }}
   {{- end }}
   template:
     metadata:
@@ -39,13 +36,12 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /usr/local/bin/gitlab-ci-pipelines-exporter
-          args:
-            - --config
-            - /etc/config.yml
-        {{- with .Values.envVariables }}
-          env:
-{{ toYaml . | indent 16 }}
-        {{- end }}
+          {{- with .Values.args }}
+          args: {{ toYaml . | nindent 16 }}
+          {{- end }}
+          {{- with .Values.envVariables }}
+          env: {{ toYaml . | nindent 16 }}
+          {{- end }}
           volumeMounts:
             - name: config
               mountPath: /etc/config.yml
@@ -54,36 +50,27 @@ spec:
             - name: exporter
               containerPort: 8080
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /health/live
-              port: 8080
-          readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: 8080
-            initialDelaySeconds: 5
-            timeoutSeconds: 5
-            failureThreshold: 3
-            periodSeconds: 30
-          resources:
-{{ toYaml .Values.resources | indent 12 }}
-    {{- with .Values.nodeSelector }}
-      nodeSelector:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.affinity }}
-      affinity:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
-      tolerations:
-{{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.securityContext }}
-      securityContext:
-{{ toYaml . | indent 8 }}
-    {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe: {{ toYaml . | nindent 16 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe: {{ toYaml . | nindent 16 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.securityContext }}
+      securityContext: {{ toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
         - name: config
           secret:

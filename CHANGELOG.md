@@ -11,6 +11,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 - Graceful shutdowns
 
+### Changed
+
+- Got more flexibility for the helm chart configuration
+
 ## [0.2.6] - 2019-09-09
 
 ### Added
