@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Changed
+
+- Upgraded to go `1.13`
+
 ## [0.2.7] - 2019-09-12
 
 ### Added
