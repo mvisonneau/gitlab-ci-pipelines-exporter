@@ -128,8 +128,9 @@ wildcards:
 			{
 				Search: "bar",
 				Owner: struct {
-					Name string
-					Kind string
+					Name             string
+					Kind             string
+					IncludeSubgroups bool `yaml:"include_subgroups"`
 				}{
 					Name: "foo",
 					Kind: "group",

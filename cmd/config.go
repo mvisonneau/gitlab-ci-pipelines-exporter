@@ -35,8 +35,9 @@ type Project struct {
 type Wildcard struct {
 	Search string
 	Owner  struct {
-		Name string
-		Kind string
+		Name             string
+		Kind             string
+		IncludeSubgroups bool `yaml:"include_subgroups"`
 	}
 	Refs string
 }

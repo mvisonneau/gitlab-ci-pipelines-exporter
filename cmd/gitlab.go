@@ -56,24 +56,32 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 			gps, resp, err = c.Projects.ListUserProjects(
 				w.Owner.Name,
 				&gitlab.ListProjectsOptions{
-					ListOptions: listOptions,
 					Archived:    &falseVal,
-					Simple:      &trueVal,
+					ListOptions: listOptions,
 					Search:      &w.Search,
+					Simple:      &trueVal,
 				},
 			)
 		case "group":
 			gps, resp, err = c.Groups.ListGroupProjects(
 				w.Owner.Name,
 				&gitlab.ListGroupProjectsOptions{
+					Archived:         &falseVal,
+					IncludeSubgroups: &w.Owner.IncludeSubgroups,
+					ListOptions:      listOptions,
+					Search:           &w.Search,
+					Simple:           &trueVal,
+				},
+			)
+		default:
+			gps, resp, err = c.Projects.ListProjects(
+				&gitlab.ListProjectsOptions{
 					ListOptions: listOptions,
 					Archived:    &falseVal,
 					Simple:      &trueVal,
 					Search:      &w.Search,
 				},
 			)
-		default:
-			return projects, fmt.Errorf("Invalid owner kind '%s' must be either 'user' or 'group'", w.Owner.Kind)
 		}
 
 		if err != nil {

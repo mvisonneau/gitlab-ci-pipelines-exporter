@@ -89,11 +89,13 @@ func TestListUserProjects(t *testing.T) {
 	w := &Wildcard{
 		Search: "bar",
 		Owner: struct {
-			Name string
-			Kind string
+			Name             string
+			Kind             string
+			IncludeSubgroups bool `yaml:"include_subgroups"`
 		}{
-			Name: "foo",
-			Kind: "user",
+			Name:             "foo",
+			Kind:             "user",
+			IncludeSubgroups: false,
 		},
 		Refs: "^master|1.0$",
 	}
@@ -121,11 +123,13 @@ func TestListGroupProjects(t *testing.T) {
 	w := &Wildcard{
 		Search: "bar",
 		Owner: struct {
-			Name string
-			Kind string
+			Name             string
+			Kind             string
+			IncludeSubgroups bool `yaml:"include_subgroups"`
 		}{
-			Name: "foo",
-			Kind: "group",
+			Name:             "foo",
+			Kind:             "group",
+			IncludeSubgroups: false,
 		},
 		Refs: "^master|1.0$",
 	}
@@ -146,25 +150,37 @@ func TestListGroupProjects(t *testing.T) {
 	}
 }
 
-func TestListProjectsInvalidOwnerKind(t *testing.T) {
-	_, server, c := getMockedGitlabClient()
+func TestListProjects(t *testing.T) {
+	mux, server, c := getMockedGitlabClient()
 	defer server.Close()
 
 	w := &Wildcard{
 		Search: "bar",
 		Owner: struct {
-			Name string
-			Kind string
+			Name             string
+			Kind             string
+			IncludeSubgroups bool `yaml:"include_subgroups"`
 		}{
-			Name: "foo",
-			Kind: "blah",
+			Name:             "",
+			Kind:             "",
+			IncludeSubgroups: false,
 		},
 		Refs: "",
 	}
 
-	_, err := c.listProjects(w)
-	if err.Error() != "Invalid owner kind 'blah' must be either 'user' or 'group'" {
+	mux.HandleFunc("/api/v4/projects",
+		func(w http.ResponseWriter, r *http.Request) {
+			testMethod(t, r, "GET")
+			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
+		})
+
+	projects, err := c.listProjects(w)
+	if err != nil {
 		t.Fatalf("Did not expect this error %v", err)
+	}
+
+	if len(projects) != 2 {
+		t.Fatalf("Expected to get 2 projects, got %d", len(projects))
 	}
 }
 
@@ -175,8 +191,9 @@ func TestListProjectsAPIError(t *testing.T) {
 	w := &Wildcard{
 		Search: "bar",
 		Owner: struct {
-			Name string
-			Kind string
+			Name             string
+			Kind             string
+			IncludeSubgroups bool `yaml:"include_subgroups"`
 		}{
 			Name: "foo",
 			Kind: "user",

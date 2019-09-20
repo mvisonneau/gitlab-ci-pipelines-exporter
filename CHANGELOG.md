@@ -7,6 +7,11 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- Capability to automatically fetch projects from subgroups
+- List projects without specifying an user or a group as owner, referring to what is discoverable by the token
+
 ### Changed
 
 - Upgraded to go `1.13`

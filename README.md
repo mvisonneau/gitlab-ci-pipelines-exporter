@@ -46,11 +46,24 @@ projects:
 
 # Dynamically fetch projects to monitor using a wildcard
 wildcards:
+  # Fetch projects belonging to a group and potentially its subgroups
   - owner:
       name: foo
       kind: group
+      includeSubgroups: true # optional (default: false)
     refs: "^master|1.0$"
-    search: 'bar' # optional
+    search: 'bar' # optional (defaults to '')
+
+  # Fetch projects belonging to a specific user
+  - owner:
+      name: bar
+      kind: user
+    refs: ".*"
+    search: 'bar' # optional (defaults to '')
+
+  # Search for projects globally
+  - refs: ".*"
+    search: 'baz' # optional (defaults to '')
 EOF
 
 # If you have docker installed, it is as easy as :
