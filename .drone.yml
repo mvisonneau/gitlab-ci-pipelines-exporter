@@ -3,6 +3,10 @@ kind: pipeline
 name: test
 
 steps:
+  - name: fetch-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
   - name: lint
     image: golang:1.12
     commands:
@@ -84,6 +88,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: 18a95398aa2be5a57958f284d9cd985a128cc2ecdd925443900af6af7cd143d1
+hmac: 2a1cc11577005b7135b921a6913c0448ece8f5fd9f9aac2cc3ffe0d29b2eb5f2
 
 ...
