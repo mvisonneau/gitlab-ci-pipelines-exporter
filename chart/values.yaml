@@ -78,17 +78,20 @@ config: {}
   # gitlab:
   #   url: https://gitlab.example.com
   #   token: xrN14n9-ywvAFxxxxxx
-  # polling_interval_seconds: 30
+  # projects_polling_interval_seconds: 300            # Interval in seconds at which to poll projects from wildcards
+  # refs_polling_interval_seconds: 5                  # Interval in seconds to fetch refs from projects
+  # pipelines_polling_interval_seconds: 10            # Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
+  # pipelines_max_polling_interval_seconds: 1800      # Maximum interval in seconds to fetch new pipelines from refs 
   # projects:
   #   - name: foo/project
-  #     refs: [master]
+  #     refs: master
   #   - name: bar/project
-  #     refs: [dev,master]
+  #     refs: master
   # wildcards:
   #   - owner:
   #       name: foo
   #       kind: group
-  #     refs: [master]
+  #     refs: master]
   #     search: 'bar' # optional
 
 ## Environment variables for the container
