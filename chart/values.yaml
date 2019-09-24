@@ -91,7 +91,7 @@ config: {}
   #   - owner:
   #       name: foo
   #       kind: group
-  #     refs: master]
+  #     refs: master
   #     search: 'bar' # optional
 
 ## Environment variables for the container
