@@ -50,7 +50,7 @@ wildcards:
   - owner:
       name: foo
       kind: group
-      includeSubgroups: true # optional (default: false)
+      include_subgroups: true # optional (default: false)
     refs: "^master|1.0$"
     search: 'bar' # optional (defaults to '')
 
