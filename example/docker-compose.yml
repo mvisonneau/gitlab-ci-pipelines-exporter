@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   gitlab-ci-pipelines-exporter:
-    image: mvisonneau/gitlab-ci-pipelines-exporter:0.2.7
+    image: mvisonneau/gitlab-ci-pipelines-exporter:0.2.8
     ports:
       - 8080:8080
     environment:
@@ -10,7 +10,7 @@ services:
       - ./gitlab-ci-pipelines-exporter/config.yml:/etc/gitlab-ci-pipelines-exporter/config.yml
 
   prometheus:
-    image: prom/prometheus:v2.11.1
+    image: prom/prometheus:v2.12.0
     ports:
       - 9090:9090
     links:
@@ -19,7 +19,7 @@ services:
       - ./prometheus/config.yml:/etc/prometheus/prometheus.yml
 
   grafana:
-    image: grafana/grafana:6.2.5
+    image: grafana/grafana:6.4.0
     ports:
       - 3000:3000
     environment:
