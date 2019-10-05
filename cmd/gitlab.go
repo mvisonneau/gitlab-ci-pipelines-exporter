@@ -276,7 +276,7 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 		}
 
 		if len(pipelines) == 0 {
-			log.Debug("Could not find any pipeline for %s:%s", gp.PathWithNamespace, ref)
+			log.Debugf("Could not find any pipeline for %s:%s", gp.PathWithNamespace, ref)
 		} else if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
 			if lastPipeline != nil {
 				runCount.WithLabelValues(gp.PathWithNamespace, ref).Inc()
