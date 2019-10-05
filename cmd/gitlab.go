@@ -267,38 +267,39 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 	}
 
 	for {
+		time.Sleep(b.Duration())
+
 		pipelines, _, err := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
 		if err != nil {
 			log.Errorf("ListProjectPipelines: %s", err.Error())
+			continue
 		}
 
-		if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
+		if len(pipelines) == 0 {
+			log.Debug("Could not find any pipeline for %s:%s", gp.PathWithNamespace, ref)
+		} else if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
 			if lastPipeline != nil {
 				runCount.WithLabelValues(gp.PathWithNamespace, ref).Inc()
 			}
 
-			if len(pipelines) > 0 {
-				lastPipeline, _, err = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
-				if err != nil {
-					log.Errorf("GetPipeline: %s", err.Error())
-				}
+			lastPipeline, _, err = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
+			if err != nil {
+				log.Errorf("GetPipeline: %s", err.Error())
+			}
 
-				if lastPipeline != nil {
-					lastRunDuration.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.Duration))
-					lastRunID.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.ID))
+			if lastPipeline != nil {
+				lastRunDuration.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.Duration))
+				lastRunID.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.ID))
 
-					// List of available statuses from the API spec
-					// ref: https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines
-					for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped"} {
-						if s == lastPipeline.Status {
-							lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(1)
-						} else {
-							lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(0)
-						}
+				// List of available statuses from the API spec
+				// ref: https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines
+				for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped"} {
+					if s == lastPipeline.Status {
+						lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(1)
+					} else {
+						lastRunStatus.WithLabelValues(gp.PathWithNamespace, ref, s).Set(0)
 					}
 				}
-			} else {
-				log.Warnf("Could not find any pipeline for %s:%s", gp.PathWithNamespace, ref)
 			}
 		}
 
@@ -306,8 +307,6 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 			timeSinceLastRun.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds()))
 			b.Reset()
 		}
-
-		time.Sleep(b.Duration())
 	}
 }
 
