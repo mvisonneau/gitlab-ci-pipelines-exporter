@@ -235,6 +235,7 @@ func (c *Client) pollProject(p Project) {
 		refs, err := c.pollRefs(gp.ID, p.Refs)
 		if err != nil {
 			log.Warnf("Could not fetch refs for project '%s'", p.Name)
+			continue
 		}
 
 		if len(refs) > 0 {
