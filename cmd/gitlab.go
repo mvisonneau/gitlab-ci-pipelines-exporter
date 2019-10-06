@@ -222,6 +222,8 @@ func (c *Client) pollTagNames(projectID int) ([]*string, error) {
 func (c *Client) pollProject(p Project) {
 	var polledRefs []string
 	for {
+		time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
+
 		log.Infof("Fetching project : %s", p.Name)
 		gp, err := c.getProject(p.Name)
 		if err != nil {
@@ -249,7 +251,6 @@ func (c *Client) pollProject(p Project) {
 			log.Warnf("No refs found for for project '%s'", p.Name)
 		}
 
-		time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
 	}
 }
 
