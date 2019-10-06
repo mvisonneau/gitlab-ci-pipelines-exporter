@@ -84,9 +84,9 @@ config: {}
   # pipelines_max_polling_interval_seconds: 1800      # Maximum interval in seconds to fetch new pipelines from refs 
   # projects:
   #   - name: foo/project
-  #     refs: master
+  #     refs: "^master|develop|1.0$"
   #   - name: bar/project
-  #     refs: master
+  #     refs: "^master|develop|1.0$"
   # wildcards:
   #   - owner:
   #       name: foo
