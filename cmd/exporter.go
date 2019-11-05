@@ -24,6 +24,14 @@ type Client struct {
 }
 
 var (
+	coverage = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_coverage",
+			Help: "Coverage of the most recent pipeline",
+		},
+		[]string{"project", "ref"},
+	)
+
 	lastRunDuration = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_last_run_duration_seconds",
@@ -67,6 +75,7 @@ var (
 
 func init() {
 	cfg = &Config{}
+	prometheus.MustRegister(coverage)
 	prometheus.MustRegister(lastRunDuration)
 	prometheus.MustRegister(lastRunID)
 	prometheus.MustRegister(lastRunStatus)

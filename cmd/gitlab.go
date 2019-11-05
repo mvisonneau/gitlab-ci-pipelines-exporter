@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -290,6 +291,14 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 			}
 
 			if lastPipeline != nil {
+				if lastPipeline.Coverage != "" {
+					if parsedCoverage, err := strconv.ParseFloat(lastPipeline.Coverage, 64); err == nil {
+						coverage.WithLabelValues(gp.PathWithNamespace, ref).Set(parsedCoverage)
+					} else {
+						log.Warnf("Could not parse coverage string returned from GitLab API: '%s' - '%s'", lastPipeline.Coverage, err.Error())
+					}
+				}
+
 				lastRunDuration.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.Duration))
 				lastRunID.WithLabelValues(gp.PathWithNamespace, ref).Set(float64(lastPipeline.ID))
 

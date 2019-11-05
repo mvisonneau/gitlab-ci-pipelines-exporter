@@ -121,6 +121,9 @@ And this is an example of the metrics you should expect to retrieve
 
 ```bash
 ~$ curl -s localhost:8080/metrics | grep gitlab_ci_pipeline
+# HELP gitlab_ci_pipeline_coverage Coverage of the most recent pipeline
+# TYPE gitlab_ci_pipeline_coverage gauge
+gitlab_ci_pipeline_coverage{project="foo/project",ref="dev"} 65.4
 # HELP gitlab_ci_pipeline_last_run_duration_seconds Duration of last pipeline run
 # TYPE gitlab_ci_pipeline_last_run_duration_seconds gauge
 gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="master"} 676
