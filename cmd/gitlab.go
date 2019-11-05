@@ -37,7 +37,7 @@ func (c *Client) getProject(name string) (*gitlab.Project, error) {
 }
 
 func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
-	log.Infof("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
+	log.Debugf("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
 
 	projects := []Project{}
 	trueVal := true
@@ -225,7 +225,7 @@ func (c *Client) pollProject(p Project) {
 	for {
 		time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
 
-		log.Infof("Fetching project : %s", p.Name)
+		log.Debugf("Fetching project : %s", p.Name)
 		gp, err := c.getProject(p.Name)
 		if err != nil {
 			log.Errorf("Unable to fetch project '%s' from the GitLab API : %v", p.Name, err.Error())
@@ -233,7 +233,7 @@ func (c *Client) pollProject(p Project) {
 			continue
 		}
 
-		log.Infof("Polling refs for project : %s", p.Name)
+		log.Debugf("Polling refs for project : %s", p.Name)
 
 		refs, err := c.pollRefs(gp.ID, p.Refs)
 		if err != nil {
@@ -257,7 +257,7 @@ func (c *Client) pollProject(p Project) {
 }
 
 func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
-	log.Infof("Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
+	log.Debugf("Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
 	var lastPipeline *gitlab.Pipeline
 
 	runCount.WithLabelValues(gp.PathWithNamespace, ref).Add(0)
@@ -322,7 +322,7 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 }
 
 func (c *Client) pollProjects() {
-	log.Infof("%d project(s) configured", len(cfg.Projects))
+	log.Infof("%d project(s) and %d wildcard(s) configured", len(cfg.Projects), len(cfg.Wildcards))
 	for _, p := range cfg.Projects {
 		go c.pollProject(p)
 	}

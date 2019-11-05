@@ -16,6 +16,7 @@ and this project adheres to [0ver](https://0ver.org).
 - Fixed a bug causing panic on DNS lookup failure
 - Enhanced the polling logic to reduce the amount of network calls
 - Bumped dependencies versions
+- Reduced default verbosity
 
 ## [0.2.8] - 2019-10-01
 

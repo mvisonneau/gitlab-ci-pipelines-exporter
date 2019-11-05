@@ -146,16 +146,16 @@ func Run(ctx *cli.Context) error {
 			log.Fatal(err)
 		}
 	}()
-	log.Info("exporter started!")
+	log.Infof("Started listening onto %s", ctx.GlobalString("listen-address"))
 
 	<-done
-	log.Print("exporter stopped!")
+	log.Print("Stopped!")
 
 	ctxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctxt); err != nil {
-		log.Fatalf("exporter shutdown failed: %+v", err)
+		log.Fatalf("Shutdown failed: %+v", err)
 	}
 
 	return exit(nil, 0)
