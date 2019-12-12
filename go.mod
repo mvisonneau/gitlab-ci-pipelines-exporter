@@ -11,7 +11,7 @@ require (
 	github.com/prometheus/client_golang v1.2.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/urfave/cli v1.22.1
-	github.com/xanzy/go-gitlab v0.21.0
+	github.com/xanzy/go-gitlab v0.22.2
 	golang.org/x/net v0.0.0-20191105084925-a882066a44e0 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
 	golang.org/x/sys v0.0.0-20191104094858-e8c54fb511f6 // indirect
