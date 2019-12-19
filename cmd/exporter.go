@@ -29,7 +29,7 @@ var (
 			Name: "gitlab_ci_pipeline_coverage",
 			Help: "Coverage of the most recent pipeline",
 		},
-		[]string{"project", "ref"},
+		[]string{"project", "topics", "ref"},
 	)
 
 	lastRunDuration = prometheus.NewGaugeVec(
@@ -37,7 +37,7 @@ var (
 			Name: "gitlab_ci_pipeline_last_run_duration_seconds",
 			Help: "Duration of last pipeline run",
 		},
-		[]string{"project", "ref"},
+		[]string{"project", "topics", "ref"},
 	)
 
 	lastRunID = prometheus.NewGaugeVec(
@@ -45,7 +45,7 @@ var (
 			Name: "gitlab_ci_pipeline_last_run_id",
 			Help: "ID of the most recent pipeline",
 		},
-		[]string{"project", "ref"},
+		[]string{"project", "topics", "ref"},
 	)
 
 	lastRunStatus = prometheus.NewGaugeVec(
@@ -53,7 +53,7 @@ var (
 			Name: "gitlab_ci_pipeline_last_run_status",
 			Help: "Status of the most recent pipeline",
 		},
-		[]string{"project", "ref", "status"},
+		[]string{"project", "topics", "ref", "status"},
 	)
 
 	runCount = prometheus.NewCounterVec(
@@ -61,7 +61,7 @@ var (
 			Name: "gitlab_ci_pipeline_run_count",
 			Help: "GitLab CI pipeline run count",
 		},
-		[]string{"project", "ref"},
+		[]string{"project", "topics", "ref"},
 	)
 
 	timeSinceLastRun = prometheus.NewGaugeVec(
@@ -69,7 +69,7 @@ var (
 			Name: "gitlab_ci_pipeline_time_since_last_run_seconds",
 			Help: "Elapsed time since most recent GitLab CI pipeline run.",
 		},
-		[]string{"project", "ref"},
+		[]string{"project", "topics", "ref"},
 	)
 )
 
