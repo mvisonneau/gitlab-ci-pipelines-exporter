@@ -166,8 +166,10 @@ func (c *Client) pollBranchNames(projectID int) ([]*string, error) {
 	var names []*string
 
 	options := &gitlab.ListBranchesOptions{
-		PerPage: 20,
-		Page:    1,
+		ListOptions: gitlab.ListOptions{
+			Page:    1,
+			PerPage: 20,
+		},
 	}
 
 	for {
