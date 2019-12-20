@@ -35,6 +35,11 @@ refs_polling_interval_seconds: 300
 pipelines_polling_interval_seconds: 60
 pipelines_max_polling_interval_seconds: 1800 # when no pipeline exists for a given ref, the exporter will exponentially backoff up to this value
 
+# Whether to attempt retrieving refs from pipelines when the exporter starts (default: false)
+on_init_fetch_refs_from_pipelines: false
+# Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
+on_init_fetch_refs_from_pipelines_depth_limit: 100
+
 # Default regexp for parsing the refs (branches and tags) to monitor (optional, default to master)
 # default_refs: "^master$"
 

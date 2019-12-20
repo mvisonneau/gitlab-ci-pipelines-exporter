@@ -74,6 +74,8 @@ projects_polling_interval_seconds: 1
 refs_polling_interval_seconds: 2
 pipelines_polling_interval_seconds: 3
 pipelines_max_polling_interval_seconds: 4
+on_init_fetch_refs_from_pipelines: true
+on_init_fetch_refs_from_pipelines_depth_limit: 1337
 default_refs: "^dev$"
 
 projects:
@@ -109,11 +111,13 @@ wildcards:
 			Token:         "xrN14n9-ywvAFxxxxxx",
 			SkipTLSVerify: true,
 		},
-		ProjectsPollingIntervalSeconds:     1,
-		RefsPollingIntervalSeconds:         2,
-		PipelinesPollingIntervalSeconds:    3,
-		PipelinesMaxPollingIntervalSeconds: 4,
-		DefaultRefsRegexp:                  "^dev$",
+		ProjectsPollingIntervalSeconds:         1,
+		RefsPollingIntervalSeconds:             2,
+		PipelinesPollingIntervalSeconds:        3,
+		PipelinesMaxPollingIntervalSeconds:     4,
+		OnInitFetchRefsFromPipelines:           true,
+		OnInitFetchRefsFromPipelinesDepthLimit: 1337,
+		DefaultRefsRegexp:                      "^dev$",
 		Projects: []Project{
 			{
 				Name: "foo/project",
@@ -180,11 +184,13 @@ projects:
 			HealthURL:     "https://gitlab.com/users/sign_in",
 			SkipTLSVerify: false,
 		},
-		ProjectsPollingIntervalSeconds:     defaultProjectsPollingIntervalSeconds,
-		RefsPollingIntervalSeconds:         defaultRefsPollingIntervalSeconds,
-		PipelinesPollingIntervalSeconds:    defaultPipelinesPollingIntervalSeconds,
-		PipelinesMaxPollingIntervalSeconds: defaultPipelinesMaxPollingIntervalSeconds,
-		DefaultRefsRegexp:                  "",
+		ProjectsPollingIntervalSeconds:         defaultProjectsPollingIntervalSeconds,
+		RefsPollingIntervalSeconds:             defaultRefsPollingIntervalSeconds,
+		PipelinesPollingIntervalSeconds:        defaultPipelinesPollingIntervalSeconds,
+		PipelinesMaxPollingIntervalSeconds:     defaultPipelinesMaxPollingIntervalSeconds,
+		OnInitFetchRefsFromPipelines:           false,
+		OnInitFetchRefsFromPipelinesDepthLimit: defaultOnInitFetchRefsFromPipelinesDepthLimit,
+		DefaultRefsRegexp:                      "",
 		Projects: []Project{
 			{
 				Name: "foo/bar",

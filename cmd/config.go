@@ -16,13 +16,15 @@ type Config struct {
 		SkipTLSVerify bool   `yaml:"skip_tls_verify"` // Whether to validate TLS certificates or not
 	}
 
-	ProjectsPollingIntervalSeconds     int        `yaml:"projects_polling_interval_seconds"`      // Interval in seconds at which to poll projects from wildcards
-	RefsPollingIntervalSeconds         int        `yaml:"refs_polling_interval_seconds"`          // Interval in seconds to fetch refs from projects
-	PipelinesPollingIntervalSeconds    int        `yaml:"pipelines_polling_interval_seconds"`     // Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
-	PipelinesMaxPollingIntervalSeconds int        `yaml:"pipelines_max_polling_interval_seconds"` // Maximum interval in seconds to fetch new pipelines from refs
-	DefaultRefsRegexp                  string     `yaml:"default_refs"`                           // Default regular expression
-	Projects                           []Project  `yaml:"projects"`                               // List of projects to poll
-	Wildcards                          []Wildcard `yaml:"wildcards"`                              // List of wildcards to search projects from
+	ProjectsPollingIntervalSeconds         int        `yaml:"projects_polling_interval_seconds"`             // Interval in seconds at which to poll projects from wildcards
+	RefsPollingIntervalSeconds             int        `yaml:"refs_polling_interval_seconds"`                 // Interval in seconds to fetch refs from projects
+	PipelinesPollingIntervalSeconds        int        `yaml:"pipelines_polling_interval_seconds"`            // Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
+	PipelinesMaxPollingIntervalSeconds     int        `yaml:"pipelines_max_polling_interval_seconds"`        // Maximum interval in seconds to fetch new pipelines from refs
+	OnInitFetchRefsFromPipelines           bool       `yaml:"on_init_fetch_refs_from_pipelines"`             // Whether to attempt retrieving refs from pipelines when the exporter starts
+	OnInitFetchRefsFromPipelinesDepthLimit int        `yaml:"on_init_fetch_refs_from_pipelines_depth_limit"` // Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
+	DefaultRefsRegexp                      string     `yaml:"default_refs"`                                  // Default regular expression
+	Projects                               []Project  `yaml:"projects"`                                      // List of projects to poll
+	Wildcards                              []Wildcard `yaml:"wildcards"`                                     // List of wildcards to search projects from
 }
 
 // Project holds information about a GitLab project
@@ -44,10 +46,11 @@ type Wildcard struct {
 
 // Default values
 const (
-	defaultProjectsPollingIntervalSeconds     = 1800
-	defaultRefsPollingIntervalSeconds         = 300
-	defaultPipelinesPollingIntervalSeconds    = 30
-	defaultPipelinesMaxPollingIntervalSeconds = 3600
+	defaultProjectsPollingIntervalSeconds         = 1800
+	defaultRefsPollingIntervalSeconds             = 300
+	defaultPipelinesPollingIntervalSeconds        = 30
+	defaultPipelinesMaxPollingIntervalSeconds     = 3600
+	defaultOnInitFetchRefsFromPipelinesDepthLimit = 100
 )
 
 var cfg *Config
@@ -83,6 +86,10 @@ func (cfg *Config) Parse(path string) error {
 
 	if cfg.PipelinesMaxPollingIntervalSeconds == 0 {
 		cfg.PipelinesMaxPollingIntervalSeconds = defaultPipelinesMaxPollingIntervalSeconds
+	}
+
+	if cfg.OnInitFetchRefsFromPipelinesDepthLimit == 0 {
+		cfg.OnInitFetchRefsFromPipelinesDepthLimit = defaultOnInitFetchRefsFromPipelinesDepthLimit
 	}
 
 	// Default GitLab URLs
