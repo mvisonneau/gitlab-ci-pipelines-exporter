@@ -7,6 +7,19 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+## [0.2.10] - 2019-12-20
+
+### Added
+
+- Capability to fetch removed refs by analyzing recent project pipelines
+- New label `topics` which gather project topics
+
+### Changed
+
+- Refactored the fetching logic to get faster inits
+- Enhanced the logic to prevent fatal failures on connectivity issues
+- Bumped go librairies to their latest versions
+
 ## [0.2.9] - 2019-11-15
 
 ### Added
@@ -155,7 +168,8 @@ and this project adheres to [0ver](https://0ver.org).
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.9...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.10...HEAD
+[0.2.10]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.10
 [0.2.9]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.9
 [0.2.8]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.8
 [0.2.7]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.7
