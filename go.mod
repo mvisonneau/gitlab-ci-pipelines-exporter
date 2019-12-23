@@ -9,7 +9,7 @@ require (
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/jpillora/backoff v1.0.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
-	github.com/prometheus/client_golang v1.2.1
+	github.com/prometheus/client_golang v1.3.0
 	github.com/prometheus/client_model v0.0.0-20191202183732-d1d2010b5bee // indirect
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/sirupsen/logrus v1.4.2
