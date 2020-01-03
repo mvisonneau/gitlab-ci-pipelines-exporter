@@ -29,6 +29,9 @@ gitlab:
   # health_url: https://gitlab.example.com/-/health  # Alternative URL for determining health of GitLab API (readiness probe)
   # skip_tls_verify: false                           # disable TLS verification
 
+# Global rate limit for the GitLab API request/sec
+maximum_gitlab_api_requests_per_second: 10
+
 # Custom waiting time between polls for projects, their refs and pipelines (in seconds, optional)
 projects_polling_interval_seconds: 1800 # only used for wildcards
 refs_polling_interval_seconds: 300
