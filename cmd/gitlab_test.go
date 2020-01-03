@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/xanzy/go-gitlab"
+	"go.uber.org/ratelimit"
 )
 
 // Mocking helpers
@@ -15,7 +16,10 @@ func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *Client) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	c := &Client{gitlab.NewClient(&http.Client{}, "")}
+	c := &Client{
+		Client: gitlab.NewClient(&http.Client{}, ""),
+		RateLimiter: ratelimit.New(100),
+	}
 	c.SetBaseURL(server.URL)
 
 	return mux, server, c

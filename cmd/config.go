@@ -16,6 +16,7 @@ type Config struct {
 		SkipTLSVerify bool   `yaml:"skip_tls_verify"` // Whether to validate TLS certificates or not
 	}
 
+	MaximumGitLabAPIRequestsPerSecond      int        `yaml:"maximum_gitlab_api_requests_per_second"`        // Maximum amount of requests per seconds to make against the GitLab API (default: 10)
 	ProjectsPollingIntervalSeconds         int        `yaml:"projects_polling_interval_seconds"`             // Interval in seconds at which to poll projects from wildcards
 	RefsPollingIntervalSeconds             int        `yaml:"refs_polling_interval_seconds"`                 // Interval in seconds to fetch refs from projects
 	PipelinesPollingIntervalSeconds        int        `yaml:"pipelines_polling_interval_seconds"`            // Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
@@ -46,11 +47,12 @@ type Wildcard struct {
 
 // Default values
 const (
+	defaultMaximumGitLabAPIRequestsPerSecond      = 10
+	defaultOnInitFetchRefsFromPipelinesDepthLimit = 100
+	defaultPipelinesMaxPollingIntervalSeconds     = 3600
+	defaultPipelinesPollingIntervalSeconds        = 30
 	defaultProjectsPollingIntervalSeconds         = 1800
 	defaultRefsPollingIntervalSeconds             = 300
-	defaultPipelinesPollingIntervalSeconds        = 30
-	defaultPipelinesMaxPollingIntervalSeconds     = 3600
-	defaultOnInitFetchRefsFromPipelinesDepthLimit = 100
 )
 
 var cfg *Config
@@ -71,7 +73,11 @@ func (cfg *Config) Parse(path string) error {
 		return fmt.Errorf("You need to configure at least one project/wildcard to poll, none given")
 	}
 
-	// Defining defaults polling intervals
+	// Defining defaults
+	if cfg.MaximumGitLabAPIRequestsPerSecond == 0 {
+		cfg.MaximumGitLabAPIRequestsPerSecond = defaultMaximumGitLabAPIRequestsPerSecond
+	}
+
 	if cfg.ProjectsPollingIntervalSeconds == 0 {
 		cfg.ProjectsPollingIntervalSeconds = defaultProjectsPollingIntervalSeconds
 	}
@@ -92,7 +98,6 @@ func (cfg *Config) Parse(path string) error {
 		cfg.OnInitFetchRefsFromPipelinesDepthLimit = defaultOnInitFetchRefsFromPipelinesDepthLimit
 	}
 
-	// Default GitLab URLs
 	if cfg.Gitlab.URL == "" {
 		cfg.Gitlab.URL = "https://gitlab.com"
 	}

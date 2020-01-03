@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- Added global rate limit capability to avoid hammering GitLab API endpoints
+
 ## [0.2.10] - 2019-12-20
 
 ### Added

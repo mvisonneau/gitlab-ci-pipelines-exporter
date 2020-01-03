@@ -33,6 +33,7 @@ func refExists(refs []string, r string) bool {
 }
 
 func (c *Client) getProject(name string) (*gitlab.Project, error) {
+	c.rateLimit()
 	p, _, err := c.Projects.GetProject(name, &gitlab.GetProjectOptions{})
 	return p, err
 }
@@ -53,6 +54,7 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 		var resp *gitlab.Response
 		var err error
 
+		c.rateLimit()
 		switch w.Owner.Kind {
 		case "user":
 			gps, resp, err = c.Projects.ListUserProjects(
@@ -174,6 +176,7 @@ func (c *Client) pollBranchNames(projectID int) ([]*string, error) {
 	}
 
 	for {
+		c.rateLimit()
 		branches, resp, err := c.Branches.ListBranches(projectID, options)
 		if err != nil {
 			return names, err
@@ -204,6 +207,7 @@ func (c *Client) pollTagNames(projectID int) ([]*string, error) {
 	}
 
 	for {
+		c.rateLimit()
 		tags, resp, err := c.Tags.ListTags(projectID, options)
 		if err != nil {
 			return names, err
@@ -298,6 +302,7 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 	for {
 		log.Debugf("Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
 
+		c.rateLimit()
 		pipelines, _, err := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
 		if err != nil {
 			log.Errorf("ListProjectPipelines: %s", err.Error())
@@ -312,6 +317,7 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 				runCount.WithLabelValues(gp.PathWithNamespace, topics, ref).Inc()
 			}
 
+			c.rateLimit()
 			lastPipeline, _, err = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
 			if err != nil {
 				log.Errorf("GetPipeline: %s", err.Error())
@@ -371,6 +377,7 @@ func (c *Client) pollProjectRefsFromPipelines(projectID, limit int) ([]string, e
 	}
 
 	refs := []string{}
+	c.rateLimit()
 	pipelines, _, err := c.Pipelines.ListProjectPipelines(projectID, options)
 	if err != nil {
 		return refs, err
@@ -384,4 +391,12 @@ func (c *Client) pollProjectRefsFromPipelines(projectID, limit int) ([]string, e
 	}
 
 	return refs, nil
+}
+
+func (c *Client) rateLimit() {
+	now := time.Now()
+	throttled := c.RateLimiter.Take()
+	if throttled.Sub(now).Milliseconds() > 10 {
+		log.Debugf("throttled polling requests for %v", throttled.Sub(now))
+	}
 }

@@ -70,10 +70,11 @@ gitlab:
   health_url: https://gitlab.example.com/-/health
   skip_tls_verify: true
 
-projects_polling_interval_seconds: 1
-refs_polling_interval_seconds: 2
-pipelines_polling_interval_seconds: 3
-pipelines_max_polling_interval_seconds: 4
+maximum_gitlab_api_requests_per_second: 1
+projects_polling_interval_seconds: 2
+refs_polling_interval_seconds: 3
+pipelines_polling_interval_seconds: 4
+pipelines_max_polling_interval_seconds: 5
 on_init_fetch_refs_from_pipelines: true
 on_init_fetch_refs_from_pipelines_depth_limit: 1337
 default_refs: "^dev$"
@@ -111,10 +112,11 @@ wildcards:
 			Token:         "xrN14n9-ywvAFxxxxxx",
 			SkipTLSVerify: true,
 		},
-		ProjectsPollingIntervalSeconds:         1,
-		RefsPollingIntervalSeconds:             2,
-		PipelinesPollingIntervalSeconds:        3,
-		PipelinesMaxPollingIntervalSeconds:     4,
+		MaximumGitLabAPIRequestsPerSecond:      1,
+		ProjectsPollingIntervalSeconds:         2,
+		RefsPollingIntervalSeconds:             3,
+		PipelinesPollingIntervalSeconds:        4,
+		PipelinesMaxPollingIntervalSeconds:     5,
 		OnInitFetchRefsFromPipelines:           true,
 		OnInitFetchRefsFromPipelinesDepthLimit: 1337,
 		DefaultRefsRegexp:                      "^dev$",
@@ -184,6 +186,7 @@ projects:
 			HealthURL:     "https://gitlab.com/users/sign_in",
 			SkipTLSVerify: false,
 		},
+		MaximumGitLabAPIRequestsPerSecond:      defaultMaximumGitLabAPIRequestsPerSecond,
 		ProjectsPollingIntervalSeconds:         defaultProjectsPollingIntervalSeconds,
 		RefsPollingIntervalSeconds:             defaultRefsPollingIntervalSeconds,
 		PipelinesPollingIntervalSeconds:        defaultPipelinesPollingIntervalSeconds,

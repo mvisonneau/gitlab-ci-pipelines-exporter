@@ -16,11 +16,13 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/xanzy/go-gitlab"
+	"go.uber.org/ratelimit"
 )
 
 // Client holds a GitLab client
 type Client struct {
 	*gitlab.Client
+	RateLimiter ratelimit.Limiter
 }
 
 var (
@@ -102,9 +104,10 @@ func Run(ctx *cli.Context) error {
 
 	log.Infof("Starting exporter")
 	log.Infof("Configured GitLab endpoint : %s", cfg.Gitlab.URL)
-	log.Infof("Polling projects every %vs", cfg.ProjectsPollingIntervalSeconds)
-	log.Infof("Polling refs every %vs", cfg.RefsPollingIntervalSeconds)
-	log.Infof("Polling pipelines every %vs", cfg.PipelinesPollingIntervalSeconds)
+	log.Infof("Polling projects every %ds", cfg.ProjectsPollingIntervalSeconds)
+	log.Infof("Polling refs every %ds", cfg.RefsPollingIntervalSeconds)
+	log.Infof("Polling pipelines every %ds", cfg.PipelinesPollingIntervalSeconds)
+	log.Infof("Global rate limit for the GitLab API set to %d req/s", cfg.MaximumGitLabAPIRequestsPerSecond)
 
 	// Configure GitLab client
 	httpTransport := &http.Transport{
@@ -112,7 +115,8 @@ func Run(ctx *cli.Context) error {
 	}
 
 	c := &Client{
-		gitlab.NewClient(&http.Client{Transport: httpTransport}, cfg.Gitlab.Token),
+		Client:      gitlab.NewClient(&http.Client{Transport: httpTransport}, cfg.Gitlab.Token),
+		RateLimiter: ratelimit.New(cfg.MaximumGitLabAPIRequestsPerSecond),
 	}
 	c.SetBaseURL(cfg.Gitlab.URL)
 
