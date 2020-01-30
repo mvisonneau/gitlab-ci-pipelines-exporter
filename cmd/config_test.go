@@ -208,3 +208,35 @@ projects:
 		t.Fatalf("Diff of expected/got config :\n %v", cmp.Diff(*cfg, expectedCfg))
 	}
 }
+
+func TestParseEnvironmentVariables(t *testing.T) {
+	f, err := ioutil.TempFile("/tmp", "test-")
+	if err != nil {
+		t.Fatal("Could not create temporary test files")
+	}
+	defer os.Remove(f.Name())
+
+	// Valid minimal configuration
+	f.WriteString(`
+---
+projects:
+  - name: foo/bar
+`)
+
+	expectedGitlabToken := "foo-bar"
+
+	os.Setenv("GITLAB_TOKEN", expectedGitlabToken)
+	defer os.Setenv("GITLAB_TOKEN", "")
+
+	// Reset config var before parsing
+	cfg = &Config{}
+
+	err = cfg.Parse(f.Name())
+	if err != nil {
+		t.Fatalf("Did not expect an error, got %s", err.Error())
+	}
+
+	if !cmp.Equal(cfg.Gitlab.Token, expectedGitlabToken) {
+		t.Fatalf("Diff of expected/got gitlab token :\n %v", cmp.Diff(cfg.Gitlab.Token, expectedGitlabToken))
+	}
+}
