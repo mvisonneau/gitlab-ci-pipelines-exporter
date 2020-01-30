@@ -111,6 +111,5 @@ func (cfg *Config) Parse(path string) error {
 		cfg.Gitlab.Token = os.Getenv("GITLAB_TOKEN")
 	}
 
-
 	return nil
 }
