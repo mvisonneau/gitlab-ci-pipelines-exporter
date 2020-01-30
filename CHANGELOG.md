@@ -11,6 +11,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 - Added global rate limit capability to avoid hammering GitLab API endpoints
 
+### Added
+
+- Load gitlab token from the environment (`GITLAB_TOKEN`) when `gitlab.token` is not configured
+
 ## [0.2.10] - 2019-12-20
 
 ### Added

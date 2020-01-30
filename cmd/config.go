@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v3"
 )
@@ -105,6 +106,11 @@ func (cfg *Config) Parse(path string) error {
 	if cfg.Gitlab.HealthURL == "" {
 		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/users/sign_in", cfg.Gitlab.URL)
 	}
+
+	if cfg.Gitlab.Token == "" {
+		cfg.Gitlab.Token = os.Getenv("GITLAB_TOKEN")
+	}
+
 
 	return nil
 }
