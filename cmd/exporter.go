@@ -120,7 +120,7 @@ func Run(ctx *cli.Context) error {
 		Client:      gitlab.NewClient(&http.Client{Transport: httpTransport}, cfg.Gitlab.Token),
 		RateLimiter: ratelimit.New(cfg.MaximumGitLabAPIRequestsPerSecond),
 	}
-	c.SetBaseURL(cfg.Gitlab.URL)
+	_ = c.SetBaseURL(cfg.Gitlab.URL)
 
 	go c.pollProjects()
 
