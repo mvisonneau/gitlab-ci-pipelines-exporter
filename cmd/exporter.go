@@ -97,10 +97,12 @@ func Run(ctx *cli.Context) error {
 		return exit(err, 1)
 	}
 
-	// Parse config file
+	// Initialize config
 	if err := cfg.Parse(ctx.GlobalString("config")); err != nil {
 		return exit(err, 1)
 	}
+
+	cfg.MergeWithContext(ctx)
 
 	log.Infof("Starting exporter")
 	log.Infof("Configured GitLab endpoint : %s", cfg.Gitlab.URL)

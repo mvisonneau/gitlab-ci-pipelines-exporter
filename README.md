@@ -25,7 +25,7 @@ If you are solely interested into trying it out, have a look into the [example/]
 # pipelines informations
 gitlab:
   url: https://gitlab.example.com
-  token: xrN14n9-ywvAFxxxxxx                         # Gitlab access token. Omit this field to use "GITLAB_TOKEN" from the environment.
+  token: xrN14n9-ywvAFxxxxxx                         # Gitlab access token. You can omit this field when --token or $GCPE_TOKEN are set
   # health_url: https://gitlab.example.com/-/health  # Alternative URL for determining health of GitLab API (readiness probe)
   # skip_tls_verify: false                           # disable TLS verification
 
