@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"flag"
 	"io/ioutil"
 	"os"
 
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/urfave/cli"
 )
 
 func TestParseInvalidPath(t *testing.T) {
@@ -209,7 +211,10 @@ projects:
 	}
 }
 
-func TestParseEnvironmentVariables(t *testing.T) {
+func TestMergeWithContext(t *testing.T) {
+	expectedFileToken := "file-foo-bar"
+	expectedCtxToken := "ctx-foo-bar"
+
 	f, err := ioutil.TempFile("/tmp", "test-")
 	if err != nil {
 		t.Fatal("Could not create temporary test files")
@@ -219,14 +224,11 @@ func TestParseEnvironmentVariables(t *testing.T) {
 	// Valid minimal configuration
 	f.WriteString(`
 ---
+gitlab:
+  token: file-foo-bar
 projects:
   - name: foo/bar
 `)
-
-	expectedGitlabToken := "foo-bar"
-
-	os.Setenv("GITLAB_TOKEN", expectedGitlabToken)
-	defer os.Setenv("GITLAB_TOKEN", "")
 
 	// Reset config var before parsing
 	cfg = &Config{}
@@ -236,7 +238,17 @@ projects:
 		t.Fatalf("Did not expect an error, got %s", err.Error())
 	}
 
-	if !cmp.Equal(cfg.Gitlab.Token, expectedGitlabToken) {
-		t.Fatalf("Diff of expected/got gitlab token :\n %v", cmp.Diff(cfg.Gitlab.Token, expectedGitlabToken))
+	if !cmp.Equal(cfg.Gitlab.Token, expectedFileToken) {
+		t.Fatalf("Diff of expected/got gitlab token :\n %v", cmp.Diff(cfg.Gitlab.Token, expectedFileToken))
+	}
+
+	set := flag.NewFlagSet("", 0)
+	set.String("token", expectedCtxToken, "")
+
+	ctx := cli.NewContext(nil, set, nil)
+	cfg.MergeWithContext(ctx)
+
+	if !cmp.Equal(cfg.Gitlab.Token, expectedCtxToken) {
+		t.Fatalf("Diff of expected/got gitlab token :\n %v", cmp.Diff(cfg.Gitlab.Token, expectedCtxToken))
 	}
 }

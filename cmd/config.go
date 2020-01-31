@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
+	"github.com/urfave/cli"
 	"gopkg.in/yaml.v3"
 )
 
@@ -107,9 +107,12 @@ func (cfg *Config) Parse(path string) error {
 		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/users/sign_in", cfg.Gitlab.URL)
 	}
 
-	if cfg.Gitlab.Token == "" {
-		cfg.Gitlab.Token = os.Getenv("GITLAB_TOKEN")
-	}
-
 	return nil
+}
+
+func (cfg *Config) MergeWithContext(ctx *cli.Context) {
+	token := ctx.GlobalString("token")
+	if len(token) != 0 {
+		cfg.Gitlab.Token = token
+	}
 }

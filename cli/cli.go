@@ -40,6 +40,11 @@ func Init(version *string) (app *cli.App) {
 			Usage:  "config `file`",
 			Value:  "~/.gitlab-ci-pipelines-exporter.yml",
 		},
+		cli.StringFlag{
+			Name:   "token, t",
+			EnvVar: "GCPE_TOKEN",
+			Usage:  "GitLab access `token`. Can be use to override the gitlab token in config file",
+		},
 	}
 
 	app.Action = cmd.Run
