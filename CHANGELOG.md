@@ -10,7 +10,7 @@ and this project adheres to [0ver](https://0ver.org).
 ### Added
 
 - Added global rate limit capability to avoid hammering GitLab API endpoints
-- Added `--token, -t` flag. Can be use to specify the gitlab token as flag or env var.
+- Added `--gitlab-token` flag. Can be use to specify the gitlab token as flag or env var.
 
 ## [0.2.10] - 2019-12-20
 
