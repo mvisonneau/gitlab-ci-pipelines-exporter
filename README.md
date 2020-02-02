@@ -192,6 +192,7 @@ GLOBAL OPTIONS:
    --log-format format            log format (json,text) (default: "text") [$GCPE_LOG_FORMAT]
    --listen-address address:port  listen-address address:port (default: ":8080") [$GCPE_LISTEN_ADDRESS]
    --config file                  config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
+   --gitlab-token token           GitLab access token. Can be use to override the gitlab token in config file [$GCPE_GITLAB_TOKEN]
    --help, -h                     show help
    --version, -v                  print the version
 ```
