@@ -92,6 +92,8 @@ github.com/xanzy/go-gitlab v0.22.2 h1:KYPewSm3Tl7WHrVON7BOwX6FZ1gaiFEdpOt0DNIYyS
 github.com/xanzy/go-gitlab v0.22.2/go.mod h1:t4Bmvnxj7k37S4Y17lfLx+nLqkf/oQwT2HagfWKv5Og=
 github.com/xanzy/go-gitlab v0.22.3 h1:/rNlZ2hquUWNc6rJdntVM03tEOoTmnZ1lcNyJCl0WlU=
 github.com/xanzy/go-gitlab v0.22.3/go.mod h1:t4Bmvnxj7k37S4Y17lfLx+nLqkf/oQwT2HagfWKv5Og=
+github.com/xanzy/go-gitlab v0.23.0 h1:6KPPZxVOm3wy0cPE/xnjR1lHH9wMlpZQcsQyOS10DmM=
+github.com/xanzy/go-gitlab v0.23.0/go.mod h1:t4Bmvnxj7k37S4Y17lfLx+nLqkf/oQwT2HagfWKv5Og=
 go.uber.org/ratelimit v0.1.0 h1:U2AruXqeTb4Eh9sYQSTrMhH8Cb7M0Ian2ibBOnBcnAw=
 go.uber.org/ratelimit v0.1.0/go.mod h1:2X8KaoNd1J0lZV+PxJk/5+DGbO/tpwLR1m++a7FnB/Y=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
