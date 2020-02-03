@@ -7,10 +7,16 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+## [0.2.11] - 2019-02-03
+
 ### Added
 
 - Added global rate limit capability to avoid hammering GitLab API endpoints
 - Added `--gitlab-token` flag. Can be use to specify the gitlab token as flag or env var.
+
+### Changed
+
+- Bumped gitlab & prometheus libaries to their latest versions
 
 ## [0.2.10] - 2019-12-20
 
@@ -173,7 +179,8 @@ and this project adheres to [0ver](https://0ver.org).
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.10...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.11...HEAD
+[0.2.11]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.11
 [0.2.10]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.10
 [0.2.9]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.9
 [0.2.8]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.8
