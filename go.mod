@@ -11,7 +11,7 @@ require (
 	github.com/prometheus/client_golang v1.4.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/urfave/cli v1.22.2
-	github.com/xanzy/go-gitlab v0.23.0
+	github.com/xanzy/go-gitlab v0.25.0
 	go.uber.org/atomic v1.5.1 // indirect
 	go.uber.org/ratelimit v0.1.0
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
