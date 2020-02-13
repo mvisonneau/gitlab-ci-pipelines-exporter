@@ -111,7 +111,7 @@ func (cfg *Config) Parse(path string) error {
 }
 
 func (cfg *Config) MergeWithContext(ctx *cli.Context) {
-	token := ctx.GlobalString("token")
+	token := ctx.GlobalString("gitlab-token")
 	if len(token) != 0 {
 		cfg.Gitlab.Token = token
 	}
