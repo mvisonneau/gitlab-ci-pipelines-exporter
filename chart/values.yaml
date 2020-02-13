@@ -101,3 +101,5 @@ envVariables: []
   #   value: json
   # - name: GCPE_LOG_LEVEL
   #   value: debug
+  # - name: GCPE_GITLAB_TOKEN
+  #   value: "<your-gitlab-token>"

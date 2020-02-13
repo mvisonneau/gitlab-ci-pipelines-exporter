@@ -243,7 +243,7 @@ projects:
 	}
 
 	set := flag.NewFlagSet("", 0)
-	set.String("token", expectedCtxToken, "")
+	set.String("gitlab-token", expectedCtxToken, "")
 
 	ctx := cli.NewContext(nil, set, nil)
 	cfg.MergeWithContext(ctx)

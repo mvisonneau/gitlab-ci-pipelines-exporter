@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Changed
+
+- Fix `--gitlab-token` and improve docs/chart
+
 ## [0.2.11] - 2019-02-03
 
 ### Added
