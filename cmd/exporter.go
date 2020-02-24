@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/logger"
+	"github.com/mvisonneau/go-helpers/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
