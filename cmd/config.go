@@ -110,6 +110,8 @@ func (cfg *Config) Parse(path string) error {
 	return nil
 }
 
+// MergeWithContext is used to override values defined in the config by ones
+// provided at runtime
 func (cfg *Config) MergeWithContext(ctx *cli.Context) {
 	token := ctx.GlobalString("gitlab-token")
 	if len(token) != 0 {
