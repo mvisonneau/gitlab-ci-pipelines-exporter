@@ -21,5 +21,4 @@ require (
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20191120175047-4206685974f2
-	gotest.tools v2.2.0+incompatible
 )
