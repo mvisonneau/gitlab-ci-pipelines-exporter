@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/xanzy/go-gitlab"
 	"go.uber.org/ratelimit"
 )
@@ -25,12 +26,6 @@ func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *Client) {
 	return mux, server, c
 }
 
-func testMethod(t *testing.T, r *http.Request, want string) {
-	if got := r.Method; got != want {
-		t.Errorf("Request method: %s, want %s", got, want)
-	}
-}
-
 // Functions testing
 func TestProjectExists(t *testing.T) {
 	foo := Project{Name: "foo"}
@@ -40,25 +35,15 @@ func TestProjectExists(t *testing.T) {
 		Projects: []Project{foo},
 	}
 
-	if !projectExists(foo) {
-		t.Fatalf("Expected project foo to exist")
-	}
-
-	if projectExists(bar) {
-		t.Fatalf("Expected project bar to not exist")
-	}
+	assert.Equal(t, projectExists(foo), true)
+	assert.Equal(t, projectExists(bar), false)
 }
 
 func TestRefExists(t *testing.T) {
 	refs := []string{"foo"}
 
-	if !refExists(refs, "foo") {
-		t.Fatalf("Expected ref foo to exist")
-	}
-
-	if refExists(refs, "bar") {
-		t.Fatalf("Expected ref bar to not exist")
-	}
+	assert.Equal(t, refExists(refs, "foo"), true)
+	assert.Equal(t, refExists(refs, "bar"), false)
 }
 
 func TestGetProject(t *testing.T) {
@@ -68,22 +53,14 @@ func TestGetProject(t *testing.T) {
 	project := "foo/bar"
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/%s", project),
 		func(w http.ResponseWriter, r *http.Request) {
-			testMethod(t, r, "GET")
+			assert.Equal(t, r.Method, "GET")
 			fmt.Fprint(w, `{"id":1}`)
 		})
 
 	p, err := c.getProject(project)
-	if err != nil {
-		t.Fatalf("Did not expect this error %v", err)
-	}
-
-	if p == nil {
-		t.Fatalf("Expected 'p' to be defined, got nil")
-	}
-
-	if p.ID != 1 {
-		t.Fatalf("Expected 'p.ID' to equal 1, got %d", p.ID)
-	}
+	assert.Nil(t, err)
+	assert.NotNil(t, p)
+	assert.Equal(t, p.ID, 1)
 }
 
 func TestListUserProjects(t *testing.T) {
@@ -106,18 +83,13 @@ func TestListUserProjects(t *testing.T) {
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
-			testMethod(t, r, "GET")
+			assert.Equal(t, r.Method, "GET")
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
 	projects, err := c.listProjects(w)
-	if err != nil {
-		t.Fatalf("Did not expect this error %v", err)
-	}
-
-	if len(projects) != 2 {
-		t.Fatalf("Expected to get 2 projects, got %d", len(projects))
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, len(projects), 2)
 }
 
 func TestListGroupProjects(t *testing.T) {
@@ -140,18 +112,13 @@ func TestListGroupProjects(t *testing.T) {
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/groups/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
-			testMethod(t, r, "GET")
+			assert.Equal(t, r.Method, "GET")
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
 	projects, err := c.listProjects(w)
-	if err != nil {
-		t.Fatalf("Did not expect this error %v", err)
-	}
-
-	if len(projects) != 2 {
-		t.Fatalf("Expected to get 2 projects, got %d", len(projects))
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, len(projects), 2)
 }
 
 func TestListProjects(t *testing.T) {
@@ -174,18 +141,13 @@ func TestListProjects(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects",
 		func(w http.ResponseWriter, r *http.Request) {
-			testMethod(t, r, "GET")
+			assert.Equal(t, r.Method, "GET")
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
 	projects, err := c.listProjects(w)
-	if err != nil {
-		t.Fatalf("Did not expect this error %v", err)
-	}
-
-	if len(projects) != 2 {
-		t.Fatalf("Expected to get 2 projects, got %d", len(projects))
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, len(projects), 2)
 }
 
 func TestListProjectsAPIError(t *testing.T) {
@@ -212,11 +174,6 @@ func TestListProjectsAPIError(t *testing.T) {
 		})
 
 	_, err := c.listProjects(w)
-	if err == nil {
-		t.Fatal("Expected an error, got nil")
-	}
-
-	if !strings.HasPrefix(err.Error(), "Unable to list projects with search pattern") {
-		t.Fatalf("Did not expect this error %v", err)
-	}
+	assert.NotNil(t, err)
+	assert.Equal(t, strings.HasPrefix(err.Error(), "Unable to list projects with search pattern"), true)
 }

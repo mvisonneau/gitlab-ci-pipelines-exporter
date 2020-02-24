@@ -11,6 +11,7 @@ require (
 	github.com/mvisonneau/go-helpers v0.0.0-20200224131125-cb5cc4e6def9
 	github.com/prometheus/client_golang v1.4.1
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/testify v1.4.0
 	github.com/urfave/cli v1.22.2
 	github.com/xanzy/go-gitlab v0.26.0
 	go.uber.org/atomic v1.5.1 // indirect
@@ -20,4 +21,5 @@ require (
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20191120175047-4206685974f2
+	gotest.tools v2.2.0+incompatible
 )

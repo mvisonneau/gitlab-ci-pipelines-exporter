@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- Now using stretchr/testify for asserting test results
+
 ### Changed
 
 - Fix `--gitlab-token` and improve docs/chart

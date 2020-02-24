@@ -2,65 +2,46 @@ package cmd
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
 )
 
 func TestParseInvalidPath(t *testing.T) {
 	err := cfg.Parse("/path_do_not_exist")
-	if err == nil {
-		t.Fatal("Expected config parser to return an error")
-	}
-
-	if err.Error() != "Couldn't open config file : open /path_do_not_exist: no such file or directory" {
-		t.Fatalf("Unexpected returned error : %s", err.Error())
-	}
+	assert.Equal(t, err, fmt.Errorf("Couldn't open config file : open /path_do_not_exist: no such file or directory"))
 }
 
 func TestParseInvalidYaml(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
-	if err != nil {
-		t.Fatal("Could not create temporary test files")
-	}
+	assert.Nil(t, err)
 	defer os.Remove(f.Name())
 
 	// Invalid YAML content
 	f.WriteString("invalid_yaml")
 	err = cfg.Parse(f.Name())
-	if err == nil {
-		t.Fatal("Expected config parser to return an error")
-	}
+	assert.NotNil(t, err)
 }
 
 func TestParseEmptyYaml(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
-	if err != nil {
-		t.Fatal("Could not create temporary test files")
-	}
+	assert.Nil(t, err)
 	defer os.Remove(f.Name())
 
 	// Invalid YAML content
 	f.WriteString("---")
 	err = cfg.Parse(f.Name())
-	if err == nil {
-		t.Fatal("Expected config parser to return an error")
-	}
-
-	if err.Error() != "You need to configure at least one project/wildcard to poll, none given" {
-		t.Fatalf("Unexpected returned error : %s", err.Error())
-	}
+	assert.Equal(t, err, fmt.Errorf("You need to configure at least one project/wildcard to poll, none given"))
 }
 
 func TestParseValidConfig(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
-	if err != nil {
-		t.Fatal("Could not create temporary test files")
-	}
+	assert.Nil(t, err)
 	defer os.Remove(f.Name())
 
 	// Valid minimal configuration
@@ -98,9 +79,7 @@ wildcards:
 	cfg = &Config{}
 
 	err = cfg.Parse(f.Name())
-	if err != nil {
-		t.Fatalf("Did not expect an error, got %s", err.Error())
-	}
+	assert.Nil(t, err)
 
 	expectedCfg := Config{
 		Gitlab: struct {
@@ -149,16 +128,12 @@ wildcards:
 	}
 
 	// Test variable assignments
-	if !cmp.Equal(*cfg, expectedCfg) {
-		t.Fatalf("Diff of expected/got config :\n %v", cmp.Diff(*cfg, expectedCfg))
-	}
+	assert.Equal(t, *cfg, expectedCfg)
 }
 
 func TestParseDefaultsValues(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
-	if err != nil {
-		t.Fatal("Could not create temporary test files")
-	}
+	assert.Nil(t, err)
 	defer os.Remove(f.Name())
 
 	// Valid minimal configuration
@@ -172,9 +147,7 @@ projects:
 	cfg = &Config{}
 
 	err = cfg.Parse(f.Name())
-	if err != nil {
-		t.Fatalf("Did not expect an error, got %s", err.Error())
-	}
+	assert.Nil(t, err)
 
 	expectedCfg := Config{
 		Gitlab: struct {
@@ -206,9 +179,7 @@ projects:
 	}
 
 	// Test variable assignments
-	if !cmp.Equal(*cfg, expectedCfg) {
-		t.Fatalf("Diff of expected/got config :\n %v", cmp.Diff(*cfg, expectedCfg))
-	}
+	assert.Equal(t, *cfg, expectedCfg)
 }
 
 func TestMergeWithContext(t *testing.T) {
@@ -216,9 +187,7 @@ func TestMergeWithContext(t *testing.T) {
 	expectedCtxToken := "ctx-foo-bar"
 
 	f, err := ioutil.TempFile("/tmp", "test-")
-	if err != nil {
-		t.Fatal("Could not create temporary test files")
-	}
+	assert.Nil(t, err)
 	defer os.Remove(f.Name())
 
 	// Valid minimal configuration
@@ -234,13 +203,8 @@ projects:
 	cfg = &Config{}
 
 	err = cfg.Parse(f.Name())
-	if err != nil {
-		t.Fatalf("Did not expect an error, got %s", err.Error())
-	}
-
-	if !cmp.Equal(cfg.Gitlab.Token, expectedFileToken) {
-		t.Fatalf("Diff of expected/got gitlab token :\n %v", cmp.Diff(cfg.Gitlab.Token, expectedFileToken))
-	}
+	assert.Nil(t, err)
+	assert.Equal(t, cfg.Gitlab.Token, expectedFileToken)
 
 	set := flag.NewFlagSet("", 0)
 	set.String("gitlab-token", expectedCtxToken, "")
@@ -248,7 +212,5 @@ projects:
 	ctx := cli.NewContext(nil, set, nil)
 	cfg.MergeWithContext(ctx)
 
-	if !cmp.Equal(cfg.Gitlab.Token, expectedCtxToken) {
-		t.Fatalf("Diff of expected/got gitlab token :\n %v", cmp.Diff(cfg.Gitlab.Token, expectedCtxToken))
-	}
+	assert.Equal(t, cfg.Gitlab.Token, expectedCtxToken)
 }
