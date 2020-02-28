@@ -4,3 +4,4 @@ vendor
 .gitlab-ci-pipelines-exporter.yml
 **/.DS_Store
 gitlab-ci-pipelines-exporter
+coverage.out

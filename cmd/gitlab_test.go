@@ -78,7 +78,8 @@ func TestListUserProjects(t *testing.T) {
 			Kind:             "user",
 			IncludeSubgroups: false,
 		},
-		Refs: "^master|1.0$",
+		Archived: false,
+		Refs:     "^master|1.0$",
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
@@ -107,7 +108,8 @@ func TestListGroupProjects(t *testing.T) {
 			Kind:             "group",
 			IncludeSubgroups: false,
 		},
-		Refs: "^master|1.0$",
+		Archived: false,
+		Refs:     "^master|1.0$",
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/groups/%s/projects", w.Owner.Name),
@@ -136,7 +138,8 @@ func TestListProjects(t *testing.T) {
 			Kind:             "",
 			IncludeSubgroups: false,
 		},
-		Refs: "",
+		Archived: false,
+		Refs:     "",
 	}
 
 	mux.HandleFunc("/api/v4/projects",
@@ -164,7 +167,8 @@ func TestListProjectsAPIError(t *testing.T) {
 			Name: "foo",
 			Kind: "user",
 		},
-		Refs: "",
+		Archived: false,
+		Refs:     "",
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),

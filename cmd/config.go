@@ -43,7 +43,8 @@ type Wildcard struct {
 		Kind             string
 		IncludeSubgroups bool `yaml:"include_subgroups"`
 	}
-	Refs string
+	Archived bool `yaml:"archived"`
+	Refs     string
 }
 
 // Default values
