@@ -61,6 +61,7 @@ wildcards:
       include_subgroups: true # optional (default: false)
     refs: "^master|1.0$"
     search: 'bar' # optional (defaults to '')
+    archived: true # optional (default: false)
 
   # Fetch projects belonging to a specific user
   - owner:
@@ -68,10 +69,12 @@ wildcards:
       kind: user
     refs: ".*"
     search: 'bar' # optional (defaults to '')
+    archived: true # optional (default: false)
 
   # Search for projects globally
   - refs: ".*"
     search: 'baz' # optional (defaults to '')
+    archived: true # optional (default: false)
 EOF
 
 # If you have docker installed, it is as easy as :

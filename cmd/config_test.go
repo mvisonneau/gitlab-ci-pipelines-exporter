@@ -73,6 +73,7 @@ wildcards:
       kind: group
     refs: "^master|1.0$"
     search: 'bar'
+    archived: true
 `)
 
 	// Reset config var before parsing
@@ -122,7 +123,8 @@ wildcards:
 					Name: "foo",
 					Kind: "group",
 				},
-				Refs: "^master|1.0$",
+				Refs:     "^master|1.0$",
+				Archived: true,
 			},
 		},
 	}

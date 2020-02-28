@@ -43,7 +43,6 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 
 	projects := []Project{}
 	trueVal := true
-	falseVal := false
 	listOptions := gitlab.ListOptions{
 		PerPage: 20,
 		Page:    1,
@@ -60,7 +59,7 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 			gps, resp, err = c.Projects.ListUserProjects(
 				w.Owner.Name,
 				&gitlab.ListProjectsOptions{
-					Archived:    &falseVal,
+					Archived:    &w.Archived,
 					ListOptions: listOptions,
 					Search:      &w.Search,
 					Simple:      &trueVal,
@@ -70,7 +69,7 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 			gps, resp, err = c.Groups.ListGroupProjects(
 				w.Owner.Name,
 				&gitlab.ListGroupProjectsOptions{
-					Archived:         &falseVal,
+					Archived:         &w.Archived,
 					IncludeSubgroups: &w.Owner.IncludeSubgroups,
 					ListOptions:      listOptions,
 					Search:           &w.Search,
@@ -81,7 +80,7 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 			gps, resp, err = c.Projects.ListProjects(
 				&gitlab.ListProjectsOptions{
 					ListOptions: listOptions,
-					Archived:    &falseVal,
+					Archived:    &w.Archived,
 					Simple:      &trueVal,
 					Search:      &w.Search,
 				},
