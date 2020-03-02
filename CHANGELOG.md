@@ -10,6 +10,7 @@ and this project adheres to [0ver](https://0ver.org).
 ### Added
 
 - Now using stretchr/testify for asserting test results
+- Capability to filter in/out archived projects
 
 ### Changed
 
