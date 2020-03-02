@@ -11,7 +11,7 @@ require (
 	github.com/mvisonneau/go-helpers v0.0.0-20200224131125-cb5cc4e6def9
 	github.com/prometheus/client_golang v1.4.1
 	github.com/sirupsen/logrus v1.4.2
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli v1.22.2
 	github.com/xanzy/go-gitlab v0.27.0
 	go.uber.org/atomic v1.5.1 // indirect
