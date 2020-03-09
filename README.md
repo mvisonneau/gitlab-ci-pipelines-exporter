@@ -24,10 +24,17 @@ If you are solely interested into trying it out, have a look into the [example/]
 # URL and Token with sufficient permissions to access your GitLab's projects
 # pipelines informations
 gitlab:
+  # URL of your GitLab instance (defaults to https://gitlab.com)
   url: https://gitlab.example.com
-  token: xrN14n9-ywvAFxxxxxx                         # Gitlab access token. You can omit this field when --gitlab-token or $GCPE_GITLAB_TOKEN  are set
-  # health_url: https://gitlab.example.com/-/health  # Alternative URL for determining health of GitLab API (readiness probe)
-  # skip_tls_verify: false                           # disable TLS verification
+
+  # Gitlab access token. You can omit this field when --gitlab-token or $GCPE_GITLAB_TOKEN  are set
+  token: xrN14n9-ywvAFxxxxxx
+
+  # Alternative URL for determining health of GitLab API (readiness probe)
+  # health_url: https://gitlab.example.com/-/health
+  
+  # disable TLS verification
+  # skip_tls_verify: false
 
 # Global rate limit for the GitLab API request/sec
 maximum_gitlab_api_requests_per_second: 10
@@ -36,7 +43,9 @@ maximum_gitlab_api_requests_per_second: 10
 projects_polling_interval_seconds: 1800 # only used for wildcards
 refs_polling_interval_seconds: 300
 pipelines_polling_interval_seconds: 60
-pipelines_max_polling_interval_seconds: 1800 # when no pipeline exists for a given ref, the exporter will exponentially backoff up to this value
+
+# When no pipeline exists for a given ref, the exporter will exponentially backoff up to this value
+pipelines_max_polling_interval_seconds: 1800
 
 # Whether to attempt retrieving refs from pipelines when the exporter starts (default: false)
 on_init_fetch_refs_from_pipelines: false
