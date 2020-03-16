@@ -10,7 +10,7 @@ require (
 	github.com/jpillora/backoff v1.0.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mvisonneau/go-helpers v0.0.0-20200224131125-cb5cc4e6def9
-	github.com/prometheus/client_golang v1.5.0
+	github.com/prometheus/client_golang v1.5.1
 	github.com/prometheus/procfs v0.0.10 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.5.1
