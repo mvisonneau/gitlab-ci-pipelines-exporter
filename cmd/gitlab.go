@@ -34,7 +34,13 @@ func refExists(refs []string, r string) bool {
 
 func (c *Client) getProject(name string) (*gitlab.Project, error) {
 	c.rateLimit()
-	p, _, err := c.Projects.GetProject(name, &gitlab.GetProjectOptions{})
+	trueVal := true
+
+	p, _, err := c.Projects.GetProject(name, &gitlab.GetProjectOptions{Statistics: &trueVal})
+	log.Infof("RFG: '%s' project has %d commits", p.PathWithNamespace, p.Statistics.CommitCount)
+	topics := strings.Join(p.TagList[:], ",")
+	commitCount.WithLabelValues(p.PathWithNamespace, topics, p.DefaultBranch).Set(float64(p.Statistics.CommitCount))
+
 	return p, err
 }
 

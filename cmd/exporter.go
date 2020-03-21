@@ -73,6 +73,14 @@ var (
 		},
 		[]string{"project", "topics", "ref"},
 	)
+
+	commitCount = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_project_commit_count",
+			Help: "GitLab project commit count in default ref",
+		},
+		[]string{"project", "topics", "ref"},
+	)
 )
 
 func init() {
@@ -83,6 +91,7 @@ func init() {
 	prometheus.MustRegister(lastRunStatus)
 	prometheus.MustRegister(runCount)
 	prometheus.MustRegister(timeSinceLastRun)
+	prometheus.MustRegister(commitCount)
 }
 
 // Run launches the exporter
