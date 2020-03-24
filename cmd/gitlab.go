@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jpillora/backoff"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/xanzy/go-gitlab"
 
 	log "github.com/sirupsen/logrus"
@@ -285,6 +286,24 @@ func (c *Client) pollProject(p Project) {
 	}
 }
 
+func (c *Client) outputStatusMetric(metric *prometheus.GaugeVec, labels []string, statuses []string, status string) {
+	// Moved into separate function to reduce cyclomatic complexity
+	args := append(labels, status)
+	if cfg.OutputSparseStatusMetrics {
+		metric.WithLabelValues(args...).Set(1)
+	} else {
+		// List of available statuses from the API spec
+		// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
+		for _, s := range statuses {
+			if s == status {
+				metric.WithLabelValues(args...).Set(1)
+			} else {
+				metric.WithLabelValues(append(labels, s)...).Set(0)
+			}
+		}
+	}
+}
+
 func (c *Client) pollPipelineJobs(gp *gitlab.Project, pipelineID int, topics string, ref string) error {
 	var jobs []*gitlab.Job
 	var resp *gitlab.Response
@@ -316,20 +335,11 @@ func (c *Client) pollPipelineJobs(gp *gitlab.Project, pipelineID int, topics str
 				log.Debugf("Job %s for pipeline %d", jobName, pipelineID)
 				lastRunJobDuration.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(job.Duration))
 
-				if cfg.OutputSparseStatusMetrics {
-					lastRunJobStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName, job.Status).Set(1)
-				} else {
-					// List of available statuses from the API spec
-					// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
-					for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"} {
-						var statVal float64
-						if s == job.Status {
-							statVal = 1
-						}
-
-						lastRunJobStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName, s).Set(statVal)
-					}
-				}
+				c.outputStatusMetric(
+					lastRunJobStatus,
+					[]string{gp.PathWithNamespace, topics, ref, stageName, jobName},
+					[]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"},
+					job.Status)
 
 				timeSinceLastJobRun.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(time.Since(*job.CreatedAt).Round(time.Second).Seconds()))
 
@@ -406,19 +416,11 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 				lastRunDuration.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.Duration))
 				lastRunID.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.ID))
 
-				if cfg.OutputSparseStatusMetrics {
-					lastRunStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, lastPipeline.Status).Set(1)
-				} else {
-					// List of available statuses from the API spec
-					// ref: https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines
-					for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped"} {
-						var statVal float64
-						if s == lastPipeline.Status {
-							statVal = 1
-						}
-						lastRunStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, s).Set(statVal)
-					}
-				}
+				c.outputStatusMetric(
+					lastRunStatus,
+					[]string{gp.PathWithNamespace, topics, ref},
+					[]string{"running", "pending", "success", "failed", "canceled", "skipped"},
+					lastPipeline.Status)
 
 				if cfg.FetchPipelineJobStats {
 					if err := c.pollPipelineJobs(gp, lastPipeline.ID, topics, ref); err != nil {
