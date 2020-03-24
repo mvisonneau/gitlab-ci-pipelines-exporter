@@ -278,11 +278,83 @@ func (c *Client) pollProject(p Project) {
 				}
 			}
 		} else {
-			log.Warnf("No refs found for for project '%s'", p.Name)
+			log.Warnf("No refs found for project '%s'", p.Name)
 		}
 
 		time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
 	}
+}
+
+func (c *Client) pollPipelineJobs(gp *gitlab.Project, pipelineID int, topics string, ref string) error {
+	var jobs []*gitlab.Job
+	var resp *gitlab.Response
+	var err error
+
+	options := &gitlab.ListJobsOptions{
+		ListOptions: gitlab.ListOptions{
+			PerPage: 20,
+			Page:    1,
+		},
+	}
+
+	for {
+		c.rateLimit()
+
+		jobs, resp, err = c.Jobs.ListPipelineJobs(gp.ID, pipelineID, options)
+		if err != nil {
+			return err
+		}
+
+		jobCount := len(jobs)
+
+		log.Infof("Found %d jobs for pipeline %d", jobCount, pipelineID)
+
+		if jobCount > 0 {
+			for _, job := range jobs {
+				jobName := job.Name
+				stageName := job.Stage
+				log.Debugf("Job %s for pipeline %d", jobName, pipelineID)
+				lastRunJobDuration.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(job.Duration))
+
+				if cfg.OutputSparseStatusMetrics {
+					lastRunJobStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName, job.Status).Set(1)
+				} else {
+					// List of available statuses from the API spec
+					// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
+					for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"} {
+						var statVal float64
+						if s == job.Status {
+							statVal = 1
+						}
+
+						lastRunJobStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName, s).Set(statVal)
+					}
+				}
+
+				timeSinceLastJobRun.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(time.Since(*job.CreatedAt).Round(time.Second).Seconds()))
+
+				jobRunCount.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Inc()
+
+				artifactSize := 0
+				for _, artifact := range job.Artifacts {
+					artifactSize += artifact.Size
+				}
+
+				lastRunJobArtifactSize.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(artifactSize))
+			}
+
+		} else {
+			log.Warnf("No jobs found for pipeline %d", pipelineID)
+			break
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		options.Page = resp.NextPage
+	}
+	return err
 }
 
 func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
@@ -334,15 +406,26 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 				lastRunDuration.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.Duration))
 				lastRunID.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.ID))
 
-				// List of available statuses from the API spec
-				// ref: https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines
-				for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped"} {
-					if s == lastPipeline.Status {
-						lastRunStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, s).Set(1)
-					} else {
-						lastRunStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, s).Set(0)
+				if cfg.OutputSparseStatusMetrics {
+					lastRunStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, lastPipeline.Status).Set(1)
+				} else {
+					// List of available statuses from the API spec
+					// ref: https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines
+					for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped"} {
+						var statVal float64
+						if s == lastPipeline.Status {
+							statVal = 1
+						}
+						lastRunStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, s).Set(statVal)
 					}
 				}
+
+				if cfg.FetchPipelineJobStats {
+					if err := c.pollPipelineJobs(gp, lastPipeline.ID, topics, ref); err != nil {
+						log.Errorf("Could not poll jobs for pipeline %d: %s", lastPipeline.ID, err.Error())
+					}
+				}
+
 			}
 		}
 
