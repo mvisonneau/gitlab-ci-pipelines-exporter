@@ -19,6 +19,10 @@ import (
 	"go.uber.org/ratelimit"
 )
 
+const (
+	userAgent = "gitlab-ci-pipelines-exporter"
+)
+
 // Client holds a GitLab client
 type Client struct {
 	*gitlab.Client
@@ -120,6 +124,8 @@ func Run(ctx *cli.Context) error {
 		Client:      gitlab.NewClient(&http.Client{Transport: httpTransport}, cfg.Gitlab.Token),
 		RateLimiter: ratelimit.New(cfg.MaximumGitLabAPIRequestsPerSecond),
 	}
+
+	c.UserAgent = userAgent
 	_ = c.SetBaseURL(cfg.Gitlab.URL)
 
 	go c.pollProjects()

@@ -9,6 +9,7 @@ and this project adheres to [0ver](https://0ver.org).
 
 ### Changed
 
+- Updated the user agent to "gitlab-ci-pipelines-exporter"
 - Bumped go-gitlab to v0.29.0
 - Bumped goreleaser to 0.129.0
 
