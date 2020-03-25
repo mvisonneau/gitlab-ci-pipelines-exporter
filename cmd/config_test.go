@@ -14,7 +14,7 @@ import (
 
 func TestParseInvalidPath(t *testing.T) {
 	err := cfg.Parse("/path_do_not_exist")
-	assert.Equal(t, err, fmt.Errorf("Couldn't open config file : open /path_do_not_exist: no such file or directory"))
+	assert.Equal(t, fmt.Errorf("Couldn't open config file : open /path_do_not_exist: no such file or directory"), err)
 }
 
 func TestParseInvalidYaml(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseEmptyYaml(t *testing.T) {
 	// Invalid YAML content
 	f.WriteString("---")
 	err = cfg.Parse(f.Name())
-	assert.Equal(t, err, fmt.Errorf("You need to configure at least one project/wildcard to poll, none given"))
+	assert.Equal(t, fmt.Errorf("You need to configure at least one project/wildcard to poll, none given"), err)
 }
 
 func TestParseValidConfig(t *testing.T) {
@@ -130,7 +130,7 @@ wildcards:
 	}
 
 	// Test variable assignments
-	assert.Equal(t, *cfg, expectedCfg)
+	assert.Equal(t, expectedCfg, *cfg)
 }
 
 func TestParseDefaultsValues(t *testing.T) {
@@ -181,7 +181,7 @@ projects:
 	}
 
 	// Test variable assignments
-	assert.Equal(t, *cfg, expectedCfg)
+	assert.Equal(t, expectedCfg, *cfg)
 }
 
 func TestMergeWithContext(t *testing.T) {
@@ -206,7 +206,7 @@ projects:
 
 	err = cfg.Parse(f.Name())
 	assert.Nil(t, err)
-	assert.Equal(t, cfg.Gitlab.Token, expectedFileToken)
+	assert.Equal(t, expectedFileToken, cfg.Gitlab.Token)
 
 	set := flag.NewFlagSet("", 0)
 	set.String("gitlab-token", expectedCtxToken, "")
@@ -214,5 +214,5 @@ projects:
 	ctx := cli.NewContext(nil, set, nil)
 	cfg.MergeWithContext(ctx)
 
-	assert.Equal(t, cfg.Gitlab.Token, expectedCtxToken)
+	assert.Equal(t, expectedCtxToken, cfg.Gitlab.Token)
 }

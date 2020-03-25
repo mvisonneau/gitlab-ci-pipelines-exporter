@@ -35,15 +35,15 @@ func TestProjectExists(t *testing.T) {
 		Projects: []Project{foo},
 	}
 
-	assert.Equal(t, projectExists(foo), true)
-	assert.Equal(t, projectExists(bar), false)
+	assert.Equal(t, true, projectExists(foo))
+	assert.Equal(t, false, projectExists(bar))
 }
 
 func TestRefExists(t *testing.T) {
 	refs := []string{"foo"}
 
-	assert.Equal(t, refExists(refs, "foo"), true)
-	assert.Equal(t, refExists(refs, "bar"), false)
+	assert.Equal(t, true, refExists(refs, "foo"))
+	assert.Equal(t, false, refExists(refs, "bar"))
 }
 
 func TestGetProject(t *testing.T) {
@@ -60,7 +60,7 @@ func TestGetProject(t *testing.T) {
 	p, err := c.getProject(project)
 	assert.Nil(t, err)
 	assert.NotNil(t, p)
-	assert.Equal(t, p.ID, 1)
+	assert.Equal(t, 1, p.ID)
 }
 
 func TestListUserProjects(t *testing.T) {
@@ -90,7 +90,7 @@ func TestListUserProjects(t *testing.T) {
 
 	projects, err := c.listProjects(w)
 	assert.Nil(t, err)
-	assert.Equal(t, len(projects), 2)
+	assert.Equal(t, 2, len(projects))
 }
 
 func TestListGroupProjects(t *testing.T) {
@@ -120,7 +120,7 @@ func TestListGroupProjects(t *testing.T) {
 
 	projects, err := c.listProjects(w)
 	assert.Nil(t, err)
-	assert.Equal(t, len(projects), 2)
+	assert.Equal(t, 2, len(projects))
 }
 
 func TestListProjects(t *testing.T) {
@@ -150,7 +150,7 @@ func TestListProjects(t *testing.T) {
 
 	projects, err := c.listProjects(w)
 	assert.Nil(t, err)
-	assert.Equal(t, len(projects), 2)
+	assert.Equal(t, 2, len(projects))
 }
 
 func TestListProjectsAPIError(t *testing.T) {
@@ -179,5 +179,5 @@ func TestListProjectsAPIError(t *testing.T) {
 
 	_, err := c.listProjects(w)
 	assert.NotNil(t, err)
-	assert.Equal(t, strings.HasPrefix(err.Error(), "Unable to list projects with search pattern"), true)
+	assert.Equal(t, true, strings.HasPrefix(err.Error(), "Unable to list projects with search pattern"))
 }

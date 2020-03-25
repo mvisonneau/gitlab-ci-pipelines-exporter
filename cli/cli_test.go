@@ -9,6 +9,6 @@ import (
 func TestRunCli(t *testing.T) {
 	version := "0.0.0"
 	app := Init(&version)
-	assert.Equal(t, app.Name, "gitlab-ci-pipelines-exporter")
-	assert.Equal(t, app.Version, "0.0.0")
+	assert.Equal(t, "gitlab-ci-pipelines-exporter", app.Name)
+	assert.Equal(t, "0.0.0", app.Version)
 }

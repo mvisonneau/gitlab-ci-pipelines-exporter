@@ -17,7 +17,7 @@ func TestRunWrongLogLevel(t *testing.T) {
 	set.String("log-format", "json", "")
 	fmt.Println(Run(cli.NewContext(nil, set, nil)))
 	err := Run(cli.NewContext(nil, set, nil))
-	assert.Equal(t, strings.HasPrefix(err.Error(), "not a valid logrus Level"), true)
+	assert.Equal(t, true, strings.HasPrefix(err.Error(), "not a valid logrus Level"))
 }
 
 func TestRunWrongLogType(t *testing.T) {
@@ -25,7 +25,7 @@ func TestRunWrongLogType(t *testing.T) {
 	set.String("log-level", "debug", "")
 	set.String("log-format", "foo", "")
 	err := Run(cli.NewContext(nil, set, nil))
-	assert.Equal(t, strings.HasPrefix(err.Error(), "Invalid log format"), true)
+	assert.Equal(t, true, strings.HasPrefix(err.Error(), "Invalid log format"))
 }
 
 func TestRunInvalidConfigFile(t *testing.T) {
@@ -34,5 +34,5 @@ func TestRunInvalidConfigFile(t *testing.T) {
 	set.String("log-format", "json", "")
 	set.String("config", "path_does_not_exist", "")
 	err := Run(cli.NewContext(nil, set, nil))
-	assert.Equal(t, strings.HasPrefix(err.Error(), "Couldn't open config file :"), true)
+	assert.Equal(t, true, strings.HasPrefix(err.Error(), "Couldn't open config file :"))
 }
