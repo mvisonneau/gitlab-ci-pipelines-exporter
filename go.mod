@@ -12,8 +12,6 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli v1.22.3
 	github.com/xanzy/go-gitlab v0.29.0
-	go.uber.org/atomic v1.6.0 // indirect
 	go.uber.org/ratelimit v0.1.0
-	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
