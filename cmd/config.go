@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/urfave/cli"
+	"github.com/xanzy/go-gitlab"
 	"gopkg.in/yaml.v3"
 )
 
@@ -22,7 +23,7 @@ type Config struct {
 	RefsPollingIntervalSeconds             int        `yaml:"refs_polling_interval_seconds"`                 // Interval in seconds to fetch refs from projects
 	PipelinesPollingIntervalSeconds        int        `yaml:"pipelines_polling_interval_seconds"`            // Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
 	PipelinesMaxPollingIntervalSeconds     int        `yaml:"pipelines_max_polling_interval_seconds"`        // Maximum interval in seconds to fetch new pipelines from refs
-	FetchPipelineJobStats                  bool       `yaml:"fetch_pipeline_job_stats"`                      // Whether to attempt to retrieve job statistics from polled pipelines
+	FetchPipelineJobMetrics                bool       `yaml:"fetch_pipeline_job_metrics"`                    // Whether to attempt to retrieve job metrics from polled pipelines
 	OutputSparseStatusMetrics              bool       `yaml:"output_sparse_status_metrics"`                  // Whether to report all pipeline / job statuses, or only report the one from the last job.
 	OnInitFetchRefsFromPipelines           bool       `yaml:"on_init_fetch_refs_from_pipelines"`             // Whether to attempt retrieving refs from pipelines when the exporter starts
 	OnInitFetchRefsFromPipelinesDepthLimit int        `yaml:"on_init_fetch_refs_from_pipelines_depth_limit"` // Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
@@ -33,8 +34,11 @@ type Config struct {
 
 // Project holds information about a GitLab project
 type Project struct {
-	Name string
-	Refs string
+	Name                      string `yaml:"name"`
+	Refs                      string `yaml:"refs"`
+	FetchPipelineJobMetrics   *bool  `yaml:"fetch_pipeline_job_metrics,omitempty"`
+	OutputSparseStatusMetrics *bool  `yaml:"output_sparse_status_metrics,omitempty"`
+	GitlabProject             *gitlab.Project
 }
 
 // Wildcard is a specific handler to dynamically search projects
@@ -45,8 +49,10 @@ type Wildcard struct {
 		Kind             string
 		IncludeSubgroups bool `yaml:"include_subgroups"`
 	}
-	Archived bool `yaml:"archived"`
-	Refs     string
+	Archived                  bool  `yaml:"archived"`
+	FetchPipelineJobMetrics   *bool `yaml:"fetch_pipeline_job_metrics,omitempty"`
+	OutputSparseStatusMetrics *bool `yaml:"output_sparse_status_metrics,omitempty"`
+	Refs                      string
 }
 
 // Default values
@@ -60,6 +66,24 @@ const (
 )
 
 var cfg *Config
+
+// ShouldFetchPipelineJobMetrics returns true if pipeline job statistics should be fetched
+func (p *Project) ShouldFetchPipelineJobMetrics(cfg *Config) bool {
+	if p.FetchPipelineJobMetrics == nil {
+		// Default to global config value
+		return cfg.FetchPipelineJobMetrics
+	}
+	return *p.FetchPipelineJobMetrics
+}
+
+// ShouldOutputSparseStatusMetrics returns true if sparse status metrics should be exported
+func (p *Project) ShouldOutputSparseStatusMetrics(cfg *Config) bool {
+	if p.OutputSparseStatusMetrics == nil {
+		// Default to global config value
+		return cfg.OutputSparseStatusMetrics
+	}
+	return *p.OutputSparseStatusMetrics
+}
 
 // Parse loads a yaml file into a Config structure
 func (cfg *Config) Parse(path string) error {
