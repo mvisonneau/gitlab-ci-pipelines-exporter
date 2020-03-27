@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jpillora/backoff"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/xanzy/go-gitlab"
 
 	log "github.com/sirupsen/logrus"
@@ -91,12 +92,16 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 			return projects, fmt.Errorf("Unable to list projects with search pattern '%s' from the GitLab API : %v", w.Search, err.Error())
 		}
 
+		// Copy relevant settings from wildcard into created project
 		for _, gp := range gps {
+
 			projects = append(
 				projects,
 				Project{
-					Name: gp.PathWithNamespace,
-					Refs: w.Refs,
+					Name:                      gp.PathWithNamespace,
+					Refs:                      w.Refs,
+					FetchPipelineJobMetrics:   w.FetchPipelineJobMetrics,
+					OutputSparseStatusMetrics: w.OutputSparseStatusMetrics,
 				},
 			)
 		}
@@ -228,12 +233,11 @@ func (c *Client) pollTagNames(projectID int) ([]*string, error) {
 
 func (c *Client) pollProject(p Project) {
 	var polledRefs []string
-	var gp *gitlab.Project
 	var err error
 
 	for {
 		log.Debugf("Fetching project : %s", p.Name)
-		gp, err = c.getProject(p.Name)
+		p.GitlabProject, err = c.getProject(p.Name)
 		if err != nil {
 			log.Errorf("Unable to fetch project '%s' from the GitLab API : %v", p.Name, err.Error())
 			time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
@@ -242,7 +246,7 @@ func (c *Client) pollProject(p Project) {
 
 		if cfg.OnInitFetchRefsFromPipelines {
 			log.Debugf("Polling project refs %s from most recent %d pipelines (init only)", p.Name, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
-			refs, err := c.pollProjectRefsFromPipelines(gp.ID, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
+			refs, err := c.pollProjectRefsFromPipelines(p.GitlabProject.ID, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
 			if err != nil {
 				log.Errorf("Unable to fetch refs from project pipelines %s : %v", p.Name, err.Error())
 				time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
@@ -252,7 +256,7 @@ func (c *Client) pollProject(p Project) {
 			log.Debugf("Found %d refs from %s pipelines", len(refs), p.Name)
 			for _, r := range refs {
 				log.Infof("Found ref '%s' for project '%s'", r, p.Name)
-				go c.pollProjectRef(gp, r)
+				go c.pollProjectRef(p, r)
 				polledRefs = append(polledRefs, r)
 			}
 		}
@@ -263,7 +267,7 @@ func (c *Client) pollProject(p Project) {
 	for {
 		log.Debugf("Polling refs for project : %s", p.Name)
 
-		refs, err := c.pollRefs(gp.ID, p.Refs)
+		refs, err := c.pollRefs(p.GitlabProject.ID, p.Refs)
 		if err != nil {
 			log.Warnf("Could not fetch refs for project '%s'", p.Name)
 			continue
@@ -273,19 +277,117 @@ func (c *Client) pollProject(p Project) {
 			for _, r := range refs {
 				if !refExists(polledRefs, r) {
 					log.Infof("Found ref '%s' for project '%s'", r, p.Name)
-					go c.pollProjectRef(gp, r)
+					go c.pollProjectRef(p, r)
 					polledRefs = append(polledRefs, r)
 				}
 			}
 		} else {
-			log.Warnf("No refs found for for project '%s'", p.Name)
+			log.Warnf("No refs found for project '%s'", p.Name)
 		}
 
 		time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
 	}
 }
 
-func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
+func outputStatusMetric(metric *prometheus.GaugeVec, labels []string, statuses []string, status string, sparseMetrics bool) {
+	// Moved into separate function to reduce cyclomatic complexity
+	args := append(labels, status)
+	if sparseMetrics {
+		metric.WithLabelValues(args...).Set(1)
+	} else {
+		// List of available statuses from the API spec
+		// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
+		for _, s := range statuses {
+			if s == status {
+				metric.WithLabelValues(args...).Set(1)
+			} else {
+				metric.WithLabelValues(append(labels, s)...).Set(0)
+			}
+		}
+	}
+}
+
+func (c *Client) outputPipelineStatusMetric(status string, sparseMetrics bool, labels ...string) {
+	outputStatusMetric(
+		lastRunStatus,
+		labels,
+		[]string{"running", "pending", "success", "failed", "canceled", "skipped"},
+		status,
+		sparseMetrics,
+	)
+}
+func (c *Client) outputJobStatusMetric(status string, sparseMetrics bool, labels ...string) {
+	outputStatusMetric(
+		lastRunJobStatus,
+		labels,
+		[]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"},
+		status,
+		sparseMetrics,
+	)
+}
+
+func (c *Client) pollPipelineJobs(p Project, pipelineID int, topics string, ref string) error {
+	var jobs []*gitlab.Job
+	var resp *gitlab.Response
+	var gp *gitlab.Project = p.GitlabProject
+	var err error
+
+	options := &gitlab.ListJobsOptions{
+		ListOptions: gitlab.ListOptions{
+			PerPage: 20,
+			Page:    1,
+		},
+	}
+
+	for {
+		c.rateLimit()
+
+		jobs, resp, err = c.Jobs.ListPipelineJobs(gp.ID, pipelineID, options)
+		if err != nil {
+			return err
+		}
+
+		jobCount := len(jobs)
+
+		log.Infof("Found %d jobs for pipeline %d", jobCount, pipelineID)
+
+		if jobCount > 0 {
+			for _, job := range jobs {
+				jobName := job.Name
+				stageName := job.Stage
+				log.Debugf("Job %s for pipeline %d", jobName, pipelineID)
+				lastRunJobDuration.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(job.Duration))
+
+				c.outputJobStatusMetric(job.Status, p.ShouldOutputSparseStatusMetrics(cfg), gp.PathWithNamespace, topics, ref, stageName, jobName)
+
+				timeSinceLastJobRun.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(time.Since(*job.CreatedAt).Round(time.Second).Seconds()))
+
+				jobRunCount.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Inc()
+
+				artifactSize := 0
+				for _, artifact := range job.Artifacts {
+					artifactSize += artifact.Size
+				}
+
+				lastRunJobArtifactSize.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(artifactSize))
+			}
+
+		} else {
+			log.Warnf("No jobs found for pipeline %d", pipelineID)
+			break
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
+		options.Page = resp.NextPage
+	}
+	return err
+}
+
+func (c *Client) pollProjectRef(p Project, ref string) {
+	var gp *gitlab.Project = p.GitlabProject
 	topics := strings.Join(gp.TagList[:], ",")
 	var lastPipeline *gitlab.Pipeline
 
@@ -334,15 +436,14 @@ func (c *Client) pollProjectRef(gp *gitlab.Project, ref string) {
 				lastRunDuration.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.Duration))
 				lastRunID.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.ID))
 
-				// List of available statuses from the API spec
-				// ref: https://docs.gitlab.com/ee/api/pipelines.html#list-project-pipelines
-				for _, s := range []string{"running", "pending", "success", "failed", "canceled", "skipped"} {
-					if s == lastPipeline.Status {
-						lastRunStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, s).Set(1)
-					} else {
-						lastRunStatus.WithLabelValues(gp.PathWithNamespace, topics, ref, s).Set(0)
+				c.outputPipelineStatusMetric(lastPipeline.Status, p.ShouldOutputSparseStatusMetrics(cfg), gp.PathWithNamespace, topics, ref)
+
+				if p.ShouldFetchPipelineJobMetrics(cfg) {
+					if err := c.pollPipelineJobs(p, lastPipeline.ID, topics, ref); err != nil {
+						log.Errorf("Could not poll jobs for pipeline %d: %s", lastPipeline.ID, err.Error())
 					}
 				}
+
 			}
 		}
 
