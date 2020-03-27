@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+## [0.2.13] - 2019-03-27
+
 ### Added
 
 - **new** `fetch_pipeline_job_stats` configuration flag (default `false`).
@@ -21,7 +23,6 @@ if not seen in a long time.
 
 - Corrected the ordering of variable assigments in the assertion tests functions
 - Updated the user agent to `gitlab-ci-pipelines-exporter`
-- Bumped go-gitlab to v0.29.0
 - Bumped goreleaser to 0.129.0
 
 ## [0.2.12] - 2019-03-09
