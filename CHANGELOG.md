@@ -11,7 +11,7 @@ and this project adheres to [0ver](https://0ver.org).
 
 ### Added
 
-- **new** `fetch_pipeline_job_stats` configuration flag (default `false`).
+- **new** `fetch_pipeline_job_metrics` configuration flag (default `false`).
 When enabled, various statistics for the jobs from the last pipeline run will be collected.
 
 - **new** `output_sparse_status_metrics` flag (default `false`).
