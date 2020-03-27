@@ -210,7 +210,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.12...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.13...HEAD
+[0.2.13]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.13
 [0.2.12]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.12
 [0.2.11]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.11
 [0.2.10]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.10
