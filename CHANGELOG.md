@@ -7,10 +7,20 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- **new** `fetch_pipeline_job_stats` configuration flag (default `false`).
+When enabled, various statistics for the jobs from the last pipeline run will be collected.
+
+- **new** `output_sparse_status_metrics` flag (default `false`).
+When enabled, only reports the status metric currently matching the last pipeline run.
+Reduces reported metric count, at the cost of status values being expired from storage
+if not seen in a long time.
+
 ### Changed
 
-- Corrected the ordering of variable assigments in the assertion tests functions.
-- Updated the user agent to "gitlab-ci-pipelines-exporter"
+- Corrected the ordering of variable assigments in the assertion tests functions
+- Updated the user agent to `gitlab-ci-pipelines-exporter`
 - Bumped go-gitlab to v0.29.0
 - Bumped goreleaser to 0.129.0
 
