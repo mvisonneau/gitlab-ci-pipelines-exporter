@@ -7,7 +7,9 @@ metadata:
     chart: {{ template "exporter.chart" . }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+{{- if .Values.service.labels }}
 {{ toYaml .Values.service.labels | indent 4 }}
+{{- end }}
   name: {{ template "exporter.fullname" . }}
   annotations:
 {{ toYaml .Values.service.annotations | indent 4 }}
