@@ -165,13 +165,22 @@ func Run(ctx *cli.Context) error {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.SkipTLSVerify},
 	}
 
+	opts := []gitlab.ClientOptionFunc{
+		gitlab.WithHTTPClient(&http.Client{Transport: httpTransport}),
+		gitlab.WithBaseURL(cfg.Gitlab.URL),
+	}
+
+	gc, err := gitlab.NewClient(cfg.Gitlab.Token, opts...)
+	if err != nil {
+		return exit(err, 1)
+	}
+
 	c := &Client{
-		Client:      gitlab.NewClient(&http.Client{Transport: httpTransport}, cfg.Gitlab.Token),
+		Client:      gc,
 		RateLimiter: ratelimit.New(cfg.MaximumGitLabAPIRequestsPerSecond),
 	}
 
 	c.UserAgent = userAgent
-	_ = c.SetBaseURL(cfg.Gitlab.URL)
 
 	go c.pollProjects()
 

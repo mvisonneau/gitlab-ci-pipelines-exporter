@@ -17,11 +17,17 @@ func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *Client) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
+	opts := []gitlab.ClientOptionFunc{
+		gitlab.WithBaseURL(server.URL),
+		gitlab.WithoutRetries(),
+	}
+
+	gc, _ := gitlab.NewClient("", opts...)
+
 	c := &Client{
-		Client:      gitlab.NewClient(&http.Client{}, ""),
+		Client:      gc,
 		RateLimiter: ratelimit.New(100),
 	}
-	c.SetBaseURL(server.URL)
 
 	return mux, server, c
 }
