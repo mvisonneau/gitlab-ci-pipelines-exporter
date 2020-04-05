@@ -80,7 +80,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"} > 0) or vector(0)",
+          "expr": "count(gitlab_ci_pipeline_last_run_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -361,7 +361,7 @@
       ],
       "targets": [
         {
-          "expr": "(gitlab_ci_pipeline_status{status=\"success\", project=~\"$PROJECT\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", project=~\"$PROJECT\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"} * 3 > 0)",
+          "expr": "(gitlab_ci_pipeline_last_run_status{status=\"success\", project=~\"$PROJECT\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_last_run_status{status=\"running\", project=~\"$PROJECT\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_last_run_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"} * 3 > 0)",
           "format": "time_series",
           "hide": false,
           "instant": true,
@@ -483,7 +483,7 @@
       ],
       "targets": [
         {
-          "expr": "(max(gitlab_ci_pipeline_time_since_last_run_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) * min(gitlab_ci_pipeline_status{status=~\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref)) > 0",
+          "expr": "(max(gitlab_ci_pipeline_time_since_last_run_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) * min(gitlab_ci_pipeline_last_run_status{status=~\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref)) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -491,7 +491,7 @@
           "refId": "B"
         },
         {
-          "expr": "(max(gitlab_ci_pipeline_last_run_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) * min(gitlab_ci_pipeline_status{status=~\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref)) > 0",
+          "expr": "(max(gitlab_ci_pipeline_last_run_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) * min(gitlab_ci_pipeline_last_run_status{status=~\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref)) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -499,7 +499,7 @@
           "refId": "C"
         },
         {
-          "expr": "min(gitlab_ci_pipeline_status{status=~\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) > 0",
+          "expr": "min(gitlab_ci_pipeline_last_run_status{status=~\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -624,14 +624,14 @@
       ],
       "targets": [
         {
-          "expr": "max(gitlab_ci_pipeline_time_since_last_run_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) unless (min(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) > 0)",
+          "expr": "max(gitlab_ci_pipeline_time_since_last_run_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) unless (min(gitlab_ci_pipeline_last_run_status{status!~\"success|running\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) > 0)",
           "format": "table",
           "instant": true,
           "intervalFactor": 1,
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_last_run_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) unless (min(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) > 0)",
+          "expr": "max(gitlab_ci_pipeline_last_run_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) unless (min(gitlab_ci_pipeline_last_run_status{status!~\"success|running\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -639,7 +639,7 @@
           "refId": "C"
         },
         {
-          "expr": "min(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"} * 1) by (project, ref) > 0 or min(gitlab_ci_pipeline_status{status=~\"running\", project=~\"$PROJECT\", ref=~\"$REF\"} * 2) by (project, ref) > 0",
+          "expr": "min(gitlab_ci_pipeline_last_run_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"} * 1) by (project, ref) > 0 or min(gitlab_ci_pipeline_last_run_status{status=~\"running\", project=~\"$PROJECT\", ref=~\"$REF\"} * 2) by (project, ref) > 0",
           "format": "table",
           "instant": true,
           "intervalFactor": 1,
