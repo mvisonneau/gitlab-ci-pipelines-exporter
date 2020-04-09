@@ -7,14 +7,17 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+## [0.2.14] - 2019-04-09
+
 ### Added
 
-- Support for `manual` pipeline statuses
+- Support for pipelines status : `manual`
 
 ### Changed
 
-- renamed the `job` label into `job_name`
-- Bumped go-gitlab to v0.31.0
+- Bumped **go-gitlab** to `v0.31.0` which includes an exponentional backoff retry mechanism on API errors
+- Renamed the `job` label into `job_name`
+- Fixed a bug in the helm deployment when using service labels
 
 ## [0.2.13] - 2019-03-27
 
@@ -219,7 +222,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.13...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.14...HEAD
+[0.2.14]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.14
 [0.2.13]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.13
 [0.2.12]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.12
 [0.2.11]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.11
