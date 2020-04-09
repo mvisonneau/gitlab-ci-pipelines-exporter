@@ -13,6 +13,7 @@ and this project adheres to [0ver](https://0ver.org).
 
 ### Changed
 
+- renamed the `job` label into `job_name`
 - Bumped go-gitlab to v0.31.0
 
 ## [0.2.13] - 2019-03-27

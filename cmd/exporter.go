@@ -51,7 +51,7 @@ var (
 			Name: "gitlab_ci_pipeline_last_job_run_duration_seconds",
 			Help: "Duration of last job run",
 		},
-		[]string{"project", "topics", "ref", "stage", "job"},
+		[]string{"project", "topics", "ref", "stage", "job_name"},
 	)
 
 	lastRunJobStatus = prometheus.NewGaugeVec(
@@ -59,7 +59,7 @@ var (
 			Name: "gitlab_ci_pipeline_last_job_run_status",
 			Help: "Status of the most recent job",
 		},
-		[]string{"project", "topics", "ref", "stage", "job", "status"},
+		[]string{"project", "topics", "ref", "stage", "job_name", "status"},
 	)
 
 	lastRunJobArtifactSize = prometheus.NewGaugeVec(
@@ -67,7 +67,7 @@ var (
 			Name: "gitlab_ci_pipeline_last_job_run_artifact_size",
 			Help: "Filesize of the most recent job artifacts",
 		},
-		[]string{"project", "topics", "ref", "stage", "job"},
+		[]string{"project", "topics", "ref", "stage", "job_name"},
 	)
 
 	timeSinceLastJobRun = prometheus.NewGaugeVec(
@@ -75,7 +75,7 @@ var (
 			Name: "gitlab_ci_pipeline_time_since_last_job_run_seconds",
 			Help: "Elapsed time since most recent GitLab CI job run.",
 		},
-		[]string{"project", "topics", "ref", "stage", "job"},
+		[]string{"project", "topics", "ref", "stage", "job_name"},
 	)
 
 	jobRunCount = prometheus.NewCounterVec(
@@ -83,7 +83,7 @@ var (
 			Name: "gitlab_ci_pipeline_job_run_count",
 			Help: "GitLab CI pipeline job run count",
 		},
-		[]string{"project", "topics", "ref", "stage", "job"},
+		[]string{"project", "topics", "ref", "stage", "job_name"},
 	)
 
 	lastRunID = prometheus.NewGaugeVec(
