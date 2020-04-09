@@ -311,7 +311,7 @@ func (c *Client) outputPipelineStatusMetric(status string, sparseMetrics bool, l
 	outputStatusMetric(
 		lastRunStatus,
 		labels,
-		[]string{"running", "pending", "success", "failed", "canceled", "skipped"},
+		[]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"},
 		status,
 		sparseMetrics,
 	)
