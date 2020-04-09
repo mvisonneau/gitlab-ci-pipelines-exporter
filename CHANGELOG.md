@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Added
+
+- Support for `manual` pipeline statuses
+
 ### Changed
 
 - Bumped go-gitlab to v0.31.0
