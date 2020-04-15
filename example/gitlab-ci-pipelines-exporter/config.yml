@@ -1,8 +1,27 @@
 gitlab:
-  url: https://gitlab.com
-  token: <your_token>
+  url: https://gitlab.lastminute.com
+  token: x8zhx7s2mZ9jf3ZGRNrD
 
-# Example public projects to monitor
-projects:
-  - name: gitlab-org/gitlab-runner
-  - name: gitlab-org/charts/auto-deploy-app
+## Example public projects to monitor
+#projects:
+#  - name: gitlab-org/gitlab-runner
+#  - name: gitlab-org/charts/auto-deploy-app
+on_init_fetch_refs_from_pipelines: true
+projects_polling_interval_seconds: 30
+refs_polling_interval_seconds: 60
+
+wildcards:
+  - owner:
+      name: fromscratch
+      kind: group
+      include_subgroups: true
+    refs: ".*"
+    fetch_pipeline_job_metrics: true
+    output_sparse_status_metrics: true
+  - owner:
+      name: infrastructure
+      kind: group
+      include_subgroups: true
+    refs: ".*"
+    fetch_pipeline_job_metrics: true
+    output_sparse_status_metrics: true
