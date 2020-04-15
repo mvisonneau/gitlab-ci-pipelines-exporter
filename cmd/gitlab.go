@@ -444,11 +444,11 @@ func (c *Client) discoverWildcards() {
 	}
 }
 
-func (c *Client) pollWithWorkersUntil(stopWorkers chan struct{}) {
+func (c *Client) pollWithWorkersUntil(stopWorkers <-chan struct{}) {
 	log.Infof("%d project(s) configured for polling", len(cfg.Projects))
 	pollErrors := c.pollProjectsWithMaxWorkers(stopWorkers, cfg.Projects...)
 	for _, err := range pollErrors {
-		log.Errorf("%s", err.Error())
+		log.Errorf("%v", err)
 	}
 }
 
@@ -470,8 +470,11 @@ func (c *Client) pollProjectsFromWildcards() error {
 }
 
 func (c *Client) pollProjectsWithMaxWorkers(until <-chan struct{}, projects ...Project) []error {
-	errs := make([]error, 0)
+	var errs []error
+	errorStream := make(chan error)
+	defer close(errorStream)
 	projectsToPoll := make(chan Project, len(projects))
+	// spawn GOMAXPROCS workers to process project polling
 	for w := 0; w < runtime.GOMAXPROCS(0); w++ {
 		go func() {
 			for {
@@ -480,12 +483,19 @@ func (c *Client) pollProjectsWithMaxWorkers(until <-chan struct{}, projects ...P
 					return
 				case p := <-projectsToPoll:
 					if e := c.pollProject(p); e != nil {
-						errs = append(errs, e)
+						errorStream <- e
 					}
 				}
 			}
 		}()
 	}
+	go func() {
+		for ex := range errorStream {
+			errs = append(errs, ex)
+		}
+	}()
+	// since the channel is buffered we can close immediately and the runtime will
+	// handle the channel close only when the messages are dispatched
 	for _, pr := range projects {
 		projectsToPoll <- pr
 	}
