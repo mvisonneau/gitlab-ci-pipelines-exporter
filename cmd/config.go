@@ -65,7 +65,7 @@ const (
 	defaultRefsPollingIntervalSeconds             = 300
 )
 
-var cfg *Config
+var cfg = &Config{}
 
 // ShouldFetchPipelineJobMetrics returns true if pipeline job statistics should be fetched
 func (p *Project) ShouldFetchPipelineJobMetrics(cfg *Config) bool {

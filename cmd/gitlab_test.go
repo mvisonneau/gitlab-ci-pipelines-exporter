@@ -185,5 +185,45 @@ func TestListProjectsAPIError(t *testing.T) {
 
 	_, err := c.listProjects(w)
 	assert.NotNil(t, err)
-	assert.Equal(t, true, strings.HasPrefix(err.Error(), "Unable to list projects with search pattern"))
+	assert.Equal(t, true, strings.HasPrefix(err.Error(), "unable to list projects with search pattern"))
+}
+
+// Here an example of concurrent execution of projects polling
+func TestProjectPolling(t *testing.T) {
+	projects := []Project{{Name: "test1"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
+	until := make(chan struct{})
+	defer close(until)
+	_, _, c := getMockedGitlabClient()
+	// provided we are able to intercept an error from from pollProject method
+	// we can iterate over a channel of Project and collect its results
+	assert.Equal(t, len(projects), pollingResult(until, readProjects(until, projects...), c, t))
+}
+
+func readProjects(until chan struct{}, projects ...Project) <-chan Project {
+	p := make(chan Project)
+	go func() {
+		defer close(p)
+		for _, i := range projects {
+			select {
+			case <-until:
+				return
+			case p <- i:
+			}
+		}
+	}()
+	return p
+}
+
+func pollingResult(until <-chan struct{}, projects <-chan Project, client *Client, t *testing.T) (numErrs int) {
+	for i := range projects {
+		select {
+		case <-until:
+			return numErrs
+		default:
+			if assert.Error(t, client.pollProject(i)) {
+				numErrs++
+			}
+		}
+	}
+	return numErrs
 }
