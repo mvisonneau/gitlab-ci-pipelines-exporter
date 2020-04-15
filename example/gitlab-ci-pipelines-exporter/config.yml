@@ -1,6 +1,6 @@
 gitlab:
-  url: https://gitlab.lastminute.com
-  token: x8zhx7s2mZ9jf3ZGRNrD
+  url: https://gitlab.com
+  token: something
 
 ## Example public projects to monitor
 #projects:
