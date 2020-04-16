@@ -208,7 +208,7 @@ func Run(ctx *cli.Context) error {
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
 	mux.Handle("/metrics", promhttp.HandlerFor(metrics, promhttp.HandlerOpts{
 		Registry:          metrics,
-		EnableOpenMetrics: true,
+		EnableOpenMetrics: cfg.PrometheusOpenmetricsEncoding,
 	}))
 
 	srv := &http.Server{

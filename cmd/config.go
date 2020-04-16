@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"runtime"
 
 	"github.com/urfave/cli"
 	"github.com/xanzy/go-gitlab"
@@ -27,6 +28,8 @@ type Config struct {
 	OnInitFetchRefsFromPipelines           bool       `yaml:"on_init_fetch_refs_from_pipelines"`             // Whether to attempt retrieving refs from pipelines when the exporter starts
 	OnInitFetchRefsFromPipelinesDepthLimit int        `yaml:"on_init_fetch_refs_from_pipelines_depth_limit"` // Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
 	DefaultRefsRegexp                      string     `yaml:"default_refs"`                                  // Default regular expression
+	MaximumProjectsPollingWorkers          int        `yaml:"maximum_projects_poller_workers"`               // Sets the parallelism for polling projects from the API
+	PrometheusOpenmetricsEncoding          bool       `yaml:"prometheus_openmetrics_encoding"`               // Enable OpenMetrics content encoding in prometheus HTTP handler (default: false)
 	Projects                               []Project  `yaml:"projects"`                                      // List of projects to poll
 	Wildcards                              []Wildcard `yaml:"wildcards"`                                     // List of wildcards to search projects from
 }
@@ -58,10 +61,12 @@ type Wildcard struct {
 const (
 	defaultMaximumGitLabAPIRequestsPerSecond      = 10
 	defaultOnInitFetchRefsFromPipelinesDepthLimit = 100
-	defaultPipelinesMaxPollingIntervalSeconds     = 3600
 	defaultPipelinesPollingIntervalSeconds        = 30
 	defaultProjectsPollingIntervalSeconds         = 1800
 	defaultRefsPollingIntervalSeconds             = 300
+
+	errNoProjectsOrWildacrdConfigured = "you need to configure at least one project/wildcard to poll, none given"
+	errConfigFileNotFound             = "couldn't open config file : %v"
 )
 
 var cfg = &Config{}
@@ -88,16 +93,16 @@ func (p *Project) ShouldOutputSparseStatusMetrics(cfg *Config) bool {
 func (cfg *Config) Parse(path string) error {
 	configFile, err := ioutil.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("Couldn't open config file : %s", err.Error())
+		return fmt.Errorf(errConfigFileNotFound, err)
 	}
 
 	err = yaml.Unmarshal(configFile, cfg)
 	if err != nil {
-		return fmt.Errorf("Unable to parse config file: %s", err.Error())
+		return fmt.Errorf("unable to parse config file: %v", err)
 	}
 
 	if len(cfg.Projects) < 1 && len(cfg.Wildcards) < 1 {
-		return fmt.Errorf("You need to configure at least one project/wildcard to poll, none given")
+		return fmt.Errorf(errNoProjectsOrWildacrdConfigured)
 	}
 
 	// Defining defaults
@@ -127,6 +132,10 @@ func (cfg *Config) Parse(path string) error {
 
 	if cfg.Gitlab.HealthURL == "" {
 		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/users/sign_in", cfg.Gitlab.URL)
+	}
+
+	if cfg.MaximumProjectsPollingWorkers == 0 {
+		cfg.MaximumProjectsPollingWorkers = runtime.GOMAXPROCS(0)
 	}
 
 	return nil

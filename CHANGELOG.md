@@ -7,6 +7,17 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+## [0.2.15] - 2020-04-??
+
+### Added
+
+- Configuration for OpenMetrics Encoding in metrics HTTP endpoint: `prometheus_openmetrics_encoding` can be set `true` or `false` (default)
+- Worker pool for projects polling: set `maximum_projects_poller_workers` with an integer value to control parallelism (defaults to `runtime.GOMAXPROCS(0)`)  
+
+### Changed
+
+- Projects polling from GitLab API is done in parallel using `maximum_projects_poller_workers` pollers and concurrently fetching refs and projects
+
 ## [0.2.14] - 2019-04-09
 
 ### Added

@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -367,7 +366,6 @@ func (c *Client) pollProjectRef(p Project, ref string) error {
 	var lastPipeline *gitlab.Pipeline
 	topics := strings.Join(gp.TagList[:], ",")
 
-	//FIXME is adding the counter a 0 value at every run a problem?
 	runCount.WithLabelValues(gp.PathWithNamespace, topics, ref).Add(0)
 	log.Debugf("Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
 
@@ -444,9 +442,9 @@ func (c *Client) discoverWildcards() {
 	}
 }
 
-func (c *Client) pollWithWorkersUntil(stopWorkers <-chan struct{}) {
+func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
 	log.Infof("%d project(s) configured for polling", len(cfg.Projects))
-	pollErrors := c.pollProjectsWithMaxWorkers(stopWorkers, cfg.Projects...)
+	pollErrors := c.pollProjectsWith(cfg.MaximumProjectsPollingWorkers, stop, cfg.Projects...)
 	for _, err := range pollErrors {
 		log.Errorf("%v", err)
 	}
@@ -468,13 +466,13 @@ func (c *Client) findProjectsFromWildcards() error {
 	return nil
 }
 
-func (c *Client) pollProjectsWithMaxWorkers(until <-chan struct{}, projects ...Project) []error {
+func (c *Client) pollProjectsWith(numWorkers int, until <-chan struct{}, projects ...Project) []error {
 	var errs []error
 	errorStream := make(chan error)
 	defer close(errorStream)
 	projectsToPoll := make(chan Project, len(projects))
-	// spawn GOMAXPROCS workers to process project polling
-	for w := 0; w < runtime.GOMAXPROCS(0); w++ {
+	// spawn maximum_projects_poller_workers to process project polling in parallel
+	for w := 0; w < numWorkers; w++ {
 		go func() {
 			for {
 				select {
@@ -488,13 +486,15 @@ func (c *Client) pollProjectsWithMaxWorkers(until <-chan struct{}, projects ...P
 			}
 		}()
 	}
+	// process errors coming from pollProject
 	go func() {
 		for ex := range errorStream {
 			errs = append(errs, ex)
 		}
 	}()
-	// since the channel is buffered we can close immediately and the runtime will
-	// handle the channel close only when the messages are dispatched
+	// start processing all the projects configured for this run;
+	// since the channel is buffered because we already know the length of the projects to process,
+	// we can close immediately and the runtime will handle the channel close only when the messages are dispatched
 	for _, pr := range projects {
 		projectsToPoll <- pr
 	}
