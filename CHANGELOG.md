@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org).
 
 ## [Unreleased]
 
+### Changed
+
+- Fixed a bug causing duplicate metrics when status changes with sparse flag enabled
+
 ## [0.2.14] - 2019-04-09
 
 ### Added
