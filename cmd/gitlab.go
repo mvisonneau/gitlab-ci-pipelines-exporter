@@ -439,8 +439,8 @@ func (c *Client) pollProjects(until <-chan bool) {
 
 func (c *Client) discoverWildcards() {
 	log.Infof("%d wildcard(s) configured for polling", len(cfg.Wildcards))
-	if err := c.pollProjectsFromWildcards(); err != nil {
-		log.Errorf("%s", err.Error())
+	if err := c.findProjectsFromWildcards(); err != nil {
+		log.Errorf("%v", err)
 	}
 }
 
@@ -452,7 +452,7 @@ func (c *Client) pollWithWorkersUntil(stopWorkers <-chan struct{}) {
 	}
 }
 
-func (c *Client) pollProjectsFromWildcards() error {
+func (c *Client) findProjectsFromWildcards() error {
 	for _, w := range cfg.Wildcards {
 		foundProjects, err := c.listProjects(&w)
 		if err != nil {

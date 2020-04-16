@@ -189,9 +189,9 @@ func Run(ctx *cli.Context) error {
 
 	// Graceful shutdowns
 	onShutdown := make(chan os.Signal, 1)
-	stopPolling := make(chan bool)
-	signal.Notify(onShutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(onShutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 
+	stopPolling := make(chan bool)
 	c.pollProjects(stopPolling)
 
 	// Configure liveness and readiness probes
