@@ -461,7 +461,6 @@ func (c *Client) findProjectsFromWildcards() error {
 		for _, p := range foundProjects {
 			if !projectExists(p) {
 				log.Infof("Found new project: %s", p.Name)
-				//go c.pollProject(p) we don't need to poll projects because they will be picked up at next iteration
 				cfg.Projects = append(cfg.Projects, p)
 			}
 		}
