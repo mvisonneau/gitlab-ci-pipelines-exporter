@@ -22,7 +22,6 @@ type Config struct {
 	ProjectsPollingIntervalSeconds         int        `yaml:"projects_polling_interval_seconds"`             // Interval in seconds at which to poll projects from wildcards
 	RefsPollingIntervalSeconds             int        `yaml:"refs_polling_interval_seconds"`                 // Interval in seconds to fetch refs from projects
 	PipelinesPollingIntervalSeconds        int        `yaml:"pipelines_polling_interval_seconds"`            // Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
-	PipelinesMaxPollingIntervalSeconds     int        `yaml:"pipelines_max_polling_interval_seconds"`        // Maximum interval in seconds to fetch new pipelines from refs
 	FetchPipelineJobMetrics                bool       `yaml:"fetch_pipeline_job_metrics"`                    // Whether to attempt to retrieve job metrics from polled pipelines
 	OutputSparseStatusMetrics              bool       `yaml:"output_sparse_status_metrics"`                  // Whether to report all pipeline / job statuses, or only report the one from the last job.
 	OnInitFetchRefsFromPipelines           bool       `yaml:"on_init_fetch_refs_from_pipelines"`             // Whether to attempt retrieving refs from pipelines when the exporter starts
@@ -116,10 +115,6 @@ func (cfg *Config) Parse(path string) error {
 
 	if cfg.PipelinesPollingIntervalSeconds == 0 {
 		cfg.PipelinesPollingIntervalSeconds = defaultPipelinesPollingIntervalSeconds
-	}
-
-	if cfg.PipelinesMaxPollingIntervalSeconds == 0 {
-		cfg.PipelinesMaxPollingIntervalSeconds = defaultPipelinesMaxPollingIntervalSeconds
 	}
 
 	if cfg.OnInitFetchRefsFromPipelinesDepthLimit == 0 {

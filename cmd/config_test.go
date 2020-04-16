@@ -57,7 +57,6 @@ maximum_gitlab_api_requests_per_second: 1
 projects_polling_interval_seconds: 2
 refs_polling_interval_seconds: 3
 pipelines_polling_interval_seconds: 4
-pipelines_max_polling_interval_seconds: 5
 on_init_fetch_refs_from_pipelines: true
 on_init_fetch_refs_from_pipelines_depth_limit: 1337
 default_refs: "^dev$"
@@ -98,7 +97,6 @@ wildcards:
 		ProjectsPollingIntervalSeconds:         2,
 		RefsPollingIntervalSeconds:             3,
 		PipelinesPollingIntervalSeconds:        4,
-		PipelinesMaxPollingIntervalSeconds:     5,
 		OnInitFetchRefsFromPipelines:           true,
 		OnInitFetchRefsFromPipelinesDepthLimit: 1337,
 		DefaultRefsRegexp:                      "^dev$",
@@ -167,7 +165,6 @@ projects:
 		ProjectsPollingIntervalSeconds:         defaultProjectsPollingIntervalSeconds,
 		RefsPollingIntervalSeconds:             defaultRefsPollingIntervalSeconds,
 		PipelinesPollingIntervalSeconds:        defaultPipelinesPollingIntervalSeconds,
-		PipelinesMaxPollingIntervalSeconds:     defaultPipelinesMaxPollingIntervalSeconds,
 		OnInitFetchRefsFromPipelines:           false,
 		OnInitFetchRefsFromPipelinesDepthLimit: defaultOnInitFetchRefsFromPipelinesDepthLimit,
 		DefaultRefsRegexp:                      "",

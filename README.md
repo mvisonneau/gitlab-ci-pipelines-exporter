@@ -44,9 +44,6 @@ projects_polling_interval_seconds: 1800 # only used for wildcards
 refs_polling_interval_seconds: 300
 pipelines_polling_interval_seconds: 60
 
-# When no pipeline exists for a given ref, the exporter will exponentially backoff up to this value
-pipelines_max_polling_interval_seconds: 1800
-
 # Whether to attempt retrieving refs from pipelines when the exporter starts (default: false)
 on_init_fetch_refs_from_pipelines: false
 # Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
