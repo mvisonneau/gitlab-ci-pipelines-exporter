@@ -140,7 +140,7 @@ func newMetricsRegistry() *prometheus.Registry {
 // Run launches the exporter
 func Run(ctx *cli.Context) error {
 	// register metrics
-	metrics :=  newMetricsRegistry()
+	metrics := newMetricsRegistry()
 
 	// Configure logger
 	lc := &logger.Config{
@@ -207,7 +207,7 @@ func Run(ctx *cli.Context) error {
 	mux.HandleFunc("/health/live", health.LiveEndpoint)
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
 	mux.Handle("/metrics", promhttp.HandlerFor(metrics, promhttp.HandlerOpts{
-		Registry:metrics,
+		Registry:          metrics,
 		EnableOpenMetrics: true,
 	}))
 
@@ -224,7 +224,7 @@ func Run(ctx *cli.Context) error {
 	log.Infof("Started listening onto %s", ctx.GlobalString("listen-address"))
 
 	<-onShutdown
-	stopPolling<-true
+	stopPolling <- true
 	log.Print("Stopped!")
 
 	ctxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
