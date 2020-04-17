@@ -119,23 +119,29 @@ var (
 	)
 )
 
-func init() {
-	cfg = &Config{}
-	prometheus.MustRegister(coverage)
-	prometheus.MustRegister(lastRunDuration)
-	prometheus.MustRegister(lastRunID)
-	prometheus.MustRegister(lastRunStatus)
-	prometheus.MustRegister(runCount)
-	prometheus.MustRegister(timeSinceLastRun)
-	prometheus.MustRegister(lastRunJobDuration)
-	prometheus.MustRegister(lastRunJobStatus)
-	prometheus.MustRegister(jobRunCount)
-	prometheus.MustRegister(timeSinceLastJobRun)
-	prometheus.MustRegister(lastRunJobArtifactSize)
+func newMetricsRegistry() *prometheus.Registry {
+	registry := prometheus.NewRegistry()
+
+	registry.MustRegister(coverage)
+	registry.MustRegister(lastRunDuration)
+	registry.MustRegister(lastRunID)
+	registry.MustRegister(lastRunStatus)
+	registry.MustRegister(runCount)
+	registry.MustRegister(timeSinceLastRun)
+	registry.MustRegister(lastRunJobDuration)
+	registry.MustRegister(lastRunJobStatus)
+	registry.MustRegister(jobRunCount)
+	registry.MustRegister(timeSinceLastJobRun)
+	registry.MustRegister(lastRunJobArtifactSize)
+
+	return registry
 }
 
 // Run launches the exporter
 func Run(ctx *cli.Context) error {
+	// register metrics
+	metrics := newMetricsRegistry()
+
 	// Configure logger
 	lc := &logger.Config{
 		Level:  ctx.GlobalString("log-level"),
@@ -179,10 +185,14 @@ func Run(ctx *cli.Context) error {
 		Client:      gc,
 		RateLimiter: ratelimit.New(cfg.MaximumGitLabAPIRequestsPerSecond),
 	}
-
 	c.UserAgent = userAgent
 
-	go c.pollProjects()
+	// Graceful shutdowns
+	onShutdown := make(chan os.Signal, 1)
+	signal.Notify(onShutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
+
+	stopPolling := make(chan bool)
+	c.pollProjects(stopPolling)
 
 	// Configure liveness and readiness probes
 	health := healthcheck.NewHandler()
@@ -192,15 +202,14 @@ func Run(ctx *cli.Context) error {
 		log.Warn("TLS verification has been disabled. Readiness checks won't be operated.")
 	}
 
-	// Graceful shutdowns
-	done := make(chan os.Signal, 1)
-	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
 	// Expose the registered metrics via HTTP
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health/live", health.LiveEndpoint)
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
-	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle("/metrics", promhttp.HandlerFor(metrics, promhttp.HandlerOpts{
+		Registry:          metrics,
+		EnableOpenMetrics: cfg.PrometheusOpenmetricsEncoding,
+	}))
 
 	srv := &http.Server{
 		Addr:    ctx.GlobalString("listen-address"),
@@ -214,7 +223,8 @@ func Run(ctx *cli.Context) error {
 	}()
 	log.Infof("Started listening onto %s", ctx.GlobalString("listen-address"))
 
-	<-done
+	<-onShutdown
+	stopPolling <- true
 	log.Print("Stopped!")
 
 	ctxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)

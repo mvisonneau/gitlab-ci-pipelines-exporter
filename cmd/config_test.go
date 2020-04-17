@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 
 	"testing"
 
@@ -14,7 +15,7 @@ import (
 
 func TestParseInvalidPath(t *testing.T) {
 	err := cfg.Parse("/path_do_not_exist")
-	assert.Equal(t, fmt.Errorf("Couldn't open config file : open /path_do_not_exist: no such file or directory"), err)
+	assert.Equal(t, fmt.Errorf("couldn't open config file : open /path_do_not_exist: no such file or directory"), err)
 }
 
 func TestParseInvalidYaml(t *testing.T) {
@@ -36,7 +37,7 @@ func TestParseEmptyYaml(t *testing.T) {
 	// Invalid YAML content
 	f.WriteString("---")
 	err = cfg.Parse(f.Name())
-	assert.Equal(t, fmt.Errorf("You need to configure at least one project/wildcard to poll, none given"), err)
+	assert.Equal(t, fmt.Errorf("you need to configure at least one project/wildcard to poll, none given"), err)
 }
 
 func TestParseValidConfig(t *testing.T) {
@@ -57,10 +58,10 @@ maximum_gitlab_api_requests_per_second: 1
 projects_polling_interval_seconds: 2
 refs_polling_interval_seconds: 3
 pipelines_polling_interval_seconds: 4
-pipelines_max_polling_interval_seconds: 5
 on_init_fetch_refs_from_pipelines: true
 on_init_fetch_refs_from_pipelines_depth_limit: 1337
 default_refs: "^dev$"
+maximum_projects_poller_workers: 4
 
 projects:
   - name: foo/project
@@ -98,10 +99,10 @@ wildcards:
 		ProjectsPollingIntervalSeconds:         2,
 		RefsPollingIntervalSeconds:             3,
 		PipelinesPollingIntervalSeconds:        4,
-		PipelinesMaxPollingIntervalSeconds:     5,
 		OnInitFetchRefsFromPipelines:           true,
 		OnInitFetchRefsFromPipelinesDepthLimit: 1337,
 		DefaultRefsRegexp:                      "^dev$",
+		MaximumProjectsPollingWorkers:          4,
 		Projects: []Project{
 			{
 				Name: "foo/project",
@@ -167,10 +168,10 @@ projects:
 		ProjectsPollingIntervalSeconds:         defaultProjectsPollingIntervalSeconds,
 		RefsPollingIntervalSeconds:             defaultRefsPollingIntervalSeconds,
 		PipelinesPollingIntervalSeconds:        defaultPipelinesPollingIntervalSeconds,
-		PipelinesMaxPollingIntervalSeconds:     defaultPipelinesMaxPollingIntervalSeconds,
 		OnInitFetchRefsFromPipelines:           false,
 		OnInitFetchRefsFromPipelinesDepthLimit: defaultOnInitFetchRefsFromPipelinesDepthLimit,
 		DefaultRefsRegexp:                      "",
+		MaximumProjectsPollingWorkers:          runtime.GOMAXPROCS(0),
 		Projects: []Project{
 			{
 				Name: "foo/bar",
@@ -215,4 +216,41 @@ projects:
 	cfg.MergeWithContext(ctx)
 
 	assert.Equal(t, expectedCtxToken, cfg.Gitlab.Token)
+}
+
+func TestParsePrometheusConfig(t *testing.T) {
+	f, err := ioutil.TempFile("/tmp", "test-")
+	assert.Nil(t, err)
+	defer os.Remove(f.Name())
+
+	// Valid minimal configuration
+	f.WriteString(`
+prometheus_openmetrics_encoding: true
+projects:
+  - name: foo/project
+  - name: bar/project
+    refs: "^master|dev$"
+`)
+
+	config := &Config{}
+	assert.NoError(t, config.Parse(f.Name()))
+	assert.True(t, config.PrometheusOpenmetricsEncoding)
+}
+
+func TestParseConfigWithoutProjectWorkersUsesGOMAXPROCS(t *testing.T) {
+	f, err := ioutil.TempFile("/tmp", "test-")
+	assert.Nil(t, err)
+	defer os.Remove(f.Name())
+
+	// Valid minimal configuration
+	f.WriteString(`
+projects:
+  - name: foo/project
+  - name: bar/project
+    refs: "^master|dev$"
+`)
+	config := &Config{}
+	assert.NoError(t, config.Parse(f.Name()))
+	assert.Equal(t, runtime.GOMAXPROCS(0), config.MaximumProjectsPollingWorkers)
+
 }

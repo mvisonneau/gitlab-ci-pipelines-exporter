@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/jpillora/backoff"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/xanzy/go-gitlab"
 
@@ -42,7 +41,7 @@ func (c *Client) getProject(name string) (*gitlab.Project, error) {
 func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 	log.Debugf("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
 
-	projects := []Project{}
+	var projects []Project
 	trueVal := true
 	listOptions := gitlab.ListOptions{
 		PerPage: 20,
@@ -89,7 +88,7 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 		}
 
 		if err != nil {
-			return projects, fmt.Errorf("Unable to list projects with search pattern '%s' from the GitLab API : %v", w.Search, err.Error())
+			return projects, fmt.Errorf("unable to list projects with search pattern '%s' from the GitLab API : %v", w.Search, err.Error())
 		}
 
 		// Copy relevant settings from wildcard into created project
@@ -116,24 +115,7 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 	return projects, nil
 }
 
-func (c *Client) pollProjectsFromWildcards() {
-	for _, w := range cfg.Wildcards {
-		foundProjects, err := c.listProjects(&w)
-		if err != nil {
-			log.Error(err.Error())
-		} else {
-			for _, p := range foundProjects {
-				if !projectExists(p) {
-					log.Infof("Found project : %s", p.Name)
-					go c.pollProject(p)
-					cfg.Projects = append(cfg.Projects, p)
-				}
-			}
-		}
-	}
-}
-
-func (c *Client) pollRefs(projectID int, refsRegexp string) (refs []string, err error) {
+func (c *Client) branchesAndTagsFor(projectID int, refsRegexp string) (refs []string, err error) {
 	if len(refsRegexp) == 0 {
 		if len(cfg.DefaultRefsRegexp) > 0 {
 			refsRegexp = cfg.DefaultRefsRegexp
@@ -144,7 +126,7 @@ func (c *Client) pollRefs(projectID int, refsRegexp string) (refs []string, err 
 
 	re := regexp.MustCompile(refsRegexp)
 
-	branches, err := c.pollBranchNames(projectID)
+	branches, err := c.branchNamesFor(projectID)
 	if err != nil {
 		return
 	}
@@ -155,7 +137,7 @@ func (c *Client) pollRefs(projectID int, refsRegexp string) (refs []string, err 
 		}
 	}
 
-	tags, err := c.pollTagNames(projectID)
+	tags, err := c.tagNamesFor(projectID)
 	if err != nil {
 		return
 	}
@@ -169,7 +151,7 @@ func (c *Client) pollRefs(projectID int, refsRegexp string) (refs []string, err 
 	return
 }
 
-func (c *Client) pollBranchNames(projectID int) ([]*string, error) {
+func (c *Client) branchNamesFor(projectID int) ([]*string, error) {
 	var names []*string
 
 	options := &gitlab.ListBranchesOptions{
@@ -200,7 +182,7 @@ func (c *Client) pollBranchNames(projectID int) ([]*string, error) {
 	return names, nil
 }
 
-func (c *Client) pollTagNames(projectID int) ([]*string, error) {
+func (c *Client) tagNamesFor(projectID int) ([]*string, error) {
 	var names []*string
 
 	options := &gitlab.ListTagsOptions{
@@ -231,62 +213,55 @@ func (c *Client) pollTagNames(projectID int) ([]*string, error) {
 	return names, nil
 }
 
-func (c *Client) pollProject(p Project) {
+func (c *Client) pollProject(p Project) error {
 	var polledRefs []string
 	var err error
 
-	for {
-		log.Debugf("Fetching project : %s", p.Name)
-		p.GitlabProject, err = c.getProject(p.Name)
+	log.Debugf("Fetching project : %s", p.Name)
+	p.GitlabProject, err = c.getProject(p.Name)
+	if err != nil {
+		return fmt.Errorf("unable to fetch project '%s' from the GitLab API : %v", p.Name, err.Error())
+	}
+
+	if cfg.OnInitFetchRefsFromPipelines {
+		log.Debugf("Polling project refs %s from most recent %d pipelines (init only)", p.Name, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
+		refs, err := c.pollProjectRefsFromPipelines(p.GitlabProject.ID, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
 		if err != nil {
-			log.Errorf("Unable to fetch project '%s' from the GitLab API : %v", p.Name, err.Error())
-			time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
-			continue
+			return fmt.Errorf("unable to fetch refs from project pipelines %s : %v", p.Name, err.Error())
 		}
 
-		if cfg.OnInitFetchRefsFromPipelines {
-			log.Debugf("Polling project refs %s from most recent %d pipelines (init only)", p.Name, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
-			refs, err := c.pollProjectRefsFromPipelines(p.GitlabProject.ID, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
-			if err != nil {
-				log.Errorf("Unable to fetch refs from project pipelines %s : %v", p.Name, err.Error())
-				time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
+		log.Debugf("Found %d refs from %s pipelines", len(refs), p.Name)
+		for _, r := range refs {
+			log.Infof("Found ref '%s' for project '%s'", r, p.Name)
+			if err := c.pollProjectRef(p, r); err != nil {
+				log.Errorf("Error getting pipeline data on ref '%s' for project '%s'", r, p.Name)
 				continue
 			}
+			polledRefs = append(polledRefs, r)
+		}
+	}
+	log.Debugf("Polling refs for project : %s", p.Name)
 
-			log.Debugf("Found %d refs from %s pipelines", len(refs), p.Name)
-			for _, r := range refs {
+	refs, err := c.branchesAndTagsFor(p.GitlabProject.ID, p.Refs)
+	if err != nil {
+		return fmt.Errorf("error fetching refs for project '%s'", p.Name)
+	}
+
+	if len(refs) > 0 {
+		for _, r := range refs {
+			if !refExists(polledRefs, r) {
 				log.Infof("Found ref '%s' for project '%s'", r, p.Name)
-				go c.pollProjectRef(p, r)
+				if err := c.pollProjectRef(p, r); err != nil {
+					log.Errorf("Error getting pipeline data on ref '%s' for project '%s'", r, p.Name)
+					continue
+				}
 				polledRefs = append(polledRefs, r)
 			}
 		}
-
-		break
 	}
 
-	for {
-		log.Debugf("Polling refs for project : %s", p.Name)
-
-		refs, err := c.pollRefs(p.GitlabProject.ID, p.Refs)
-		if err != nil {
-			log.Warnf("Could not fetch refs for project '%s'", p.Name)
-			continue
-		}
-
-		if len(refs) > 0 {
-			for _, r := range refs {
-				if !refExists(polledRefs, r) {
-					log.Infof("Found ref '%s' for project '%s'", r, p.Name)
-					go c.pollProjectRef(p, r)
-					polledRefs = append(polledRefs, r)
-				}
-			}
-		} else {
-			log.Warnf("No refs found for project '%s'", p.Name)
-		}
-
-		time.Sleep(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
-	}
+	log.Warnf("No refs found for project '%s'", p.Name)
+	return nil
 }
 
 func outputStatusMetric(metric *prometheus.GaugeVec, labels []string, statuses []string, status string, sparseMetrics bool) {
@@ -329,7 +304,7 @@ func (c *Client) outputJobStatusMetric(status string, sparseMetrics bool, labels
 func (c *Client) pollPipelineJobs(p Project, pipelineID int, topics string, ref string) error {
 	var jobs []*gitlab.Job
 	var resp *gitlab.Response
-	var gp *gitlab.Project = p.GitlabProject
+	var gp = p.GitlabProject
 	var err error
 
 	options := &gitlab.ListJobsOptions{
@@ -356,11 +331,11 @@ func (c *Client) pollPipelineJobs(p Project, pipelineID int, topics string, ref 
 				jobName := job.Name
 				stageName := job.Stage
 				log.Debugf("Job %s for pipeline %d", jobName, pipelineID)
-				lastRunJobDuration.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(job.Duration))
+				lastRunJobDuration.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(job.Duration)
 
 				c.outputJobStatusMetric(job.Status, p.ShouldOutputSparseStatusMetrics(cfg), gp.PathWithNamespace, topics, ref, stageName, jobName)
 
-				timeSinceLastJobRun.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(time.Since(*job.CreatedAt).Round(time.Second).Seconds()))
+				timeSinceLastJobRun.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
 
 				jobRunCount.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Inc()
 
@@ -386,86 +361,145 @@ func (c *Client) pollPipelineJobs(p Project, pipelineID int, topics string, ref 
 	return err
 }
 
-func (c *Client) pollProjectRef(p Project, ref string) {
-	var gp *gitlab.Project = p.GitlabProject
-	topics := strings.Join(gp.TagList[:], ",")
+func (c *Client) pollProjectRef(p Project, ref string) error {
+	var gp = p.GitlabProject
 	var lastPipeline *gitlab.Pipeline
+	topics := strings.Join(gp.TagList[:], ",")
 
 	runCount.WithLabelValues(gp.PathWithNamespace, topics, ref).Add(0)
+	log.Debugf("Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
 
-	b := &backoff.Backoff{
-		Min:    time.Duration(cfg.PipelinesPollingIntervalSeconds) * time.Second,
-		Max:    time.Duration(cfg.PipelinesMaxPollingIntervalSeconds) * time.Second,
-		Factor: 1.4,
-		Jitter: false,
+	c.rateLimit()
+	pipelines, _, err := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
+	if err != nil {
+		return fmt.Errorf("error listing project pipelines for ref %s: %v", ref, err)
 	}
 
-	for {
-		log.Debugf("Polling %v:%v (%v)", gp.PathWithNamespace, ref, gp.ID)
+	if len(pipelines) == 0 {
+		return fmt.Errorf("could not find any pipeline for %s:%s", gp.PathWithNamespace, ref)
+	}
 
-		c.rateLimit()
-		pipelines, _, err := c.Pipelines.ListProjectPipelines(gp.ID, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
-		if err != nil {
-			log.Errorf("ListProjectPipelines: %s", err.Error())
-			time.Sleep(b.Duration())
-			continue
-		}
+	c.rateLimit()
+	lastPipeline, _, err = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
+	if err != nil {
+		return fmt.Errorf("could not read content of last pipeline %s:%s", gp.PathWithNamespace, ref)
+	}
+	if lastPipeline != nil {
+		runCount.WithLabelValues(gp.PathWithNamespace, topics, ref).Inc()
 
-		if len(pipelines) == 0 {
-			log.Debugf("Could not find any pipeline for %s:%s", gp.PathWithNamespace, ref)
-		} else if lastPipeline == nil || lastPipeline.ID != pipelines[0].ID || lastPipeline.Status != pipelines[0].Status {
-			if lastPipeline != nil {
-				runCount.WithLabelValues(gp.PathWithNamespace, topics, ref).Inc()
-			}
-
-			c.rateLimit()
-			lastPipeline, _, err = c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
+		if lastPipeline.Coverage != "" {
+			parsedCoverage, err := strconv.ParseFloat(lastPipeline.Coverage, 64)
 			if err != nil {
-				log.Errorf("GetPipeline: %s", err.Error())
+				log.Warnf("Could not parse coverage string returned from GitLab API '%s' into Float64: %v", lastPipeline.Coverage, err)
 			}
+			coverage.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(parsedCoverage)
+		}
 
-			if lastPipeline != nil {
-				if lastPipeline.Coverage != "" {
-					if parsedCoverage, err := strconv.ParseFloat(lastPipeline.Coverage, 64); err == nil {
-						coverage.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(parsedCoverage)
-					} else {
-						log.Warnf("Could not parse coverage string returned from GitLab API: '%s' - '%s'", lastPipeline.Coverage, err.Error())
-					}
-				}
+		lastRunDuration.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.Duration))
+		lastRunID.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.ID))
 
-				lastRunDuration.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.Duration))
-				lastRunID.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.ID))
+		c.outputPipelineStatusMetric(lastPipeline.Status, p.ShouldOutputSparseStatusMetrics(cfg), gp.PathWithNamespace, topics, ref)
 
-				c.outputPipelineStatusMetric(lastPipeline.Status, p.ShouldOutputSparseStatusMetrics(cfg), gp.PathWithNamespace, topics, ref)
-
-				if p.ShouldFetchPipelineJobMetrics(cfg) {
-					if err := c.pollPipelineJobs(p, lastPipeline.ID, topics, ref); err != nil {
-						log.Errorf("Could not poll jobs for pipeline %d: %s", lastPipeline.ID, err.Error())
-					}
-				}
-
+		if p.ShouldFetchPipelineJobMetrics(cfg) {
+			if err := c.pollPipelineJobs(p, lastPipeline.ID, topics, ref); err != nil {
+				log.Errorf("Could not poll jobs for pipeline %d: %s", lastPipeline.ID, err.Error())
 			}
 		}
 
-		if lastPipeline != nil {
-			timeSinceLastRun.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds()))
-			b.Reset()
-		}
+		timeSinceLastRun.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds())
+	}
 
-		time.Sleep(b.Duration())
+	return nil
+}
+
+func (c *Client) pollProjects(until <-chan bool) {
+	go func() {
+		pollWildcardsEvery := time.NewTicker(time.Duration(cfg.ProjectsPollingIntervalSeconds) * time.Second)
+		pollRefsEvery := time.NewTicker(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
+		stopWorkers := make(chan struct{})
+		defer close(stopWorkers)
+		// first execution
+		c.discoverWildcards()
+		c.pollWithWorkersUntil(stopWorkers)
+		for {
+			select {
+			case <-until:
+				log.Info("stopping projects polling...")
+				return
+			case <-pollRefsEvery.C:
+				c.pollWithWorkersUntil(stopWorkers)
+			case <-pollWildcardsEvery.C:
+				c.discoverWildcards()
+			}
+		}
+	}()
+}
+
+func (c *Client) discoverWildcards() {
+	log.Infof("%d wildcard(s) configured for polling", len(cfg.Wildcards))
+	if err := c.findProjectsFromWildcards(); err != nil {
+		log.Errorf("%v", err)
 	}
 }
 
-func (c *Client) pollProjects() {
-	log.Infof("%d project(s) and %d wildcard(s) configured", len(cfg.Projects), len(cfg.Wildcards))
-	for _, p := range cfg.Projects {
-		go c.pollProject(p)
+func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
+	log.Infof("%d project(s) configured for polling", len(cfg.Projects))
+	pollErrors := c.pollProjectsWith(cfg.MaximumProjectsPollingWorkers, stop, cfg.Projects...)
+	for _, err := range pollErrors {
+		log.Errorf("%v", err)
 	}
+}
 
-	for {
-		c.pollProjectsFromWildcards()
-		time.Sleep(time.Duration(cfg.ProjectsPollingIntervalSeconds) * time.Second)
+func (c *Client) findProjectsFromWildcards() error {
+	for _, w := range cfg.Wildcards {
+		foundProjects, err := c.listProjects(&w)
+		if err != nil {
+			return fmt.Errorf("could not list projects for wildcard %v: %v", w, err)
+		}
+		for _, p := range foundProjects {
+			if !projectExists(p) {
+				log.Infof("Found new project: %s", p.Name)
+				cfg.Projects = append(cfg.Projects, p)
+			}
+		}
 	}
+	return nil
+}
+
+func (c *Client) pollProjectsWith(numWorkers int, until <-chan struct{}, projects ...Project) []error {
+	var errs []error
+	errorStream := make(chan error)
+	defer close(errorStream)
+	projectsToPoll := make(chan Project, len(projects))
+	// spawn maximum_projects_poller_workers to process project polling in parallel
+	for w := 0; w < numWorkers; w++ {
+		go func() {
+			for {
+				select {
+				case <-until:
+					return
+				case p := <-projectsToPoll:
+					if e := c.pollProject(p); e != nil {
+						errorStream <- e
+					}
+				}
+			}
+		}()
+	}
+	// process errors coming from pollProject
+	go func() {
+		for ex := range errorStream {
+			errs = append(errs, ex)
+		}
+	}()
+	// start processing all the projects configured for this run;
+	// since the channel is buffered because we already know the length of the projects to process,
+	// we can close immediately and the runtime will handle the channel close only when the messages are dispatched
+	for _, pr := range projects {
+		projectsToPoll <- pr
+	}
+	close(projectsToPoll)
+	return errs
 }
 
 func (c *Client) pollProjectRefsFromPipelines(projectID, limit int) ([]string, error) {
@@ -476,7 +510,7 @@ func (c *Client) pollProjectRefsFromPipelines(projectID, limit int) ([]string, e
 		},
 	}
 
-	refs := []string{}
+	var refs []string
 	c.rateLimit()
 	pipelines, _, err := c.Pipelines.ListProjectPipelines(projectID, options)
 	if err != nil {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"runtime"
 
 	"github.com/urfave/cli"
 	"github.com/xanzy/go-gitlab"
@@ -22,12 +23,13 @@ type Config struct {
 	ProjectsPollingIntervalSeconds         int        `yaml:"projects_polling_interval_seconds"`             // Interval in seconds at which to poll projects from wildcards
 	RefsPollingIntervalSeconds             int        `yaml:"refs_polling_interval_seconds"`                 // Interval in seconds to fetch refs from projects
 	PipelinesPollingIntervalSeconds        int        `yaml:"pipelines_polling_interval_seconds"`            // Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
-	PipelinesMaxPollingIntervalSeconds     int        `yaml:"pipelines_max_polling_interval_seconds"`        // Maximum interval in seconds to fetch new pipelines from refs
 	FetchPipelineJobMetrics                bool       `yaml:"fetch_pipeline_job_metrics"`                    // Whether to attempt to retrieve job metrics from polled pipelines
 	OutputSparseStatusMetrics              bool       `yaml:"output_sparse_status_metrics"`                  // Whether to report all pipeline / job statuses, or only report the one from the last job.
 	OnInitFetchRefsFromPipelines           bool       `yaml:"on_init_fetch_refs_from_pipelines"`             // Whether to attempt retrieving refs from pipelines when the exporter starts
 	OnInitFetchRefsFromPipelinesDepthLimit int        `yaml:"on_init_fetch_refs_from_pipelines_depth_limit"` // Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
 	DefaultRefsRegexp                      string     `yaml:"default_refs"`                                  // Default regular expression
+	MaximumProjectsPollingWorkers          int        `yaml:"maximum_projects_poller_workers"`               // Sets the parallelism for polling projects from the API
+	PrometheusOpenmetricsEncoding          bool       `yaml:"prometheus_openmetrics_encoding"`               // Enable OpenMetrics content encoding in prometheus HTTP handler (default: false)
 	Projects                               []Project  `yaml:"projects"`                                      // List of projects to poll
 	Wildcards                              []Wildcard `yaml:"wildcards"`                                     // List of wildcards to search projects from
 }
@@ -59,13 +61,15 @@ type Wildcard struct {
 const (
 	defaultMaximumGitLabAPIRequestsPerSecond      = 10
 	defaultOnInitFetchRefsFromPipelinesDepthLimit = 100
-	defaultPipelinesMaxPollingIntervalSeconds     = 3600
 	defaultPipelinesPollingIntervalSeconds        = 30
 	defaultProjectsPollingIntervalSeconds         = 1800
 	defaultRefsPollingIntervalSeconds             = 300
+
+	errNoProjectsOrWildcardConfigured = "you need to configure at least one project/wildcard to poll, none given"
+	errConfigFileNotFound             = "couldn't open config file : %v"
 )
 
-var cfg *Config
+var cfg = &Config{}
 
 // ShouldFetchPipelineJobMetrics returns true if pipeline job statistics should be fetched
 func (p *Project) ShouldFetchPipelineJobMetrics(cfg *Config) bool {
@@ -89,16 +93,16 @@ func (p *Project) ShouldOutputSparseStatusMetrics(cfg *Config) bool {
 func (cfg *Config) Parse(path string) error {
 	configFile, err := ioutil.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("Couldn't open config file : %s", err.Error())
+		return fmt.Errorf(errConfigFileNotFound, err)
 	}
 
 	err = yaml.Unmarshal(configFile, cfg)
 	if err != nil {
-		return fmt.Errorf("Unable to parse config file: %s", err.Error())
+		return fmt.Errorf("unable to parse config file: %v", err)
 	}
 
 	if len(cfg.Projects) < 1 && len(cfg.Wildcards) < 1 {
-		return fmt.Errorf("You need to configure at least one project/wildcard to poll, none given")
+		return fmt.Errorf(errNoProjectsOrWildcardConfigured)
 	}
 
 	// Defining defaults
@@ -118,10 +122,6 @@ func (cfg *Config) Parse(path string) error {
 		cfg.PipelinesPollingIntervalSeconds = defaultPipelinesPollingIntervalSeconds
 	}
 
-	if cfg.PipelinesMaxPollingIntervalSeconds == 0 {
-		cfg.PipelinesMaxPollingIntervalSeconds = defaultPipelinesMaxPollingIntervalSeconds
-	}
-
 	if cfg.OnInitFetchRefsFromPipelinesDepthLimit == 0 {
 		cfg.OnInitFetchRefsFromPipelinesDepthLimit = defaultOnInitFetchRefsFromPipelinesDepthLimit
 	}
@@ -132,6 +132,10 @@ func (cfg *Config) Parse(path string) error {
 
 	if cfg.Gitlab.HealthURL == "" {
 		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/users/sign_in", cfg.Gitlab.URL)
+	}
+
+	if cfg.MaximumProjectsPollingWorkers == 0 {
+		cfg.MaximumProjectsPollingWorkers = runtime.GOMAXPROCS(0)
 	}
 
 	return nil

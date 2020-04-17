@@ -34,5 +34,5 @@ func TestRunInvalidConfigFile(t *testing.T) {
 	set.String("log-format", "json", "")
 	set.String("config", "path_does_not_exist", "")
 	err := Run(cli.NewContext(nil, set, nil))
-	assert.Equal(t, true, strings.HasPrefix(err.Error(), "Couldn't open config file :"))
+	assert.Equal(t, true, strings.HasPrefix(err.Error(), "couldn't open config file :"))
 }
