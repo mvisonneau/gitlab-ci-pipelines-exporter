@@ -65,7 +65,7 @@ const (
 	defaultProjectsPollingIntervalSeconds         = 1800
 	defaultRefsPollingIntervalSeconds             = 300
 
-	errNoProjectsOrWildacrdConfigured = "you need to configure at least one project/wildcard to poll, none given"
+	errNoProjectsOrWildcardConfigured = "you need to configure at least one project/wildcard to poll, none given"
 	errConfigFileNotFound             = "couldn't open config file : %v"
 )
 
@@ -102,7 +102,7 @@ func (cfg *Config) Parse(path string) error {
 	}
 
 	if len(cfg.Projects) < 1 && len(cfg.Wildcards) < 1 {
-		return fmt.Errorf(errNoProjectsOrWildacrdConfigured)
+		return fmt.Errorf(errNoProjectsOrWildcardConfigured)
 	}
 
 	// Defining defaults
