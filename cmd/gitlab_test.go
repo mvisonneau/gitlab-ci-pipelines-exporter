@@ -34,22 +34,23 @@ func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *Client) {
 
 // Functions testing
 func TestProjectExists(t *testing.T) {
-	foo := Project{Name: "foo"}
+	foo := Project{Name: "foo", Refs: "abc"}
+	fooClone := foo
 	bar := Project{Name: "bar"}
 
-	cfg = &Config{
+	config := &Config{
 		Projects: []Project{foo},
 	}
 
-	assert.Equal(t, true, projectExists(foo))
-	assert.Equal(t, false, projectExists(bar))
+	assert.Equal(t, true, projectExists(fooClone, config.Projects))
+	assert.Equal(t, false, projectExists(bar, config.Projects))
 }
 
 func TestRefExists(t *testing.T) {
 	refs := []string{"foo"}
 
-	assert.Equal(t, true, refExists(refs, "foo"))
-	assert.Equal(t, false, refExists(refs, "bar"))
+	assert.Equal(t, true, refExists("foo", refs))
+	assert.Equal(t, false, refExists("bar", refs))
 }
 
 func TestGetProject(t *testing.T) {
