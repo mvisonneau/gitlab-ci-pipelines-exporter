@@ -119,9 +119,10 @@ var (
 	)
 )
 
-func newMetricsRegistry() *prometheus.Registry {
+func newMetricsRegistry(metrics ...prometheus.Collector) *prometheus.Registry {
 	registry := prometheus.NewRegistry()
 
+	//default metrics
 	registry.MustRegister(coverage)
 	registry.MustRegister(lastRunDuration)
 	registry.MustRegister(lastRunID)
@@ -134,13 +135,14 @@ func newMetricsRegistry() *prometheus.Registry {
 	registry.MustRegister(timeSinceLastJobRun)
 	registry.MustRegister(lastRunJobArtifactSize)
 
+	for _, m := range metrics {
+		registry.MustRegister(m)
+	}
 	return registry
 }
 
 // Run launches the exporter
 func Run(ctx *cli.Context) error {
-	// register metrics
-	metrics := newMetricsRegistry()
 
 	// Configure logger
 	lc := &logger.Config{
@@ -202,14 +204,13 @@ func Run(ctx *cli.Context) error {
 		log.Warn("TLS verification has been disabled. Readiness checks won't be operated.")
 	}
 
-	// Expose the registered metrics via HTTP
+	// register registry
+	registry := newMetricsRegistry()
+	// Expose the registered registry via HTTP
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health/live", health.LiveEndpoint)
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
-	mux.Handle("/metrics", promhttp.HandlerFor(metrics, promhttp.HandlerOpts{
-		Registry:          metrics,
-		EnableOpenMetrics: cfg.PrometheusOpenmetricsEncoding,
-	}))
+	mux.Handle("/registry", metricsHandlerFor(registry, cfg.PrometheusOpenmetricsEncoding))
 
 	srv := &http.Server{
 		Addr:    ctx.GlobalString("listen-address"),
@@ -235,6 +236,13 @@ func Run(ctx *cli.Context) error {
 	}
 
 	return exit(nil, 0)
+}
+
+func metricsHandlerFor(metrics *prometheus.Registry, openMetricsEncoder bool) http.Handler {
+	return promhttp.HandlerFor(metrics, promhttp.HandlerOpts{
+		Registry:          metrics,
+		EnableOpenMetrics: openMetricsEncoder,
+	})
 }
 
 func exit(err error, exitCode int) *cli.ExitError {

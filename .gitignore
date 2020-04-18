@@ -5,3 +5,4 @@ vendor
 **/.DS_Store
 gitlab-ci-pipelines-exporter
 coverage.out
+testconfig.yml

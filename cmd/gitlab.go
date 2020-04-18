@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -228,7 +229,7 @@ func (c *Client) pollProject(p Project) error {
 	log.Debugf("Fetching project : %s", p.Name)
 	p.GitlabProject, err = c.getProject(p.Name)
 	if err != nil {
-		return fmt.Errorf("unable to fetch project '%s' from the GitLab API : %v", p.Name, err.Error())
+		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %v", p.Name, err.Error())
 	}
 
 	if cfg.OnInitFetchRefsFromPipelines {
@@ -445,7 +446,7 @@ func (c *Client) discoverWildcards() {
 func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
 	log.Infof("%d project(s) configured for polling", len(cfg.Projects))
 	pollErrors := c.pollProjectsWith(cfg.MaximumProjectsPollingWorkers, stop, cfg.Projects...)
-	for _, err := range pollErrors {
+	for err := range pollErrors {
 		log.Errorf("%v", err)
 	}
 }
@@ -466,14 +467,16 @@ func (c *Client) findProjectsFromWildcards() error {
 	return nil
 }
 
-func (c *Client) pollProjectsWith(numWorkers int, until <-chan struct{}, projects ...Project) []error {
-	var errs []error
+func (c *Client) pollProjectsWith(numWorkers int, until <-chan struct{}, projects ...Project) <-chan error {
 	errorStream := make(chan error)
-	defer close(errorStream)
 	projectsToPoll := make(chan Project, len(projects))
+	// sync the closing of error via a waitGroup
+	wg := sync.WaitGroup{}
+	wg.Add(numWorkers)
 	// spawn maximum_projects_poller_workers to process project polling in parallel
 	for w := 0; w < numWorkers; w++ {
-		go func() {
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
 			for {
 				select {
 				case <-until:
@@ -484,13 +487,12 @@ func (c *Client) pollProjectsWith(numWorkers int, until <-chan struct{}, project
 					}
 				}
 			}
-		}()
+		}(&wg)
 	}
-	// process errors coming from pollProject
+	// close the error channel when the workers won't write to it anymore
 	go func() {
-		for ex := range errorStream {
-			errs = append(errs, ex)
-		}
+		wg.Wait()
+		close(errorStream)
 	}()
 	// start processing all the projects configured for this run;
 	// since the channel is buffered because we already know the length of the projects to process,
@@ -499,7 +501,7 @@ func (c *Client) pollProjectsWith(numWorkers int, until <-chan struct{}, project
 		projectsToPoll <- pr
 	}
 	close(projectsToPoll)
-	return errs
+	return errorStream
 }
 
 func (c *Client) pollProjectRefsFromPipelines(projectID, limit int) ([]string, error) {
