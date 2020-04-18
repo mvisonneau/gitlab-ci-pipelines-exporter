@@ -229,7 +229,7 @@ func (c *Client) pollProject(p Project) error {
 	log.Debugf("Fetching project : %s", p.Name)
 	p.GitlabProject, err = c.getProject(p.Name)
 	if err != nil {
-		return fmt.Errorf("unable to fetch project '%s' from the GitLab API : %v", p.Name, err.Error())
+		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %v", p.Name, err.Error())
 	}
 
 	if cfg.OnInitFetchRefsFromPipelines {
@@ -450,6 +450,7 @@ func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
 		if err != nil {
 			log.Errorf("%v", err)
 		}
+
 	}
 }
 
