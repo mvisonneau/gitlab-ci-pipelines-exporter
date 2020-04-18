@@ -15,22 +15,31 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func projectExists(p Project) bool {
-	for _, cp := range cfg.Projects {
-		if cmp.Equal(p, cp) {
+var statusesList = []string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
+
+var has = func(item interface{}, list []interface{}) bool {
+	for _, i := range list {
+		if cmp.Equal(i, item) {
 			return true
 		}
 	}
 	return false
 }
 
-func refExists(refs []string, r string) bool {
-	for _, ref := range refs {
-		if cmp.Equal(r, ref) {
-			return true
-		}
+func projectExists(p Project, in []Project) bool {
+	var ints []interface{}
+	for _, pr := range in {
+		ints = append(ints, pr)
 	}
-	return false
+	return has(p, ints)
+}
+
+func refExists(r string, refs []string) bool {
+	var ints []interface{}
+	for _, ref := range refs {
+		ints = append(ints, ref)
+	}
+	return has(r, ints)
 }
 
 func (c *Client) getProject(name string) (*gitlab.Project, error) {
@@ -207,7 +216,6 @@ func (c *Client) tagNamesFor(projectID int) ([]*string, error) {
 		if resp.CurrentPage >= resp.TotalPages {
 			break
 		}
-
 		options.Page = resp.NextPage
 	}
 
@@ -250,7 +258,7 @@ func (c *Client) pollProject(p Project) error {
 
 	if len(refs) > 0 {
 		for _, r := range refs {
-			if !refExists(polledRefs, r) {
+			if !refExists(r, polledRefs) {
 				log.Infof("Found ref '%s' for project '%s'", r, p.Name)
 				if err := c.pollProjectRef(p, r); err != nil {
 					log.Errorf("Error getting pipeline data on ref '%s' for project '%s'", r, p.Name)
@@ -265,7 +273,7 @@ func (c *Client) pollProject(p Project) error {
 	return nil
 }
 
-func outputStatusMetric(metric *prometheus.GaugeVec, labels []string, statuses []string, status string, sparseMetrics bool) {
+func emitStatusMetric(metric *prometheus.GaugeVec, labels []string, statuses []string, status string, sparseMetrics bool) {
 	// Moved into separate function to reduce cyclomatic complexity
 	// List of available statuses from the API spec
 	// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
@@ -281,25 +289,6 @@ func outputStatusMetric(metric *prometheus.GaugeVec, labels []string, statuses [
 			}
 		}
 	}
-}
-
-func (c *Client) outputPipelineStatusMetric(status string, sparseMetrics bool, labels ...string) {
-	outputStatusMetric(
-		lastRunStatus,
-		labels,
-		[]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"},
-		status,
-		sparseMetrics,
-	)
-}
-func (c *Client) outputJobStatusMetric(status string, sparseMetrics bool, labels ...string) {
-	outputStatusMetric(
-		lastRunJobStatus,
-		labels,
-		[]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"},
-		status,
-		sparseMetrics,
-	)
 }
 
 func (c *Client) pollPipelineJobs(p Project, pipelineID int, topics string, ref string) error {
@@ -324,33 +313,38 @@ func (c *Client) pollPipelineJobs(p Project, pipelineID int, topics string, ref 
 		}
 
 		jobCount := len(jobs)
-
-		log.Infof("Found %d jobs for pipeline %d", jobCount, pipelineID)
-
-		if jobCount > 0 {
-			for _, job := range jobs {
-				jobName := job.Name
-				stageName := job.Stage
-				log.Debugf("Job %s for pipeline %d", jobName, pipelineID)
-				lastRunJobDuration.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(job.Duration)
-
-				c.outputJobStatusMetric(job.Status, p.ShouldOutputSparseStatusMetrics(cfg), gp.PathWithNamespace, topics, ref, stageName, jobName)
-
-				timeSinceLastJobRun.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
-
-				jobRunCount.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Inc()
-
-				artifactSize := 0
-				for _, artifact := range job.Artifacts {
-					artifactSize += artifact.Size
-				}
-
-				lastRunJobArtifactSize.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(artifactSize))
-			}
-
-		} else {
+		// early break if list of jobs is empty
+		if jobCount == 0 {
 			log.Warnf("No jobs found for pipeline %d", pipelineID)
 			break
+		}
+
+		//otherwise proceed
+		log.Infof("Found %d jobs for pipeline %d", jobCount, pipelineID)
+		for _, job := range jobs {
+			jobName := job.Name
+			stageName := job.Stage
+			log.Debugf("Job %s for pipeline %d", jobName, pipelineID)
+			lastRunJobDuration.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(job.Duration)
+
+			emitStatusMetric(
+				lastRunJobStatus,
+				[]string{gp.PathWithNamespace, topics, ref, stageName, jobName},
+				statusesList,
+				job.Status,
+				p.ShouldOutputSparseStatusMetrics(cfg),
+			)
+
+			timeSinceLastJobRun.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
+
+			jobRunCount.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Inc()
+
+			artifactSize := 0
+			for _, artifact := range job.Artifacts {
+				artifactSize += artifact.Size
+			}
+
+			lastRunJobArtifactSize.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(artifactSize))
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
@@ -399,7 +393,13 @@ func (c *Client) pollProjectRef(p Project, ref string) error {
 		lastRunDuration.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.Duration))
 		lastRunID.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.ID))
 
-		c.outputPipelineStatusMetric(lastPipeline.Status, p.ShouldOutputSparseStatusMetrics(cfg), gp.PathWithNamespace, topics, ref)
+		emitStatusMetric(
+			lastRunStatus,
+			[]string{gp.PathWithNamespace, topics, ref},
+			statusesList,
+			lastPipeline.Status,
+			p.ShouldOutputSparseStatusMetrics(cfg),
+		)
 
 		if p.ShouldFetchPipelineJobMetrics(cfg) {
 			if err := c.pollPipelineJobs(p, lastPipeline.ID, topics, ref); err != nil {
@@ -460,7 +460,7 @@ func (c *Client) findProjectsFromWildcards() error {
 			return fmt.Errorf("could not list projects for wildcard %v: %v", w, err)
 		}
 		for _, p := range foundProjects {
-			if !projectExists(p) {
+			if !projectExists(p, cfg.Projects) {
 				log.Infof("Found new project: %s", p.Name)
 				cfg.Projects = append(cfg.Projects, p)
 			}
@@ -520,7 +520,7 @@ func (c *Client) pollProjectRefsFromPipelines(projectID, limit int) ([]string, e
 	}
 
 	for _, p := range pipelines {
-		if refExists(refs, p.Ref) {
+		if refExists(p.Ref, refs) {
 			continue
 		}
 		refs = append(refs, p.Ref)
