@@ -43,17 +43,28 @@ func TestRunInvalidConfigFile(t *testing.T) {
 // introduce a test to check the /metrics endpoint body
 func TestMetricsRegistryContainsMetricsWhenSet(t *testing.T) {
 	// a custom additional metric added to the registry
-	aMetric := "test_something"
-	aCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: aMetric})
-	registry := newMetricsRegistry(aCounter)
+	some := "test_something"
+	aCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: some})
+	registry := newMetricsRegistry(nil, aCounter)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 	metricsHandlerFor(registry, false).ServeHTTP(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
-	assert.Contains(t, w.Body.String(), aMetric)
-	//
-	//// assert also the default metrics are in
-	//assert.Contains(t, w.Body.String(), "gitlab_ci_pipeline_last_run_id")
+	assert.Contains(t, w.Body.String(), some)
+}
+
+func TestAMetricCanBeAddedLabelDynamically(t *testing.T) {
+	// a custom additional metric added to the registry
+	some := "test_something"
+	counter := prometheus.NewCounterVec(prometheus.CounterOpts{Name: some}, []string{"first", "second"})
+	prometheus.MustRegister(counter)
+
+	label := prometheus.Labels{"second": "something"}
+	curriedCounter, err := counter.CurryWith(label)
+	assert.NoError(t, err)
+	if assert.Nil(t, err) {
+		assert.Contains(t, label, curriedCounter.WithLabelValues("something").Desc())
+	}
 }

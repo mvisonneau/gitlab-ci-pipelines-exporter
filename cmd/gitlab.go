@@ -447,7 +447,9 @@ func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
 	log.Infof("%d project(s) configured for polling", len(cfg.Projects))
 	pollErrors := c.pollProjectsWith(cfg.MaximumProjectsPollingWorkers, stop, cfg.Projects...)
 	for err := range pollErrors {
-		log.Errorf("%v", err)
+		if err != nil {
+			log.Errorf("%v", err)
+		}
 	}
 }
 
@@ -470,21 +472,18 @@ func (c *Client) findProjectsFromWildcards() error {
 func (c *Client) pollProjectsWith(numWorkers int, until <-chan struct{}, projects ...Project) <-chan error {
 	errorStream := make(chan error)
 	projectsToPoll := make(chan Project, len(projects))
-	// sync the closing of error via a waitGroup
+	// sync closing the error channel via a waitGroup
 	wg := sync.WaitGroup{}
 	wg.Add(numWorkers)
 	// spawn maximum_projects_poller_workers to process project polling in parallel
 	for w := 0; w < numWorkers; w++ {
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
-			for {
+			for p := range projectsToPoll {
 				select {
 				case <-until:
 					return
-				case p := <-projectsToPoll:
-					if e := c.pollProject(p); e != nil {
-						errorStream <- e
-					}
+				case errorStream <- c.pollProject(p):
 				}
 			}
 		}(&wg)
