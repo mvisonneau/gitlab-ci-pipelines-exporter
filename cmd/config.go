@@ -29,7 +29,7 @@ type Config struct {
 	OnInitFetchRefsFromPipelinesDepthLimit int        `yaml:"on_init_fetch_refs_from_pipelines_depth_limit"` // Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
 	DefaultRefsRegexp                      string     `yaml:"default_refs"`                                  // Default regular expression
 	MaximumProjectsPollingWorkers          int        `yaml:"maximum_projects_poller_workers"`               // Sets the parallelism for polling projects from the API
-	PrometheusOpenmetricsEncoding          bool       `yaml:"prometheus_openmetrics_encoding"`               // Enable OpenMetrics content encoding in prometheus HTTP handler (default: false)
+	DisableOpenmetricsEncoding             bool       `yaml:"disable_openmetrics_encoding"`                  // Disable OpenMetrics content encoding in prometheus HTTP handler (default: false)
 	Projects                               []Project  `yaml:"projects"`                                      // List of projects to poll
 	Wildcards                              []Wildcard `yaml:"wildcards"`                                     // List of wildcards to search projects from
 }

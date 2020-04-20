@@ -47,9 +47,9 @@ pipelines_polling_interval_seconds: 60
 # Sets the parallelism for polling projects from the API (default to available CPUs: runtime.GOMAXPROCS(0))
 # maximum_projects_poller_workers: 1
 
-# Enable OpenMetrics content encoding in prometheus HTTP handler (default: false)
+# Enable OpenMetrics content encoding in prometheus HTTP handler (default: true)
 # see: https://godoc.org/github.com/prometheus/client_golang/prometheus/promhttp#HandlerOpts
-# prometheus_openmetrics_encoding: false
+# prometheus_openmetrics_encoding: true
 
 # Whether to attempt retrieving refs from pipelines when the exporter starts (default: false)
 on_init_fetch_refs_from_pipelines: false
