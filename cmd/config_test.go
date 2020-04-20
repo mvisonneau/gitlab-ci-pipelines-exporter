@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime"
-
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,7 +51,7 @@ gitlab:
   url: https://gitlab.example.com
   token: xrN14n9-ywvAFxxxxxx
   health_url: https://gitlab.example.com/-/health
-  skip_tls_verify: true
+  skip_health_check: true
 
 maximum_gitlab_api_requests_per_second: 1
 projects_polling_interval_seconds: 2
@@ -85,15 +84,16 @@ wildcards:
 
 	expectedCfg := Config{
 		Gitlab: struct {
-			URL           string "yaml:\"url\""
-			Token         string "yaml:\"token\""
-			HealthURL     string "yaml:\"health_url\""
-			SkipTLSVerify bool   "yaml:\"skip_tls_verify\""
+			URL             string "yaml:\"url\""
+			Token           string "yaml:\"token\""
+			HealthURL       string "yaml:\"health_url\""
+			SkipHealthCheck bool   "yaml:\"skip_health_check\""
+			SkipTLSVerify   bool   "yaml:\"skip_tls_verify\""
 		}{
-			URL:           "https://gitlab.example.com",
-			HealthURL:     "https://gitlab.example.com/-/health",
-			Token:         "xrN14n9-ywvAFxxxxxx",
-			SkipTLSVerify: true,
+			URL:             "https://gitlab.example.com",
+			HealthURL:       "https://gitlab.example.com/-/health",
+			Token:           "xrN14n9-ywvAFxxxxxx",
+			SkipHealthCheck: true,
 		},
 		MaximumGitLabAPIRequestsPerSecond:      1,
 		ProjectsPollingIntervalSeconds:         2,
@@ -154,15 +154,15 @@ projects:
 
 	expectedCfg := Config{
 		Gitlab: struct {
-			URL           string "yaml:\"url\""
-			Token         string "yaml:\"token\""
-			HealthURL     string "yaml:\"health_url\""
-			SkipTLSVerify bool   "yaml:\"skip_tls_verify\""
+			URL             string "yaml:\"url\""
+			Token           string "yaml:\"token\""
+			HealthURL       string "yaml:\"health_url\""
+			SkipHealthCheck bool   "yaml:\"skip_health_check\""
+			SkipTLSVerify   bool   "yaml:\"skip_tls_verify\""
 		}{
-			URL:           "https://gitlab.com",
-			Token:         "",
-			HealthURL:     "https://gitlab.com/users/sign_in",
-			SkipTLSVerify: false,
+			URL:       "https://gitlab.com",
+			Token:     "",
+			HealthURL: "https://gitlab.com/users/sign_in",
 		},
 		MaximumGitLabAPIRequestsPerSecond:      defaultMaximumGitLabAPIRequestsPerSecond,
 		ProjectsPollingIntervalSeconds:         defaultProjectsPollingIntervalSeconds,

@@ -10,9 +10,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/xanzy/go-gitlab"
-
 	log "github.com/sirupsen/logrus"
+	"github.com/xanzy/go-gitlab"
 )
 
 var statusesList = []string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
@@ -223,48 +222,41 @@ func (c *Client) tagNamesFor(projectID int) ([]*string, error) {
 }
 
 func (c *Client) pollProject(p Project) error {
-	var polledRefs []string
-	var err error
 
 	log.Debugf("Fetching project : %s", p.Name)
-	p.GitlabProject, err = c.getProject(p.Name)
+	project, err := c.getProject(p.Name)
 	if err != nil {
 		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %v", p.Name, err.Error())
 	}
+	p.GitlabProject = project
 
+	// create a list of refs to analyze
+	var refs []string
+	// search for refs on pipelines if requested
 	if cfg.OnInitFetchRefsFromPipelines {
-		log.Debugf("Polling project refs %s from most recent %d pipelines (init only)", p.Name, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
-		refs, err := c.pollProjectRefsFromPipelines(p.GitlabProject.ID, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
+		log.Debugf("Polling project refs %s from most recent %d pipelines", p.Name, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
+		pipeleRefs, err := c.refsFromPipelines(p.GitlabProject.ID, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
 		if err != nil {
 			return fmt.Errorf("unable to fetch refs from project pipelines %s : %v", p.Name, err.Error())
 		}
+		// append to refs the entries found on init
+		refs = append(refs, pipeleRefs...)
+	}
+	// append to refs the entries from branches and tags
+	branchesAndTagRefs, err := c.branchesAndTagsFor(p.GitlabProject.ID, p.Refs)
+	if err != nil {
+		return fmt.Errorf("error fetching refs for project '%s'", p.Name)
+	}
+	refs = append(refs, branchesAndTagRefs...)
 
-		log.Debugf("Found %d refs from %s pipelines", len(refs), p.Name)
+	// read the metrics for refs
+	log.Debugf("Polling refs for project : %s", p.Name)
+	if len(refs) > 0 {
 		for _, r := range refs {
 			log.Infof("Found ref '%s' for project '%s'", r, p.Name)
 			if err := c.pollProjectRef(p, r); err != nil {
 				log.Errorf("Error getting pipeline data on ref '%s' for project '%s'", r, p.Name)
 				continue
-			}
-			polledRefs = append(polledRefs, r)
-		}
-	}
-	log.Debugf("Polling refs for project : %s", p.Name)
-
-	refs, err := c.branchesAndTagsFor(p.GitlabProject.ID, p.Refs)
-	if err != nil {
-		return fmt.Errorf("error fetching refs for project '%s'", p.Name)
-	}
-
-	if len(refs) > 0 {
-		for _, r := range refs {
-			if !refExists(r, polledRefs) {
-				log.Infof("Found ref '%s' for project '%s'", r, p.Name)
-				if err := c.pollProjectRef(p, r); err != nil {
-					log.Errorf("Error getting pipeline data on ref '%s' for project '%s'", r, p.Name)
-					continue
-				}
-				polledRefs = append(polledRefs, r)
 			}
 		}
 	}
@@ -503,7 +495,7 @@ func (c *Client) pollProjectsWith(numWorkers int, until <-chan struct{}, project
 	return errorStream
 }
 
-func (c *Client) pollProjectRefsFromPipelines(projectID, limit int) ([]string, error) {
+func (c *Client) refsFromPipelines(projectID, limit int) ([]string, error) {
 	options := &gitlab.ListProjectPipelinesOptions{
 		ListOptions: gitlab.ListOptions{
 			Page:    1,
@@ -519,10 +511,9 @@ func (c *Client) pollProjectRefsFromPipelines(projectID, limit int) ([]string, e
 	}
 
 	for _, p := range pipelines {
-		if refExists(p.Ref, refs) {
-			continue
+		if !refExists(p.Ref, refs) {
+			refs = append(refs, p.Ref)
 		}
-		refs = append(refs, p.Ref)
 	}
 
 	return refs, nil
@@ -534,4 +525,14 @@ func (c *Client) rateLimit() {
 	if throttled.Sub(now).Milliseconds() > 10 {
 		log.Debugf("throttled polling requests for %v", throttled.Sub(now))
 	}
+}
+
+func variableLabelledCounter(vars []gitlab.PipelineVariable) prometheus.Counter {
+	var labels []string
+	for _, v := range vars {
+		labels = append(labels, v.Key)
+	}
+	counter := prometheus.NewCounterVec(prometheus.CounterOpts{Name: "test_vars"}, labels).WithLabelValues(labels...)
+	counter.Add(1.0)
+	return counter
 }

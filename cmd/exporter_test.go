@@ -3,15 +3,15 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
 	"net/http/httptest"
 	"strings"
-
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
+	"github.com/xanzy/go-gitlab"
 )
 
 func TestRunWrongLogLevel(t *testing.T) {
@@ -57,14 +57,21 @@ func TestMetricsRegistryContainsMetricsWhenSet(t *testing.T) {
 
 func TestAMetricCanBeAddedLabelDynamically(t *testing.T) {
 	// a custom additional metric added to the registry
-	some := "test_something"
-	counter := prometheus.NewCounterVec(prometheus.CounterOpts{Name: some}, []string{"first", "second"})
+	counter := prometheus.NewCounterVec(prometheus.CounterOpts{Name: "test_something"}, []string{"first", "second"})
 	prometheus.MustRegister(counter)
 
-	label := prometheus.Labels{"second": "something"}
-	curriedCounter, err := counter.CurryWith(label)
-	assert.NoError(t, err)
+	curriedCounter, err := counter.CurryWith(prometheus.Labels{"first": "0", "second": "something"})
 	if assert.Nil(t, err) {
-		assert.Contains(t, label, curriedCounter.WithLabelValues("something").Desc())
+		assert.Contains(t, curriedCounter.WithLabelValues().Desc().String(), "something")
 	}
+}
+
+func TestAVaribleConstMetricIsUpdated(t *testing.T) {
+	someVars := []gitlab.PipelineVariable{{Key: "test", Value: "testval"}, {Key: "test-2", Value: "aaaa", VariableType: "env_var"}}
+
+	counter := variableLabelledCounter(someVars)
+	assert.Contains(t, counter.Desc().String(), "test")
+	assert.Contains(t, counter.Desc().String(), "test-2")
+	assert.NotContains(t, counter.Desc().String(), "testval")
+
 }
