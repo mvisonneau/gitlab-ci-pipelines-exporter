@@ -159,11 +159,10 @@ func Run(ctx *cli.Context) error {
 	log.Infof("Global rate limit for the GitLab API set to %d req/s", cfg.MaximumGitLabAPIRequestsPerSecond)
 
 	// Configure GitLab client
-	httpTransport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.SkipTLSVerify},
-	}
 	opts := []gitlab.ClientOptionFunc{
-		gitlab.WithHTTPClient(&http.Client{Transport: httpTransport}),
+		gitlab.WithHTTPClient(&http.Client{Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.SkipTLSVerify},
+		}}),
 		gitlab.WithBaseURL(cfg.Gitlab.URL),
 	}
 	gc, err := gitlab.NewClient(cfg.Gitlab.Token, opts...)
@@ -180,18 +179,18 @@ func Run(ctx *cli.Context) error {
 	onShutdown := make(chan os.Signal, 1)
 	signal.Notify(onShutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 
-	stopPolling := make(chan bool)
-	c.pollProjects(stopPolling)
+	untilStopSignal := make(chan bool)
+	c.pollProjects(untilStopSignal)
 
 	// Configure liveness and readiness probes
 	health := healthcheck.NewHandler()
-	if !cfg.Gitlab.SkipTLSVerify {
+	if !cfg.Gitlab.SkipHealthCheck {
 		health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(cfg.Gitlab.HealthURL, 5*time.Second))
 	} else {
 		log.Warn("TLS verification has been disabled. Readiness checks won't be operated.")
 	}
 
-	// Register registry
+	// Register the default metrics into a new registry
 	registry := newMetricsRegistry(log.StandardLogger(), defaultMetrics...)
 
 	// Expose the registered registry via HTTP
@@ -213,7 +212,7 @@ func Run(ctx *cli.Context) error {
 	log.Infof("Started listening onto %s", ctx.GlobalString("listen-address"))
 
 	<-onShutdown
-	stopPolling <- true
+	untilStopSignal <- true
 	log.Print("Stopped!")
 
 	ctxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
