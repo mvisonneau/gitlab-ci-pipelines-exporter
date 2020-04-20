@@ -235,12 +235,12 @@ func (c *Client) pollProject(p Project) error {
 	// search for refs on pipelines if requested
 	if cfg.OnInitFetchRefsFromPipelines {
 		log.Debugf("Polling project refs %s from most recent %d pipelines", p.Name, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
-		pipeleRefs, err := c.refsFromPipelines(p.GitlabProject.ID, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
+		pipelineRefs, err := c.refsFromPipelines(p.GitlabProject.ID, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
 		if err != nil {
 			return fmt.Errorf("unable to fetch refs from project pipelines %s : %v", p.Name, err.Error())
 		}
 		// append to refs the entries found on init
-		refs = append(refs, pipeleRefs...)
+		refs = append(refs, pipelineRefs...)
 	}
 	// append to refs the entries from branches and tags
 	branchesAndTagRefs, err := c.branchesAndTagsFor(p.GitlabProject.ID, p.Refs)
