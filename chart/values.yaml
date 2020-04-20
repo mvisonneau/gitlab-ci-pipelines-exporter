@@ -6,9 +6,20 @@ image:
   pullPolicy: IfNotPresent
   # tag: <default to chart version>
 
+## Additional labels and annotations for the deployment resource
+##
+labels: {}
+annotations: {}
+
+## Additional labels and annotations for the pods
+podLabels: {}
+podAnnotations: {}
+
 service:
   type: ClusterIP
   port: 80
+
+  ## Additional labels and annotations for the service
   annotations: {}
   labels: {}
 

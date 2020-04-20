@@ -16,6 +16,7 @@ and this project adheres to [0ver](https://0ver.org).
 
 - Projects polling from GitLab API is done in parallel using `maximum_projects_poller_workers` pollers and concurrently fetching refs and projects
 - Fixed a bug causing duplicate metrics when status changes with sparse flag enabled
+- Updated labels syntax in helm chart to comply with standards
 
 ## [0.2.14] - 2019-04-09
 
