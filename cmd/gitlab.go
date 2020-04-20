@@ -450,7 +450,6 @@ func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
 		if err != nil {
 			log.Errorf("%v", err)
 		}
-
 	}
 }
 

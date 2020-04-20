@@ -119,24 +119,14 @@ var (
 	)
 )
 
-func newMetricsRegistry(metrics ...prometheus.Collector) *prometheus.Registry {
+var defaultMetrics = []prometheus.Collector{coverage, lastRunDuration, lastRunID, lastRunStatus, runCount, timeSinceLastJobRun, lastRunDuration, lastRunJobStatus, jobRunCount, timeSinceLastJobRun, lastRunJobArtifactSize}
+
+func newMetricsRegistry(log *log.Logger, metrics ...prometheus.Collector) *prometheus.Registry {
 	registry := prometheus.NewRegistry()
-
-	//default metrics
-	registry.MustRegister(coverage)
-	registry.MustRegister(lastRunDuration)
-	registry.MustRegister(lastRunID)
-	registry.MustRegister(lastRunStatus)
-	registry.MustRegister(runCount)
-	registry.MustRegister(timeSinceLastRun)
-	registry.MustRegister(lastRunJobDuration)
-	registry.MustRegister(lastRunJobStatus)
-	registry.MustRegister(jobRunCount)
-	registry.MustRegister(timeSinceLastJobRun)
-	registry.MustRegister(lastRunJobArtifactSize)
-
 	for _, m := range metrics {
-		registry.MustRegister(m)
+		if err := registry.Register(m); err != nil {
+			log.Fatalf("could not add provided metric '%v' to the Prometheus registry: %v", m, err)
+		}
 	}
 	return registry
 }
@@ -172,17 +162,14 @@ func Run(ctx *cli.Context) error {
 	httpTransport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.SkipTLSVerify},
 	}
-
 	opts := []gitlab.ClientOptionFunc{
 		gitlab.WithHTTPClient(&http.Client{Transport: httpTransport}),
 		gitlab.WithBaseURL(cfg.Gitlab.URL),
 	}
-
 	gc, err := gitlab.NewClient(cfg.Gitlab.Token, opts...)
 	if err != nil {
 		return exit(err, 1)
 	}
-
 	c := &Client{
 		Client:      gc,
 		RateLimiter: ratelimit.New(cfg.MaximumGitLabAPIRequestsPerSecond),
@@ -204,13 +191,14 @@ func Run(ctx *cli.Context) error {
 		log.Warn("TLS verification has been disabled. Readiness checks won't be operated.")
 	}
 
-	// register registry
-	registry := newMetricsRegistry()
+	// Register registry
+	registry := newMetricsRegistry(log.StandardLogger(), defaultMetrics...)
+
 	// Expose the registered registry via HTTP
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health/live", health.LiveEndpoint)
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
-	mux.Handle("/registry", metricsHandlerFor(registry, cfg.PrometheusOpenmetricsEncoding))
+	mux.Handle("/metrics", metricsHandlerFor(registry, cfg.PrometheusOpenmetricsEncoding))
 
 	srv := &http.Server{
 		Addr:    ctx.GlobalString("listen-address"),
