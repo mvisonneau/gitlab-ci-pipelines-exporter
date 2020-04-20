@@ -11,6 +11,7 @@ and this project adheres to [0ver](https://0ver.org).
 
 - Configuration for OpenMetrics Encoding in metrics HTTP endpoint: `prometheus_openmetrics_encoding` can be set `true` or `false` (default)
 - Worker pool for projects polling: set `maximum_projects_poller_workers` with an integer value to control parallelism (defaults to `runtime.GOMAXPROCS(0)`)  
+- Configurable ServiceMonitor resource through the helm chart
 
 ### Changed
 

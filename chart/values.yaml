@@ -113,3 +113,13 @@ envVariables: []
   #   value: debug
   # - name: GCPE_GITLAB_TOKEN
   #   value: "<your-gitlab-token>"
+
+## Manage a ServiceMonitor resource to automatically configure the endpoint
+## through the Prometheus operator: https://github.com/coreos/prometheus-operator
+serviceMonitor:
+  enabled: false
+  scrapeInterval: 10s
+
+  ## Additional labels and annotations for the service monitor
+  annotations: {}
+  labels: {}
