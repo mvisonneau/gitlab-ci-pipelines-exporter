@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"go.uber.org/ratelimit"
 	"regexp"
 	"strconv"
 	"strings"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
@@ -39,6 +39,20 @@ func refExists(r string, refs []string) bool {
 		ints = append(ints, ref)
 	}
 	return has(r, ints)
+}
+
+// Client holds a GitLab client
+type Client struct {
+	*gitlab.Client
+	RateLimiter ratelimit.Limiter
+}
+
+func (c *Client) rateLimit() {
+	now := time.Now()
+	throttled := c.RateLimiter.Take()
+	if throttled.Sub(now).Milliseconds() > 10 {
+		log.Debugf("throttled polling requests for %v", throttled.Sub(now))
+	}
 }
 
 func (c *Client) getProject(name string) (*gitlab.Project, error) {
@@ -265,24 +279,6 @@ func (c *Client) pollProject(p Project) error {
 	return nil
 }
 
-func emitStatusMetric(metric *prometheus.GaugeVec, labels []string, statuses []string, status string, sparseMetrics bool) {
-	// Moved into separate function to reduce cyclomatic complexity
-	// List of available statuses from the API spec
-	// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
-	for _, s := range statuses {
-		args := append(labels, s)
-		if s == status {
-			metric.WithLabelValues(args...).Set(1)
-		} else {
-			if sparseMetrics {
-				metric.DeleteLabelValues(args...)
-			} else {
-				metric.WithLabelValues(args...).Set(0)
-			}
-		}
-	}
-}
-
 func (c *Client) pollPipelineJobs(p Project, pipelineID int, topics string, ref string) error {
 	var jobs []*gitlab.Job
 	var resp *gitlab.Response
@@ -461,9 +457,9 @@ func (c *Client) findProjectsFromWildcards() error {
 	return nil
 }
 
-func (c *Client) pollProjectsWith(numWorkers int, fetch func(Project) error, until <-chan struct{}, on ...Project) <-chan error {
+func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, until <-chan struct{}, projects ...Project) <-chan error {
 	errorStream := make(chan error)
-	projectsToPoll := make(chan Project, len(on))
+	projectsToPoll := make(chan Project, len(projects))
 	// sync closing the error channel via a waitGroup
 	var wg sync.WaitGroup
 	wg.Add(numWorkers)
@@ -476,7 +472,8 @@ func (c *Client) pollProjectsWith(numWorkers int, fetch func(Project) error, unt
 				select {
 				case <-until:
 					return
-				case errorStream <- fetch(p):
+				case errorStream <- doing(p):
+				case errorStream <- doing(p):
 				}
 			}
 		}(&wg)
@@ -489,7 +486,7 @@ func (c *Client) pollProjectsWith(numWorkers int, fetch func(Project) error, unt
 	// start processing all the projects configured for this run;
 	// since the channel is buffered because we already know the length of the projects to process,
 	// we can close immediately and the runtime will handle the channel close only when the messages are dispatched
-	for _, pr := range on {
+	for _, pr := range projects {
 		projectsToPoll <- pr
 	}
 	close(projectsToPoll)
@@ -518,22 +515,4 @@ func (c *Client) refsFromPipelines(projectID, limit int) ([]string, error) {
 	}
 
 	return refs, nil
-}
-
-func (c *Client) rateLimit() {
-	now := time.Now()
-	throttled := c.RateLimiter.Take()
-	if throttled.Sub(now).Milliseconds() > 10 {
-		log.Debugf("throttled polling requests for %v", throttled.Sub(now))
-	}
-}
-
-func variableLabelledCounter(vars []gitlab.PipelineVariable) prometheus.Counter {
-	var labels []string
-	for _, v := range vars {
-		labels = append(labels, v.Key)
-	}
-	counter := prometheus.NewCounterVec(prometheus.CounterOpts{Name: "test_vars"}, labels).WithLabelValues(labels...)
-	counter.Add(1.0)
-	return counter
 }
