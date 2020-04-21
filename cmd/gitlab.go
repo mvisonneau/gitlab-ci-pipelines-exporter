@@ -469,7 +469,7 @@ func (c *Client) findProjectsFromWildcards() error {
 	return nil
 }
 
-func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, until <-chan struct{}, on ...Project) <-chan error {
+func (c *Client) pollProjectsWith(numWorkers int, fetch func(Project) error, until <-chan struct{}, on ...Project) <-chan error {
 	errorStream := make(chan error)
 	projectsToPoll := make(chan Project, len(on))
 	// sync closing the error channel via a waitGroup
@@ -484,7 +484,7 @@ func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, unt
 				select {
 				case <-until:
 					return
-				case errorStream <- doing(p):
+				case errorStream <- fetch(p):
 				}
 			}
 		}(&wg)
