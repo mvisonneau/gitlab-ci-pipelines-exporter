@@ -473,7 +473,7 @@ func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, unt
 	errorStream := make(chan error)
 	projectsToPoll := make(chan Project, len(on))
 	// sync closing the error channel via a waitGroup
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
 	wg.Add(numWorkers)
 
 	// spawn maximum_projects_poller_workers to process project polling in parallel

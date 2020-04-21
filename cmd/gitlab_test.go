@@ -234,7 +234,7 @@ func TestClient_pollProjectsWith(t *testing.T) {
 	doing := func(Project) error {
 		return fmt.Errorf(message)
 	}
-	testProjects := []Project{{Name: "test"}, {Name: "test2"}, {Name: "test4"}, {Name: "test4"}}
+	testProjects := []Project{{Name: "test"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
 	until := make(chan struct{})
 	errCh := c.pollProjectsWith(4, doing, until, testProjects...)
 	var errCount int
