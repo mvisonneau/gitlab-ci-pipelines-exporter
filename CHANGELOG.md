@@ -9,14 +9,16 @@ and this project adheres to [0ver](https://0ver.org).
 
 ### Added
 
-- Configuration for OpenMetrics Encoding in metrics HTTP endpoint: `prometheus_openmetrics_encoding` can be set `true` or `false` (default)
+- Configuration for OpenMetrics Encoding in metrics HTTP endpoint. Enabled by default but can be disable using `disable_openmetrics_encoding: true`.
 - Worker pool for projects polling: set `maximum_projects_poller_workers` with an integer value to control parallelism (defaults to `runtime.GOMAXPROCS(0)`)  
 - Augmented `skip_tls_verify` with `skip_health_check` additional parameter to drive the behaviour of checking healthiness of target service 
+- Configurable ServiceMonitor resource through the helm chart
 
 ### Changed
 
 - Projects polling from GitLab API is done in parallel using `maximum_projects_poller_workers` pollers and concurrently fetching refs and projects
 - Fixed a bug causing duplicate metrics when status changes with sparse flag enabled
+- Updated labels syntax in helm chart to comply with standards
 
 ## [0.2.14] - 2019-04-09
 

@@ -469,6 +469,7 @@ func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, unt
 	// sync closing the error channel via a waitGroup
 	var wg sync.WaitGroup
 	wg.Add(numWorkers)
+
 	// spawn maximum_projects_poller_workers to process project polling in parallel
 	for w := 0; w < numWorkers; w++ {
 		go func(wg *sync.WaitGroup) {
@@ -490,7 +491,7 @@ func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, unt
 	// start processing all the projects configured for this run;
 	// since the channel is buffered because we already know the length of the projects to process,
 	// we can close immediately and the runtime will handle the channel close only when the messages are dispatched
-	for _, pr := range projects {
+	for _, pr := range on {
 		projectsToPoll <- pr
 	}
 	close(projectsToPoll)

@@ -228,3 +228,22 @@ func pollingResult(until <-chan struct{}, projects <-chan Project, client *Clien
 	}
 	return numErrs
 }
+
+func TestClient_pollProjectsWith(t *testing.T) {
+	c := Client{}
+	message := "some error"
+	doing := func(Project) error {
+		return fmt.Errorf(message)
+	}
+	testProjects := []Project{{Name: "test"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
+	until := make(chan struct{})
+	errCh := c.pollProjectsWith(4, doing, until, testProjects...)
+	var errCount int
+	for err := range errCh {
+		if assert.Error(t, err) {
+			assert.Equal(t, err.Error(), message)
+			errCount++
+		}
+	}
+	assert.Equal(t, len(testProjects), errCount)
+}

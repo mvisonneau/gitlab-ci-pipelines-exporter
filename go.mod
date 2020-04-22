@@ -5,7 +5,6 @@ go 1.14
 require (
 	github.com/google/go-cmp v0.4.0
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
-	github.com/jpillora/backoff v1.0.0
 	github.com/mvisonneau/go-helpers v0.0.0-20200224131125-cb5cc4e6def9
 	github.com/prometheus/client_golang v1.5.1
 	github.com/sirupsen/logrus v1.5.0

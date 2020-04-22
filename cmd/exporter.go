@@ -91,6 +91,7 @@ func Run(ctx *cli.Context) error {
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
 	mux.Handle("/metrics", metricsHandlerFor(registry, cfg.PrometheusOpenmetricsEncoding))
 
+
 	srv := &http.Server{
 		Addr:    ctx.GlobalString("listen-address"),
 		Handler: mux,

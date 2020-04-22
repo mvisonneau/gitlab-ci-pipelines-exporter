@@ -168,6 +168,7 @@ projects:
 		ProjectsPollingIntervalSeconds:         defaultProjectsPollingIntervalSeconds,
 		RefsPollingIntervalSeconds:             defaultRefsPollingIntervalSeconds,
 		PipelinesPollingIntervalSeconds:        defaultPipelinesPollingIntervalSeconds,
+		DisableOpenmetricsEncoding:             false,
 		OnInitFetchRefsFromPipelines:           false,
 		OnInitFetchRefsFromPipelinesDepthLimit: defaultOnInitFetchRefsFromPipelinesDepthLimit,
 		DefaultRefsRegexp:                      "",
@@ -225,7 +226,7 @@ func TestParsePrometheusConfig(t *testing.T) {
 
 	// Valid minimal configuration
 	f.WriteString(`
-prometheus_openmetrics_encoding: true
+disable_openmetrics_encoding: true
 projects:
   - name: foo/project
   - name: bar/project
@@ -234,7 +235,7 @@ projects:
 
 	config := &Config{}
 	assert.NoError(t, config.Parse(f.Name()))
-	assert.True(t, config.PrometheusOpenmetricsEncoding)
+	assert.True(t, config.DisableOpenmetricsEncoding)
 }
 
 func TestParseConfigWithoutProjectWorkersUsesGOMAXPROCS(t *testing.T) {
