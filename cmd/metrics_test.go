@@ -41,17 +41,6 @@ func TestMetricsRegistryFailsWhenDouble(t *testing.T) {
 	assert.Panics(t, panicFn)
 }
 
-func TestAMetricCanBeAddedLabelDynamically(t *testing.T) {
-	// a custom additional metric added to the registry
-	counter := prometheus.NewCounterVec(prometheus.CounterOpts{Name: "test_something"}, []string{"first", "second"})
-	prometheus.MustRegister(counter)
-
-	curriedCounter, err := counter.CurryWith(prometheus.Labels{"first": "0", "second": "something"})
-	if assert.Nil(t, err) {
-		assert.Contains(t, curriedCounter.WithLabelValues().Desc().String(), "something")
-	}
-}
-
 func TestEmitVariablesMetric(t *testing.T) {
 	var testOkFetchFn = func(interface{}, int, ...gitlab.RequestOptionFunc) ([]*gitlab.PipelineVariable, *gitlab.Response, error) {
 		return []*gitlab.PipelineVariable{{Key: "test", Value: "testval"}, {Key: "test-2", Value: "aaaa", VariableType: "env_var"}}, nil, nil

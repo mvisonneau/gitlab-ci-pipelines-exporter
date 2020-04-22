@@ -479,7 +479,6 @@ func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, unt
 				case <-until:
 					return
 				case errorStream <- doing(p):
-				case errorStream <- doing(p):
 				}
 			}
 		}(&wg)

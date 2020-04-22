@@ -11,8 +11,8 @@ and this project adheres to [0ver](https://0ver.org).
 
 - Configuration for OpenMetrics Encoding in metrics HTTP endpoint. Enabled by default but can be disable using `disable_openmetrics_encoding: true`.
 - Worker pool for projects polling: set `maximum_projects_poller_workers` with an integer value to control parallelism (defaults to `runtime.GOMAXPROCS(0)`)  
+- Augmented `skip_tls_verify` with `skip_health_check` additional parameter to drive the behaviour of checking healthiness of target service 
 - Configurable ServiceMonitor resource through the helm chart
-- Augmented `skip_tls_verify` with `skip_health_check` additional parameter to drive the behaviour of checking healthiness of target service
 
 ### Changed
 
