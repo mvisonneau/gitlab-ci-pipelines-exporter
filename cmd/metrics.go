@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
@@ -94,27 +97,49 @@ var (
 		},
 		[]string{"project", "topics", "ref"},
 	)
+
+	pipelineVariables = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_run_count_with_variable",
+			Help: "Count of pipelines with variables",
+		},
+		[]string{"project", "ref", "pipeline_variables"},
+	)
 )
 
 var (
 	registry       = prometheus.NewRegistry()
-	defaultMetrics = []prometheus.Collector{coverage, lastRunDuration, lastRunID, lastRunStatus, runCount, timeSinceLastJobRun, lastRunDuration, lastRunJobStatus, jobRunCount, timeSinceLastJobRun, lastRunJobArtifactSize}
+	defaultMetrics = []prometheus.Collector{
+		coverage,
+		lastRunDuration,
+		lastRunJobDuration,
+		lastRunJobStatus,
+		lastRunJobArtifactSize,
+		timeSinceLastJobRun,
+		jobRunCount,
+		lastRunID,
+		lastRunStatus,
+		runCount,
+		timeSinceLastRun,
+		pipelineVariables,
+	}
 )
 
 func registerMetricOn(registry *prometheus.Registry, log *log.Logger, metrics ...prometheus.Collector) {
 	for _, m := range metrics {
-		if err := registry.Register(m); err != nil {
-			log.Fatalf("could not add provided metric '%v' to the Prometheus registry: %v", m, err)
-		}
+		//if err := registry.Register(m); err != nil {
+		//	log.Fatalf("could not add provided metric '%v' to the Prometheus registry: %v", m, err)
+		//}
+		registry.MustRegister(m)
 	}
 }
 
-func emitStatusMetric(metric *prometheus.GaugeVec, labels []string, statuses []string, status string, sparseMetrics bool) {
+func emitStatusMetric(metric *prometheus.GaugeVec, labelValuess []string, statuses []string, status string, sparseMetrics bool) {
 	// Moved into separate function to reduce cyclomatic complexity
 	// List of available statuses from the API spec
 	// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
 	for _, s := range statuses {
-		args := append(labels, s)
+		args := append(labelValuess, s)
 		if s == status {
 			metric.WithLabelValues(args...).Set(1)
 		} else {
@@ -127,12 +152,24 @@ func emitStatusMetric(metric *prometheus.GaugeVec, labels []string, statuses []s
 	}
 }
 
-func variableLabelledCounter(vars []gitlab.PipelineVariable) prometheus.Counter {
-	var labels []string
-	for _, v := range vars {
-		labels = append(labels, v.Key)
+type pipelineVarsFetchOp func(interface{}, int, ...gitlab.RequestOptionFunc) ([]*gitlab.PipelineVariable, *gitlab.Response, error)
+
+func emitPipelineVariablesMetric(c *Client, metric *prometheus.GaugeVec, projectName, ref string, projectID int, pipelineID int, fetch pipelineVarsFetchOp) error {
+	c.rateLimit()
+	variables, _, err := fetch(projectID, pipelineID)
+	if err != nil {
+		return fmt.Errorf("could not fetch pipeline variables for pipeline %d: %s", pipelineID, err.Error())
 	}
-	counter := prometheus.NewCounterVec(prometheus.CounterOpts{Name: "test_vars"}, labels).WithLabelValues(labels...)
-	counter.Add(1.0)
-	return counter
+	if len(variables) > 0 {
+		var varValues []string
+		for _, v := range variables {
+			varValues = append(varValues, v.Key)
+		}
+		metric.WithLabelValues(projectName, ref, strings.Join(varValues, ",")).Inc()
+	}
+	return nil
+}
+
+func variableLabelledCounter(metricName string, labels []string) *prometheus.GaugeVec {
+	return prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: metricName}, labels)
 }

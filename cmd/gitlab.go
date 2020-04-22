@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"go.uber.org/ratelimit"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
+	"go.uber.org/ratelimit"
 )
 
 var statusesList = []string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
@@ -357,9 +357,15 @@ func (c *Client) pollProjectRef(p Project, ref string) error {
 	if err != nil {
 		return fmt.Errorf("error listing project pipelines for ref %s: %v", ref, err)
 	}
-
 	if len(pipelines) == 0 {
 		return fmt.Errorf("could not find any pipeline for %s:%s", gp.PathWithNamespace, ref)
+	}
+
+	// fetch pipeline variables, stick them into metrics registry
+	for _, pipe := range pipelines {
+		if err := emitPipelineVariablesMetric(c, pipelineVariables, gp.PathWithNamespace, ref, gp.ID, pipe.ID, c.Pipelines.GetPipelineVariables); err != nil {
+			log.Errorf("%v", err)
+		}
 	}
 
 	c.rateLimit()
