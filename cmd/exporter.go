@@ -83,13 +83,13 @@ func Run(ctx *cli.Context) error {
 	}
 
 	// Register the default metrics into a new registry
-	registerMetricOn(registry, log.StandardLogger(), defaultMetrics...)
+	registerMetricOn(registry, defaultMetrics...)
 
 	// Expose the registered registry via HTTP
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health/live", health.LiveEndpoint)
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
-	mux.Handle("/metrics", metricsHandlerFor(registry, cfg.PrometheusOpenmetricsEncoding))
+	mux.Handle("/metrics", metricsHandlerFor(registry, cfg.DisableOpenmetricsEncoding))
 
 	srv := &http.Server{
 		Addr:    ctx.GlobalString("listen-address"),

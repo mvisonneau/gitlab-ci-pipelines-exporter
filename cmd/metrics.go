@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -125,12 +124,11 @@ var (
 	}
 )
 
-func registerMetricOn(registry *prometheus.Registry, log *log.Logger, metrics ...prometheus.Collector) {
+func registerMetricOn(registry *prometheus.Registry, metrics ...prometheus.Collector) {
 	for _, m := range metrics {
-		//if err := registry.Register(m); err != nil {
-		//	log.Fatalf("could not add provided metric '%v' to the Prometheus registry: %v", m, err)
-		//}
-		registry.MustRegister(m)
+		if err := registry.Register(m); err != nil {
+			panic(fmt.Errorf("could not add provided metric '%v' to the Prometheus registry: %v", m, err))
+		}
 	}
 }
 

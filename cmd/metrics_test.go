@@ -18,7 +18,7 @@ func TestMetricsRegistryContainsMetricsWhenSet(t *testing.T) {
 	some := "test_something"
 	aCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: some})
 	reg := prometheus.NewRegistry()
-	registerMetricOn(reg, nil, aCounter)
+	registerMetricOn(reg, aCounter)
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -34,15 +34,12 @@ func TestMetricsRegistryFailsWhenDouble(t *testing.T) {
 	some := "test_something"
 	aCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: some})
 	reg := prometheus.NewRegistry()
-	registerMetricOn(reg, nil, aCounter)
-	registerMetricOn(reg, nil, aCounter)
-	defer func(){
-		if r := recover(); r!=nil {
-			t.Log("failed correctly")
-		}
-	}()
+	registerMetricOn(reg, aCounter)
+	panicFn := func() {
+		registerMetricOn(reg, aCounter)
+	}
+	assert.Panics(t, panicFn)
 }
-
 
 func TestAMetricCanBeAddedLabelDynamically(t *testing.T) {
 	// a custom additional metric added to the registry
