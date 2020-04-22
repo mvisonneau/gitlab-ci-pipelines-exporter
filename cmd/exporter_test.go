@@ -3,15 +3,11 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
-	"github.com/xanzy/go-gitlab"
 )
 
 func TestRunWrongLogLevel(t *testing.T) {
@@ -39,4 +35,3 @@ func TestRunInvalidConfigFile(t *testing.T) {
 	err := Run(cli.NewContext(nil, set, nil))
 	assert.Equal(t, true, strings.HasPrefix(err.Error(), "couldn't open config file :"))
 }
-

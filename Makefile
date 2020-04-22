@@ -45,7 +45,7 @@ misspell: setup ## Test code with misspell
 
 .PHONY: test
 test: ## Run the tests against the codebase
-	go test -v ./...
+	go test -v -race ./...
 
 .PHONY: install
 install: ## Build and install locally the binary (dev purpose)
