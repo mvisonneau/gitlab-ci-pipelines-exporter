@@ -14,7 +14,7 @@ import (
 	"go.uber.org/ratelimit"
 )
 
-var statusesList = []string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
+var statusesList = [...]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
 
 var has = func(item interface{}, list []interface{}) bool {
 	for _, i := range list {
