@@ -232,12 +232,16 @@ func pollingResult(until <-chan struct{}, projects <-chan Project, client *Clien
 func TestClient_pollProjectsWith(t *testing.T) {
 	c := Client{}
 	message := "some error"
-	doing := func(Project) error {
-		return fmt.Errorf(message)
+	doing := func() func(Project) error {
+		return func(Project) error {
+			// set the already polled refs, simulate the pollProject(p Project) set of Client.hasPolledOnInit
+			// return an error to count them afterwards
+			return fmt.Errorf(message)
+		}
 	}
 	testProjects := []Project{{Name: "test"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
 	until := make(chan struct{})
-	errCh := c.pollProjectsWith(4, doing, until, testProjects...)
+	errCh := c.pollProjectsWith(4, doing(), until, testProjects...)
 	var errCount int
 	for err := range errCh {
 		if assert.Error(t, err) {
