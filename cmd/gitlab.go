@@ -207,7 +207,7 @@ func (c *Client) orchestratePolling(until <-chan bool, getRefsOnInit <-chan bool
 				log.Info("stopping projects polling...")
 				return
 			case todo := <-getRefsOnInit:
-				log.Debugf("executing init pipeline? %v", todo)
+				log.Debugf("should we poll the more recent refs from the last executed pipelines? %v", todo)
 				if todo {
 					c.pollPipelinesOnInit()
 				}
