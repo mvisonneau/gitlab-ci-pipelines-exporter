@@ -72,10 +72,10 @@ func Run(ctx *cli.Context) error {
 	signal.Notify(onShutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 
 	untilStopSignal := make(chan bool)
-	refsOnInit := make(chan bool)
-	c.orchestratePolling(untilStopSignal, refsOnInit)
+	pipelinesOnInit := make(chan bool)
+	c.orchestratePolling(untilStopSignal, pipelinesOnInit)
 	// get immediately some data from the latest executed pipelines, if configured to do so
-	refsOnInit <- cfg.OnInitFetchRefsFromPipelines
+	pipelinesOnInit <- cfg.OnInitFetchRefsFromPipelines
 
 	// Configure liveness and readiness probes
 	health := healthcheck.NewHandler()

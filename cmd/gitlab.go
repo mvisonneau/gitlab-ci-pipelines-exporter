@@ -207,6 +207,7 @@ func (c *Client) orchestratePolling(until <-chan bool, getRefsOnInit <-chan bool
 				log.Info("stopping projects polling...")
 				return
 			case todo := <-getRefsOnInit:
+				log.Debugf("executing init pipeline? %v", todo)
 				if todo {
 					c.pollPipelinesOnInit()
 				}
@@ -239,7 +240,9 @@ func (c *Client) discoverWildcards() {
 }
 
 func (c *Client) pollPipelinesOnInit() {
+	log.Debug("Polling latest pipelines to get data out of them")
 	for _, p := range cfg.Projects {
+		log.Debug("On init: reading project %s",p.Name)
 		gitlabProject, err := c.getProject(p.Name)
 		if err != nil {
 			log.Errorf("could not get GitLab project with name %s: %v", p.Name, err)
@@ -303,7 +306,7 @@ func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, unt
 }
 
 func (c *Client) pipelinesFor(gp *gitlab.Project, options *gitlab.ListProjectPipelinesOptions) ([]*gitlab.PipelineInfo, error) {
-	log.Debugf("Reading pipelines for project %v (%v)", gp.PathWithNamespace, gp.ID)
+	log.Debugf("Reading pipelines for project %v (ID %v)", gp.PathWithNamespace, gp.ID)
 	c.rateLimit()
 	pipelines, _, err := c.Pipelines.ListProjectPipelines(gp.ID, options)
 	if err != nil {
