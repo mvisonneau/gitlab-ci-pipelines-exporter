@@ -53,7 +53,7 @@ func Run(ctx *cli.Context) error {
 	// Configure GitLab client
 	opts := []gitlab.ClientOptionFunc{
 		gitlab.WithHTTPClient(&http.Client{Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.SkipTLSVerify},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.DisableTLSVerify},
 		}}),
 		gitlab.WithBaseURL(cfg.Gitlab.URL),
 	}
@@ -79,7 +79,7 @@ func Run(ctx *cli.Context) error {
 
 	// Configure liveness and readiness probes
 	health := healthcheck.NewHandler()
-	if !cfg.Gitlab.SkipHealthCheck {
+	if !cfg.Gitlab.DisableHealthCheck {
 		health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(cfg.Gitlab.HealthURL, 5*time.Second))
 	} else {
 		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")

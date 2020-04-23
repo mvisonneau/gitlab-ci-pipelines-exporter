@@ -13,11 +13,11 @@ import (
 // Config represents what can be defined as a yaml config file
 type Config struct {
 	Gitlab struct {
-		URL             string `yaml:"url"`               // The URL of the GitLab server/api (default to https://gitlab.com)
-		Token           string `yaml:"token"`             // Token to use to authenticate against the API
-		HealthURL       string `yaml:"health_url"`        // The URL of the GitLab server/api health endpoint (default to /users/sign_in which is publicly available on gitlab.com)
-		SkipHealthCheck bool   `yaml:"skip_health_check"` // Whether to validate the service is reachable calling HealthURL
-		SkipTLSVerify   bool   `yaml:"skip_tls_verify"`   // Whether to skip TLS validation when querying HealthURL
+		URL                string `yaml:"url"`                  // The URL of the GitLab server/api (default to https://gitlab.com)
+		Token              string `yaml:"token"`                // Token to use to authenticate against the API
+		HealthURL          string `yaml:"health_url"`           // The URL of the GitLab server/api health endpoint (default to /users/sign_in which is publicly available on gitlab.com)
+		DisableHealthCheck bool   `yaml:"disable_health_check"` // Whether to validate the service is reachable calling HealthURL
+		DisableTLSVerify   bool   `yaml:"disable_tls_verify"`   // Whether to skip TLS validation when querying HealthURL
 	}
 
 	MaximumGitLabAPIRequestsPerSecond      int        `yaml:"maximum_gitlab_api_requests_per_second"`        // Maximum amount of requests per seconds to make against the GitLab API (default: 10)

@@ -34,10 +34,10 @@ gitlab:
   # health_url: https://gitlab.example.com/-/health
   
   # disable verification of readiness for target GitLab instance calling `health_url`
-  # skip_health_check: false
+  # disable_health_check: false
 
   # disable TLS validation for target GitLab instance (handy when self-hosting)
-  # skip_tls_verify: false
+  # disable_tls_verify: false
 
 # Global rate limit for the GitLab API request/sec
 maximum_gitlab_api_requests_per_second: 10
