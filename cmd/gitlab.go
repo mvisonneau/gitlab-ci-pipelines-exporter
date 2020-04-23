@@ -242,7 +242,7 @@ func (c *Client) discoverWildcards() {
 func (c *Client) pollPipelinesOnInit() {
 	log.Debug("Polling latest pipelines to get data out of them")
 	for _, p := range cfg.Projects {
-		log.Debug("On init: reading project %s",p.Name)
+		log.Debugf("On init: reading project %s", p.Name)
 		gitlabProject, err := c.getProject(p.Name)
 		if err != nil {
 			log.Errorf("could not get GitLab project with name %s: %v", p.Name, err)
