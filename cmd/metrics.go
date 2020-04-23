@@ -132,12 +132,12 @@ func registerMetricOn(registry *prometheus.Registry, metrics ...prometheus.Colle
 	}
 }
 
-func emitStatusMetric(metric *prometheus.GaugeVec, labelValuess []string, statuses []string, status string, sparseMetrics bool) {
+func emitStatusMetric(metric *prometheus.GaugeVec, labelValues []string, statuses []string, status string, sparseMetrics bool) {
 	// Moved into separate function to reduce cyclomatic complexity
 	// List of available statuses from the API spec
 	// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
 	for _, s := range statuses {
-		args := append(labelValuess, s)
+		args := append(labelValues, s)
 		if s == status {
 			metric.WithLabelValues(args...).Set(1)
 		} else {

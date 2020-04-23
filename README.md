@@ -35,11 +35,7 @@ gitlab:
   
   # disable verification of readiness for target GitLab instance calling `health_url`
   # skip_health_check: false
-<<<<<<< HEAD
 
-=======
-  
->>>>>>> e549ae4123917b2f785c3df9687d7b9da28d71bf
   # disable TLS validation for target GitLab instance (handy when self-hosting)
   # skip_tls_verify: false
 

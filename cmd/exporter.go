@@ -82,7 +82,7 @@ func Run(ctx *cli.Context) error {
 	if !cfg.Gitlab.SkipHealthCheck {
 		health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(cfg.Gitlab.HealthURL, 5*time.Second))
 	} else {
-		log.Warn("TLS verification has been disabled. Readiness checks won't be operated.")
+		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
 	}
 
 	// Register the default metrics into a new registry
