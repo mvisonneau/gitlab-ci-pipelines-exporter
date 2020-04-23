@@ -248,12 +248,12 @@ func (c *Client) pollPipelinesOnInit() {
 			log.Errorf("could not get GitLab project with name %s: %v", p.Name, err)
 			continue
 		}
-		pipeRefs, err := c.refsFromPipelines(gitlabProject, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
+		pipelineRefs, err := c.refsFromPipelines(gitlabProject, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
 		if err != nil {
 			log.Errorf("unable to fetch refs from project pipelines %s : %v", p.Name, err.Error())
 			continue
 		}
-		for _, r := range pipeRefs {
+		for _, r := range pipelineRefs {
 			if err := c.pollProjectRefOn(gitlabProject, r, false, false); err != nil {
 				log.Errorf("%v", err)
 			}
