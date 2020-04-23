@@ -153,6 +153,9 @@ func (c *Client) pollProjectRefOn(gp *gitlab.Project, ref string, outputSparseSt
 	topics := strings.Join(gp.TagList[:], ",")
 	runCount.WithLabelValues(gp.PathWithNamespace, topics, ref).Add(0)
 
+	if len(pipelines) == 0 {
+		return fmt.Errorf("could not find any pipeline run in project %s", gp.PathWithNamespace)
+	}
 	c.rateLimit()
 	lastPipeline, _, err := c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
 	if err != nil {
