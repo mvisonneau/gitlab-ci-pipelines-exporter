@@ -138,55 +138,55 @@ func (c *Client) pollPipelineJobs(gp *gitlab.Project, pipelineID int, topics str
 	return err
 }
 
-func (c *Client) pollProjectRefOn(gitlabProject *gitlab.Project, ref string, outputSparseStatusMetrics bool, fetchPipelineJobMetrics bool) error {
-	pipelines, err := c.pipelinesFor(gitlabProject, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
+func (c *Client) pollProjectRefOn(gp *gitlab.Project, ref string, outputSparseStatusMetrics bool, fetchPipelineJobMetrics bool) error {
+	pipelines, err := c.pipelinesFor(gp, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
 	if err != nil {
-		return fmt.Errorf("error fetching project pipelines for %s: %v", gitlabProject.PathWithNamespace, err)
+		return fmt.Errorf("error fetching project pipelines for %s: %v", gp.PathWithNamespace, err)
 	}
 	// fetch pipeline variables, stick them into metrics registry
 	for _, pipe := range pipelines {
-		if err := emitPipelineVariablesMetric(c, pipelineVariables, gitlabProject.PathWithNamespace, ref, gitlabProject.ID, pipe.ID, c.Pipelines.GetPipelineVariables); err != nil {
+		if err := emitPipelineVariablesMetric(c, pipelineVariables, gp.PathWithNamespace, ref, gp.ID, pipe.ID, c.Pipelines.GetPipelineVariables); err != nil {
 			log.Errorf("%v", err)
 		}
 	}
 	// create the initial matric with topics label, not harmful if it already exists
-	topics := strings.Join(gitlabProject.TagList[:], ",")
-	runCount.WithLabelValues(gitlabProject.PathWithNamespace, topics, ref).Add(0)
+	topics := strings.Join(gp.TagList[:], ",")
+	runCount.WithLabelValues(gp.PathWithNamespace, topics, ref).Add(0)
 
 	c.rateLimit()
-	lastPipeline, _, err := c.Pipelines.GetPipeline(gitlabProject.ID, pipelines[0].ID)
+	lastPipeline, _, err := c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
 	if err != nil {
-		return fmt.Errorf("could not read content of last pipeline %s:%s", gitlabProject.PathWithNamespace, ref)
+		return fmt.Errorf("could not read content of last pipeline %s:%s", gp.PathWithNamespace, ref)
 	}
 	if lastPipeline != nil {
-		runCount.WithLabelValues(gitlabProject.PathWithNamespace, topics, ref).Inc()
+		runCount.WithLabelValues(gp.PathWithNamespace, topics, ref).Inc()
 
 		if lastPipeline.Coverage != "" {
 			parsedCoverage, err := strconv.ParseFloat(lastPipeline.Coverage, 64)
 			if err != nil {
 				log.Warnf("Could not parse coverage string returned from GitLab API '%s' into Float64: %v", lastPipeline.Coverage, err)
 			}
-			coverage.WithLabelValues(gitlabProject.PathWithNamespace, topics, ref).Set(parsedCoverage)
+			coverage.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(parsedCoverage)
 		}
 
-		lastRunDuration.WithLabelValues(gitlabProject.PathWithNamespace, topics, ref).Set(float64(lastPipeline.Duration))
-		lastRunID.WithLabelValues(gitlabProject.PathWithNamespace, topics, ref).Set(float64(lastPipeline.ID))
+		lastRunDuration.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.Duration))
+		lastRunID.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(float64(lastPipeline.ID))
 
 		emitStatusMetric(
 			lastRunStatus,
-			[]string{gitlabProject.PathWithNamespace, topics, ref},
+			[]string{gp.PathWithNamespace, topics, ref},
 			statusesList,
 			lastPipeline.Status,
 			outputSparseStatusMetrics,
 		)
 
 		if fetchPipelineJobMetrics {
-			if err := c.pollPipelineJobs(gitlabProject, lastPipeline.ID, topics, ref, outputSparseStatusMetrics); err != nil {
+			if err := c.pollPipelineJobs(gp, lastPipeline.ID, topics, ref, outputSparseStatusMetrics); err != nil {
 				log.Errorf("Could not poll jobs for pipeline %d: %s", lastPipeline.ID, err.Error())
 			}
 		}
 
-		timeSinceLastRun.WithLabelValues(gitlabProject.PathWithNamespace, topics, ref).Set(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds())
+		timeSinceLastRun.WithLabelValues(gp.PathWithNamespace, topics, ref).Set(time.Since(*lastPipeline.CreatedAt).Round(time.Second).Seconds())
 	}
 
 	return nil
