@@ -69,7 +69,7 @@ func (c *Client) pollProject(p Project) error {
 	for _, r := range branchesAndTagRefs {
 		log.Infof("Found ref '%s' for project '%s'", r, p.Name)
 		if err := c.pollProjectRefOn(project, r, p.ShouldOutputSparseStatusMetrics(cfg), p.ShouldFetchPipelineJobMetrics(cfg)); err != nil {
-			log.Errorf("Error getting pipeline data on ref '%s' for project '%s'", r, p.Name)
+			log.Errorf("Error getting pipeline data on ref '%s' for project '%s': %v", r, p.Name, err)
 			continue
 		}
 	}
