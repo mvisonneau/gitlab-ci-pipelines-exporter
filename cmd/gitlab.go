@@ -143,12 +143,21 @@ func (c *Client) pollProjectRefOn(gp *gitlab.Project, ref string, outputSparseSt
 	if err != nil {
 		return fmt.Errorf("error fetching project pipelines for %s: %v", gp.PathWithNamespace, err)
 	}
-	// fetch pipeline variables, stick them into metrics registry
-	for _, pipe := range pipelines {
-		if err := emitPipelineVariablesMetric(c, pipelineVariables, gp.PathWithNamespace, ref, gp.ID, pipe.ID, c.Pipelines.GetPipelineVariables); err != nil {
-			log.Errorf("%v", err)
+	// fetch pipeline variables, stick them into metrics registry (if requested to do so)
+	if cfg.FetchPipelineVariables {
+		rx, err := regexp.Compile(cfg.PipelineVariablesFilterRegexp)
+		if err != nil {
+			log.Errorf("the provided filter regex for pipeline variables is invalid '(%s)': %v", cfg.PipelineVariablesFilterRegexp, err)
+			goto process
+		}
+		for _, pipe := range pipelines {
+			if err := emitPipelineVariablesMetric(c, pipelineVariables, gp.PathWithNamespace, ref, gp.ID, pipe.ID, c.Pipelines.GetPipelineVariables, rx); err != nil {
+				log.Errorf("%v", err)
+			}
 		}
 	}
+
+process:
 	// create the initial matric with topics label, not harmful if it already exists
 	topics := strings.Join(gp.TagList[:], ",")
 	runCount.WithLabelValues(gp.PathWithNamespace, topics, ref).Add(0)

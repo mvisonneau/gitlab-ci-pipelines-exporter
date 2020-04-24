@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -152,7 +153,8 @@ func emitStatusMetric(metric *prometheus.GaugeVec, labelValues []string, statuse
 
 type pipelineVarsFetchOp func(interface{}, int, ...gitlab.RequestOptionFunc) ([]*gitlab.PipelineVariable, *gitlab.Response, error)
 
-func emitPipelineVariablesMetric(c *Client, metric *prometheus.GaugeVec, projectName, ref string, projectID int, pipelineID int, fetch pipelineVarsFetchOp) error {
+func emitPipelineVariablesMetric(c *Client, metric *prometheus.GaugeVec, projectName, ref string, projectID, pipelineID int, fetch pipelineVarsFetchOp, filterRegexp *regexp.Regexp) error {
+	// get the pipelines data from API
 	c.rateLimit()
 	variables, _, err := fetch(projectID, pipelineID)
 	if err != nil {
@@ -161,7 +163,10 @@ func emitPipelineVariablesMetric(c *Client, metric *prometheus.GaugeVec, project
 	if len(variables) > 0 {
 		var varValues []string
 		for _, v := range variables {
-			varValues = append(varValues, v.Key)
+			// only add the variables whose key matches the regex
+			if filterRegexp.MatchString(v.Key) {
+				varValues = append(varValues, v.Key)
+			}
 		}
 		metric.WithLabelValues(projectName, ref, strings.Join(varValues, ",")).Inc()
 	}

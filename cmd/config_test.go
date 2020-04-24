@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"runtime"
 	"testing"
 
@@ -103,6 +104,7 @@ wildcards:
 		OnInitFetchRefsFromPipelinesDepthLimit: 1337,
 		DefaultRefsRegexp:                      "^dev$",
 		MaximumProjectsPollingWorkers:          4,
+		PipelineVariablesFilterRegexp:          variablesCatchallRegex,
 		Projects: []Project{
 			{
 				Name: "foo/project",
@@ -173,6 +175,7 @@ projects:
 		OnInitFetchRefsFromPipelinesDepthLimit: defaultOnInitFetchRefsFromPipelinesDepthLimit,
 		DefaultRefsRegexp:                      "",
 		MaximumProjectsPollingWorkers:          runtime.GOMAXPROCS(0),
+		PipelineVariablesFilterRegexp:          variablesCatchallRegex,
 		Projects: []Project{
 			{
 				Name: "foo/bar",
@@ -254,4 +257,26 @@ projects:
 	assert.NoError(t, config.Parse(f.Name()))
 	assert.Equal(t, runtime.GOMAXPROCS(0), config.MaximumProjectsPollingWorkers)
 
+}
+
+func TestParseConfigHasPipelineVariablesAndDefaultRegex(t *testing.T) {
+	f, err := ioutil.TempFile("/tmp", "test-")
+	assert.Nil(t, err)
+	defer os.Remove(f.Name())
+
+	// Valid minimal configuration
+	f.WriteString(`
+fetch_pipeline_variables: true
+projects:
+    - name: foo/project
+    - name: bar/project
+      refs: "^master|dev$"	
+`)
+	config := &Config{}
+	assert.NoError(t, config.Parse(f.Name()))
+	assert.True(t, config.FetchPipelineVariables)
+	assert.Equal(t, "\\.*", config.PipelineVariablesFilterRegexp)
+
+	rx := regexp.MustCompile(config.PipelineVariablesFilterRegexp)
+	assert.True(t, rx.MatchString("blahblah"))
 }

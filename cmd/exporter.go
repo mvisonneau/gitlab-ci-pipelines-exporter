@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -51,10 +52,11 @@ func Run(ctx *cli.Context) error {
 	log.Infof("Global rate limit for the GitLab API set to %d req/s", cfg.MaximumGitLabAPIRequestsPerSecond)
 
 	// Configure GitLab client
+	gitlabHTTPClient := &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.DisableTLSVerify},
+	}}
 	opts := []gitlab.ClientOptionFunc{
-		gitlab.WithHTTPClient(&http.Client{Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.DisableTLSVerify},
-		}}),
+		gitlab.WithHTTPClient(gitlabHTTPClient),
 		gitlab.WithBaseURL(cfg.Gitlab.URL),
 	}
 	gc, err := gitlab.NewClient(cfg.Gitlab.Token, opts...)
@@ -80,7 +82,7 @@ func Run(ctx *cli.Context) error {
 	// Configure liveness and readiness probes
 	health := healthcheck.NewHandler()
 	if !cfg.Gitlab.DisableHealthCheck {
-		health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(cfg.Gitlab.HealthURL, 5*time.Second))
+		health.AddReadinessCheck("gitlab-reachable", gitlabReadinessCheck(gitlabHTTPClient, cfg.Gitlab.HealthURL))
 	} else {
 		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
 	}
@@ -118,6 +120,18 @@ func Run(ctx *cli.Context) error {
 	}
 
 	return exit(nil, 0)
+}
+
+func gitlabReadinessCheck(httpClient *http.Client, url string) healthcheck.Check {
+	return func() error {
+		client := httpClient
+		client.Timeout = 5 * time.Second
+		resp, err := client.Get(url)
+		if err == nil && resp.StatusCode != 200 {
+			return fmt.Errorf("HTTP error: %d", resp.StatusCode)
+		}
+		return err
+	}
 }
 
 func metricsHandlerFor(registry *prometheus.Registry, openMetricsEncoder bool) http.Handler {

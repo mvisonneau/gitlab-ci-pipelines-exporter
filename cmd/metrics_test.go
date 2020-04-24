@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -41,21 +42,42 @@ func TestMetricsRegistryFailsWhenDouble(t *testing.T) {
 	assert.Panics(t, panicFn)
 }
 
+var testOkFetchFn = func(interface{}, int, ...gitlab.RequestOptionFunc) ([]*gitlab.PipelineVariable, *gitlab.Response, error) {
+	return []*gitlab.PipelineVariable{{Key: "test", Value: "testval"}, {Key: "test-2", Value: "aaaa", VariableType: "env_var"}}, nil, nil
+}
+var testErrFetchFn = func(interface{}, int, ...gitlab.RequestOptionFunc) ([]*gitlab.PipelineVariable, *gitlab.Response, error) {
+	return nil, nil, fmt.Errorf("some error")
+}
+
 func TestEmitVariablesMetric(t *testing.T) {
-	var testOkFetchFn = func(interface{}, int, ...gitlab.RequestOptionFunc) ([]*gitlab.PipelineVariable, *gitlab.Response, error) {
-		return []*gitlab.PipelineVariable{{Key: "test", Value: "testval"}, {Key: "test-2", Value: "aaaa", VariableType: "env_var"}}, nil, nil
-	}
-	var testErrFetchFn = func(interface{}, int, ...gitlab.RequestOptionFunc) ([]*gitlab.PipelineVariable, *gitlab.Response, error) {
-		return nil, nil, fmt.Errorf("some error")
-	}
 	client := &Client{
 		RateLimiter: ratelimit.New(2),
 	}
+	rx, err := regexp.Compile(variablesCatchallRegex)
+	if assert.Nil(t, err) {
+		assert.NoError(t,
+			emitPipelineVariablesMetric(client, variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "ref", "pipeline_variables"}), "test-project", "master", 0, 0, testOkFetchFn, rx))
+		assert.Error(t,
+			emitPipelineVariablesMetric(client, variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "ref", "pipeline_variables"}), "test-project", "master", 0, 0, testErrFetchFn, rx))
+	}
+}
 
-	assert.NoError(t,
-		emitPipelineVariablesMetric(client, variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "ref", "pipeline_variables"}),
-			"test-project", "master", 0, 0, testOkFetchFn))
-	assert.Error(t,
-		emitPipelineVariablesMetric(client, variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "ref", "pipeline_variables"}),
-			"test-project", "master", 0, 0, testErrFetchFn))
+func TestEmitFilteredVariablesMetric(t *testing.T) {
+	client := &Client{
+		RateLimiter: ratelimit.New(2),
+	}
+	counter := variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "ref", "pipeline_variables"})
+	rx, err := regexp.Compile(`^test$`)
+	if assert.Nil(t, err) {
+		assert.NoError(t,
+			emitPipelineVariablesMetric(client, counter, "test-project", "master", 0, 0, testOkFetchFn, rx))
+
+		g, err := counter.GetMetricWithLabelValues("test", "test-project", "master")
+		assert.NoError(t, err)
+		assert.NotNil(t, g.Desc())
+
+		g2, err := counter.GetMetricWith(prometheus.Labels{"pipeline_variables": "test-2"})
+		assert.Error(t, err)
+		assert.Nil(t, g2)
+	}
 }

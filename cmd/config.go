@@ -25,6 +25,8 @@ type Config struct {
 	RefsPollingIntervalSeconds             int        `yaml:"refs_polling_interval_seconds"`                 // Interval in seconds to fetch refs from projects
 	PipelinesPollingIntervalSeconds        int        `yaml:"pipelines_polling_interval_seconds"`            // Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
 	FetchPipelineJobMetrics                bool       `yaml:"fetch_pipeline_job_metrics"`                    // Whether to attempt to retrieve job metrics from polled pipelines
+	FetchPipelineVariables                 bool       `yaml:"fetch_pipeline_variables"`                      // Whether to attempt to retrieve variables included in the pipeline execution
+	PipelineVariablesFilterRegexp          string     `yaml:"pipeline_variables_filter_regex"`               // Regex to filter pipeline variables, deafaults to '.*'
 	OutputSparseStatusMetrics              bool       `yaml:"output_sparse_status_metrics"`                  // Whether to report all pipeline / job statuses, or only report the one from the last job.
 	OnInitFetchRefsFromPipelines           bool       `yaml:"on_init_fetch_refs_from_pipelines"`             // Whether to attempt retrieving refs from pipelines when the exporter starts
 	OnInitFetchRefsFromPipelinesDepthLimit int        `yaml:"on_init_fetch_refs_from_pipelines_depth_limit"` // Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
@@ -68,6 +70,8 @@ const (
 
 	errNoProjectsOrWildcardConfigured = "you need to configure at least one project/wildcard to poll, none given"
 	errConfigFileNotFound             = "couldn't open config file : %v"
+
+	variablesCatchallRegex = "\\.*"
 )
 
 var cfg = &Config{}
@@ -137,6 +141,10 @@ func (cfg *Config) Parse(path string) error {
 
 	if cfg.MaximumProjectsPollingWorkers == 0 {
 		cfg.MaximumProjectsPollingWorkers = runtime.GOMAXPROCS(0)
+	}
+
+	if cfg.PipelineVariablesFilterRegexp == "" {
+		cfg.PipelineVariablesFilterRegexp = variablesCatchallRegex
 	}
 
 	return nil
