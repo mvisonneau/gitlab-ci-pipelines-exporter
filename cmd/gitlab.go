@@ -79,7 +79,7 @@ func (c *Client) pollProject(p Project) error {
 		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %v", p.Name, err.Error())
 	}
 
-	branchesAndTagRefs, err := c.branchesAndTagsFor(project.ID, p.Refs)
+	branchesAndTagRefs, err := c.branchesAndTagsFor(project.ID, p.RefsRegexp)
 	if err != nil {
 		return fmt.Errorf("error fetching refs for project '%s'", p.Name)
 	}
@@ -438,7 +438,7 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 				projects,
 				Project{
 					Name:                      gp.PathWithNamespace,
-					Refs:                      w.Refs,
+					RefsRegexp:                w.RefsRegexp,
 					FetchPipelineJobMetrics:   w.FetchPipelineJobMetrics,
 					OutputSparseStatusMetrics: w.OutputSparseStatusMetrics,
 				},

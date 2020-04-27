@@ -29,7 +29,7 @@ type Config struct {
 	OutputSparseStatusMetrics              bool       `yaml:"output_sparse_status_metrics"`                  // Whether to report all pipeline / job statuses, or only report the one from the last job.
 	OnInitFetchRefsFromPipelines           bool       `yaml:"on_init_fetch_refs_from_pipelines"`             // Whether to attempt retrieving refs from pipelines when the exporter starts
 	OnInitFetchRefsFromPipelinesDepthLimit int        `yaml:"on_init_fetch_refs_from_pipelines_depth_limit"` // Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
-	DefaultRefsRegexp                      string     `yaml:"default_refs"`                                  // Default regular expression
+	DefaultRefsRegexp                      string     `yaml:"default_refs_regexp"`                           // Default regular expression to filter refs to fetch
 	MaximumProjectsPollingWorkers          int        `yaml:"maximum_projects_poller_workers"`               // Sets the parallelism for polling projects from the API
 	DisableOpenmetricsEncoding             bool       `yaml:"disable_openmetrics_encoding"`                  // Disable OpenMetrics content encoding in prometheus HTTP handler (default: false)
 	Projects                               []Project  `yaml:"projects"`                                      // List of projects to poll
@@ -39,23 +39,23 @@ type Config struct {
 // Project holds information about a GitLab project
 type Project struct {
 	Name                      string `yaml:"name"`
-	Refs                      string `yaml:"refs"`
+	RefsRegexp                string `yaml:"refs_regexp"`
 	FetchPipelineJobMetrics   *bool  `yaml:"fetch_pipeline_job_metrics,omitempty"`
 	OutputSparseStatusMetrics *bool  `yaml:"output_sparse_status_metrics,omitempty"`
 }
 
 // Wildcard is a specific handler to dynamically search projects
 type Wildcard struct {
-	Search string
+	Search string `yaml:"search"`
 	Owner  struct {
-		Name             string
-		Kind             string
-		IncludeSubgroups bool `yaml:"include_subgroups"`
+		Name             string `yaml:"name"`
+		Kind             string `yaml:"kind"`
+		IncludeSubgroups bool   `yaml:"include_subgroups"`
 	}
-	Archived                  bool  `yaml:"archived"`
-	FetchPipelineJobMetrics   *bool `yaml:"fetch_pipeline_job_metrics,omitempty"`
-	OutputSparseStatusMetrics *bool `yaml:"output_sparse_status_metrics,omitempty"`
-	Refs                      string
+	Archived                  bool   `yaml:"archived"`
+	FetchPipelineJobMetrics   *bool  `yaml:"fetch_pipeline_job_metrics,omitempty"`
+	OutputSparseStatusMetrics *bool  `yaml:"output_sparse_status_metrics,omitempty"`
+	RefsRegexp                string `yaml:"refs_regexp"`
 }
 
 // Default values

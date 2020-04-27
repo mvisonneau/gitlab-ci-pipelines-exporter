@@ -60,19 +60,19 @@ refs_polling_interval_seconds: 3
 pipelines_polling_interval_seconds: 4
 on_init_fetch_refs_from_pipelines: true
 on_init_fetch_refs_from_pipelines_depth_limit: 1337
-default_refs: "^dev$"
+default_refs_regexp: "^dev$"
 maximum_projects_poller_workers: 4
 
 projects:
   - name: foo/project
   - name: bar/project
-    refs: "^master|dev$"
+    refs_regexp: "^master|dev$"
 
 wildcards:
   - owner:
       name: foo
       kind: group
-    refs: "^master|1.0$"
+    refs_regexp: "^master|1.0$"
     search: 'bar'
     archived: true
 `)
@@ -107,27 +107,27 @@ wildcards:
 		PipelineVariablesFilterRegexp:          variablesCatchallRegex,
 		Projects: []Project{
 			{
-				Name: "foo/project",
-				Refs: "",
+				Name:       "foo/project",
+				RefsRegexp: "",
 			},
 			{
-				Name: "bar/project",
-				Refs: "^master|dev$",
+				Name:       "bar/project",
+				RefsRegexp: "^master|dev$",
 			},
 		},
 		Wildcards: []Wildcard{
 			{
 				Search: "bar",
 				Owner: struct {
-					Name             string
-					Kind             string
-					IncludeSubgroups bool `yaml:"include_subgroups"`
+					Name             string `yaml:"name"`
+					Kind             string `yaml:"kind"`
+					IncludeSubgroups bool   `yaml:"include_subgroups"`
 				}{
 					Name: "foo",
 					Kind: "group",
 				},
-				Refs:     "^master|1.0$",
-				Archived: true,
+				RefsRegexp: "^master|1.0$",
+				Archived:   true,
 			},
 		},
 	}
@@ -179,8 +179,8 @@ projects:
 		PipelineVariablesFilterRegexp:          variablesCatchallRegex,
 		Projects: []Project{
 			{
-				Name: "foo/bar",
-				Refs: "",
+				Name:       "foo/bar",
+				RefsRegexp: "",
 			},
 		},
 		Wildcards: nil,
@@ -234,7 +234,7 @@ disable_openmetrics_encoding: true
 projects:
   - name: foo/project
   - name: bar/project
-    refs: "^master|dev$"
+    refs_regexp: "^master|dev$"
 `)
 
 	config := &Config{}
@@ -252,7 +252,7 @@ func TestParseConfigWithoutProjectWorkersUsesGOMAXPROCS(t *testing.T) {
 projects:
   - name: foo/project
   - name: bar/project
-    refs: "^master|dev$"
+    refs_regexp: "^master|dev$"
 `)
 	config := &Config{}
 	assert.NoError(t, config.Parse(f.Name()))
@@ -269,9 +269,9 @@ func TestParseConfigHasPipelineVariablesAndDefaultRegex(t *testing.T) {
 	f.WriteString(`
 fetch_pipeline_variables: true
 projects:
-    - name: foo/project
-    - name: bar/project
-      refs: "^master|dev$"	
+  - name: foo/project
+  - name: bar/project
+    refs_regexp: "^master|dev$"	
 `)
 	config := &Config{}
 	assert.NoError(t, config.Parse(f.Name()))

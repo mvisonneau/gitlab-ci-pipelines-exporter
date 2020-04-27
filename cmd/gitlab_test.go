@@ -34,7 +34,7 @@ func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *Client) {
 
 // Functions testing
 func TestProjectExists(t *testing.T) {
-	foo := Project{Name: "foo", Refs: "abc"}
+	foo := Project{Name: "foo", RefsRegexp: "abc"}
 	fooClone := foo
 	bar := Project{Name: "bar"}
 
@@ -77,16 +77,16 @@ func TestListUserProjects(t *testing.T) {
 	w := &Wildcard{
 		Search: "bar",
 		Owner: struct {
-			Name             string
-			Kind             string
-			IncludeSubgroups bool `yaml:"include_subgroups"`
+			Name             string `yaml:"name"`
+			Kind             string `yaml:"kind"`
+			IncludeSubgroups bool   `yaml:"include_subgroups"`
 		}{
 			Name:             "foo",
 			Kind:             "user",
 			IncludeSubgroups: false,
 		},
-		Archived: false,
-		Refs:     "^master|1.0$",
+		Archived:   false,
+		RefsRegexp: "^master|1.0$",
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
@@ -107,16 +107,16 @@ func TestListGroupProjects(t *testing.T) {
 	w := &Wildcard{
 		Search: "bar",
 		Owner: struct {
-			Name             string
-			Kind             string
-			IncludeSubgroups bool `yaml:"include_subgroups"`
+			Name             string `yaml:"name"`
+			Kind             string `yaml:"kind"`
+			IncludeSubgroups bool   `yaml:"include_subgroups"`
 		}{
 			Name:             "foo",
 			Kind:             "group",
 			IncludeSubgroups: false,
 		},
-		Archived: false,
-		Refs:     "^master|1.0$",
+		Archived:   false,
+		RefsRegexp: "^master|1.0$",
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/groups/%s/projects", w.Owner.Name),
@@ -137,16 +137,16 @@ func TestListProjects(t *testing.T) {
 	w := &Wildcard{
 		Search: "bar",
 		Owner: struct {
-			Name             string
-			Kind             string
-			IncludeSubgroups bool `yaml:"include_subgroups"`
+			Name             string `yaml:"name"`
+			Kind             string `yaml:"kind"`
+			IncludeSubgroups bool   `yaml:"include_subgroups"`
 		}{
 			Name:             "",
 			Kind:             "",
 			IncludeSubgroups: false,
 		},
-		Archived: false,
-		Refs:     "",
+		Archived:   false,
+		RefsRegexp: "",
 	}
 
 	mux.HandleFunc("/api/v4/projects",
@@ -167,15 +167,15 @@ func TestListProjectsAPIError(t *testing.T) {
 	w := &Wildcard{
 		Search: "bar",
 		Owner: struct {
-			Name             string
-			Kind             string
-			IncludeSubgroups bool `yaml:"include_subgroups"`
+			Name             string `yaml:"name"`
+			Kind             string `yaml:"kind"`
+			IncludeSubgroups bool   `yaml:"include_subgroups"`
 		}{
 			Name: "foo",
 			Kind: "user",
 		},
-		Archived: false,
-		Refs:     "",
+		Archived:   false,
+		RefsRegexp: "",
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),

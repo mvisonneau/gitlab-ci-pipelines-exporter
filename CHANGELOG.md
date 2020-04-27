@@ -19,6 +19,7 @@ and this project adheres to [0ver](https://0ver.org).
 
 ### Changed
 
+- **BREAKING CHANGE** - `default_refs` & `refs` parameter have been renamed respectively to `default_refs_regexp` and `refs_regexp` to make them more explicit
 - Projects polling from GitLab API is done in parallel using `maximum_projects_poller_workers` pollers and concurrently fetching refs and projects
 - Fixed a bug causing duplicate metrics when status changes with sparse flag enabled
 - Updated labels syntax in helm chart to comply with standards
