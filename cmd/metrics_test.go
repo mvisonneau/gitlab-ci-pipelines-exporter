@@ -85,9 +85,10 @@ func TestEmitFilteredVariablesMetric(t *testing.T) {
 		assert.NoError(t,
 			emitPipelineVariablesMetric(client, counter, details, 0, testOkFetchFn, rx))
 
-		g, err := counter.GetMetricWithLabelValues("test", "tag", "test-project", "master")
+		g, err := counter.GetMetricWithLabelValues("test", "tag", "master", "test-project")
 		assert.NoError(t, err)
 		assert.NotNil(t, g.Desc())
+		assert.Contains(t, g.Desc().String(), "pipeline_variables")
 
 		g2, err := counter.GetMetricWith(prometheus.Labels{"pipeline_variables": "test-2"})
 		assert.Error(t, err)

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 
@@ -168,7 +169,11 @@ func emitPipelineVariablesMetric(c *Client, gauge *prometheus.GaugeVec, details 
 				varValues = append(varValues, v.Key)
 			}
 		}
-		gauge.WithLabelValues(augmentLabelValues(details, strings.Join(varValues, ","))...).Inc()
+		// only create the metric if there are matching vars
+		if len(varValues) > 0 {
+			log.Debugf("creating metric for pipelines with variables: %v", varValues)
+			gauge.WithLabelValues(augmentLabelValues(details, strings.Join(varValues, ","))...).Inc()
+		}
 	}
 	return nil
 }
