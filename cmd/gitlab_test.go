@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
 	gitlab "github.com/xanzy/go-gitlab"
 	"go.uber.org/ratelimit"
@@ -34,7 +35,12 @@ func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *Client) {
 
 // Functions testing
 func TestProjectExists(t *testing.T) {
-	foo := Project{Name: "foo", RefsRegexp: "abc"}
+	foo := Project{
+		Name: "foo",
+		Parameters: Parameters{
+			RefsRegexpValue: pointy.String("abc"),
+		},
+	}
 	fooClone := foo
 	bar := Project{Name: "bar"}
 
@@ -85,8 +91,7 @@ func TestListUserProjects(t *testing.T) {
 			Kind:             "user",
 			IncludeSubgroups: false,
 		},
-		Archived:   false,
-		RefsRegexp: "^master|1.0$",
+		Archived: false,
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
@@ -115,8 +120,7 @@ func TestListGroupProjects(t *testing.T) {
 			Kind:             "group",
 			IncludeSubgroups: false,
 		},
-		Archived:   false,
-		RefsRegexp: "^master|1.0$",
+		Archived: false,
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/groups/%s/projects", w.Owner.Name),
@@ -145,8 +149,7 @@ func TestListProjects(t *testing.T) {
 			Kind:             "",
 			IncludeSubgroups: false,
 		},
-		Archived:   false,
-		RefsRegexp: "",
+		Archived: false,
 	}
 
 	mux.HandleFunc("/api/v4/projects",
@@ -174,8 +177,7 @@ func TestListProjectsAPIError(t *testing.T) {
 			Name: "foo",
 			Kind: "user",
 		},
-		Archived:   false,
-		RefsRegexp: "",
+		Archived: false,
 	}
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),

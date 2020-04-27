@@ -3,9 +3,19 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [0ver](https://0ver.org).
+and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
+
+### **BREAKING CHANGES**
+
+- `default_refs` & `refs` parameter have been renamed respectively to `default_refs_regexp` and `refs_regexp` to make them more explicit
+- In the config, there is a new `defaults` parameter group for any setting which can be overridden at the `project` or `wildcard` level. It includes the following parameters:
+  - **fetch_pipeline_job_metrics**
+  - **fetch_pipeline_variables**
+  - **output_sparse_status_metrics**
+  - **pipeline_variables_filter_regex**
+  - **refs_regexp**
 
 ### Added
 
@@ -19,7 +29,6 @@ and this project adheres to [0ver](https://0ver.org).
 
 ### Changed
 
-- **BREAKING CHANGE** - `default_refs` & `refs` parameter have been renamed respectively to `default_refs_regexp` and `refs_regexp` to make them more explicit
 - Projects polling from GitLab API is done in parallel using `maximum_projects_poller_workers` pollers and concurrently fetching refs and projects
 - Fixed a bug causing duplicate metrics when status changes with sparse flag enabled
 - Updated labels syntax in helm chart to comply with standards

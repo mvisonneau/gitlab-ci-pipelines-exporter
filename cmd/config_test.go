@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,8 +8,8 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli"
 )
 
 func TestParseInvalidPath(t *testing.T) {
@@ -60,8 +59,14 @@ refs_polling_interval_seconds: 3
 pipelines_polling_interval_seconds: 4
 on_init_fetch_refs_from_pipelines: true
 on_init_fetch_refs_from_pipelines_depth_limit: 1337
-default_refs_regexp: "^dev$"
 maximum_projects_poller_workers: 4
+
+defaults:
+  fetch_pipeline_job_metrics: true
+  fetch_pipeline_variables: true
+  output_sparse_status_metrics: true
+  pipeline_variables_regexp: "^CI_"
+  refs_regexp: "^dev$"
 
 projects:
   - name: foo/project
@@ -102,17 +107,26 @@ wildcards:
 		PipelinesPollingIntervalSeconds:        4,
 		OnInitFetchRefsFromPipelines:           true,
 		OnInitFetchRefsFromPipelinesDepthLimit: 1337,
-		DefaultRefsRegexp:                      "^dev$",
 		MaximumProjectsPollingWorkers:          4,
-		PipelineVariablesFilterRegexp:          variablesCatchallRegex,
+		Defaults: Parameters{
+			FetchPipelineJobMetricsValue:   pointy.Bool(true),
+			OutputSparseStatusMetricsValue: pointy.Bool(true),
+			FetchPipelineVariablesValue:    pointy.Bool(true),
+			PipelineVariablesRegexpValue:   pointy.String("^CI_"),
+			RefsRegexpValue:                pointy.String("^dev$"),
+		},
 		Projects: []Project{
 			{
-				Name:       "foo/project",
-				RefsRegexp: "",
+				Name: "foo/project",
+				Parameters: Parameters{
+					RefsRegexpValue: nil,
+				},
 			},
 			{
-				Name:       "bar/project",
-				RefsRegexp: "^master|dev$",
+				Name: "bar/project",
+				Parameters: Parameters{
+					RefsRegexpValue: pointy.String("^master|dev$"),
+				},
 			},
 		},
 		Wildcards: []Wildcard{
@@ -126,8 +140,10 @@ wildcards:
 					Name: "foo",
 					Kind: "group",
 				},
-				RefsRegexp: "^master|1.0$",
-				Archived:   true,
+				Parameters: Parameters{
+					RefsRegexpValue: pointy.String("^master|1.0$"),
+				},
+				Archived: true,
 			},
 		},
 	}
@@ -173,14 +189,10 @@ projects:
 		DisableOpenmetricsEncoding:             false,
 		OnInitFetchRefsFromPipelines:           false,
 		OnInitFetchRefsFromPipelinesDepthLimit: defaultOnInitFetchRefsFromPipelinesDepthLimit,
-		DefaultRefsRegexp:                      "",
 		MaximumProjectsPollingWorkers:          runtime.GOMAXPROCS(0),
-		FetchPipelineVariables:                 false,
-		PipelineVariablesFilterRegexp:          variablesCatchallRegex,
 		Projects: []Project{
 			{
-				Name:       "foo/bar",
-				RefsRegexp: "",
+				Name: "foo/bar",
 			},
 		},
 		Wildcards: nil,
@@ -188,39 +200,6 @@ projects:
 
 	// Test variable assignments
 	assert.Equal(t, expectedCfg, *cfg)
-}
-
-func TestMergeWithContext(t *testing.T) {
-	expectedFileToken := "file-foo-bar"
-	expectedCtxToken := "ctx-foo-bar"
-
-	f, err := ioutil.TempFile("/tmp", "test-")
-	assert.Nil(t, err)
-	defer os.Remove(f.Name())
-
-	// Valid minimal configuration
-	f.WriteString(`
----
-gitlab:
-  token: file-foo-bar
-projects:
-  - name: foo/bar
-`)
-
-	// Reset config var before parsing
-	cfg = &Config{}
-
-	err = cfg.Parse(f.Name())
-	assert.Nil(t, err)
-	assert.Equal(t, expectedFileToken, cfg.Gitlab.Token)
-
-	set := flag.NewFlagSet("", 0)
-	set.String("gitlab-token", expectedCtxToken, "")
-
-	ctx := cli.NewContext(nil, set, nil)
-	cfg.MergeWithContext(ctx)
-
-	assert.Equal(t, expectedCtxToken, cfg.Gitlab.Token)
 }
 
 func TestParsePrometheusConfig(t *testing.T) {
@@ -267,17 +246,21 @@ func TestParseConfigHasPipelineVariablesAndDefaultRegex(t *testing.T) {
 
 	// Valid minimal configuration
 	f.WriteString(`
-fetch_pipeline_variables: true
+defaults:
+  fetch_pipeline_variables: true
 projects:
   - name: foo/project
   - name: bar/project
-    refs_regexp: "^master|dev$"	
+    refs_regexp: "^master|dev$"
 `)
-	config := &Config{}
-	assert.NoError(t, config.Parse(f.Name()))
-	assert.True(t, config.FetchPipelineVariables)
-	assert.Equal(t, "\\.*", config.PipelineVariablesFilterRegexp)
+	cfg := &Config{}
+	assert.NoError(t, cfg.Parse(f.Name()))
+	assert.NotNil(t, cfg.Defaults.FetchPipelineVariablesValue)
+	assert.True(t, *cfg.Defaults.FetchPipelineVariablesValue)
+	assert.Len(t, cfg.Projects, 2)
+	assert.IsType(t, Project{}, cfg.Projects[0])
+	assert.Equal(t, defaultPipelineVariablesRegexp, cfg.Projects[0].PipelineVariablesRegexp(cfg))
 
-	rx := regexp.MustCompile(config.PipelineVariablesFilterRegexp)
+	rx := regexp.MustCompile(cfg.Projects[0].PipelineVariablesRegexp(cfg))
 	assert.True(t, rx.MatchString("blahblah"))
 }

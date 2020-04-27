@@ -42,7 +42,9 @@ func Run(ctx *cli.Context) error {
 		return exit(err, 1)
 	}
 
-	cfg.MergeWithContext(ctx)
+	if len(ctx.GlobalString("gitlab-token")) > 0 {
+		cfg.Gitlab.Token = ctx.GlobalString("gitlab-token")
+	}
 
 	log.Infof("Starting exporter")
 	log.Infof("Configured GitLab endpoint : %s", cfg.Gitlab.URL)

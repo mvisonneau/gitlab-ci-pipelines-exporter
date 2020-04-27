@@ -56,29 +56,32 @@ pipelines_polling_interval_seconds: 60
 
 # Whether to attempt retrieving refs from pipelines when the exporter starts (default: false)
 on_init_fetch_refs_from_pipelines: false
+
 # Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
 on_init_fetch_refs_from_pipelines_depth_limit: 100
 
-# Whether to attempt retrieving job level metrics from pipelines. Increases the number of output metrics significantly! (default: false)
-fetch_pipeline_job_metrics: false
+# Default settings which can be overridden at the project or wildcard level
+defaults:
+  # Whether to attempt retrieving job level metrics from pipelines. Increases the number of output metrics significantly! (default: false)
+  # fetch_pipeline_job_metrics: false
 
-# Whether to output sparse job and pipeline status metrics. When enabled, only the status label matching the last run of a pipeline or jb will be submitted (default: false)
-output_sparse_status_metrics: false
+  # Fetch pipeline variables in a separate metric (default: false)
+  # fetch_pipeline_variables: false
 
-# Default regexp for parsing the refs (branches and tags) to monitor (optional, default to master)
-# default_refs: "^master$"
+  # Whether to output sparse job and pipeline status metrics. When enabled, only the status label matching the last run of a pipeline or jb will be submitted (default: false)
+  # output_sparse_status_metrics: false
 
-# Fetch pipeline variables in a separate metric (default: false)
-# fetch_pipeline_variables: true
+  # Filter pipelines variables to include (default: ".*", all variables)
+  # pipeline_variables_filter_regex: ".*"
 
-# Filter refs (branches/tags) to include in pipeline variables scanning (default: ".*", all refs)
-# pipeline_variables_filter_regex: "^(master|dev|feature-123)$"
+  # Filter refs (branches/tags) to include (default: "^master$" -- master branch)
+  # refs_regexp: "^master$"
 
 # The list of the projects you want to monitor
 projects:
   - name: foo/project
   - name: bar/project
-    refs: "^master|dev$"
+    refs_regexp: "^master|dev$"
     fetch_pipeline_job_metrics: true # optional, overrides global setting of the same name
     output_sparse_status_metrics: true # optional, overrides global setting of the same name
 
@@ -89,7 +92,7 @@ wildcards:
       name: foo
       kind: group
       include_subgroups: true # optional (default: false)
-    refs: "^master|1.0$"
+    refs_regexp: "^master|1.0$"
     search: 'bar' # optional (defaults to '')
     archived: true # optional (default: false)
     fetch_pipeline_job_metrics: true # optional, overrides global setting of the same name
@@ -99,12 +102,12 @@ wildcards:
   - owner:
       name: bar
       kind: user
-    refs: ".*"
+    refs_regexp: ".*"
     search: 'bar' # optional (defaults to '')
     archived: true # optional (default: false)
 
   # Search for projects globally
-  - refs: ".*"
+  - refs_regexp: ".*"
     search: 'baz' # optional (defaults to '')
     archived: true # optional (default: false)
 EOF
