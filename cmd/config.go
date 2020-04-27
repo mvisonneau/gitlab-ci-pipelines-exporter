@@ -6,17 +6,17 @@ import (
 	"runtime"
 
 	"github.com/urfave/cli"
-	"github.com/xanzy/go-gitlab"
 	"gopkg.in/yaml.v3"
 )
 
 // Config represents what can be defined as a yaml config file
 type Config struct {
 	Gitlab struct {
-		URL           string `yaml:"url"`             // The URL of the GitLab server/api (default to https://gitlab.com)
-		Token         string `yaml:"token"`           // Token to use to authenticate against the API
-		HealthURL     string `yaml:"health_url"`      // The URL of the GitLab server/api health endpoint (default to /users/sign_in which is publicly available on gitlab.com)
-		SkipTLSVerify bool   `yaml:"skip_tls_verify"` // Whether to validate TLS certificates or not
+		URL                string `yaml:"url"`                  // The URL of the GitLab server/api (default to https://gitlab.com)
+		Token              string `yaml:"token"`                // Token to use to authenticate against the API
+		HealthURL          string `yaml:"health_url"`           // The URL of the GitLab server/api health endpoint (default to /users/sign_in which is publicly available on gitlab.com)
+		DisableHealthCheck bool   `yaml:"disable_health_check"` // Whether to validate the service is reachable calling HealthURL
+		DisableTLSVerify   bool   `yaml:"disable_tls_verify"`   // Whether to skip TLS validation when querying HealthURL
 	}
 
 	MaximumGitLabAPIRequestsPerSecond      int        `yaml:"maximum_gitlab_api_requests_per_second"`        // Maximum amount of requests per seconds to make against the GitLab API (default: 10)
@@ -24,6 +24,8 @@ type Config struct {
 	RefsPollingIntervalSeconds             int        `yaml:"refs_polling_interval_seconds"`                 // Interval in seconds to fetch refs from projects
 	PipelinesPollingIntervalSeconds        int        `yaml:"pipelines_polling_interval_seconds"`            // Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
 	FetchPipelineJobMetrics                bool       `yaml:"fetch_pipeline_job_metrics"`                    // Whether to attempt to retrieve job metrics from polled pipelines
+	FetchPipelineVariables                 bool       `yaml:"fetch_pipeline_variables"`                      // Whether to attempt to retrieve variables included in the pipeline execution
+	PipelineVariablesFilterRegexp          string     `yaml:"pipeline_variables_filter_regex"`               // Regex to filter pipeline variables, deafaults to '.*'
 	OutputSparseStatusMetrics              bool       `yaml:"output_sparse_status_metrics"`                  // Whether to report all pipeline / job statuses, or only report the one from the last job.
 	OnInitFetchRefsFromPipelines           bool       `yaml:"on_init_fetch_refs_from_pipelines"`             // Whether to attempt retrieving refs from pipelines when the exporter starts
 	OnInitFetchRefsFromPipelinesDepthLimit int        `yaml:"on_init_fetch_refs_from_pipelines_depth_limit"` // Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
@@ -40,7 +42,6 @@ type Project struct {
 	Refs                      string `yaml:"refs"`
 	FetchPipelineJobMetrics   *bool  `yaml:"fetch_pipeline_job_metrics,omitempty"`
 	OutputSparseStatusMetrics *bool  `yaml:"output_sparse_status_metrics,omitempty"`
-	GitlabProject             *gitlab.Project
 }
 
 // Wildcard is a specific handler to dynamically search projects
@@ -67,6 +68,8 @@ const (
 
 	errNoProjectsOrWildcardConfigured = "you need to configure at least one project/wildcard to poll, none given"
 	errConfigFileNotFound             = "couldn't open config file : %v"
+
+	variablesCatchallRegex = "\\.*"
 )
 
 var cfg = &Config{}
@@ -136,6 +139,10 @@ func (cfg *Config) Parse(path string) error {
 
 	if cfg.MaximumProjectsPollingWorkers == 0 {
 		cfg.MaximumProjectsPollingWorkers = runtime.GOMAXPROCS(0)
+	}
+
+	if cfg.PipelineVariablesFilterRegexp == "" {
+		cfg.PipelineVariablesFilterRegexp = variablesCatchallRegex
 	}
 
 	return nil

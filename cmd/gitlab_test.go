@@ -34,22 +34,23 @@ func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *Client) {
 
 // Functions testing
 func TestProjectExists(t *testing.T) {
-	foo := Project{Name: "foo"}
+	foo := Project{Name: "foo", Refs: "abc"}
+	fooClone := foo
 	bar := Project{Name: "bar"}
 
-	cfg = &Config{
+	config := &Config{
 		Projects: []Project{foo},
 	}
 
-	assert.Equal(t, true, projectExists(foo))
-	assert.Equal(t, false, projectExists(bar))
+	assert.Equal(t, true, projectExists(fooClone, config.Projects))
+	assert.Equal(t, false, projectExists(bar, config.Projects))
 }
 
 func TestRefExists(t *testing.T) {
 	refs := []string{"foo"}
 
-	assert.Equal(t, true, refExists(refs, "foo"))
-	assert.Equal(t, false, refExists(refs, "bar"))
+	assert.Equal(t, true, refExists("foo", refs))
+	assert.Equal(t, false, refExists("bar", refs))
 }
 
 func TestGetProject(t *testing.T) {
@@ -231,12 +232,16 @@ func pollingResult(until <-chan struct{}, projects <-chan Project, client *Clien
 func TestClient_pollProjectsWith(t *testing.T) {
 	c := Client{}
 	message := "some error"
-	doing := func(Project) error {
-		return fmt.Errorf(message)
+	doing := func() func(Project) error {
+		return func(Project) error {
+			// set the already polled refs, simulate the pollProject(p Project) set of Client.hasPolledOnInit
+			// return an error to count them afterwards
+			return fmt.Errorf(message)
+		}
 	}
 	testProjects := []Project{{Name: "test"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
 	until := make(chan struct{})
-	errCh := c.pollProjectsWith(4, doing, until, testProjects...)
+	errCh := c.pollProjectsWith(4, doing(), until, testProjects...)
 	var errCount int
 	for err := range errCh {
 		if assert.Error(t, err) {

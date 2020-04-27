@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,124 +24,8 @@ const (
 	userAgent = "gitlab-ci-pipelines-exporter"
 )
 
-// Client holds a GitLab client
-type Client struct {
-	*gitlab.Client
-	RateLimiter ratelimit.Limiter
-}
-
-var (
-	coverage = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_coverage",
-			Help: "Coverage of the most recent pipeline",
-		},
-		[]string{"project", "topics", "ref"},
-	)
-
-	lastRunDuration = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_run_duration_seconds",
-			Help: "Duration of last pipeline run",
-		},
-		[]string{"project", "topics", "ref"},
-	)
-
-	lastRunJobDuration = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_job_run_duration_seconds",
-			Help: "Duration of last job run",
-		},
-		[]string{"project", "topics", "ref", "stage", "job_name"},
-	)
-
-	lastRunJobStatus = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_job_run_status",
-			Help: "Status of the most recent job",
-		},
-		[]string{"project", "topics", "ref", "stage", "job_name", "status"},
-	)
-
-	lastRunJobArtifactSize = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_job_run_artifact_size",
-			Help: "Filesize of the most recent job artifacts",
-		},
-		[]string{"project", "topics", "ref", "stage", "job_name"},
-	)
-
-	timeSinceLastJobRun = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_time_since_last_job_run_seconds",
-			Help: "Elapsed time since most recent GitLab CI job run.",
-		},
-		[]string{"project", "topics", "ref", "stage", "job_name"},
-	)
-
-	jobRunCount = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "gitlab_ci_pipeline_job_run_count",
-			Help: "GitLab CI pipeline job run count",
-		},
-		[]string{"project", "topics", "ref", "stage", "job_name"},
-	)
-
-	lastRunID = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_run_id",
-			Help: "ID of the most recent pipeline",
-		},
-		[]string{"project", "topics", "ref"},
-	)
-
-	lastRunStatus = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_run_status",
-			Help: "Status of the most recent pipeline",
-		},
-		[]string{"project", "topics", "ref", "status"},
-	)
-
-	runCount = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "gitlab_ci_pipeline_run_count",
-			Help: "GitLab CI pipeline run count",
-		},
-		[]string{"project", "topics", "ref"},
-	)
-
-	timeSinceLastRun = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_time_since_last_run_seconds",
-			Help: "Elapsed time since most recent GitLab CI pipeline run.",
-		},
-		[]string{"project", "topics", "ref"},
-	)
-)
-
-func newMetricsRegistry() *prometheus.Registry {
-	registry := prometheus.NewRegistry()
-
-	registry.MustRegister(coverage)
-	registry.MustRegister(lastRunDuration)
-	registry.MustRegister(lastRunID)
-	registry.MustRegister(lastRunStatus)
-	registry.MustRegister(runCount)
-	registry.MustRegister(timeSinceLastRun)
-	registry.MustRegister(lastRunJobDuration)
-	registry.MustRegister(lastRunJobStatus)
-	registry.MustRegister(jobRunCount)
-	registry.MustRegister(timeSinceLastJobRun)
-	registry.MustRegister(lastRunJobArtifactSize)
-
-	return registry
-}
-
 // Run launches the exporter
 func Run(ctx *cli.Context) error {
-	// register metrics
-	metrics := newMetricsRegistry()
 
 	// Configure logger
 	lc := &logger.Config{
@@ -167,20 +52,17 @@ func Run(ctx *cli.Context) error {
 	log.Infof("Global rate limit for the GitLab API set to %d req/s", cfg.MaximumGitLabAPIRequestsPerSecond)
 
 	// Configure GitLab client
-	httpTransport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.SkipTLSVerify},
-	}
-
+	gitlabHTTPClient := &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: cfg.Gitlab.DisableTLSVerify},
+	}}
 	opts := []gitlab.ClientOptionFunc{
-		gitlab.WithHTTPClient(&http.Client{Transport: httpTransport}),
+		gitlab.WithHTTPClient(gitlabHTTPClient),
 		gitlab.WithBaseURL(cfg.Gitlab.URL),
 	}
-
 	gc, err := gitlab.NewClient(cfg.Gitlab.Token, opts...)
 	if err != nil {
 		return exit(err, 1)
 	}
-
 	c := &Client{
 		Client:      gc,
 		RateLimiter: ratelimit.New(cfg.MaximumGitLabAPIRequestsPerSecond),
@@ -191,25 +73,28 @@ func Run(ctx *cli.Context) error {
 	onShutdown := make(chan os.Signal, 1)
 	signal.Notify(onShutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 
-	stopPolling := make(chan bool)
-	c.pollProjects(stopPolling)
+	untilStopSignal := make(chan bool)
+	pipelinesOnInit := make(chan bool)
+	c.orchestratePolling(untilStopSignal, pipelinesOnInit)
+	// get immediately some data from the latest executed pipelines, if configured to do so
+	pipelinesOnInit <- cfg.OnInitFetchRefsFromPipelines
 
 	// Configure liveness and readiness probes
 	health := healthcheck.NewHandler()
-	if !cfg.Gitlab.SkipTLSVerify {
-		health.AddReadinessCheck("gitlab-reachable", healthcheck.HTTPGetCheck(cfg.Gitlab.HealthURL, 5*time.Second))
+	if !cfg.Gitlab.DisableHealthCheck {
+		health.AddReadinessCheck("gitlab-reachable", gitlabReadinessCheck(gitlabHTTPClient, cfg.Gitlab.HealthURL))
 	} else {
-		log.Warn("TLS verification has been disabled. Readiness checks won't be operated.")
+		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
 	}
 
-	// Expose the registered metrics via HTTP
+	// Register the default metrics into a new registry
+	registerMetricOn(registry, defaultMetrics...)
+
+	// Expose the registered registry via HTTP
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health/live", health.LiveEndpoint)
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
-	mux.Handle("/metrics", promhttp.HandlerFor(metrics, promhttp.HandlerOpts{
-		Registry:          metrics,
-		EnableOpenMetrics: !cfg.DisableOpenmetricsEncoding,
-	}))
+	mux.Handle("/metrics", metricsHandlerFor(registry, cfg.DisableOpenmetricsEncoding))
 
 	srv := &http.Server{
 		Addr:    ctx.GlobalString("listen-address"),
@@ -224,7 +109,7 @@ func Run(ctx *cli.Context) error {
 	log.Infof("Started listening onto %s", ctx.GlobalString("listen-address"))
 
 	<-onShutdown
-	stopPolling <- true
+	untilStopSignal <- true
 	log.Print("Stopped!")
 
 	ctxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -235,6 +120,25 @@ func Run(ctx *cli.Context) error {
 	}
 
 	return exit(nil, 0)
+}
+
+func gitlabReadinessCheck(httpClient *http.Client, url string) healthcheck.Check {
+	return func() error {
+		client := httpClient
+		client.Timeout = 5 * time.Second
+		resp, err := client.Get(url)
+		if err == nil && resp.StatusCode != 200 {
+			return fmt.Errorf("HTTP error: %d", resp.StatusCode)
+		}
+		return err
+	}
+}
+
+func metricsHandlerFor(registry *prometheus.Registry, disableOpenMetricsEncoder bool) http.Handler {
+	return promhttp.HandlerFor(registry, promhttp.HandlerOpts{
+		Registry:          registry,
+		EnableOpenMetrics: !disableOpenMetricsEncoder,
+	})
 }
 
 func exit(err error, exitCode int) *cli.ExitError {

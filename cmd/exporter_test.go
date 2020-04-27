@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"strings"
-
 	"testing"
 
 	"github.com/stretchr/testify/assert"

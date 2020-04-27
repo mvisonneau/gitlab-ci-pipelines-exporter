@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"runtime"
-
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,7 +52,7 @@ gitlab:
   url: https://gitlab.example.com
   token: xrN14n9-ywvAFxxxxxx
   health_url: https://gitlab.example.com/-/health
-  skip_tls_verify: true
+  disable_health_check: true
 
 maximum_gitlab_api_requests_per_second: 1
 projects_polling_interval_seconds: 2
@@ -85,15 +85,16 @@ wildcards:
 
 	expectedCfg := Config{
 		Gitlab: struct {
-			URL           string "yaml:\"url\""
-			Token         string "yaml:\"token\""
-			HealthURL     string "yaml:\"health_url\""
-			SkipTLSVerify bool   "yaml:\"skip_tls_verify\""
+			URL                string "yaml:\"url\""
+			Token              string "yaml:\"token\""
+			HealthURL          string "yaml:\"health_url\""
+			DisableHealthCheck bool   "yaml:\"disable_health_check\""
+			DisableTLSVerify   bool   "yaml:\"disable_tls_verify\""
 		}{
-			URL:           "https://gitlab.example.com",
-			HealthURL:     "https://gitlab.example.com/-/health",
-			Token:         "xrN14n9-ywvAFxxxxxx",
-			SkipTLSVerify: true,
+			URL:                "https://gitlab.example.com",
+			HealthURL:          "https://gitlab.example.com/-/health",
+			Token:              "xrN14n9-ywvAFxxxxxx",
+			DisableHealthCheck: true,
 		},
 		MaximumGitLabAPIRequestsPerSecond:      1,
 		ProjectsPollingIntervalSeconds:         2,
@@ -103,6 +104,7 @@ wildcards:
 		OnInitFetchRefsFromPipelinesDepthLimit: 1337,
 		DefaultRefsRegexp:                      "^dev$",
 		MaximumProjectsPollingWorkers:          4,
+		PipelineVariablesFilterRegexp:          variablesCatchallRegex,
 		Projects: []Project{
 			{
 				Name: "foo/project",
@@ -154,15 +156,15 @@ projects:
 
 	expectedCfg := Config{
 		Gitlab: struct {
-			URL           string "yaml:\"url\""
-			Token         string "yaml:\"token\""
-			HealthURL     string "yaml:\"health_url\""
-			SkipTLSVerify bool   "yaml:\"skip_tls_verify\""
+			URL                string "yaml:\"url\""
+			Token              string "yaml:\"token\""
+			HealthURL          string "yaml:\"health_url\""
+			DisableHealthCheck bool   "yaml:\"disable_health_check\""
+			DisableTLSVerify   bool   "yaml:\"disable_tls_verify\""
 		}{
-			URL:           "https://gitlab.com",
-			Token:         "",
-			HealthURL:     "https://gitlab.com/users/sign_in",
-			SkipTLSVerify: false,
+			URL:       "https://gitlab.com",
+			Token:     "",
+			HealthURL: "https://gitlab.com/users/sign_in",
 		},
 		MaximumGitLabAPIRequestsPerSecond:      defaultMaximumGitLabAPIRequestsPerSecond,
 		ProjectsPollingIntervalSeconds:         defaultProjectsPollingIntervalSeconds,
@@ -173,6 +175,8 @@ projects:
 		OnInitFetchRefsFromPipelinesDepthLimit: defaultOnInitFetchRefsFromPipelinesDepthLimit,
 		DefaultRefsRegexp:                      "",
 		MaximumProjectsPollingWorkers:          runtime.GOMAXPROCS(0),
+		FetchPipelineVariables:                 false,
+		PipelineVariablesFilterRegexp:          variablesCatchallRegex,
 		Projects: []Project{
 			{
 				Name: "foo/bar",
@@ -254,4 +258,26 @@ projects:
 	assert.NoError(t, config.Parse(f.Name()))
 	assert.Equal(t, runtime.GOMAXPROCS(0), config.MaximumProjectsPollingWorkers)
 
+}
+
+func TestParseConfigHasPipelineVariablesAndDefaultRegex(t *testing.T) {
+	f, err := ioutil.TempFile("/tmp", "test-")
+	assert.Nil(t, err)
+	defer os.Remove(f.Name())
+
+	// Valid minimal configuration
+	f.WriteString(`
+fetch_pipeline_variables: true
+projects:
+    - name: foo/project
+    - name: bar/project
+      refs: "^master|dev$"	
+`)
+	config := &Config{}
+	assert.NoError(t, config.Parse(f.Name()))
+	assert.True(t, config.FetchPipelineVariables)
+	assert.Equal(t, "\\.*", config.PipelineVariablesFilterRegexp)
+
+	rx := regexp.MustCompile(config.PipelineVariablesFilterRegexp)
+	assert.True(t, rx.MatchString("blahblah"))
 }
