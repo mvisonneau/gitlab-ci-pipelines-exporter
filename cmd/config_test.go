@@ -175,6 +175,7 @@ projects:
 		OnInitFetchRefsFromPipelinesDepthLimit: defaultOnInitFetchRefsFromPipelinesDepthLimit,
 		DefaultRefsRegexp:                      "",
 		MaximumProjectsPollingWorkers:          runtime.GOMAXPROCS(0),
+		FetchPipelineVariables:                 false,
 		PipelineVariablesFilterRegexp:          variablesCatchallRegex,
 		Projects: []Project{
 			{

@@ -50,9 +50,9 @@ pipelines_polling_interval_seconds: 60
 # Sets the parallelism for polling projects from the API (default to available CPUs: runtime.GOMAXPROCS(0))
 # maximum_projects_poller_workers: 1
 
-# Enable OpenMetrics content encoding in prometheus HTTP handler (default: true)
+# Disable OpenMetrics content encoding in prometheus HTTP handler (default: false)
 # see: https://godoc.org/github.com/prometheus/client_golang/prometheus/promhttp#HandlerOpts
-# prometheus_openmetrics_encoding: true
+# disable_openmetrics_encoding: true
 
 # Whether to attempt retrieving refs from pipelines when the exporter starts (default: false)
 on_init_fetch_refs_from_pipelines: false
@@ -67,6 +67,12 @@ output_sparse_status_metrics: false
 
 # Default regexp for parsing the refs (branches and tags) to monitor (optional, default to master)
 # default_refs: "^master$"
+
+# Fetch pipeline variables in a separate metric (default: false)
+# fetch_pipeline_variables: true
+
+# Filter refs (branches/tags) to include in pipeline variables scanning (default: ".*", all refs)
+# pipeline_variables_filter_regex: "^(master|dev|feature-123)$"
 
 # The list of the projects you want to monitor
 projects:

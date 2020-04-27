@@ -134,10 +134,10 @@ func gitlabReadinessCheck(httpClient *http.Client, url string) healthcheck.Check
 	}
 }
 
-func metricsHandlerFor(registry *prometheus.Registry, openMetricsEncoder bool) http.Handler {
+func metricsHandlerFor(registry *prometheus.Registry, disableOpenMetricsEncoder bool) http.Handler {
 	return promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		Registry:          registry,
-		EnableOpenMetrics: openMetricsEncoder,
+		EnableOpenMetrics: !disableOpenMetricsEncoder,
 	})
 }
 
