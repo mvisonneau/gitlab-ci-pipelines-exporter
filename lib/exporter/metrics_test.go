@@ -1,4 +1,4 @@
-package cmd
+package exporter
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/schemas"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/xanzy/go-gitlab"
@@ -14,32 +15,16 @@ import (
 )
 
 // introduce a test to check the /metrics endpoint body
-func TestMetricsRegistryContainsMetricsWhenSet(t *testing.T) {
-	// a custom additional metric added to the registry
-	some := "test_something"
-	aCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: some})
-	reg := prometheus.NewRegistry()
-	registerMetricOn(reg, aCounter)
+func TestRegisterDefaultMetrics(t *testing.T) {
+	reg := NewRegistry()
+	reg.RegisterDefaultMetrics()
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
-	metricsHandlerFor(reg, false).ServeHTTP(w, r)
+	reg.MetricsHandler(false).ServeHTTP(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
-	assert.Contains(t, w.Body.String(), some)
-}
-
-// introduce a test to check the /metrics endpoint body
-func TestMetricsRegistryFailsWhenDouble(t *testing.T) {
-	// a custom additional metric added to the registry
-	some := "test_something"
-	aCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: some})
-	reg := prometheus.NewRegistry()
-	registerMetricOn(reg, aCounter)
-	panicFn := func() {
-		registerMetricOn(reg, aCounter)
-	}
-	assert.Panics(t, panicFn)
+	// TODO: Find a way to see if all metrics are present
 }
 
 var testOkFetchFn = func(interface{}, int, ...gitlab.RequestOptionFunc) ([]*gitlab.PipelineVariable, *gitlab.Response, error) {
@@ -53,8 +38,8 @@ func TestEmitVariablesMetric(t *testing.T) {
 	client := &Client{
 		RateLimiter: ratelimit.New(2),
 	}
-	rx, err := regexp.Compile(defaultPipelineVariablesRegexp)
-	details := &projectDetails{&Project{Name: "foo"}, "foo/bar", "tag", "master", 0}
+	rx, err := regexp.Compile(`.*`)
+	details := &projectDetails{&schemas.Project{Name: "foo"}, "foo/bar", "tag", "master", 0}
 	if assert.Nil(t, err) {
 		assert.NoError(t,
 			emitPipelineVariablesMetric(client,
@@ -79,7 +64,7 @@ func TestEmitFilteredVariablesMetric(t *testing.T) {
 	counter := variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "topics", "ref", "pipeline_variables"})
 	rx, err := regexp.Compile(`^test$`)
 
-	details := &projectDetails{&Project{Name: "foo"}, "foo/bar", "tag", "master", 0}
+	details := &projectDetails{&schemas.Project{Name: "foo"}, "foo/bar", "tag", "master", 0}
 
 	if assert.Nil(t, err) {
 		assert.NoError(t,

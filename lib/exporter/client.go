@@ -1,4 +1,4 @@
-package cmd
+package exporter
 
 import (
 	"fmt"
@@ -11,17 +11,24 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 	"go.uber.org/ratelimit"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/schemas"
 )
 
 var statusesList = []string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
 
-func projectExists(p Project, projects []Project) bool {
-	for _, project := range projects {
-		if project.Name == p.Name {
-			return true
-		}
-	}
-	return false
+// Client holds a GitLab client
+type Client struct {
+	*gitlab.Client
+	Config      *schemas.Config
+	RateLimiter ratelimit.Limiter
+}
+
+type projectDetails struct {
+	*schemas.Project
+
+	fullName, topics, ref string
+	pID                   int
 }
 
 func refExists(r string, refs []string) bool {
@@ -33,20 +40,7 @@ func refExists(r string, refs []string) bool {
 	return false
 }
 
-// Client holds a GitLab client
-type Client struct {
-	*gitlab.Client
-	RateLimiter ratelimit.Limiter
-}
-
-type projectDetails struct {
-	*Project
-
-	fullName, topics, ref string
-	pID                   int
-}
-
-func detailFrom(p *Project, gp *gitlab.Project, ref string) *projectDetails {
+func detailFrom(p *schemas.Project, gp *gitlab.Project, ref string) *projectDetails {
 	topics := strings.Join(gp.TagList, ",")
 	return &projectDetails{
 		p, gp.PathWithNamespace, topics, ref, gp.ID,
@@ -65,15 +59,14 @@ func augmentLabelValues(d *projectDetails, lbv ...string) []string {
 	return std
 }
 
-func (c *Client) pollProject(p Project) error {
-
+func (c *Client) pollProject(p schemas.Project) error {
 	log.Debugf("Fetching project : %s", p.Name)
 	project, err := c.getProject(p.Name)
 	if err != nil {
 		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %v", p.Name, err.Error())
 	}
 
-	branchesAndTagRefs, err := c.branchesAndTagsFor(project.ID, p.RefsRegexp(cfg))
+	branchesAndTagRefs, err := c.branchesAndTagsFor(project.ID, p.RefsRegexp(c.Config))
 	if err != nil {
 		return fmt.Errorf("error fetching refs for project '%s'", p.Name)
 	}
@@ -126,7 +119,7 @@ func (c *Client) pollPipelineJobs(pd *projectDetails, pipelineID int) error {
 				values,
 				statusesList,
 				job.Status,
-				pd.OutputSparseStatusMetrics(cfg),
+				pd.OutputSparseStatusMetrics(c.Config),
 			)
 
 			timeSinceLastJobRun.WithLabelValues(values...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
@@ -156,10 +149,10 @@ func (c *Client) pollProjectRefOn(pd *projectDetails) error {
 	}
 
 	// fetch pipeline variables, stick them into metrics registry (if requested to do so)
-	if pd.FetchPipelineVariables(cfg) {
-		rx, err := regexp.Compile(pd.PipelineVariablesRegexp(cfg))
+	if pd.FetchPipelineVariables(c.Config) {
+		rx, err := regexp.Compile(pd.PipelineVariablesRegexp(c.Config))
 		if err != nil {
-			log.Errorf("The provided filter regex for pipeline variables is invalid '(%s)': %v", pd.PipelineVariablesRegexp(cfg), err)
+			log.Errorf("The provided filter regex for pipeline variables is invalid '(%s)': %v", pd.PipelineVariablesRegexp(c.Config), err)
 			goto process
 		}
 		for _, pipe := range pipelines {
@@ -198,10 +191,10 @@ process:
 			labelValues,
 			statusesList,
 			lastPipeline.Status,
-			pd.OutputSparseStatusMetrics(cfg),
+			pd.OutputSparseStatusMetrics(c.Config),
 		)
 
-		if pd.FetchPipelineJobMetrics(cfg) {
+		if pd.FetchPipelineJobMetrics(c.Config) {
 			if err := c.pollPipelineJobs(pd, lastPipeline.ID); err != nil {
 				log.Errorf("Could not poll jobs for pipeline %d: %s", lastPipeline.ID, err.Error())
 			}
@@ -213,10 +206,11 @@ process:
 	return nil
 }
 
-func (c *Client) orchestratePolling(until <-chan bool, getRefsOnInit <-chan bool) {
+// OrchestratePolling ...
+func (c *Client) OrchestratePolling(until <-chan bool, getRefsOnInit <-chan bool) {
 	go func() {
-		pollWildcardsEvery := time.NewTicker(time.Duration(cfg.ProjectsPollingIntervalSeconds) * time.Second)
-		pollRefsEvery := time.NewTicker(time.Duration(cfg.RefsPollingIntervalSeconds) * time.Second)
+		pollWildcardsEvery := time.NewTicker(time.Duration(c.Config.ProjectsPollingIntervalSeconds) * time.Second)
+		pollRefsEvery := time.NewTicker(time.Duration(c.Config.RefsPollingIntervalSeconds) * time.Second)
 		stopWorkers := make(chan struct{})
 		defer close(stopWorkers)
 		// first execution, blocking call before entering orchestration loop to get the wildcards discovered
@@ -244,17 +238,17 @@ func (c *Client) orchestratePolling(until <-chan bool, getRefsOnInit <-chan bool
 }
 
 func (c *Client) discoverWildcards() {
-	log.Infof("%d wildcard(s) configured for polling", len(cfg.Wildcards))
-	for _, w := range cfg.Wildcards {
+	log.Infof("%d wildcard(s) configured for polling", len(c.Config.Wildcards))
+	for _, w := range c.Config.Wildcards {
 		foundProjects, err := c.listProjects(&w)
 		if err != nil {
 			log.Errorf("could not list projects for wildcard %v: %v", w, err)
 			continue
 		}
 		for _, p := range foundProjects {
-			if !projectExists(p, cfg.Projects) {
+			if !c.Config.ProjectExists(p) {
 				log.Infof("Found new project: %s", p.Name)
-				cfg.Projects = append(cfg.Projects, p)
+				c.Config.Projects = append(c.Config.Projects, p)
 			}
 		}
 	}
@@ -262,14 +256,14 @@ func (c *Client) discoverWildcards() {
 
 func (c *Client) pollPipelinesOnInit() {
 	log.Debug("Polling latest pipelines to get data out of them")
-	for _, p := range cfg.Projects {
+	for _, p := range c.Config.Projects {
 		log.Debugf("On init: reading project %s", p.Name)
 		gitlabProject, err := c.getProject(p.Name)
 		if err != nil {
 			log.Errorf("could not get GitLab project with name %s: %v", p.Name, err)
 			continue
 		}
-		pipelineRefs, err := c.refsFromPipelines(detailFrom(&p, gitlabProject, ""), cfg.OnInitFetchRefsFromPipelinesDepthLimit)
+		pipelineRefs, err := c.refsFromPipelines(detailFrom(&p, gitlabProject, ""))
 		if err != nil {
 			log.Errorf("unable to fetch refs from project pipelines %s : %v", p.Name, err.Error())
 			continue
@@ -283,8 +277,8 @@ func (c *Client) pollPipelinesOnInit() {
 }
 
 func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
-	log.Infof("%d project(s) configured for polling", len(cfg.Projects))
-	pollErrors := c.pollProjectsWith(cfg.MaximumProjectsPollingWorkers, c.pollProject, stop, cfg.Projects...)
+	log.Infof("%d project(s) configured for polling", len(c.Config.Projects))
+	pollErrors := pollProjectsWith(c.Config.MaximumProjectsPollingWorkers, c.pollProject, stop, c.Config.Projects...)
 	for err := range pollErrors {
 		if err != nil {
 			log.Errorf("%v", err)
@@ -292,9 +286,9 @@ func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
 	}
 }
 
-func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, until <-chan struct{}, projects ...Project) <-chan error {
+func pollProjectsWith(numWorkers int, doing func(schemas.Project) error, until <-chan struct{}, projects ...schemas.Project) <-chan error {
 	errorStream := make(chan error)
-	projectsToPoll := make(chan Project, len(projects))
+	projectsToPoll := make(chan schemas.Project, len(projects))
 	// sync closing the error channel via a waitGroup
 	var wg sync.WaitGroup
 	wg.Add(numWorkers)
@@ -337,11 +331,11 @@ func (c *Client) pipelinesFor(pd *projectDetails, options *gitlab.ListProjectPip
 	return pipelines, nil
 }
 
-func (c *Client) refsFromPipelines(pd *projectDetails, limit int) ([]string, error) {
+func (c *Client) refsFromPipelines(pd *projectDetails) ([]string, error) {
 	options := &gitlab.ListProjectPipelinesOptions{
 		ListOptions: gitlab.ListOptions{
 			Page:    1,
-			PerPage: limit,
+			PerPage: c.Config.OnInitFetchRefsFromPipelinesDepthLimit,
 		},
 	}
 	pipelines, err := c.pipelinesFor(pd, options)
@@ -372,10 +366,10 @@ func (c *Client) getProject(name string) (*gitlab.Project, error) {
 	return p, err
 }
 
-func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
+func (c *Client) listProjects(w *schemas.Wildcard) ([]schemas.Project, error) {
 	log.Debugf("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
 
-	var projects []Project
+	var projects []schemas.Project
 	trueVal := true
 	listOptions := gitlab.ListOptions{
 		PerPage: 20,
@@ -430,7 +424,7 @@ func (c *Client) listProjects(w *Wildcard) ([]Project, error) {
 
 			projects = append(
 				projects,
-				Project{
+				schemas.Project{
 					Parameters: w.Parameters,
 					Name:       gp.PathWithNamespace,
 				},

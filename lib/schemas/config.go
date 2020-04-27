@@ -1,4 +1,4 @@
-package cmd
+package schemas
 
 import (
 	"fmt"
@@ -62,44 +62,6 @@ type Config struct {
 	Wildcards []Wildcard `yaml:"wildcards"`
 }
 
-// Parameters for the fetching configuration of Projects and Wildcards
-type Parameters struct {
-	// Whether to attempt to retrieve job metrics from polled pipelines
-	FetchPipelineJobMetricsValue *bool `yaml:"fetch_pipeline_job_metrics"`
-
-	// Whether to report all pipeline / job statuses, or only report the one from the last job.
-	OutputSparseStatusMetricsValue *bool `yaml:"output_sparse_status_metrics"`
-
-	// Whether to attempt to retrieve variables included in the pipeline execution
-	FetchPipelineVariablesValue *bool `yaml:"fetch_pipeline_variables"`
-
-	// Regular expression to filter pipeline variables values to fetch (defaults to '.*')
-	PipelineVariablesRegexpValue *string `yaml:"pipeline_variables_regexp"`
-
-	// Regular expression to filter project refs to fetch (defaults to '.*')
-	RefsRegexpValue *string `yaml:"refs_regexp"`
-}
-
-// Project holds information about a GitLab project
-type Project struct {
-	Parameters `yaml:",inline"`
-
-	Name string `yaml:"name"`
-}
-
-// Wildcard is a specific handler to dynamically search projects
-type Wildcard struct {
-	Parameters `yaml:",inline"`
-
-	Search string `yaml:"search"`
-	Owner  struct {
-		Name             string `yaml:"name"`
-		Kind             string `yaml:"kind"`
-		IncludeSubgroups bool   `yaml:"include_subgroups"`
-	} `yaml:"owner"`
-	Archived bool `yaml:"archived"`
-}
-
 // Default values
 const (
 	defaultMaximumGitLabAPIRequestsPerSecond      = 10
@@ -117,73 +79,6 @@ const (
 	errNoProjectsOrWildcardConfigured = "you need to configure at least one project/wildcard to poll, none given"
 	errConfigFileNotFound             = "couldn't open config file : %v"
 )
-
-var cfg = &Config{}
-
-// FetchPipelineJobMetrics ...
-func (p *Project) FetchPipelineJobMetrics(cfg *Config) bool {
-	if p.FetchPipelineJobMetricsValue != nil {
-		return *p.FetchPipelineJobMetricsValue
-	}
-
-	if cfg.Defaults.FetchPipelineJobMetricsValue != nil {
-		return *cfg.Defaults.FetchPipelineJobMetricsValue
-	}
-
-	return defaultFetchPipelineJobMetrics
-}
-
-// OutputSparseStatusMetrics ...
-func (p *Project) OutputSparseStatusMetrics(cfg *Config) bool {
-	if p.OutputSparseStatusMetricsValue != nil {
-		return *p.OutputSparseStatusMetricsValue
-	}
-
-	if cfg.Defaults.OutputSparseStatusMetricsValue != nil {
-		return *cfg.Defaults.OutputSparseStatusMetricsValue
-	}
-
-	return defaultOutputSparseStatusMetrics
-}
-
-// FetchPipelineVariables ...
-func (p *Project) FetchPipelineVariables(cfg *Config) bool {
-	if p.FetchPipelineVariablesValue != nil {
-		return *p.FetchPipelineVariablesValue
-	}
-
-	if cfg.Defaults.FetchPipelineVariablesValue != nil {
-		return *cfg.Defaults.FetchPipelineVariablesValue
-	}
-
-	return defaultFetchPipelineVariables
-}
-
-// PipelineVariablesRegexp ...
-func (p *Project) PipelineVariablesRegexp(cfg *Config) string {
-	if p.PipelineVariablesRegexpValue != nil {
-		return *p.PipelineVariablesRegexpValue
-	}
-
-	if cfg.Defaults.PipelineVariablesRegexpValue != nil {
-		return *cfg.Defaults.PipelineVariablesRegexpValue
-	}
-
-	return defaultPipelineVariablesRegexp
-}
-
-// RefsRegexp ...
-func (p *Project) RefsRegexp(cfg *Config) string {
-	if p.RefsRegexpValue != nil {
-		return *p.RefsRegexpValue
-	}
-
-	if cfg.Defaults.RefsRegexpValue != nil {
-		return *cfg.Defaults.RefsRegexpValue
-	}
-
-	return defaultRefsRegexp
-}
 
 // Parse loads a yaml file into a Config structure
 func (cfg *Config) Parse(path string) error {
@@ -235,4 +130,15 @@ func (cfg *Config) Parse(path string) error {
 	}
 
 	return nil
+}
+
+// ProjectExists indicates if the projects exists in the config
+// or not
+func (cfg *Config) ProjectExists(p Project) bool {
+	for _, project := range cfg.Projects {
+		if project.Name == p.Name {
+			return true
+		}
+	}
+	return false
 }

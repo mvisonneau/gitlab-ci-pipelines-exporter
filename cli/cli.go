@@ -1,17 +1,23 @@
 package cli
 
 import (
-	"io/ioutil"
+	"os"
+	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/cmd"
 	"github.com/urfave/cli"
 )
 
-// Init : Generates CLI configuration for the application
-func Init(version *string) (app *cli.App) {
+// Run handles the instanciation of the CLI application
+func Run(version string) {
+	NewApp(version, time.Now()).Run(os.Args)
+}
+
+// NewApp configures the CLI application
+func NewApp(version string, start time.Time) (app *cli.App) {
 	app = cli.NewApp()
 	app.Name = "gitlab-ci-pipelines-exporter"
-	app.Version = *version
+	app.Version = version
 	app.Usage = "Export metrics about GitLab CI pipelines statuses"
 	app.EnableBashCompletion = true
 
@@ -47,10 +53,11 @@ func Init(version *string) (app *cli.App) {
 		},
 	}
 
-	app.Action = cmd.Run
+	app.Action = cmd.ExecWrapper(cmd.Run)
 
-	// Disable error handling from urfave/cli
-	cli.ErrWriter = ioutil.Discard
+	app.Metadata = map[string]interface{}{
+		"startTime": start,
+	}
 
 	return
 }

@@ -1,4 +1,4 @@
-package cmd
+package schemas
 
 import (
 	"fmt"
@@ -11,6 +11,8 @@ import (
 	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
 )
+
+var cfg = &Config{}
 
 func TestParseInvalidPath(t *testing.T) {
 	err := cfg.Parse("/path_do_not_exist")

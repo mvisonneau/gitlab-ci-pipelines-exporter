@@ -1,14 +1,21 @@
-package cmd
+package exporter
 
 import (
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
+
+// Registry wraps a pointer of prometheus.Registry
+type Registry struct {
+	*prometheus.Registry
+}
 
 var (
 	coverage = prometheus.NewGaugeVec(
@@ -106,10 +113,7 @@ var (
 		},
 		[]string{"project", "topics", "ref", "pipeline_variables"},
 	)
-)
 
-var (
-	registry       = prometheus.NewRegistry()
 	defaultMetrics = []prometheus.Collector{
 		coverage,
 		lastRunDuration,
@@ -126,12 +130,27 @@ var (
 	}
 )
 
-func registerMetricOn(registry *prometheus.Registry, metrics ...prometheus.Collector) {
-	for _, m := range metrics {
-		if err := registry.Register(m); err != nil {
-			panic(fmt.Errorf("could not add provided metric '%v' to the Prometheus registry: %v", m, err))
+// NewRegistry initialize a new registry
+func NewRegistry() *Registry {
+	return &Registry{prometheus.NewRegistry()}
+}
+
+// RegisterDefaultMetrics add all our metrics to the registry
+func (r *Registry) RegisterDefaultMetrics() error {
+	for _, m := range defaultMetrics {
+		if err := r.Register(m); err != nil {
+			return fmt.Errorf("could not add provided metric '%v' to the Prometheus registry: %v", m, err)
 		}
 	}
+	return nil
+}
+
+// MetricsHandler returns an http handler containing with the desired configuration
+func (r *Registry) MetricsHandler(disableOpenMetricsEncoder bool) http.Handler {
+	return promhttp.HandlerFor(r, promhttp.HandlerOpts{
+		Registry:          r,
+		EnableOpenMetrics: !disableOpenMetricsEncoder,
+	})
 }
 
 func emitStatusMetric(metric *prometheus.GaugeVec, labelValues []string, statuses []string, status string, sparseMetrics bool) {

@@ -1,4 +1,4 @@
-package cmd
+package exporter
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/schemas"
 	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
 	gitlab "github.com/xanzy/go-gitlab"
@@ -35,21 +36,21 @@ func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *Client) {
 
 // Functions testing
 func TestProjectExists(t *testing.T) {
-	foo := Project{
+	foo := schemas.Project{
 		Name: "foo",
-		Parameters: Parameters{
+		Parameters: schemas.Parameters{
 			RefsRegexpValue: pointy.String("abc"),
 		},
 	}
 	fooClone := foo
-	bar := Project{Name: "bar"}
+	bar := schemas.Project{Name: "bar"}
 
-	config := &Config{
-		Projects: []Project{foo},
+	config := &schemas.Config{
+		Projects: []schemas.Project{foo},
 	}
 
-	assert.Equal(t, true, projectExists(fooClone, config.Projects))
-	assert.Equal(t, false, projectExists(bar, config.Projects))
+	assert.Equal(t, true, config.ProjectExists(fooClone))
+	assert.Equal(t, false, config.ProjectExists(bar))
 }
 
 func TestRefExists(t *testing.T) {
@@ -80,7 +81,7 @@ func TestListUserProjects(t *testing.T) {
 	mux, server, c := getMockedGitlabClient()
 	defer server.Close()
 
-	w := &Wildcard{
+	w := &schemas.Wildcard{
 		Search: "bar",
 		Owner: struct {
 			Name             string `yaml:"name"`
@@ -109,7 +110,7 @@ func TestListGroupProjects(t *testing.T) {
 	mux, server, c := getMockedGitlabClient()
 	defer server.Close()
 
-	w := &Wildcard{
+	w := &schemas.Wildcard{
 		Search: "bar",
 		Owner: struct {
 			Name             string `yaml:"name"`
@@ -138,7 +139,7 @@ func TestListProjects(t *testing.T) {
 	mux, server, c := getMockedGitlabClient()
 	defer server.Close()
 
-	w := &Wildcard{
+	w := &schemas.Wildcard{
 		Search: "bar",
 		Owner: struct {
 			Name             string `yaml:"name"`
@@ -167,7 +168,7 @@ func TestListProjectsAPIError(t *testing.T) {
 	mux, server, c := getMockedGitlabClient()
 	defer server.Close()
 
-	w := &Wildcard{
+	w := &schemas.Wildcard{
 		Search: "bar",
 		Owner: struct {
 			Name             string `yaml:"name"`
@@ -193,7 +194,7 @@ func TestListProjectsAPIError(t *testing.T) {
 
 // Here an example of concurrent execution of projects polling
 func TestProjectPolling(t *testing.T) {
-	projects := []Project{{Name: "test1"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
+	projects := []schemas.Project{{Name: "test1"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
 	until := make(chan struct{})
 	defer close(until)
 	_, _, c := getMockedGitlabClient()
@@ -202,8 +203,8 @@ func TestProjectPolling(t *testing.T) {
 	assert.Equal(t, len(projects), pollingResult(until, readProjects(until, projects...), c, t))
 }
 
-func readProjects(until chan struct{}, projects ...Project) <-chan Project {
-	p := make(chan Project)
+func readProjects(until chan struct{}, projects ...schemas.Project) <-chan schemas.Project {
+	p := make(chan schemas.Project)
 	go func() {
 		defer close(p)
 		for _, i := range projects {
@@ -217,7 +218,7 @@ func readProjects(until chan struct{}, projects ...Project) <-chan Project {
 	return p
 }
 
-func pollingResult(until <-chan struct{}, projects <-chan Project, client *Client, t *testing.T) (numErrs int) {
+func pollingResult(until <-chan struct{}, projects <-chan schemas.Project, client *Client, t *testing.T) (numErrs int) {
 	for i := range projects {
 		select {
 		case <-until:
@@ -231,19 +232,18 @@ func pollingResult(until <-chan struct{}, projects <-chan Project, client *Clien
 	return numErrs
 }
 
-func TestClient_pollProjectsWith(t *testing.T) {
-	c := Client{}
+func TestPollProjectsWith(t *testing.T) {
 	message := "some error"
-	doing := func() func(Project) error {
-		return func(Project) error {
+	doing := func() func(schemas.Project) error {
+		return func(schemas.Project) error {
 			// set the already polled refs, simulate the pollProject(p Project) set of Client.hasPolledOnInit
 			// return an error to count them afterwards
 			return fmt.Errorf(message)
 		}
 	}
-	testProjects := []Project{{Name: "test"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
+	testProjects := []schemas.Project{{Name: "test"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
 	until := make(chan struct{})
-	errCh := c.pollProjectsWith(4, doing(), until, testProjects...)
+	errCh := pollProjectsWith(4, doing(), until, testProjects...)
 	var errCount int
 	for err := range errCh {
 		if assert.Error(t, err) {
