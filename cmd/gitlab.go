@@ -47,6 +47,30 @@ type Client struct {
 	RateLimiter ratelimit.Limiter
 }
 
+type projectDetails struct {
+	fullName, topics, ref string
+	pID                   int
+}
+
+func detailFrom(gp *gitlab.Project, ref string) *projectDetails {
+	topics := strings.Join(gp.TagList, ",")
+	return &projectDetails{
+		gp.PathWithNamespace, topics, ref, gp.ID,
+	}
+}
+
+func (d *projectDetails) stdLabelValues() []string {
+	return []string{d.fullName, d.topics, d.ref}
+}
+
+func augmentLabelValues(d *projectDetails, lbv ...string) []string {
+	std := d.stdLabelValues()
+	for _, l := range lbv {
+		std = append(std, l)
+	}
+	return std
+}
+
 func (c *Client) pollProject(p Project) error {
 
 	log.Debugf("Fetching project : %s", p.Name)
@@ -65,10 +89,11 @@ func (c *Client) pollProject(p Project) error {
 	}
 	// read the metrics for refs
 	log.Debugf("Polling refs for project : %s", p.Name)
-	for _, r := range branchesAndTagRefs {
-		log.Infof("Found ref '%s' for project '%s'", r, p.Name)
-		if err := c.pollProjectRefOn(project, r, p.ShouldOutputSparseStatusMetrics(cfg), p.ShouldFetchPipelineJobMetrics(cfg)); err != nil {
-			log.Errorf("Error getting pipeline data on ref '%s' for project '%s': %v", r, p.Name, err)
+	for _, ref := range branchesAndTagRefs {
+		details := detailFrom(project, ref)
+		log.Infof("Found ref '%s' for project '%s'", ref, details.fullName)
+		if err := c.pollProjectRefOn(details, p.ShouldFetchPipelineJobMetrics(cfg), p.ShouldOutputSparseStatusMetrics(cfg)); err != nil {
+			log.Errorf("Error getting pipeline data on ref '%s' for project '%s': %v", ref, p.Name, err)
 			continue
 		}
 	}
@@ -76,11 +101,10 @@ func (c *Client) pollProject(p Project) error {
 	return nil
 }
 
-func (c *Client) pollPipelineJobs(gp *gitlab.Project, pipelineID int, topics string, ref string, outputSparseMetricsStatus bool) error {
+func (c *Client) pollPipelineJobs(details *projectDetails, pipelineID int, outputSparseMetricsStatus bool) error {
 	var jobs []*gitlab.Job
 	var resp *gitlab.Response
 	var err error
-
 	options := &gitlab.ListJobsOptions{
 		ListOptions: gitlab.ListOptions{
 			PerPage: 20,
@@ -90,42 +114,36 @@ func (c *Client) pollPipelineJobs(gp *gitlab.Project, pipelineID int, topics str
 
 	for {
 		c.rateLimit()
-		jobs, resp, err = c.Jobs.ListPipelineJobs(gp.ID, pipelineID, options)
+		jobs, resp, err = c.Jobs.ListPipelineJobs(details.pID, pipelineID, options)
 		if err != nil {
 			return err
 		}
-		jobCount := len(jobs)
-		// early break if list of jobs is empty
-		if jobCount == 0 {
-			log.Warnf("No jobs found for pipeline %d", pipelineID)
-			break
-		}
 
 		//otherwise proceed
-		log.Infof("Found %d jobs for pipeline %d", jobCount, pipelineID)
+		log.Infof("Found %d jobs for pipeline %d", len(jobs), pipelineID)
 		for _, job := range jobs {
-			jobName := job.Name
-			stageName := job.Stage
-			log.Debugf("Job %s for pipeline %d", jobName, pipelineID)
-			lastRunJobDuration.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(job.Duration)
+			var values = augmentLabelValues(details, job.Stage, job.Name)
+
+			log.Debugf("Job %s for pipeline %d", job.Name, pipelineID)
+			lastRunJobDuration.WithLabelValues(values...).Set(job.Duration)
 
 			emitStatusMetric(
 				lastRunJobStatus,
-				[]string{gp.PathWithNamespace, topics, ref, stageName, jobName},
+				values,
 				statusesList,
 				job.Status,
 				outputSparseMetricsStatus,
 			)
 
-			timeSinceLastJobRun.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
-			jobRunCount.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Inc()
+			timeSinceLastJobRun.WithLabelValues(values...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
+			jobRunCount.WithLabelValues(values...).Inc()
 
 			artifactSize := 0
 			for _, artifact := range job.Artifacts {
 				artifactSize += artifact.Size
 			}
 
-			lastRunJobArtifactSize.WithLabelValues(gp.PathWithNamespace, topics, ref, stageName, jobName).Set(float64(artifactSize))
+			lastRunJobArtifactSize.WithLabelValues(values...).Set(float64(artifactSize))
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
@@ -137,13 +155,11 @@ func (c *Client) pollPipelineJobs(gp *gitlab.Project, pipelineID int, topics str
 	return err
 }
 
-func (c *Client) pollProjectRefOn(gp *gitlab.Project, ref string, outputSparseStatusMetrics bool, fetchPipelineJobMetrics bool) error {
-	pipelines, err := c.pipelinesFor(gp, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(ref)})
+func (c *Client) pollProjectRefOn(details *projectDetails, fetchPipelineJobMetrics bool, outputSparseStatusMetrics bool) error {
+	pipelines, err := c.pipelinesFor(details, &gitlab.ListProjectPipelinesOptions{Ref: gitlab.String(details.ref)})
 	if err != nil {
-		return fmt.Errorf("error fetching project pipelines for %s: %v", gp.PathWithNamespace, err)
+		return fmt.Errorf("error fetching project pipelines for %s: %v", details.fullName, err)
 	}
-	// create the initial metric with topics label, not harmful if it already exists
-	topics := strings.Join(gp.TagList[:], ",")
 
 	// fetch pipeline variables, stick them into metrics registry (if requested to do so)
 	if cfg.FetchPipelineVariables {
@@ -153,7 +169,7 @@ func (c *Client) pollProjectRefOn(gp *gitlab.Project, ref string, outputSparseSt
 			goto process
 		}
 		for _, pipe := range pipelines {
-			if err := emitPipelineVariablesMetric(c, pipelineVariables, gp.PathWithNamespace, topics, ref, gp.ID, pipe.ID, c.Pipelines.GetPipelineVariables, rx); err != nil {
+			if err := emitPipelineVariablesMetric(c, pipelineVariables, details, pipe.ID, c.Pipelines.GetPipelineVariables, rx); err != nil {
 				log.Errorf("%v", err)
 			}
 		}
@@ -161,15 +177,15 @@ func (c *Client) pollProjectRefOn(gp *gitlab.Project, ref string, outputSparseSt
 
 process:
 	if len(pipelines) == 0 {
-		return fmt.Errorf("could not find any pipeline run in project %s", gp.PathWithNamespace)
+		return fmt.Errorf("could not find any pipeline run in project %s", details.fullName)
 	}
 	c.rateLimit()
-	lastPipeline, _, err := c.Pipelines.GetPipeline(gp.ID, pipelines[0].ID)
+	lastPipeline, _, err := c.Pipelines.GetPipeline(details.pID, pipelines[0].ID)
 	if err != nil {
-		return fmt.Errorf("could not read content of last pipeline %s:%s", gp.PathWithNamespace, ref)
+		return fmt.Errorf("could not read content of last pipeline %s:%s", details.fullName, details.ref)
 	}
 	if lastPipeline != nil {
-		var labelValues = []string{gp.PathWithNamespace, topics, ref}
+		var labelValues = details.stdLabelValues()
 		runCount.WithLabelValues(labelValues...).Inc()
 
 		if lastPipeline.Coverage != "" {
@@ -192,7 +208,7 @@ process:
 		)
 
 		if fetchPipelineJobMetrics {
-			if err := c.pollPipelineJobs(gp, lastPipeline.ID, topics, ref, outputSparseStatusMetrics); err != nil {
+			if err := c.pollPipelineJobs(details, lastPipeline.ID, outputSparseStatusMetrics); err != nil {
 				log.Errorf("Could not poll jobs for pipeline %d: %s", lastPipeline.ID, err.Error())
 			}
 		}
@@ -259,13 +275,13 @@ func (c *Client) pollPipelinesOnInit() {
 			log.Errorf("could not get GitLab project with name %s: %v", p.Name, err)
 			continue
 		}
-		pipelineRefs, err := c.refsFromPipelines(gitlabProject, cfg.OnInitFetchRefsFromPipelinesDepthLimit)
+		pipelineRefs, err := c.refsFromPipelines(detailFrom(gitlabProject, ""), cfg.OnInitFetchRefsFromPipelinesDepthLimit)
 		if err != nil {
 			log.Errorf("unable to fetch refs from project pipelines %s : %v", p.Name, err.Error())
 			continue
 		}
-		for _, r := range pipelineRefs {
-			if err := c.pollProjectRefOn(gitlabProject, r, cfg.OutputSparseStatusMetrics, cfg.FetchPipelineJobMetrics); err != nil {
+		for _, ref := range pipelineRefs {
+			if err := c.pollProjectRefOn(detailFrom(gitlabProject, ref), cfg.FetchPipelineJobMetrics, cfg.OutputSparseStatusMetrics); err != nil {
 				log.Errorf("%v", err)
 			}
 		}
@@ -316,25 +332,25 @@ func (c *Client) pollProjectsWith(numWorkers int, doing func(Project) error, unt
 	return errorStream
 }
 
-func (c *Client) pipelinesFor(gp *gitlab.Project, options *gitlab.ListProjectPipelinesOptions) ([]*gitlab.PipelineInfo, error) {
-	log.Debugf("Reading pipelines for project %v (ID %v)", gp.PathWithNamespace, gp.ID)
+func (c *Client) pipelinesFor(details *projectDetails, options *gitlab.ListProjectPipelinesOptions) ([]*gitlab.PipelineInfo, error) {
+	log.Debugf("Reading pipelines for project %v (ID %v)", details.fullName, details.pID)
 	c.rateLimit()
 	//topics := strings.Join(gp.TagList, ",")
-	pipelines, _, err := c.Pipelines.ListProjectPipelines(gp.ID, options)
+	pipelines, _, err := c.Pipelines.ListProjectPipelines(details.pID, options)
 	if err != nil {
-		return nil, fmt.Errorf("error listing project pipelines for project %s: %v", gp.PathWithNamespace, err)
+		return nil, fmt.Errorf("error listing project pipelines for project %s: %v", details.fullName, err)
 	}
 	return pipelines, nil
 }
 
-func (c *Client) refsFromPipelines(gp *gitlab.Project, limit int) ([]string, error) {
+func (c *Client) refsFromPipelines(details *projectDetails, limit int) ([]string, error) {
 	options := &gitlab.ListProjectPipelinesOptions{
 		ListOptions: gitlab.ListOptions{
 			Page:    1,
 			PerPage: limit,
 		},
 	}
-	pipelines, err := c.pipelinesFor(gp, options)
+	pipelines, err := c.pipelinesFor(details, options)
 	if err != nil {
 		return nil, err
 	}
