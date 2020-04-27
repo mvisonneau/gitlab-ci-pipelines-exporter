@@ -56,9 +56,9 @@ func TestEmitVariablesMetric(t *testing.T) {
 	rx, err := regexp.Compile(variablesCatchallRegex)
 	if assert.Nil(t, err) {
 		assert.NoError(t,
-			emitPipelineVariablesMetric(client, variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "ref", "pipeline_variables"}), "test-project", "master", 0, 0, testOkFetchFn, rx))
+			emitPipelineVariablesMetric(client, variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "topics", "ref", "pipeline_variables"}), "test-project", "tag", "master", 0, 0, testOkFetchFn, rx))
 		assert.Error(t,
-			emitPipelineVariablesMetric(client, variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "ref", "pipeline_variables"}), "test-project", "master", 0, 0, testErrFetchFn, rx))
+			emitPipelineVariablesMetric(client, variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "topics", "ref", "pipeline_variables"}), "test-project", "tag", "master", 0, 0, testErrFetchFn, rx))
 	}
 }
 
@@ -66,13 +66,13 @@ func TestEmitFilteredVariablesMetric(t *testing.T) {
 	client := &Client{
 		RateLimiter: ratelimit.New(2),
 	}
-	counter := variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "ref", "pipeline_variables"})
+	counter := variableLabelledCounter("gitlab_ci_pipeline_run_count_with_variable", []string{"project", "topics", "ref", "pipeline_variables"})
 	rx, err := regexp.Compile(`^test$`)
 	if assert.Nil(t, err) {
 		assert.NoError(t,
-			emitPipelineVariablesMetric(client, counter, "test-project", "master", 0, 0, testOkFetchFn, rx))
+			emitPipelineVariablesMetric(client, counter, "test-project", "test-tag", "master", 0, 0, testOkFetchFn, rx))
 
-		g, err := counter.GetMetricWithLabelValues("test", "test-project", "master")
+		g, err := counter.GetMetricWithLabelValues("test", "tag", "test-project", "master")
 		assert.NoError(t, err)
 		assert.NotNil(t, g.Desc())
 

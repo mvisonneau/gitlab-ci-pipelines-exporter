@@ -58,8 +58,8 @@ var (
 		[]string{"project", "topics", "ref", "stage", "job_name"},
 	)
 
-	jobRunCount = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
+	jobRunCount = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_job_run_count",
 			Help: "GitLab CI pipeline job run count",
 		},
@@ -82,8 +82,8 @@ var (
 		[]string{"project", "topics", "ref", "status"},
 	)
 
-	runCount = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
+	runCount = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_run_count",
 			Help: "GitLab CI pipeline run count",
 		},
@@ -103,7 +103,7 @@ var (
 			Name: "gitlab_ci_pipeline_run_count_with_variable",
 			Help: "Count of pipelines with variables",
 		},
-		[]string{"project", "ref", "pipeline_variables"},
+		[]string{"project", "topics", "ref", "pipeline_variables"},
 	)
 )
 
@@ -153,7 +153,7 @@ func emitStatusMetric(metric *prometheus.GaugeVec, labelValues []string, statuse
 
 type pipelineVarsFetchOp func(interface{}, int, ...gitlab.RequestOptionFunc) ([]*gitlab.PipelineVariable, *gitlab.Response, error)
 
-func emitPipelineVariablesMetric(c *Client, gauge *prometheus.GaugeVec, projectName, ref string, projectID, pipelineID int, fetch pipelineVarsFetchOp, filterRegexp *regexp.Regexp) error {
+func emitPipelineVariablesMetric(c *Client, gauge *prometheus.GaugeVec, projectName, topics, ref string, projectID, pipelineID int, fetch pipelineVarsFetchOp, filterRegexp *regexp.Regexp) error {
 	// get the pipelines data from API
 	c.rateLimit()
 	variables, _, err := fetch(projectID, pipelineID)
@@ -168,7 +168,7 @@ func emitPipelineVariablesMetric(c *Client, gauge *prometheus.GaugeVec, projectN
 				varValues = append(varValues, v.Key)
 			}
 		}
-		gauge.WithLabelValues(projectName, ref, strings.Join(varValues, ",")).Inc()
+		gauge.WithLabelValues(projectName, topics, ref, strings.Join(varValues, ",")).Inc()
 	}
 	return nil
 }

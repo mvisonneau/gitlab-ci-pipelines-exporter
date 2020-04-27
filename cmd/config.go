@@ -6,7 +6,6 @@ import (
 	"runtime"
 
 	"github.com/urfave/cli"
-	"github.com/xanzy/go-gitlab"
 	"gopkg.in/yaml.v3"
 )
 
@@ -43,7 +42,6 @@ type Project struct {
 	Refs                      string `yaml:"refs"`
 	FetchPipelineJobMetrics   *bool  `yaml:"fetch_pipeline_job_metrics,omitempty"`
 	OutputSparseStatusMetrics *bool  `yaml:"output_sparse_status_metrics,omitempty"`
-	GitlabProject             *gitlab.Project
 }
 
 // Wildcard is a specific handler to dynamically search projects
