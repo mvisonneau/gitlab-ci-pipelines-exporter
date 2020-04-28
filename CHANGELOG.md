@@ -32,6 +32,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Fixed a bug causing duplicate metrics when status changes with sparse flag enabled
 - Updated labels syntax in helm chart to comply with standards
 - Updated logging, using more extensively the log.WithFields parameter for an enhanced troubleshooting experience
+- Bumped prometheus/client_golang to 1.6.
 
 ## [0.2.14] - 2019-04-09
 
