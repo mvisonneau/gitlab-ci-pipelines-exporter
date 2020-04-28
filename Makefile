@@ -49,6 +49,10 @@ test: ## Run the tests against the codebase
 
 .PHONY: install
 install: ## Build and install locally the binary (dev purpose)
+	go install .
+
+.PHONY: build-local
+build-local: ## Build the binaries using local GOOS
 	go build .
 
 .PHONY: build

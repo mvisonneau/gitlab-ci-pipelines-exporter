@@ -331,8 +331,9 @@ func (c *Client) pollPipelinesOnInit() {
 				log.Fields{
 					"init-operation": true,
 					"project-name":   p.Name,
+					"error":          err.Error(),
 				},
-			).Errorf("could find GitLab project by name: %s", err.Error())
+			).Errorf("getting GitLab project by name")
 			continue
 		}
 		// TODO: It would be nice to remove this project details object if not going to
@@ -371,7 +372,11 @@ func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
 	pollErrors := pollProjectsWith(c.Config.MaximumProjectsPollingWorkers, c.pollProject, stop, c.Config.Projects...)
 	for err := range pollErrors {
 		if err != nil {
-			log.Errorf("whilst polling projects: %v", err)
+			log.WithFields(
+				log.Fields{
+					"error": err.Error(),
+				},
+			).Error("whilst polling projects")
 		}
 	}
 }
