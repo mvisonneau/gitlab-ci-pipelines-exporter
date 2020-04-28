@@ -94,7 +94,12 @@ func gitlabReadinessCheck(httpClient *http.Client, url string) healthcheck.Check
 }
 
 func exit(exitCode int, err error) *cli.ExitError {
-	defer log.Debugf("Executed in %s, exiting..", time.Since(start))
+	defer log.WithFields(
+		log.Fields{
+			"execution-time": time.Since(start),
+		},
+	).Debug("exited..")
+
 	if err != nil {
 		log.Error(err.Error())
 	}

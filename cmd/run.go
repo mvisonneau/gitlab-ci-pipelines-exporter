@@ -21,22 +21,23 @@ func Run(ctx *cli.Context) (int, error) {
 		return 1, err
 	}
 
-	log.Infof("Starting exporter")
-	log.Infof("Configured GitLab endpoint : %s", c.Config.Gitlab.URL)
-	log.Infof("Polling projects every %ds", c.Config.ProjectsPollingIntervalSeconds)
-	log.Infof("Polling refs every %ds", c.Config.RefsPollingIntervalSeconds)
-	log.Infof("Polling pipelines every %ds", c.Config.PipelinesPollingIntervalSeconds)
-	log.Infof("Global rate limit for the GitLab API set to %d req/s", c.Config.MaximumGitLabAPIRequestsPerSecond)
+	log.WithFields(
+		log.Fields{
+			"gitlab-endpoint":                   c.Config.Gitlab.URL,
+			"polling-projects-every":            fmt.Sprintf("%ds", c.Config.ProjectsPollingIntervalSeconds),
+			"polling-refs-every":                fmt.Sprintf("%ds", c.Config.RefsPollingIntervalSeconds),
+			"polling-pipelines-every":           fmt.Sprintf("%ds", c.Config.PipelinesPollingIntervalSeconds),
+			"rate-limit":                        fmt.Sprintf("%drps", c.Config.MaximumGitLabAPIRequestsPerSecond),
+			"on-init-fetch-refs-from-pipelines": c.Config.OnInitFetchRefsFromPipelines,
+		},
+	).Info("starting exporter")
 
 	// Graceful shutdowns
 	onShutdown := make(chan os.Signal, 1)
 	signal.Notify(onShutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 
 	untilStopSignal := make(chan bool)
-	pipelinesOnInit := make(chan bool)
-	c.OrchestratePolling(untilStopSignal, pipelinesOnInit)
-	// get immediately some data from the latest executed pipelines, if configured to do so
-	pipelinesOnInit <- c.Config.OnInitFetchRefsFromPipelines
+	c.OrchestratePolling(untilStopSignal, c.Config.OnInitFetchRefsFromPipelines)
 
 	// Register the default metrics into a new registry
 	registry := gcpe.NewRegistry()
@@ -60,11 +61,15 @@ func Run(ctx *cli.Context) (int, error) {
 			log.Fatal(err)
 		}
 	}()
-	log.Infof("Started listening onto %s", ctx.GlobalString("listen-address"))
+	log.WithFields(
+		log.Fields{
+			"listen-address": ctx.GlobalString("listen-address"),
+		},
+	).Info("started, now serving requests")
 
 	<-onShutdown
 	untilStopSignal <- true
-	log.Print("Stopped!")
+	log.Info("stopped!")
 
 	ctxt, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

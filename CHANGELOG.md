@@ -22,7 +22,6 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Configuration for OpenMetrics Encoding in metrics HTTP endpoint. Enabled by default but can be disable using `disable_openmetrics_encoding: true`
 - Worker pool for projects polling: set `maximum_projects_poller_workers` with an integer value to control parallelism (defaults to `runtime.GOMAXPROCS(0)`)  
 - Augmented `disable_tls_verify` with `disable_health_check` additional parameter to drive the behaviour of checking healthiness of target service 
-- New metric `gitlab_ci_pipeline_run_count_with_variable`: it stores the comma-separated list of variables as a label named `pipeline_variables`
 - Reading pipeline variables if enabled setting `fetch_pipeline_variables` to `true` (defaults to `false`)
 - Pipeline variables can be filtered with `pipeline_variables_filter_regex` (defaults to `.*`)
 - Configurable ServiceMonitor resource through the helm chart
@@ -32,6 +31,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Projects polling from GitLab API is done in parallel using `maximum_projects_poller_workers` pollers and concurrently fetching refs and projects
 - Fixed a bug causing duplicate metrics when status changes with sparse flag enabled
 - Updated labels syntax in helm chart to comply with standards
+- Updated logging, using more extensively the log.WithFields parameter for an enhanced troubleshooting experience
 
 ## [0.2.14] - 2019-04-09
 

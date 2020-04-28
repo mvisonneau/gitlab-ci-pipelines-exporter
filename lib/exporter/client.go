@@ -59,7 +59,7 @@ func refExists(r string, refs []string) bool {
 }
 
 // OrchestratePolling ...
-func (c *Client) OrchestratePolling(until <-chan bool, getRefsOnInit <-chan bool) {
+func (c *Client) OrchestratePolling(until <-chan bool, getRefsOnInit bool) {
 	go func() {
 		pollWildcardsEvery := time.NewTicker(time.Duration(c.Config.ProjectsPollingIntervalSeconds) * time.Second)
 		pollRefsEvery := time.NewTicker(time.Duration(c.Config.RefsPollingIntervalSeconds) * time.Second)
@@ -69,16 +69,15 @@ func (c *Client) OrchestratePolling(until <-chan bool, getRefsOnInit <-chan bool
 		c.discoverWildcards()
 		c.pollWithWorkersUntil(stopWorkers)
 
+		if getRefsOnInit {
+			c.pollPipelinesOnInit()
+		}
+
 		for {
 			select {
 			case <-until:
 				log.Info("stopping projects polling...")
 				return
-			case todo := <-getRefsOnInit:
-				log.Debugf("should we poll the more recent refs from the last executed pipelines? %v", todo)
-				if todo {
-					c.pollPipelinesOnInit()
-				}
 			case <-pollRefsEvery.C:
 				//
 				c.pollWithWorkersUntil(stopWorkers)
@@ -91,7 +90,12 @@ func (c *Client) OrchestratePolling(until <-chan bool, getRefsOnInit <-chan bool
 }
 
 func (c *Client) pollProject(p schemas.Project) error {
-	log.Debugf("Fetching project : %s", p.Name)
+	log.WithFields(
+		log.Fields{
+			"project-name": p.Name,
+		},
+	).Debug("fetching project")
+
 	project, err := c.getProject(p.Name)
 	if err != nil {
 		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %v", p.Name, err.Error())
@@ -102,16 +106,35 @@ func (c *Client) pollProject(p schemas.Project) error {
 		return fmt.Errorf("error fetching refs for project '%s'", p.Name)
 	}
 	if len(branchesAndTagRefs) == 0 {
-		log.Warnf("No refs found for project '%s'", p.Name)
+		log.WithFields(
+			log.Fields{
+				"project-name": p.Name,
+			},
+		).Warn("no refs found for project")
 		return nil
 	}
+
 	// read the metrics for refs
-	log.Debugf("Polling refs for project : %s", p.Name)
+	log.WithFields(
+		log.Fields{
+			"project-name": p.Name,
+		},
+	).Debug("polling project refs")
 	for _, ref := range branchesAndTagRefs {
 		pd := NewProjectDetails(&p, project, ref)
-		log.Infof("Found ref '%s' for project '%s'", ref, pd.PathWithNamespace)
+		log.WithFields(
+			log.Fields{
+				"project-path-with-namespace": pd.PathWithNamespace,
+				"project-ref":                 ref,
+			},
+		).Info("found project refs")
 		if err := c.pollProjectRef(pd); err != nil {
-			log.Errorf("Error getting pipeline data on ref '%s' for project '%s': %v", ref, p.Name, err)
+			log.WithFields(
+				log.Fields{
+					"project-path-with-namespace": pd.PathWithNamespace,
+					"project-ref":                 ref,
+				},
+			).Errorf("getting pipeline data for a project ref: %v", err.Error())
 			continue
 		}
 	}
@@ -249,16 +272,38 @@ func (c *Client) pollProjectRef(pd *ProjectDetails) error {
 }
 
 func (c *Client) discoverWildcards() {
-	log.Infof("%d wildcard(s) configured for polling", len(c.Config.Wildcards))
+	log.WithFields(
+		log.Fields{
+			"count": len(c.Config.Wildcards),
+		},
+	).Info("configured wildcards")
+
 	for _, w := range c.Config.Wildcards {
 		foundProjects, err := c.listProjects(&w)
 		if err != nil {
-			log.Errorf("could not list projects for wildcard %v: %v", w, err)
+			log.WithFields(
+				log.Fields{
+					"wildcard-search":                  w.Search,
+					"wildcard-owner-kind":              w.Owner.Kind,
+					"wildcard-owner-name":              w.Owner.Name,
+					"wildcard-owner-include-subgroups": w.Owner.IncludeSubgroups,
+					"wildcard-archived":                w.Archived,
+				},
+			).Errorf("could not list wildcard projects: %v", err)
 			continue
 		}
 		for _, p := range foundProjects {
 			if !c.Config.ProjectExists(p) {
-				log.Infof("Found new project: %s", p.Name)
+				log.WithFields(
+					log.Fields{
+						"wildcard-search":                  w.Search,
+						"wildcard-owner-kind":              w.Owner.Kind,
+						"wildcard-owner-name":              w.Owner.Name,
+						"wildcard-owner-include-subgroups": w.Owner.IncludeSubgroups,
+						"wildcard-archived":                w.Archived,
+						"project-name":                     p.Name,
+					},
+				).Infof("found new project")
 				c.Config.Projects = append(c.Config.Projects, p)
 			}
 		}
@@ -266,35 +311,67 @@ func (c *Client) discoverWildcards() {
 }
 
 func (c *Client) pollPipelinesOnInit() {
-	log.Debug("Polling latest pipelines to get data out of them")
+	log.WithFields(
+		log.Fields{
+			"init-operation": true,
+		},
+	).Debug("polling most recent project pipelines")
+
 	for _, p := range c.Config.Projects {
-		log.Debugf("On init: reading project %s", p.Name)
+		log.WithFields(
+			log.Fields{
+				"init-operation": true,
+				"project-name":   p.Name,
+			},
+		).Debug("fetching project")
+
 		gitlabProject, err := c.getProject(p.Name)
 		if err != nil {
-			log.Errorf("could not get GitLab project with name %s: %v", p.Name, err)
+			log.WithFields(
+				log.Fields{
+					"init-operation": true,
+					"project-name":   p.Name,
+				},
+			).Errorf("could find GitLab project by name: %s", err.Error())
 			continue
 		}
 		// TODO: It would be nice to remove this project details object if not going to
 		// be used afterwards for metrics purposes
 		pipelineRefs, err := c.refsFromPipelines(NewProjectDetails(&p, gitlabProject, ""))
 		if err != nil {
-			log.Errorf("unable to fetch refs from project pipelines %s : %v", p.Name, err.Error())
+			log.WithFields(
+				log.Fields{
+					"init-operation": true,
+					"project-name":   p.Name,
+				},
+			).Errorf("unable to fetch refs from project pipelines: %s", err.Error())
 			continue
 		}
 		for _, ref := range pipelineRefs {
 			if err := c.pollProjectRef(NewProjectDetails(&p, gitlabProject, ref)); err != nil {
-				log.Errorf("%v", err)
+				log.WithFields(
+					log.Fields{
+						"init-operation": true,
+						"project-name":   p.Name,
+						"project-ref":    ref,
+					},
+				).Errorf("unable to poll project ref: %s", err.Error())
 			}
 		}
 	}
 }
 
 func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
-	log.Infof("%d project(s) configured for polling", len(c.Config.Projects))
+	log.WithFields(
+		log.Fields{
+			"count": len(c.Config.Projects),
+		},
+	).Info("configured projects")
+
 	pollErrors := pollProjectsWith(c.Config.MaximumProjectsPollingWorkers, c.pollProject, stop, c.Config.Projects...)
 	for err := range pollErrors {
 		if err != nil {
-			log.Errorf("%v", err)
+			log.Errorf("whilst polling projects: %v", err)
 		}
 	}
 }
@@ -334,7 +411,13 @@ func pollProjectsWith(numWorkers int, doing func(schemas.Project) error, until <
 }
 
 func (c *Client) getProjectPipelines(pd *ProjectDetails, options *gitlab.ListProjectPipelinesOptions) ([]*gitlab.PipelineInfo, error) {
-	log.Debugf("Reading pipelines for project %v (ID %v)", pd.PathWithNamespace, pd.ID)
+	log.WithFields(
+		log.Fields{
+			"project-path-with-namespace": pd.PathWithNamespace,
+			"project-id":                  pd.ID,
+		},
+	).Debug("listing project pipelines")
+
 	c.rateLimit()
 
 	pipelines, _, err := c.Pipelines.ListProjectPipelines(pd.ID, options)
@@ -370,7 +453,11 @@ func (c *Client) rateLimit() {
 	now := time.Now()
 	throttled := c.RateLimiter.Take()
 	if throttled.Sub(now).Milliseconds() > 10 {
-		log.Debugf("throttled polling requests for %v", throttled.Sub(now))
+		log.WithFields(
+			log.Fields{
+				"for": throttled.Sub(now),
+			},
+		).Debug("throttling GitLab requests")
 	}
 }
 
@@ -381,7 +468,15 @@ func (c *Client) getProject(name string) (*gitlab.Project, error) {
 }
 
 func (c *Client) listProjects(w *schemas.Wildcard) ([]schemas.Project, error) {
-	log.Debugf("Listing all projects using search pattern : '%s' with owner '%s' (%s)", w.Search, w.Owner.Name, w.Owner.Kind)
+	log.WithFields(
+		log.Fields{
+			"wildcard-search":                  w.Search,
+			"wildcard-owner-kind":              w.Owner.Kind,
+			"wildcard-owner-name":              w.Owner.Name,
+			"wildcard-owner-include-subgroups": w.Owner.IncludeSubgroups,
+			"wildcard-archived":                w.Archived,
+		},
+	).Debug("listing all projects from wildcard")
 
 	var projects []schemas.Project
 	trueVal := true
