@@ -23,12 +23,12 @@ func Run(ctx *cli.Context) (int, error) {
 
 	log.WithFields(
 		log.Fields{
-			"gitlab-endpoint":                   c.Config.Gitlab.URL,
-			"polling-projects-every":            fmt.Sprintf("%ds", c.Config.ProjectsPollingIntervalSeconds),
-			"polling-refs-every":                fmt.Sprintf("%ds", c.Config.RefsPollingIntervalSeconds),
-			"polling-pipelines-every":           fmt.Sprintf("%ds", c.Config.PipelinesPollingIntervalSeconds),
-			"rate-limit":                        fmt.Sprintf("%drps", c.Config.MaximumGitLabAPIRequestsPerSecond),
-			"on-init-fetch-refs-from-pipelines": c.Config.OnInitFetchRefsFromPipelines,
+			"gitlab-endpoint":                     c.Config.Gitlab.URL,
+			"discover-wildcard-projects-interval": fmt.Sprintf("%ds", c.Config.WildcardsProjectsDiscoverIntervalSeconds),
+			"discover-projects-refs-interval":     fmt.Sprintf("%ds", c.Config.ProjectsRefsDiscoverIntervalSeconds),
+			"polling-projects-refs-interval":      fmt.Sprintf("%ds", c.Config.ProjectsRefsPollingIntervalSeconds),
+			"rate-limit":                          fmt.Sprintf("%drps", c.Config.MaximumGitLabAPIRequestsPerSecond),
+			"on-init-fetch-refs-from-pipelines":   c.Config.OnInitFetchRefsFromPipelines,
 		},
 	).Info("starting exporter")
 
@@ -37,7 +37,7 @@ func Run(ctx *cli.Context) (int, error) {
 	signal.Notify(onShutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 
 	untilStopSignal := make(chan bool)
-	c.OrchestratePolling(untilStopSignal, c.Config.OnInitFetchRefsFromPipelines)
+	c.OrchestratePolling(untilStopSignal)
 
 	// Register the default metrics into a new registry
 	registry := gcpe.NewRegistry()

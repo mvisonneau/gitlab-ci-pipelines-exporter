@@ -53,13 +53,6 @@ func TestProjectExists(t *testing.T) {
 	assert.Equal(t, false, config.ProjectExists(bar))
 }
 
-func TestRefExists(t *testing.T) {
-	refs := []string{"foo"}
-
-	assert.Equal(t, true, refExists("foo", refs))
-	assert.Equal(t, false, refExists("bar", refs))
-}
-
 func TestGetProject(t *testing.T) {
 	mux, server, c := getMockedGitlabClient()
 	defer server.Close()
@@ -232,18 +225,21 @@ func pollingResult(until <-chan struct{}, projects <-chan schemas.Project, clien
 	return numErrs
 }
 
-func TestPollProjectsWith(t *testing.T) {
+func TestPollProjectsRefs(t *testing.T) {
 	message := "some error"
-	doing := func() func(schemas.Project) error {
-		return func(schemas.Project) error {
+	doing := func() func(*ProjectRef) error {
+		return func(*ProjectRef) error {
 			// set the already polled refs, simulate the pollProject(p Project) set of Client.hasPolledOnInit
 			// return an error to count them afterwards
 			return fmt.Errorf(message)
 		}
 	}
-	testProjects := []schemas.Project{{Name: "test"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
+	testProjects := ProjectsRefs{}
+	testProjects[1] = map[string]*ProjectRef{"master": &ProjectRef{}}
+	testProjects[2] = map[string]*ProjectRef{"master": &ProjectRef{}}
+
 	until := make(chan struct{})
-	errCh := pollProjectsWith(4, doing(), until, testProjects...)
+	errCh := pollProjectsRefs(2, doing(), until, testProjects)
 	var errCount int
 	for err := range errCh {
 		if assert.Error(t, err) {

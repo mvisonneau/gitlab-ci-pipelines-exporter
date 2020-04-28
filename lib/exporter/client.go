@@ -17,14 +17,9 @@ import (
 
 var statusesList = [...]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
 
-// Client holds a GitLab client
-type Client struct {
-	*gitlab.Client
-	Config      *schemas.Config
-	RateLimiter ratelimit.Limiter
-}
-
-type ProjectDetails struct {
+// ProjectRef is what we will use a metrics entity on which we will
+// perform regular polling operations
+type ProjectRef struct {
 	*schemas.Project
 
 	ID                          int
@@ -35,8 +30,13 @@ type ProjectDetails struct {
 	MostRecentPipelineVariables string
 }
 
-func NewProjectDetails(project *schemas.Project, gp *gitlab.Project, ref string) *ProjectDetails {
-	return &ProjectDetails{
+// ProjectsRefs allows us to keep track of all the ProjectRef
+// we have configured/discovered
+type ProjectsRefs map[int]map[string]*ProjectRef
+
+// NewProjectRef is an helper which returns a new ProjectRef pointer
+func NewProjectRef(project *schemas.Project, gp *gitlab.Project, ref string) *ProjectRef {
+	return &ProjectRef{
 		Project:           project,
 		ID:                gp.ID,
 		PathWithNamespace: gp.PathWithNamespace,
@@ -45,45 +45,46 @@ func NewProjectDetails(project *schemas.Project, gp *gitlab.Project, ref string)
 	}
 }
 
-func (pd *ProjectDetails) defaultLabelsValues() []string {
-	return []string{pd.PathWithNamespace, pd.Topics, pd.Ref, pd.MostRecentPipelineVariables}
+// Client holds a GitLab client
+type Client struct {
+	*gitlab.Client
+	Config       *schemas.Config
+	RateLimiter  ratelimit.Limiter
+	ProjectsRefs ProjectsRefs
 }
 
-func refExists(r string, refs []string) bool {
-	for _, ref := range refs {
-		if ref == r {
-			return true
-		}
-	}
-	return false
+func (pr *ProjectRef) defaultLabelsValues() []string {
+	return []string{pr.PathWithNamespace, pr.Topics, pr.Ref, pr.MostRecentPipelineVariables}
 }
 
 // OrchestratePolling ...
-func (c *Client) OrchestratePolling(until <-chan bool, getRefsOnInit bool) {
+func (c *Client) OrchestratePolling(until <-chan bool) {
 	go func() {
-		pollWildcardsEvery := time.NewTicker(time.Duration(c.Config.ProjectsPollingIntervalSeconds) * time.Second)
-		pollRefsEvery := time.NewTicker(time.Duration(c.Config.RefsPollingIntervalSeconds) * time.Second)
+		discoverWildcardsProjectsEvery := time.NewTicker(time.Duration(c.Config.WildcardsProjectsDiscoverIntervalSeconds) * time.Second)
+		discoverProjectsRefsEvery := time.NewTicker(time.Duration(c.Config.ProjectsRefsDiscoverIntervalSeconds) * time.Second)
+		pollProjectsRefsEvery := time.NewTicker(time.Duration(c.Config.ProjectsRefsPollingIntervalSeconds) * time.Second)
 		stopWorkers := make(chan struct{})
 		defer close(stopWorkers)
 		// first execution, blocking call before entering orchestration loop to get the wildcards discovered
-		c.discoverWildcards()
-		c.pollWithWorkersUntil(stopWorkers)
-
-		if getRefsOnInit {
-			c.pollPipelinesOnInit()
-		}
+		c.discoverProjectsRefsFromPipelinesOnInit()
+		c.discoverProjectsFromWildcards()
+		c.discoverProjectsRefs()
+		c.pollProjectsRefsUntil(stopWorkers)
 
 		for {
 			select {
 			case <-until:
 				log.Info("stopping projects polling...")
 				return
-			case <-pollRefsEvery.C:
-				//
-				c.pollWithWorkersUntil(stopWorkers)
-			case <-pollWildcardsEvery.C:
+			case <-pollProjectsRefsEvery.C:
+				// poll all the configured project refs pipelines
+				c.pollProjectsRefsUntil(stopWorkers)
+			case <-discoverProjectsRefsEvery.C:
+				// refresh the list of project refs
+				c.discoverProjectsRefs()
+			case <-discoverWildcardsProjectsEvery.C:
 				// refresh the list of projects from wildcards
-				c.discoverWildcards()
+				c.discoverProjectsFromWildcards()
 			}
 		}
 	}()
@@ -101,11 +102,11 @@ func (c *Client) pollProject(p schemas.Project) error {
 		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %s", p.Name, err.Error())
 	}
 
-	branchesAndTagRefs, err := c.branchesAndTagsFor(project.ID, p.RefsRegexp(c.Config))
+	refs, err := c.getProjectRefs(project.ID, p.RefsRegexp(c.Config))
 	if err != nil {
 		return fmt.Errorf("error fetching refs for project '%s': %s", p.Name, err.Error())
 	}
-	if len(branchesAndTagRefs) == 0 {
+	if len(refs) == 0 {
 		log.WithFields(
 			log.Fields{
 				"project-name": p.Name,
@@ -120,18 +121,18 @@ func (c *Client) pollProject(p schemas.Project) error {
 			"project-name": p.Name,
 		},
 	).Debug("polling project refs")
-	for _, ref := range branchesAndTagRefs {
-		pd := NewProjectDetails(&p, project, ref)
+	for _, ref := range refs {
+		pr := NewProjectRef(&p, project, ref)
 		log.WithFields(
 			log.Fields{
-				"project-path-with-namespace": pd.PathWithNamespace,
+				"project-path-with-namespace": pr.PathWithNamespace,
 				"project-ref":                 ref,
 			},
-		).Info("found project refs")
-		if err := c.pollProjectRef(pd); err != nil {
+		).Info("discovered new project ref")
+		if err := c.pollProjectRefMostRecentPipeline(pr); err != nil {
 			log.WithFields(
 				log.Fields{
-					"project-path-with-namespace": pd.PathWithNamespace,
+					"project-path-with-namespace": pr.PathWithNamespace,
 					"project-ref":                 ref,
 					"error":                       err.Error(),
 				},
@@ -143,7 +144,7 @@ func (c *Client) pollProject(p schemas.Project) error {
 	return nil
 }
 
-func (c *Client) pollPipelineJobs(pd *ProjectDetails) error {
+func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
 	var jobs []*gitlab.Job
 	var resp *gitlab.Response
 	var err error
@@ -157,17 +158,17 @@ func (c *Client) pollPipelineJobs(pd *ProjectDetails) error {
 
 	for {
 		c.rateLimit()
-		jobs, resp, err = c.Jobs.ListPipelineJobs(pd.ID, pd.MostRecentPipeline.ID, options)
+		jobs, resp, err = c.Jobs.ListPipelineJobs(pr.ID, pr.MostRecentPipeline.ID, options)
 		if err != nil {
 			return err
 		}
 
 		// otherwise proceed
-		log.Infof("Found %d jobs for pipeline %d", len(jobs), pd.MostRecentPipeline.ID)
+		log.Infof("Found %d jobs for pipeline %d", len(jobs), pr.MostRecentPipeline.ID)
 		for _, job := range jobs {
-			jobValues := append(pd.defaultLabelsValues(), job.Stage, job.Name)
+			jobValues := append(pr.defaultLabelsValues(), job.Stage, job.Name)
 
-			log.Debugf("Job %s for pipeline %d", job.Name, pd.MostRecentPipeline.ID)
+			log.Debugf("Job %s for pipeline %d", job.Name, pr.MostRecentPipeline.ID)
 			lastRunJobDuration.WithLabelValues(jobValues...).Set(job.Duration)
 
 			emitStatusMetric(
@@ -175,7 +176,7 @@ func (c *Client) pollPipelineJobs(pd *ProjectDetails) error {
 				jobValues,
 				statusesList[:],
 				job.Status,
-				pd.OutputSparseStatusMetrics(c.Config),
+				pr.OutputSparseStatusMetrics(c.Config),
 			)
 
 			timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
@@ -198,47 +199,46 @@ func (c *Client) pollPipelineJobs(pd *ProjectDetails) error {
 	return err
 }
 
-func (c *Client) pollProjectRef(pd *ProjectDetails) error {
-	pipelines, err := c.getProjectPipelines(pd, &gitlab.ListProjectPipelinesOptions{
+func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
+	pipelines, err := c.getProjectPipelines(pr.ID, &gitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: gitlab.ListOptions{
 			PerPage: 1,
 			Page:    1,
 		},
-		Ref: gitlab.String(pd.Ref),
+		Ref: gitlab.String(pr.Ref),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error fetching project pipelines for %s: %v", pd.PathWithNamespace, err)
+		return fmt.Errorf("error fetching project pipelines for %s: %v", pr.PathWithNamespace, err)
 	}
 
 	if len(pipelines) == 0 {
-		return fmt.Errorf("could not find any pipeline for project %s with ref %s", pd.PathWithNamespace, pd.Ref)
+		return fmt.Errorf("could not find any pipeline for project %s with ref %s", pr.PathWithNamespace, pr.Ref)
 	}
 
 	c.rateLimit()
-	pipeline, _, err := c.Pipelines.GetPipeline(pd.ID, pipelines[0].ID)
+	pipeline, _, err := c.Pipelines.GetPipeline(pr.ID, pipelines[0].ID)
 	if err != nil || pipeline == nil {
-		return fmt.Errorf("could not read content of last pipeline %s:%s", pd.PathWithNamespace, pd.Ref)
+		return fmt.Errorf("could not read content of last pipeline %s:%s", pr.PathWithNamespace, pr.Ref)
 	}
 
 	// TODO: Evaluate if a > operator would not make even more sense here
-	if pd.MostRecentPipeline == nil || pipeline.ID != pd.MostRecentPipeline.ID {
-		pd.MostRecentPipeline = pipeline
+	if pr.MostRecentPipeline == nil || pipeline.ID != pr.MostRecentPipeline.ID {
+		pr.MostRecentPipeline = pipeline
 
 		// fetch pipeline variables
-
-		if pd.FetchPipelineVariables(c.Config) {
-			pd.MostRecentPipelineVariables, err = c.getPipelineVariablesAsConcatenatedString(pd)
+		if pr.FetchPipelineVariables(c.Config) {
+			pr.MostRecentPipelineVariables, err = c.getPipelineVariablesAsConcatenatedString(pr)
 			if err != nil {
 				return err
 			}
 		} else {
 			// Ensure we flush the value if there was some variables defined on the previous pipeline
-			pd.MostRecentPipelineVariables = ""
+			pr.MostRecentPipelineVariables = ""
 		}
 
-		defaultLabelValues := pd.defaultLabelsValues()
+		defaultLabelValues := pr.defaultLabelsValues()
 		runCount.WithLabelValues(defaultLabelValues...).Inc()
 
 		if pipeline.Coverage != "" {
@@ -257,16 +257,16 @@ func (c *Client) pollProjectRef(pd *ProjectDetails) error {
 			defaultLabelValues,
 			statusesList[:],
 			pipeline.Status,
-			pd.OutputSparseStatusMetrics(c.Config),
+			pr.OutputSparseStatusMetrics(c.Config),
 		)
 
-		if pd.FetchPipelineJobMetrics(c.Config) {
-			if err := c.pollPipelineJobs(pd); err != nil {
+		if pr.FetchPipelineJobMetrics(c.Config) {
+			if err := c.pollPipelineJobs(pr); err != nil {
 				log.WithFields(
 					log.Fields{
-						"project-path-with-namespace": pd.PathWithNamespace,
-						"project-id":                  pd.ID,
-						"project-ref":                 pd.Ref,
+						"project-path-with-namespace": pr.PathWithNamespace,
+						"project-id":                  pr.ID,
+						"project-ref":                 pr.Ref,
 						"pipeline-id":                 pipeline.ID,
 						"error":                       err.Error(),
 					},
@@ -280,12 +280,12 @@ func (c *Client) pollProjectRef(pd *ProjectDetails) error {
 	return nil
 }
 
-func (c *Client) discoverWildcards() {
+func (c *Client) discoverProjectsFromWildcards() {
 	log.WithFields(
 		log.Fields{
 			"count": len(c.Config.Wildcards),
 		},
-	).Info("configured wildcards")
+	).Info("discover wildcards")
 
 	for _, w := range c.Config.Wildcards {
 		foundProjects, err := c.listProjects(&w)
@@ -313,20 +313,30 @@ func (c *Client) discoverWildcards() {
 						"wildcard-archived":                w.Archived,
 						"project-name":                     p.Name,
 					},
-				).Infof("found new project")
+				).Infof("discovered new project")
 				c.Config.Projects = append(c.Config.Projects, p)
 			}
 		}
 	}
 }
 
-func (c *Client) pollPipelinesOnInit() {
+func (c *Client) discoverProjectsRefsFromPipelinesOnInit() {
+	if !c.Config.OnInitFetchRefsFromPipelines {
+		log.WithFields(
+			log.Fields{
+				"init-operation": true,
+			},
+		).Debug("not polling most recent project pipelines")
+		return
+	}
+
 	log.WithFields(
 		log.Fields{
 			"init-operation": true,
 		},
 	).Debug("polling most recent project pipelines")
 
+	c.ProjectsRefs = ProjectsRefs{}
 	for _, p := range c.Config.Projects {
 		log.WithFields(
 			log.Fields{
@@ -335,7 +345,7 @@ func (c *Client) pollPipelinesOnInit() {
 			},
 		).Debug("fetching project")
 
-		gitlabProject, err := c.getProject(p.Name)
+		gp, err := c.getProject(p.Name)
 		if err != nil {
 			log.WithFields(
 				log.Fields{
@@ -346,9 +356,8 @@ func (c *Client) pollPipelinesOnInit() {
 			).Errorf("getting GitLab project by name")
 			continue
 		}
-		// TODO: It would be nice to remove this project details object if not going to
-		// be used afterwards for metrics purposes
-		pipelineRefs, err := c.refsFromPipelines(NewProjectDetails(&p, gitlabProject, ""))
+
+		c.ProjectsRefs[gp.ID], err = c.getProjectsRefsFromPipelines(&p, gp)
 		if err != nil {
 			log.WithFields(
 				log.Fields{
@@ -356,45 +365,32 @@ func (c *Client) pollPipelinesOnInit() {
 					"project-name":   p.Name,
 				},
 			).Errorf("unable to fetch refs from project pipelines: %s", err.Error())
-			continue
-		}
-		for _, ref := range pipelineRefs {
-
-			if err := c.pollProjectRef(NewProjectDetails(&p, gitlabProject, ref)); err != nil {
-				log.WithFields(
-					log.Fields{
-						"init-operation": true,
-						"project-name":   p.Name,
-						"project-ref":    ref,
-					},
-				).Errorf("unable to poll project ref: %s", err.Error())
-			}
 		}
 	}
 }
 
-func (c *Client) pollWithWorkersUntil(stop <-chan struct{}) {
+func (c *Client) pollProjectsRefsUntil(stop <-chan struct{}) {
 	log.WithFields(
 		log.Fields{
-			"count": len(c.Config.Projects),
+			"count": len(c.ProjectsRefs),
 		},
-	).Info("configured projects")
+	).Info("polling metrics from projects refs")
 
-	pollErrors := pollProjectsWith(c.Config.MaximumProjectsPollingWorkers, c.pollProject, stop, c.Config.Projects...)
+	pollErrors := pollProjectsRefs(c.Config.MaximumProjectsPollingWorkers, c.pollProjectRefMostRecentPipeline, stop, c.ProjectsRefs)
 	for err := range pollErrors {
 		if err != nil {
 			log.WithFields(
 				log.Fields{
 					"error": err.Error(),
 				},
-			).Error("whilst polling projects")
+			).Error("whilst metrics from polling projects refs")
 		}
 	}
 }
 
-func pollProjectsWith(numWorkers int, doing func(schemas.Project) error, until <-chan struct{}, projects ...schemas.Project) <-chan error {
+func pollProjectsRefs(numWorkers int, pollFunction func(*ProjectRef) error, until <-chan struct{}, projectsRefs ProjectsRefs) <-chan error {
 	errorStream := make(chan error)
-	projectsToPoll := make(chan schemas.Project, len(projects))
+	projectsRefsToPoll := make(chan *ProjectRef)
 	// sync closing the error channel via a waitGroup
 	var wg sync.WaitGroup
 	wg.Add(numWorkers)
@@ -402,48 +398,56 @@ func pollProjectsWith(numWorkers int, doing func(schemas.Project) error, until <
 	for w := 0; w < numWorkers; w++ {
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
-			for p := range projectsToPoll {
+			for pr := range projectsRefsToPoll {
 				select {
 				case <-until:
 					return
-				case errorStream <- doing(p):
+				case errorStream <- pollFunction(pr):
 				}
 			}
 		}(&wg)
 	}
+
 	// close the error channel when the workers won't write to it anymore
 	go func() {
 		wg.Wait()
 		close(errorStream)
 	}()
+
 	// start processing all the projects configured for this run;
 	// since the channel is buffered because we already know the length of the projects to process,
 	// we can close immediately and the runtime will handle the channel close only when the messages are dispatched
-	for _, pr := range projects {
-		projectsToPoll <- pr
+	for _, refs := range projectsRefs {
+		for _, pr := range refs {
+			projectsRefsToPoll <- pr
+		}
 	}
-	close(projectsToPoll)
+
+	close(projectsRefsToPoll)
 	return errorStream
 }
 
-func (c *Client) getProjectPipelines(pd *ProjectDetails, options *gitlab.ListProjectPipelinesOptions) ([]*gitlab.PipelineInfo, error) {
-	log.WithFields(
-		log.Fields{
-			"project-path-with-namespace": pd.PathWithNamespace,
-			"project-id":                  pd.ID,
-		},
-	).Debug("listing project pipelines")
+func (c *Client) getProjectPipelines(projectID int, options *gitlab.ListProjectPipelinesOptions) ([]*gitlab.PipelineInfo, error) {
+	fields := log.Fields{
+		"project-id": projectID,
+	}
+
+	if options.Ref != nil {
+		fields["project-ref"] = *options.Ref
+	}
+
+	log.WithFields(fields).Debug("listing project pipelines")
 
 	c.rateLimit()
 
-	pipelines, _, err := c.Pipelines.ListProjectPipelines(pd.ID, options)
+	pipelines, _, err := c.Pipelines.ListProjectPipelines(projectID, options)
 	if err != nil {
-		return nil, fmt.Errorf("error listing project pipelines for project %s: %v", pd.PathWithNamespace, err)
+		return nil, fmt.Errorf("error listing project pipelines for project ID %d: %s", projectID, err.Error())
 	}
 	return pipelines, nil
 }
 
-func (c *Client) refsFromPipelines(pd *ProjectDetails) ([]string, error) {
+func (c *Client) getProjectsRefsFromPipelines(p *schemas.Project, gp *gitlab.Project) (map[string]*ProjectRef, error) {
 	options := &gitlab.ListProjectPipelinesOptions{
 		ListOptions: gitlab.ListOptions{
 			Page: 1,
@@ -451,24 +455,34 @@ func (c *Client) refsFromPipelines(pd *ProjectDetails) ([]string, error) {
 			PerPage: c.Config.OnInitFetchRefsFromPipelinesDepthLimit,
 		},
 	}
-	pipelines, err := c.getProjectPipelines(pd, options)
+
+	pipelines, err := c.getProjectPipelines(gp.ID, options)
 	if err != nil {
 		return nil, err
 	}
 
-	var refs []string
-	re, err := regexp.Compile(pd.RefsRegexp(c.Config))
+	re, err := regexp.Compile(p.RefsRegexp(c.Config))
 	if err != nil {
 		return nil, err
 	}
 
-	for _, p := range pipelines {
-		if !refExists(p.Ref, refs) && re.MatchString(p.Ref) {
-			refs = append(refs, p.Ref)
+	projectRefs := map[string]*ProjectRef{}
+	for _, pipeline := range pipelines {
+		if re.MatchString(pipeline.Ref) {
+			if _, ok := projectRefs[pipeline.Ref]; !ok {
+				log.WithFields(
+					log.Fields{
+						"project-id":                  gp.ID,
+						"project-path-with-namespace": gp.PathWithNamespace,
+						"project-ref":                 pipeline.Ref,
+					},
+				).Info("found project ref")
+				projectRefs[pipeline.Ref] = NewProjectRef(p, gp, pipeline.Ref)
+			}
 		}
 	}
 
-	return refs, nil
+	return projectRefs, nil
 }
 
 func (c *Client) rateLimit() {
@@ -572,7 +586,54 @@ func (c *Client) listProjects(w *schemas.Wildcard) ([]schemas.Project, error) {
 	return projects, nil
 }
 
-func (c *Client) branchesAndTagsFor(projectID int, refsRegexp string) ([]string, error) {
+func (c *Client) discoverProjectsRefs() {
+	if c.ProjectsRefs == nil {
+		c.ProjectsRefs = ProjectsRefs{}
+	}
+
+	for _, p := range c.Config.Projects {
+		gp, err := c.getProject(p.Name)
+		if err != nil {
+			log.WithFields(
+				log.Fields{
+					"project-name": p.Name,
+					"error":        err.Error(),
+				},
+			).Errorf("getting project by name")
+			continue
+		}
+
+		if _, ok := c.ProjectsRefs[gp.ID]; !ok {
+			c.ProjectsRefs[gp.ID] = map[string]*ProjectRef{}
+		}
+
+		refs, err := c.getProjectRefs(gp.ID, p.RefsRegexp(c.Config))
+		if err != nil {
+			log.WithFields(
+				log.Fields{
+					"project-id":                  gp.ID,
+					"project-path-with-namespace": gp.PathWithNamespace,
+					"error":                       err.Error(),
+				},
+			).Error("getting project refs")
+		}
+
+		for _, ref := range refs {
+			if _, ok := c.ProjectsRefs[gp.ID][ref]; !ok {
+				log.WithFields(
+					log.Fields{
+						"project-id":                  gp.ID,
+						"project-path-with-namespace": gp.PathWithNamespace,
+						"project-ref":                 ref,
+					},
+				).Info("discovered new project ref")
+				c.ProjectsRefs[gp.ID][ref] = NewProjectRef(&p, gp, ref)
+			}
+		}
+	}
+}
+
+func (c *Client) getProjectRefs(projectID int, refsRegexp string) ([]string, error) {
 	var refs []string
 	re, err := regexp.Compile(refsRegexp)
 	if err != nil {
@@ -658,24 +719,24 @@ func (c *Client) tagNamesFor(projectID int) ([]*string, error) {
 	return names, nil
 }
 
-func (c *Client) getPipelineVariablesAsConcatenatedString(pd *ProjectDetails) (string, error) {
+func (c *Client) getPipelineVariablesAsConcatenatedString(pr *ProjectRef) (string, error) {
 	log.WithFields(
 		log.Fields{
-			"project-path-with-namespace": pd.PathWithNamespace,
-			"project-id":                  pd.ID,
-			"pipeline-id":                 pd.MostRecentPipeline.ID,
+			"project-path-with-namespace": pr.PathWithNamespace,
+			"project-id":                  pr.ID,
+			"pipeline-id":                 pr.MostRecentPipeline.ID,
 		},
 	).Debug("fetching pipeline variables")
 
-	variablesFilter, err := regexp.Compile(pd.PipelineVariablesRegexp(c.Config))
+	variablesFilter, err := regexp.Compile(pr.PipelineVariablesRegexp(c.Config))
 	if err != nil {
-		return "", fmt.Errorf("the provided filter regex for pipeline variables is invalid '(%s)': %v", pd.PipelineVariablesRegexp(c.Config), err)
+		return "", fmt.Errorf("the provided filter regex for pipeline variables is invalid '(%s)': %v", pr.PipelineVariablesRegexp(c.Config), err)
 	}
 
 	c.rateLimit()
-	variables, _, err := c.Pipelines.GetPipelineVariables(pd.ID, pd.MostRecentPipeline.ID)
+	variables, _, err := c.Pipelines.GetPipelineVariables(pr.ID, pr.MostRecentPipeline.ID)
 	if err != nil {
-		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", pd.MostRecentPipeline.ID, err.Error())
+		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", pr.MostRecentPipeline.ID, err.Error())
 	}
 
 	var keptVariables []string

@@ -31,14 +31,14 @@ type Config struct {
 	// Maximum amount of requests per seconds to make against the GitLab API (default: 10)
 	MaximumGitLabAPIRequestsPerSecond int `yaml:"maximum_gitlab_api_requests_per_second"`
 
-	// Interval in seconds at which to poll projects from wildcards
-	ProjectsPollingIntervalSeconds int `yaml:"projects_polling_interval_seconds"`
+	// Interval in seconds to discover projects from wildcards
+	WildcardsProjectsDiscoverIntervalSeconds int `yaml:"wildcards_projects_discover_interval_seconds"`
 
-	// Interval in seconds to fetch refs from projects
-	RefsPollingIntervalSeconds int `yaml:"refs_polling_interval_seconds"`
+	// Interval in seconds to discover refs from projects
+	ProjectsRefsDiscoverIntervalSeconds int `yaml:"projects_refs_discover_interval_seconds"`
 
-	// Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
-	PipelinesPollingIntervalSeconds int `yaml:"pipelines_polling_interval_seconds"`
+	// Interval in seconds to poll metrics from discovered project refs
+	ProjectsRefsPollingIntervalSeconds int `yaml:"projects_refs_polling_interval_seconds"`
 
 	// Whether to attempt retrieving refs from pipelines when the exporter starts
 	OnInitFetchRefsFromPipelines bool `yaml:"on_init_fetch_refs_from_pipelines"`
@@ -66,9 +66,10 @@ type Config struct {
 const (
 	defaultMaximumGitLabAPIRequestsPerSecond      = 10
 	defaultOnInitFetchRefsFromPipelinesDepthLimit = 100
-	defaultPipelinesPollingIntervalSeconds        = 30
-	defaultProjectsPollingIntervalSeconds         = 1800
-	defaultRefsPollingIntervalSeconds             = 300
+
+	defaultWildcardsProjectsDiscoverIntervalSeconds = 1800
+	defaultProjectsRefsDiscoverIntervalSeconds      = 300
+	defaultProjectsRefsPollingIntervalSeconds       = 30
 
 	defaultFetchPipelineJobMetrics   = false
 	defaultOutputSparseStatusMetrics = false
@@ -101,16 +102,16 @@ func (cfg *Config) Parse(path string) error {
 		cfg.MaximumGitLabAPIRequestsPerSecond = defaultMaximumGitLabAPIRequestsPerSecond
 	}
 
-	if cfg.ProjectsPollingIntervalSeconds == 0 {
-		cfg.ProjectsPollingIntervalSeconds = defaultProjectsPollingIntervalSeconds
+	if cfg.WildcardsProjectsDiscoverIntervalSeconds == 0 {
+		cfg.WildcardsProjectsDiscoverIntervalSeconds = defaultWildcardsProjectsDiscoverIntervalSeconds
 	}
 
-	if cfg.RefsPollingIntervalSeconds == 0 {
-		cfg.RefsPollingIntervalSeconds = defaultRefsPollingIntervalSeconds
+	if cfg.ProjectsRefsDiscoverIntervalSeconds == 0 {
+		cfg.ProjectsRefsDiscoverIntervalSeconds = defaultProjectsRefsDiscoverIntervalSeconds
 	}
 
-	if cfg.PipelinesPollingIntervalSeconds == 0 {
-		cfg.PipelinesPollingIntervalSeconds = defaultPipelinesPollingIntervalSeconds
+	if cfg.ProjectsRefsPollingIntervalSeconds == 0 {
+		cfg.ProjectsRefsPollingIntervalSeconds = defaultProjectsRefsPollingIntervalSeconds
 	}
 
 	if cfg.OnInitFetchRefsFromPipelinesDepthLimit == 0 {

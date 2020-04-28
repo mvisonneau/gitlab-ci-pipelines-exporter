@@ -56,9 +56,9 @@ gitlab:
   disable_health_check: true
 
 maximum_gitlab_api_requests_per_second: 1
-projects_polling_interval_seconds: 2
-refs_polling_interval_seconds: 3
-pipelines_polling_interval_seconds: 4
+wildcards_projects_discover_interval_seconds: 2
+projects_refs_discover_interval_seconds: 3
+projects_refs_polling_interval_seconds: 4
 on_init_fetch_refs_from_pipelines: true
 on_init_fetch_refs_from_pipelines_depth_limit: 1337
 maximum_projects_poller_workers: 4
@@ -103,13 +103,13 @@ wildcards:
 			Token:              "xrN14n9-ywvAFxxxxxx",
 			DisableHealthCheck: true,
 		},
-		MaximumGitLabAPIRequestsPerSecond:      1,
-		ProjectsPollingIntervalSeconds:         2,
-		RefsPollingIntervalSeconds:             3,
-		PipelinesPollingIntervalSeconds:        4,
-		OnInitFetchRefsFromPipelines:           true,
-		OnInitFetchRefsFromPipelinesDepthLimit: 1337,
-		MaximumProjectsPollingWorkers:          4,
+		MaximumGitLabAPIRequestsPerSecond:        1,
+		WildcardsProjectsDiscoverIntervalSeconds: 2,
+		ProjectsRefsDiscoverIntervalSeconds:      3,
+		ProjectsRefsPollingIntervalSeconds:       4,
+		OnInitFetchRefsFromPipelines:             true,
+		OnInitFetchRefsFromPipelinesDepthLimit:   1337,
+		MaximumProjectsPollingWorkers:            4,
 		Defaults: Parameters{
 			FetchPipelineJobMetricsValue:   pointy.Bool(true),
 			OutputSparseStatusMetricsValue: pointy.Bool(true),
@@ -184,14 +184,14 @@ projects:
 			Token:     "",
 			HealthURL: "https://gitlab.com/users/sign_in",
 		},
-		MaximumGitLabAPIRequestsPerSecond:      defaultMaximumGitLabAPIRequestsPerSecond,
-		ProjectsPollingIntervalSeconds:         defaultProjectsPollingIntervalSeconds,
-		RefsPollingIntervalSeconds:             defaultRefsPollingIntervalSeconds,
-		PipelinesPollingIntervalSeconds:        defaultPipelinesPollingIntervalSeconds,
-		DisableOpenmetricsEncoding:             false,
-		OnInitFetchRefsFromPipelines:           false,
-		OnInitFetchRefsFromPipelinesDepthLimit: defaultOnInitFetchRefsFromPipelinesDepthLimit,
-		MaximumProjectsPollingWorkers:          runtime.GOMAXPROCS(0),
+		MaximumGitLabAPIRequestsPerSecond:        defaultMaximumGitLabAPIRequestsPerSecond,
+		WildcardsProjectsDiscoverIntervalSeconds: defaultWildcardsProjectsDiscoverIntervalSeconds,
+		ProjectsRefsDiscoverIntervalSeconds:      defaultProjectsRefsDiscoverIntervalSeconds,
+		ProjectsRefsPollingIntervalSeconds:       defaultProjectsRefsPollingIntervalSeconds,
+		DisableOpenmetricsEncoding:               false,
+		OnInitFetchRefsFromPipelines:             false,
+		OnInitFetchRefsFromPipelinesDepthLimit:   defaultOnInitFetchRefsFromPipelinesDepthLimit,
+		MaximumProjectsPollingWorkers:            runtime.GOMAXPROCS(0),
 		Projects: []Project{
 			{
 				Name: "foo/bar",

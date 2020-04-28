@@ -42,10 +42,14 @@ gitlab:
 # Global rate limit for the GitLab API request/sec
 maximum_gitlab_api_requests_per_second: 10
 
-# Custom waiting time between polls for projects, their refs and pipelines (in seconds, optional)
-projects_polling_interval_seconds: 1800 # only used for wildcards
-refs_polling_interval_seconds: 300
-pipelines_polling_interval_seconds: 60
+# Interval in seconds to discover projects from wildcards (optional, default: 1800)
+wildcards_projects_discover_interval_seconds: 1800
+
+# Interval in seconds to discover refs from projects (optional, default: 300)
+projects_refs_discover_interval_seconds: 300
+
+# Interval in seconds to poll metrics from discovered project refs (optional, default: 30)
+projects_refs_polling_interval_seconds: 30
 
 # Sets the parallelism for polling projects from the API (default to available CPUs: runtime.GOMAXPROCS(0))
 # maximum_projects_poller_workers: 1

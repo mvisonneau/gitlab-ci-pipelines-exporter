@@ -16,6 +16,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
   - **output_sparse_status_metrics**
   - **pipeline_variables_filter_regex**
   - **refs_regexp**
+- Renamed the following parameters (their behaviour remains the same):
+  - `projects_polling_interval_seconds` into `wildcards_projects_discover_interval_seconds`
+  - `refs_polling_interval_seconds` into `projects_refs_discover_interval_seconds`
+  - `pipelines_polling_interval_seconds` into `projects_refs_polling_interval_seconds`
 
 ### Added
 
