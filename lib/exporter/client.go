@@ -98,12 +98,12 @@ func (c *Client) pollProject(p schemas.Project) error {
 
 	project, err := c.getProject(p.Name)
 	if err != nil {
-		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %v", p.Name, err.Error())
+		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %s", p.Name, err.Error())
 	}
 
 	branchesAndTagRefs, err := c.branchesAndTagsFor(project.ID, p.RefsRegexp(c.Config))
 	if err != nil {
-		return fmt.Errorf("error fetching refs for project '%s'", p.Name)
+		return fmt.Errorf("error fetching refs for project '%s': %s", p.Name, err.Error())
 	}
 	if len(branchesAndTagRefs) == 0 {
 		log.WithFields(
@@ -133,8 +133,9 @@ func (c *Client) pollProject(p schemas.Project) error {
 				log.Fields{
 					"project-path-with-namespace": pd.PathWithNamespace,
 					"project-ref":                 ref,
+					"error":                       err.Error(),
 				},
-			).Errorf("getting pipeline data for a project ref: %v", err.Error())
+			).Error("getting pipeline data for a project ref")
 			continue
 		}
 	}
@@ -261,7 +262,15 @@ func (c *Client) pollProjectRef(pd *ProjectDetails) error {
 
 		if pd.FetchPipelineJobMetrics(c.Config) {
 			if err := c.pollPipelineJobs(pd); err != nil {
-				log.Errorf("Could not poll jobs for pipeline %d: %s", pipeline.ID, err.Error())
+				log.WithFields(
+					log.Fields{
+						"project-path-with-namespace": pd.PathWithNamespace,
+						"project-id":                  pd.ID,
+						"project-ref":                 pd.Ref,
+						"pipeline-id":                 pipeline.ID,
+						"error":                       err.Error(),
+					},
+				).Error("polling pipeline jobs")
 			}
 		}
 
@@ -288,8 +297,9 @@ func (c *Client) discoverWildcards() {
 					"wildcard-owner-name":              w.Owner.Name,
 					"wildcard-owner-include-subgroups": w.Owner.IncludeSubgroups,
 					"wildcard-archived":                w.Archived,
+					"error":                            err.Error(),
 				},
-			).Errorf("could not list wildcard projects: %v", err)
+			).Errorf("listing wildcard projects")
 			continue
 		}
 		for _, p := range foundProjects {

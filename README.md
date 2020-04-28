@@ -55,10 +55,10 @@ pipelines_polling_interval_seconds: 60
 # disable_openmetrics_encoding: true
 
 # Whether to attempt retrieving refs from pipelines when the exporter starts (default: false)
-on_init_fetch_refs_from_pipelines: false
+# on_init_fetch_refs_from_pipelines: false
 
 # Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
-on_init_fetch_refs_from_pipelines_depth_limit: 100
+# on_init_fetch_refs_from_pipelines_depth_limit: 100
 
 # Default settings which can be overridden at the project or wildcard level
 defaults:
