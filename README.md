@@ -14,7 +14,7 @@ Here is a [Grafana dashboard](https://grafana.com/grafana/dashboards/10620) I ha
 
 ![grafana_dashboard](/docs/images/grafana_dashboard.png)
 
-If you are solely interested into trying it out, have a look into the [example/](./example) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in ~5min. 
+If you are solely interested into trying it out, have a look into the [example/](./example) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in `~5min`.
 
 ## Getting started
 
@@ -140,76 +140,75 @@ You should then be able to see the following logs
 
 ```bash
 ~$ docker logs -f gitlab-ci-pipelines-exporter
-INFO[2019-07-30T18:12:24+01:00] Starting exporter
-INFO[2019-07-30T18:12:24+01:00] Configured GitLab endpoint : https://gitlab.example.com
-INFO[2019-07-30T18:12:24+01:00] Polling projects every 15s
-INFO[2019-07-30T18:12:24+01:00] Polling refs every 10s
-INFO[2019-07-30T18:12:24+01:00] Polling pipelines every 60s
-INFO[2019-07-30T18:12:24+01:00] 2 project(s) configured
-INFO[2019-07-30T18:12:24+01:00] Listing all projects using search pattern : 'bar' with owner 'foo' (group)
-INFO[2019-07-30T18:12:24+01:00] Found project : foo/bar
-INFO[2019-07-30T18:12:24+01:00] Polling refs for project : foo/project
-INFO[2019-07-30T18:12:24+01:00] Polling refs for project : bar/project
-INFO[2019-07-30T18:12:24+01:00] Polling refs for project : foo/bar
-INFO[2019-07-30T18:12:24+01:00] Found ref 'master' for project 'foo/project'
-INFO[2019-07-30T18:12:24+01:00] Found ref 'master' for project 'bar/project'
-INFO[2019-07-30T18:12:24+01:00] Found ref 'dev' for project 'bar/project'
-INFO[2019-07-30T18:12:24+01:00] Found ref 'master' for project 'foo/bar'
-INFO[2019-07-30T18:12:24+01:00] Found ref '1.0' for project 'foo/bar'
-INFO[2019-07-30T18:12:24+01:00] Polling foo/project:master (1)
-INFO[2019-07-30T18:12:24+01:00] Polling bar/project:master (2)
-INFO[2019-07-30T18:12:24+01:00] Polling bar/project:dev (2)
-INFO[2019-07-30T18:12:24+01:00] Polling foo/bar:master (1)
-INFO[2019-07-30T18:12:24+01:00] Polling foo/bar:1.0 (1)
+INFO[0000] starting exporter                             gitlab-endpoint="https://gitlab.com" on-init-fetch-refs-from-pipelines=true polling-pipelines-every=60s polling-projects-every=15s polling-refs-every=10s rate-limit=10rps
+INFO[0000] configured wildcards                          count=1
+INFO[0000] found new project                             project-name=foo/project wildcard-archived=false wildcard-owner-include-subgroups=false wildcard-owner-kind=group wildcard-owner-name=foo wildcard-search=
+INFO[0000] found new project                             project-name=foo/bar wildcard-archived=false wildcard-owner-include-subgroups=false wildcard-owner-kind=group wildcard-owner-name=foo wildcard-search=
+INFO[0000] configured projects                           count=3
+INFO[0000] started, now serving requests                 listen-address=":8080"
+INFO[0000] found project refs                            project-path-with-namespace=foo/project project-ref=master
+INFO[0000] found project refs                            project-path-with-namespace=bar/project project-ref=master
+INFO[0000] found project refs                            project-path-with-namespace=foo/bar project-ref=master
 ```
 
 And this is an example of the metrics you should expect to retrieve
 
 ```bash
 ~$ curl -s localhost:8080/metrics | grep gitlab_ci_pipeline
-# HELP gitlab_ci_pipeline_coverage Coverage of the most recent pipeline
-# TYPE gitlab_ci_pipeline_coverage gauge
-gitlab_ci_pipeline_coverage{project="foo/project",ref="dev"} 65.4
 # HELP gitlab_ci_pipeline_last_run_duration_seconds Duration of last pipeline run
 # TYPE gitlab_ci_pipeline_last_run_duration_seconds gauge
-gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="master"} 676
-gitlab_ci_pipeline_last_run_duration_seconds{project="foo/project",ref="master"} 33
-gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="dev"} 701
-gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="master"} 570
-gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="1.0"} 571
+gitlab_ci_pipeline_last_run_duration_seconds{project="foo/project",ref="dev",topics="",variables=""} 81
+gitlab_ci_pipeline_last_run_duration_seconds{project="foo/project",ref="master",topics="",variables=""} 420
+gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="master",topics="",variables=""} 334
+gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="master",topics="",variables="FOO:BAR"} 55
 # HELP gitlab_ci_pipeline_last_run_id ID of the most recent pipeline
 # TYPE gitlab_ci_pipeline_last_run_id gauge
-gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="master"} 2.2772738e+07
-gitlab_ci_pipeline_last_run_duration_seconds{project="foo/project",ref="master"} 3.0094592e+07
-gitlab_ci_pipeline_last_run_duration_seconds{project="bar/project",ref="dev"} 4.0059611e+07
-gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="master"} 4.082622e+07
-gitlab_ci_pipeline_last_run_duration_seconds{project="foo/bar",ref="1.0"} 6.8400336e+07
+gitlab_ci_pipeline_last_run_id{project="foo/project",ref="dev",topics="",variables=""} 4.0059611e+07
+gitlab_ci_pipeline_last_run_id{project="foo/project",ref="master",topics="",variables=""} 1.25351545e+08
+gitlab_ci_pipeline_last_run_id{project="bar/project",ref="master",topics="",variables=""} 1.33308085e+08
+gitlab_ci_pipeline_last_run_id{project="foo/bar",ref="master",topics="",variables="FOO:BAR"} 1.40420947e+08
 # HELP gitlab_ci_pipeline_last_run_status Status of the most recent pipeline
 # TYPE gitlab_ci_pipeline_last_run_status gauge
-gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="failed"} 0
-gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="running"} 0
-gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="success"} 1
-gitlab_ci_pipeline_last_run_status{project="foo/project",ref="master",status="failed"} 0
-gitlab_ci_pipeline_last_run_status{project="bar/project",ref="dev",status="running"} 0
-gitlab_ci_pipeline_last_run_status{project="bar/project",ref="dev",status="success"} 1
-gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="running"} 0
-gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="success"} 1
-gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="1.0",status="running"} 0
-gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="1.0",status="success"} 1
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="dev",status="canceled",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="dev",status="failed",topics="",variables=""} 1
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="dev",status="manual",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="dev",status="pending",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="dev",status="running",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="dev",status="skipped",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="dev",status="success",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="master",status="canceled",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="master",status="failed",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="master",status="manual",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="master",status="pending",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="master",status="running",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="master",status="skipped",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="foo/project",ref="master",status="success",topics="",variables=""} 1
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="canceled",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="failed",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="manual",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="pending",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="running",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="skipped",topics="",variables=""} 0
+gitlab_ci_pipeline_last_run_status{project="bar/project",ref="master",status="success",topics="",variables=""} 1
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="canceled",topics="",variables="FOO:BAR"} 0
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="failed",topics="",variables="FOO:BAR"} 0
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="manual",topics="",variables="FOO:BAR"} 0
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="pending",topics="",variables="FOO:BAR"} 0
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="running",topics="",variables="FOO:BAR"} 0
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="skipped",topics="",variables="FOO:BAR"} 0
+gitlab_ci_pipeline_last_run_status{project="foo/bar",ref="master",status="success",topics="",variables="FOO:BAR"} 1
 # HELP gitlab_ci_pipeline_run_count GitLab CI pipeline run count
 # TYPE gitlab_ci_pipeline_run_count counter
-gitlab_ci_pipeline_run_count{project="bar/project",ref="master"} 0
-gitlab_ci_pipeline_run_count{project="foo/project",ref="master"} 0
-gitlab_ci_pipeline_run_count{project="bar/project",ref="dev"} 0
-gitlab_ci_pipeline_run_count{project="foo/bar",ref="master"} 0
-gitlab_ci_pipeline_run_count{project="foo/bar",ref="1.0"} 0
+gitlab_ci_pipeline_run_count{project="foo/project",ref="dev",topics="",variables=""} 1
+gitlab_ci_pipeline_run_count{project="foo/project",ref="master",topics="",variables=""} 2
+gitlab_ci_pipeline_run_count{project="bar/project",ref="master",topics="",variables=""} 1
+gitlab_ci_pipeline_run_count{project="foo/bar",ref="master",topics="",variables="FOO:BAR"} 2
 # HELP gitlab_ci_pipeline_time_since_last_run_seconds Elapsed time since most recent GitLab CI pipeline run.
 # TYPE gitlab_ci_pipeline_time_since_last_run_seconds gauge
-gitlab_ci_pipeline_time_since_last_run_seconds{project="bar/project",ref="master"} 87627
-gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/project",ref="master"} 29531
-gitlab_ci_pipeline_time_since_last_run_seconds{project="bar/project",ref="dev"} 2950
-gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/bar",ref="master"} 2951
-gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/bar",ref="1.0"} 2900
+gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/project",ref="dev",topics="",variables=""} 4.3368877e+07
+gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/project",ref="master",topics="",variables=""} 4.151883e+06
+gitlab_ci_pipeline_time_since_last_run_seconds{project="bar/project",ref="master",topics="",variables=""} 1.907042e+06
+gitlab_ci_pipeline_time_since_last_run_seconds{project="foo/bar",ref="master",topics="",variables="FOO:BAR"} 65456
 ```
 
 If `fetch_pipeline_job_metrics` is enabled, expect additional metrics:
@@ -263,21 +262,21 @@ gitlab_ci_pipeline_last_job_run_status{job="test",project="bar/project",ref="mas
 ```bash
 ~$ gitlab-ci-pipelines-exporter --help
 NAME:
-   gitlab-ci-pipelines-exporter - Export metrics about GitLab CI pipeliens statuses
+   gitlab-ci-pipelines-exporter - Export metrics about GitLab CI pipelines statuses
 
 USAGE:
    gitlab-ci-pipelines-exporter [global options] command [command options] [arguments...]
 
 COMMANDS:
-     help, h  Shows a list of commands or help for one command
+   help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --log-level level              log level (debug,info,warn,fatal,panic) (default: "info") [$GCPE_LOG_LEVEL]
-   --log-format format            log format (json,text) (default: "text") [$GCPE_LOG_FORMAT]
-   --listen-address address:port  listen-address address:port (default: ":8080") [$GCPE_LISTEN_ADDRESS]
-   --config file                  config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
-   --gitlab-token token           GitLab access token. Can be use to override the gitlab token in config file [$GCPE_GITLAB_TOKEN]
-   --help, -h                     show help
+   --log-level level                               log level (debug,info,warn,fatal,panic) (default: "info") [$GCPE_LOG_LEVEL]
+   --log-format format                             log format (json,text) (default: "text") [$GCPE_LOG_FORMAT]
+   --listen-address address:port, -l address:port  listen-address address:port (default: ":8080") [$GCPE_LISTEN_ADDRESS]
+   --config file, -c file                          config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
+   --gitlab-token token                            GitLab access token. Can be use to override the gitlab token in config file [$GCPE_GITLAB_TOKEN]
+   --help, -h                                      show help
    --version, -v                  print the version
 ```
 
