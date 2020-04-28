@@ -14,7 +14,7 @@ type Registry struct {
 }
 
 var (
-	defaultLabels = []string{"project", "topics", "ref", "variables"}
+	defaultLabels = []string{"project", "topics", "ref", "kind", "variables"}
 	jobLabels     = []string{"stage", "job_name"}
 	statusLabels  = []string{"status"}
 

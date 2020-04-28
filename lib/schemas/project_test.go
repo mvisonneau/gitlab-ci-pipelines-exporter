@@ -71,3 +71,25 @@ func TestRefsRegexp(t *testing.T) {
 	project.RefsRegexpValue = pointy.String("bar")
 	assert.Equal(t, "bar", project.RefsRegexp(cfg))
 }
+
+func TestFetchMergeRequestsPipelinesRefs(t *testing.T) {
+	cfg, project := NewTestProjectVariables()
+	assert.Equal(t, defaultFetchMergeRequestsPipelinesRefs, project.FetchMergeRequestsPipelinesRefs(cfg))
+
+	cfg.Defaults.FetchMergeRequestsPipelinesRefsValue = pointy.Bool(!defaultFetchMergeRequestsPipelinesRefs)
+	assert.Equal(t, !defaultFetchMergeRequestsPipelinesRefs, project.FetchMergeRequestsPipelinesRefs(cfg))
+
+	project.FetchMergeRequestsPipelinesRefsValue = pointy.Bool(defaultFetchMergeRequestsPipelinesRefs)
+	assert.Equal(t, defaultFetchMergeRequestsPipelinesRefs, project.FetchMergeRequestsPipelinesRefs(cfg))
+}
+
+func TestFetchMergeRequestsPipelinesRefsLimit(t *testing.T) {
+	cfg, project := NewTestProjectVariables()
+	assert.Equal(t, defaultFetchMergeRequestsPipelinesRefsLimit, project.FetchMergeRequestsPipelinesRefsLimit(cfg))
+
+	cfg.Defaults.FetchMergeRequestsPipelinesRefsLimitValue = pointy.Int(10)
+	assert.Equal(t, 10, project.FetchMergeRequestsPipelinesRefsLimit(cfg))
+
+	project.FetchMergeRequestsPipelinesRefsLimitValue = pointy.Int(20)
+	assert.Equal(t, 20, project.FetchMergeRequestsPipelinesRefsLimit(cfg))
+}

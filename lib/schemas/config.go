@@ -71,12 +71,6 @@ const (
 	defaultProjectsRefsDiscoverIntervalSeconds      = 300
 	defaultProjectsRefsPollingIntervalSeconds       = 30
 
-	defaultFetchPipelineJobMetrics   = false
-	defaultOutputSparseStatusMetrics = false
-	defaultFetchPipelineVariables    = false
-	defaultRefsRegexp                = `^master$`
-	defaultPipelineVariablesRegexp   = `.*`
-
 	errNoProjectsOrWildcardConfigured = "you need to configure at least one project/wildcard to poll, none given"
 	errConfigFileNotFound             = "couldn't open config file : %v"
 )

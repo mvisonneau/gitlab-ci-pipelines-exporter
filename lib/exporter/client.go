@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 	"go.uber.org/ratelimit"
@@ -17,11 +18,28 @@ import (
 
 var statusesList = [...]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
 
+// ProjectRefKind is used to determine the kind of the ref
+type ProjectRefKind string
+
+const (
+	// ProjectRefKindBranch refers to a branch
+	ProjectRefKindBranch ProjectRefKind = "branch"
+
+	// ProjectRefKindTag refers to a tag
+	ProjectRefKindTag ProjectRefKind = "tag"
+
+	// ProjectRefKindMergeRequest refers to a tag
+	ProjectRefKindMergeRequest ProjectRefKind = "merge-request"
+
+	mergeRequestRefRegexp = `^refs/merge-requests`
+)
+
 // ProjectRef is what we will use a metrics entity on which we will
 // perform regular polling operations
 type ProjectRef struct {
 	*schemas.Project
 
+	Kind                        ProjectRefKind
 	ID                          int
 	PathWithNamespace           string
 	Topics                      string
@@ -35,9 +53,10 @@ type ProjectRef struct {
 type ProjectsRefs map[int]map[string]*ProjectRef
 
 // NewProjectRef is an helper which returns a new ProjectRef pointer
-func NewProjectRef(project *schemas.Project, gp *gitlab.Project, ref string) *ProjectRef {
+func NewProjectRef(project *schemas.Project, gp *gitlab.Project, ref string, kind ProjectRefKind) *ProjectRef {
 	return &ProjectRef{
 		Project:           project,
+		Kind:              kind,
 		ID:                gp.ID,
 		PathWithNamespace: gp.PathWithNamespace,
 		Topics:            strings.Join(gp.TagList, ","),
@@ -54,7 +73,7 @@ type Client struct {
 }
 
 func (pr *ProjectRef) defaultLabelsValues() []string {
-	return []string{pr.PathWithNamespace, pr.Topics, pr.Ref, pr.MostRecentPipelineVariables}
+	return []string{pr.PathWithNamespace, pr.Topics, pr.Ref, string(pr.Kind), pr.MostRecentPipelineVariables}
 }
 
 // OrchestratePolling ...
@@ -88,60 +107,6 @@ func (c *Client) OrchestratePolling(until <-chan bool) {
 			}
 		}
 	}()
-}
-
-func (c *Client) pollProject(p schemas.Project) error {
-	log.WithFields(
-		log.Fields{
-			"project-name": p.Name,
-		},
-	).Debug("fetching project")
-
-	project, err := c.getProject(p.Name)
-	if err != nil {
-		return fmt.Errorf("unable to fetch project '%s' from the GitLab API: %s", p.Name, err.Error())
-	}
-
-	refs, err := c.getProjectRefs(project.ID, p.RefsRegexp(c.Config))
-	if err != nil {
-		return fmt.Errorf("error fetching refs for project '%s': %s", p.Name, err.Error())
-	}
-	if len(refs) == 0 {
-		log.WithFields(
-			log.Fields{
-				"project-name": p.Name,
-			},
-		).Warn("no refs found for project")
-		return nil
-	}
-
-	// read the metrics for refs
-	log.WithFields(
-		log.Fields{
-			"project-name": p.Name,
-		},
-	).Debug("polling project refs")
-	for _, ref := range refs {
-		pr := NewProjectRef(&p, project, ref)
-		log.WithFields(
-			log.Fields{
-				"project-path-with-namespace": pr.PathWithNamespace,
-				"project-ref":                 ref,
-			},
-		).Info("discovered new project ref")
-		if err := c.pollProjectRefMostRecentPipeline(pr); err != nil {
-			log.WithFields(
-				log.Fields{
-					"project-path-with-namespace": pr.PathWithNamespace,
-					"project-ref":                 ref,
-					"error":                       err.Error(),
-				},
-			).Error("getting pipeline data for a project ref")
-			continue
-		}
-	}
-
-	return nil
 }
 
 func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
@@ -200,6 +165,25 @@ func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
 }
 
 func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
+	// TODO: Figure out if we want to have a similar approach for ProjectRefKindTag with
+	// an additional configuration parameeter perhaps
+	if pr.Kind == ProjectRefKindMergeRequest && pr.MostRecentPipeline != nil {
+		switch pr.MostRecentPipeline.Status {
+		case "success", "failed", "canceled", "skipped":
+			// The pipeline will not evolve, lets not bother querying the API
+			log.WithFields(
+				log.Fields{
+					"project-path-with-namespace": pr.PathWithNamespace,
+					"project-id":                  pr.ID,
+					"project-ref":                 pr.Ref,
+					"project-ref-kind":            pr.Kind,
+					"pipeline-id":                 pr.MostRecentPipeline.ID,
+				},
+			).Debug("skipping finished merge-request pipeline")
+			return nil
+		}
+	}
+
 	pipelines, err := c.getProjectPipelines(pr.ID, &gitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: gitlab.ListOptions{
@@ -267,6 +251,7 @@ func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
 						"project-path-with-namespace": pr.PathWithNamespace,
 						"project-id":                  pr.ID,
 						"project-ref":                 pr.Ref,
+						"project-ref-kind":            pr.Kind,
 						"pipeline-id":                 pipeline.ID,
 						"error":                       err.Error(),
 					},
@@ -454,9 +439,16 @@ func (c *Client) getProjectsRefsFromPipelines(p *schemas.Project, gp *gitlab.Pro
 			// TODO: Get a proper loop to split this query up
 			PerPage: c.Config.OnInitFetchRefsFromPipelinesDepthLimit,
 		},
+		Scope: pointy.String("branches"),
 	}
 
-	pipelines, err := c.getProjectPipelines(gp.ID, options)
+	branchPipelines, err := c.getProjectPipelines(gp.ID, options)
+	if err != nil {
+		return nil, err
+	}
+
+	options.Scope = pointy.String("tags")
+	tagsPipelines, err := c.getProjectPipelines(gp.ID, options)
 	if err != nil {
 		return nil, err
 	}
@@ -467,17 +459,25 @@ func (c *Client) getProjectsRefsFromPipelines(p *schemas.Project, gp *gitlab.Pro
 	}
 
 	projectRefs := map[string]*ProjectRef{}
-	for _, pipeline := range pipelines {
-		if re.MatchString(pipeline.Ref) {
-			if _, ok := projectRefs[pipeline.Ref]; !ok {
-				log.WithFields(
-					log.Fields{
-						"project-id":                  gp.ID,
-						"project-path-with-namespace": gp.PathWithNamespace,
-						"project-ref":                 pipeline.Ref,
-					},
-				).Info("found project ref")
-				projectRefs[pipeline.Ref] = NewProjectRef(p, gp, pipeline.Ref)
+	for kind, pipelines := range map[ProjectRefKind][]*gitlab.PipelineInfo{
+		ProjectRefKindBranch: branchPipelines,
+		ProjectRefKindTag:    tagsPipelines,
+	} {
+		for _, pipeline := range pipelines {
+			if re.MatchString(pipeline.Ref) {
+				if _, ok := projectRefs[pipeline.Ref]; !ok {
+					c.rateLimit()
+
+					log.WithFields(
+						log.Fields{
+							"project-id":                  gp.ID,
+							"project-path-with-namespace": gp.PathWithNamespace,
+							"project-ref":                 pipeline.Ref,
+							"project-ref-kind":            kind,
+						},
+					).Info("found project ref")
+					projectRefs[pipeline.Ref] = NewProjectRef(p, gp, pipeline.Ref, kind)
+				}
 			}
 		}
 	}
@@ -607,7 +607,13 @@ func (c *Client) discoverProjectsRefs() {
 			c.ProjectsRefs[gp.ID] = map[string]*ProjectRef{}
 		}
 
-		refs, err := c.getProjectRefs(gp.ID, p.RefsRegexp(c.Config))
+		refs, err := c.getProjectRefs(
+			gp.ID,
+			p.RefsRegexp(c.Config),
+			p.FetchMergeRequestsPipelinesRefs(c.Config),
+			p.FetchMergeRequestsPipelinesRefsLimit(c.Config),
+		)
+
 		if err != nil {
 			log.WithFields(
 				log.Fields{
@@ -618,54 +624,75 @@ func (c *Client) discoverProjectsRefs() {
 			).Error("getting project refs")
 		}
 
-		for _, ref := range refs {
+		for ref, kind := range refs {
 			if _, ok := c.ProjectsRefs[gp.ID][ref]; !ok {
 				log.WithFields(
 					log.Fields{
 						"project-id":                  gp.ID,
 						"project-path-with-namespace": gp.PathWithNamespace,
 						"project-ref":                 ref,
+						"project-ref-kind":            kind,
 					},
 				).Info("discovered new project ref")
-				c.ProjectsRefs[gp.ID][ref] = NewProjectRef(&p, gp, ref)
+				c.ProjectsRefs[gp.ID][ref] = NewProjectRef(&p, gp, ref, kind)
 			}
 		}
 	}
 }
 
-func (c *Client) getProjectRefs(projectID int, refsRegexp string) ([]string, error) {
-	var refs []string
-	re, err := regexp.Compile(refsRegexp)
+func (c *Client) getProjectRefs(
+	projectID int,
+	refsRegexp string,
+	fetchMergeRequestsPipelinesRefs bool,
+	fetchMergeRequestsPipelinesRefsInitLimit int) (map[string]ProjectRefKind, error) {
+
+	branches, err := c.getProjectBranches(projectID, refsRegexp)
 	if err != nil {
 		return nil, err
 	}
 
-	branches, err := c.branchNamesFor(projectID)
+	tags, err := c.getProjectTags(projectID, refsRegexp)
 	if err != nil {
 		return nil, err
 	}
 
-	tags, err := c.tagNamesFor(projectID)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, ref := range append(branches, tags...) {
-		if re.MatchString(*ref) {
-			refs = append(refs, *ref)
+	mergeRequests := []string{}
+	if fetchMergeRequestsPipelinesRefs {
+		mergeRequests, err = c.getProjectMergeRequestsPipelines(projectID, fetchMergeRequestsPipelinesRefsInitLimit)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return refs, nil
+
+	foundRefs := map[string]ProjectRefKind{}
+	for kind, refs := range map[ProjectRefKind][]string{
+		ProjectRefKindBranch:       branches,
+		ProjectRefKindTag:          tags,
+		ProjectRefKindMergeRequest: mergeRequests,
+	} {
+		for _, ref := range refs {
+			if _, ok := foundRefs[ref]; ok {
+				log.Warn("found duplicate ref for project")
+			}
+			foundRefs[ref] = kind
+		}
+	}
+	return foundRefs, nil
 }
 
-func (c *Client) branchNamesFor(projectID int) ([]*string, error) {
-	var names []*string
+func (c *Client) getProjectBranches(projectID int, refsRegexp string) ([]string, error) {
+	var names []string
 
 	options := &gitlab.ListBranchesOptions{
 		ListOptions: gitlab.ListOptions{
 			Page:    1,
 			PerPage: 20,
 		},
+	}
+
+	re, err := regexp.Compile(refsRegexp)
+	if err != nil {
+		return nil, err
 	}
 
 	for {
@@ -676,7 +703,9 @@ func (c *Client) branchNamesFor(projectID int) ([]*string, error) {
 		}
 
 		for _, branch := range branches {
-			names = append(names, &branch.Name)
+			if re.MatchString(branch.Name) {
+				names = append(names, branch.Name)
+			}
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
@@ -689,14 +718,19 @@ func (c *Client) branchNamesFor(projectID int) ([]*string, error) {
 	return names, nil
 }
 
-func (c *Client) tagNamesFor(projectID int) ([]*string, error) {
-	var names []*string
+func (c *Client) getProjectTags(projectID int, refsRegexp string) ([]string, error) {
+	var names []string
 
 	options := &gitlab.ListTagsOptions{
 		ListOptions: gitlab.ListOptions{
 			PerPage: 20,
 			Page:    1,
 		},
+	}
+
+	re, err := regexp.Compile(refsRegexp)
+	if err != nil {
+		return nil, err
 	}
 
 	for {
@@ -707,12 +741,52 @@ func (c *Client) tagNamesFor(projectID int) ([]*string, error) {
 		}
 
 		for _, tag := range tags {
-			names = append(names, &tag.Name)
+			if re.MatchString(tag.Name) {
+				names = append(names, tag.Name)
+			}
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
 			break
 		}
+		options.Page = resp.NextPage
+	}
+
+	return names, nil
+}
+
+func (c *Client) getProjectMergeRequestsPipelines(projectID int, fetchLimit int) ([]string, error) {
+	var names []string
+
+	options := &gitlab.ListProjectPipelinesOptions{
+		ListOptions: gitlab.ListOptions{
+			Page:    1,
+			PerPage: 20,
+		},
+	}
+
+	re := regexp.MustCompile(mergeRequestRefRegexp)
+
+	for {
+		c.rateLimit()
+		pipelines, resp, err := c.Pipelines.ListProjectPipelines(projectID, options)
+		if err != nil {
+			return nil, fmt.Errorf("error listing project pipelines for project ID %d: %s", projectID, err.Error())
+		}
+
+		for _, pipeline := range pipelines {
+			if re.MatchString(pipeline.Ref) {
+				names = append(names, pipeline.Ref)
+				if len(names) >= fetchLimit {
+					return names, nil
+				}
+			}
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+
 		options.Page = resp.NextPage
 	}
 

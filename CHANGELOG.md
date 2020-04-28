@@ -23,6 +23,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Added
 
+- `kind` label on all metrics which reflects the type of the ref : branch, tag or merge-request
+- project/wildcard parameters `fetch_merge_request_pipelines_refs` and `fetch_merge_request_pipelines_refs_init_limit` to enable the metrics polling of merge requests pipelines
 - Configuration for OpenMetrics Encoding in metrics HTTP endpoint. Enabled by default but can be disable using `disable_openmetrics_encoding: true`
 - Worker pool for projects polling: set `maximum_projects_poller_workers` with an integer value to control parallelism (defaults to `runtime.GOMAXPROCS(0)`)  
 - Augmented `disable_tls_verify` with `disable_health_check` additional parameter to drive the behaviour of checking healthiness of target service 

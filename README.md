@@ -81,6 +81,12 @@ defaults:
   # Filter refs (branches/tags) to include (default: "^master$" -- master branch)
   # refs_regexp: "^master$"
 
+  # Fetch merge request pipelines refs (default: false)
+  # fetch_merge_request_pipelines_refs: false
+
+  # Maximum number for merge requests pipelines to attempt fetch on each ref discovery (default: 1)
+  # fetch_merge_request_pipelines_refs_init_limit: 1
+
 # The list of the projects you want to monitor
 projects:
   - name: foo/project

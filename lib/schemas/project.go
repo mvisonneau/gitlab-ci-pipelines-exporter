@@ -16,7 +16,23 @@ type Parameters struct {
 
 	// Regular expression to filter project refs to fetch (defaults to '.*')
 	RefsRegexpValue *string `yaml:"refs_regexp"`
+
+	// Fetch merge request pipelines (default: false)
+	FetchMergeRequestsPipelinesRefsValue *bool `yaml:"fetch_merge_request_pipelines_refs"`
+
+	// Maximum number for merge requests pipelines to attempt fetch on each ref discovery (default: 1)
+	FetchMergeRequestsPipelinesRefsLimitValue *int `yaml:"fetch_merge_request_pipelines_refs_limit"`
 }
+
+const (
+	defaultFetchPipelineJobMetrics              = false
+	defaultOutputSparseStatusMetrics            = false
+	defaultFetchPipelineVariables               = false
+	defaultRefsRegexp                           = `^master$`
+	defaultPipelineVariablesRegexp              = `.*`
+	defaultFetchMergeRequestsPipelinesRefs      = false
+	defaultFetchMergeRequestsPipelinesRefsLimit = 1
+)
 
 // Project holds information about a GitLab project
 type Project struct {
@@ -88,4 +104,30 @@ func (p *Project) RefsRegexp(cfg *Config) string {
 	}
 
 	return defaultRefsRegexp
+}
+
+// FetchMergeRequestsPipelinesRefs ...
+func (p *Project) FetchMergeRequestsPipelinesRefs(cfg *Config) bool {
+	if p.FetchMergeRequestsPipelinesRefsValue != nil {
+		return *p.FetchMergeRequestsPipelinesRefsValue
+	}
+
+	if cfg.Defaults.FetchMergeRequestsPipelinesRefsValue != nil {
+		return *cfg.Defaults.FetchMergeRequestsPipelinesRefsValue
+	}
+
+	return defaultFetchMergeRequestsPipelinesRefs
+}
+
+// FetchMergeRequestsPipelinesRefsLimit ...
+func (p *Project) FetchMergeRequestsPipelinesRefsLimit(cfg *Config) int {
+	if p.FetchMergeRequestsPipelinesRefsLimitValue != nil {
+		return *p.FetchMergeRequestsPipelinesRefsLimitValue
+	}
+
+	if cfg.Defaults.FetchMergeRequestsPipelinesRefsLimitValue != nil {
+		return *cfg.Defaults.FetchMergeRequestsPipelinesRefsLimitValue
+	}
+
+	return defaultFetchMergeRequestsPipelinesRefsLimit
 }
