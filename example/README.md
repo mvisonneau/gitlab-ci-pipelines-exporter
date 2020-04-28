@@ -46,18 +46,12 @@ b3500bff6038        prom/prometheus:v2.11.1                          "/bin/prome
 
 ```bash
 ~$ docker logs -f example_gitlab-ci-pipelines-exporter_1
-time="2019-08-02T10:23:37Z" level=info msg="Starting exporter"
-time="2019-08-02T10:23:37Z" level=info msg="Configured GitLab endpoint : https://gitlab.com"
-time="2019-08-02T10:23:37Z" level=info msg="Polling projects every 1800s"
-time="2019-08-02T10:23:37Z" level=info msg="Polling refs every 300s"
-time="2019-08-02T10:23:37Z" level=info msg="Polling pipelines every 30s"
-time="2019-08-02T10:23:37Z" level=info msg="2 project(s) configured"
-time="2019-08-02T10:23:38Z" level=info msg="Polling refs for project : gitlab-org/gitlab-runner"
-time="2019-08-02T10:23:38Z" level=info msg="Polling refs for project : gitlab-org/charts/auto-deploy-app"
-time="2019-08-02T10:23:38Z" level=info msg="Found ref 'master' for project 'gitlab-org/charts/auto-deploy-app'"
-time="2019-08-02T10:23:38Z" level=info msg="Polling gitlab-org/charts/auto-deploy-app:master (11915984)"
-time="2019-08-02T10:23:46Z" level=info msg="Found ref 'master' for project 'gitlab-org/gitlab-runner'"
-time="2019-08-02T10:23:46Z" level=info msg="Polling gitlab-org/gitlab-runner:master (250833)"
+time="2020-04-28T23:09:01Z" level=info msg="starting exporter" discover-projects-refs-interval=300s discover-wildcard-projects-interval=1800s gitlab-endpoint="https://gitlab.com" on-init-fetch-refs-from-pipelines=false polling-projects-refs-interval=30s rate-limit=10rps
+time="2020-04-28T23:09:01Z" level=info msg="started, now serving requests" listen-address=":8080"
+time="2020-04-28T23:09:01Z" level=info msg="discover wildcards" count=0
+time="2020-04-28T23:09:14Z" level=info msg="discovered new project ref" project-id=250833 project-path-with-namespace=gitlab-org/gitlab-runner project-ref=master project-ref-kind=branch
+time="2020-04-28T23:09:15Z" level=info msg="discovered new project ref" project-id=11915984 project-path-with-namespace=gitlab-org/charts/auto-deploy-app project-ref=master project-ref-kind=branch
+time="2020-04-28T23:09:15Z" level=info msg="polling metrics from projects refs" count=2
 ```
 
 ### Check we can fetch metrics from the exporter container

@@ -10,7 +10,7 @@ services:
       - ./gitlab-ci-pipelines-exporter/config.yml:/etc/gitlab-ci-pipelines-exporter/config.yml
 
   prometheus:
-    image: prom/prometheus:v2.17.1
+    image: prom/prometheus:v2.17.2
     ports:
       - 9090:9090
     links:
@@ -19,7 +19,7 @@ services:
       - ./prometheus/config.yml:/etc/prometheus/prometheus.yml
 
   grafana:
-    image: grafana/grafana:6.7.1
+    image: grafana/grafana:6.7.3
     ports:
       - 3000:3000
     environment:
