@@ -359,6 +359,7 @@ func (c *Client) pollPipelinesOnInit() {
 			continue
 		}
 		for _, ref := range pipelineRefs {
+
 			if err := c.pollProjectRef(NewProjectDetails(&p, gitlabProject, ref)); err != nil {
 				log.WithFields(
 					log.Fields{
@@ -454,9 +455,15 @@ func (c *Client) refsFromPipelines(pd *ProjectDetails) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var refs []string
+	re, err := regexp.Compile(pd.RefsRegexp(c.Config))
+	if err != nil {
+		return nil, err
+	}
+
 	for _, p := range pipelines {
-		if !refExists(p.Ref, refs) {
+		if !refExists(p.Ref, refs) && re.MatchString(p.Ref) {
 			refs = append(refs, p.Ref)
 		}
 	}
