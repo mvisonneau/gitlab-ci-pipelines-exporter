@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [0.3.0] - 2019-04-29
+
 ### **BREAKING CHANGES**
 
 - `default_refs` & `refs` parameter have been renamed respectively to `default_refs_regexp` and `refs_regexp` to make them more explicit
@@ -38,7 +40,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Fixed a bug causing duplicate metrics when status changes with sparse flag enabled
 - Updated labels syntax in helm chart to comply with standards
 - Updated logging, using more extensively the log.WithFields parameter for an enhanced troubleshooting experience
-- Bumped prometheus/client_golang to 1.6.
+- Bumped prometheus/client_golang to `1.6`
 
 ## [0.2.14] - 2019-04-09
 
@@ -255,7 +257,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.2.14...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.0
 [0.2.14]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.14
 [0.2.13]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.13
 [0.2.12]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.12
