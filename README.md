@@ -14,142 +14,124 @@ Here is a [Grafana dashboard](https://grafana.com/grafana/dashboards/10620) I ha
 
 ![grafana_dashboard](/docs/images/grafana_dashboard.png)
 
-If you are solely interested into trying it out, have a look into the [example/](./example) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in `~5min`.
+If you are interested into trying it out, have a look into the [example/](./example) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in **~5min** using `docker-compose`
 
-## Getting started
+## Install
+
+
+### Go
 
 ```bash
-# Write your config file somewhere on disk
-~$ cat <<EOF > $(pwd)/config.yml
-# URL and Token with sufficient permissions to access your GitLab's projects
-# pipelines informations
-gitlab:
-  # URL of your GitLab instance (defaults to https://gitlab.com)
-  url: https://gitlab.example.com
+~$ go get -u github.com/mvisonneau/gitlab-ci-pipelines-exporter
+```
 
-  # Gitlab access token. You can omit this field when --gitlab-token or $GCPE_GITLAB_TOKEN  are set
-  token: xrN14n9-ywvAFxxxxxx
+### Homebrew
 
-  # Alternative URL for determining health of GitLab API (readiness probe)
-  # health_url: https://gitlab.example.com/-/health
-  
-  # disable verification of readiness for target GitLab instance calling `health_url`
-  # disable_health_check: false
+```bash
+~$ brew install mvisonneau/tap/gitlab-ci-pipelines-exporter
+```
 
-  # disable TLS validation for target GitLab instance (handy when self-hosting)
-  # disable_tls_verify: false
+### Docker
 
-# Global rate limit for the GitLab API request/sec
-maximum_gitlab_api_requests_per_second: 10
+```bash
+~$ docker run -it --rm mvisonneau/gitlab-ci-pipelines-exporter
+```
 
-# Interval in seconds to discover projects from wildcards (optional, default: 1800)
-wildcards_projects_discover_interval_seconds: 1800
+### Scoop
 
-# Interval in seconds to discover refs from projects (optional, default: 300)
-projects_refs_discover_interval_seconds: 300
+```bash
+~$ scoop bucket add https://github.com/mvisonneau/scoops
+~$ scoop install gitlab-ci-pipelines-exporter
+```
 
-# Interval in seconds to poll metrics from discovered project refs (optional, default: 30)
-projects_refs_polling_interval_seconds: 30
+### Binaries, DEB and RPM packages
 
-# Sets the parallelism for polling projects from the API (default to available CPUs: runtime.GOMAXPROCS(0))
-# maximum_projects_poller_workers: 1
+Have a look onto the [latest release page](https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/releases/latest) to pick your flavor and version. Here is an helper to fetch the most recent one:
 
-# Disable OpenMetrics content encoding in prometheus HTTP handler (default: false)
-# see: https://godoc.org/github.com/prometheus/client_golang/prometheus/promhttp#HandlerOpts
-# disable_openmetrics_encoding: true
+```bash
+~$ export GCPE_VERSION=$(curl -s "https://api.github.com/repos/mvisonneau/gitlab-ci-pipelines-exporter/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+```
 
-# Whether to attempt retrieving refs from pipelines when the exporter starts (default: false)
-# on_init_fetch_refs_from_pipelines: false
+```bash
+# Binary (eg: linux/amd64)
+~$ wget https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/releases/download/${GCPE_VERSION}/gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_amd64.tar.gz
+~$ tar zxvf gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_amd64.tar.gz -C /usr/local/bin
 
-# Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
-# on_init_fetch_refs_from_pipelines_depth_limit: 100
+# DEB package (eg: linux/386)
+~$ wget https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/releases/download/${GCPE_VERSION}/gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_386.deb
+~$ dpkg -i gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_386.deb
 
-# Default settings which can be overridden at the project or wildcard level
-defaults:
-  # Whether to attempt retrieving job level metrics from pipelines. Increases the number of output metrics significantly! (default: false)
-  # fetch_pipeline_job_metrics: false
+# RPM package (eg: linux/arm64)
+~$ wget https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/releases/download/${GCPE_VERSION}/gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_arm64.rpm
+~$ rpm -ivh gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_arm64.rpm
+```
 
-  # Fetch pipeline variables in a separate metric (default: false)
-  # fetch_pipeline_variables: false
+### HELM
 
-  # Whether to output sparse job and pipeline status metrics. When enabled, only the status label matching the last run of a pipeline or jb will be submitted (default: false)
-  # output_sparse_status_metrics: false
+If you want to make it run on [kubernetes](https://kubernetes.io/), there is a [helm chart](https://docs.helm.sh/) available for this purpose.
 
-  # Filter pipelines variables to include (default: ".*", all variables)
-  # pipeline_variables_filter_regex: ".*"
+You can check [chart/values.yml](chart/values.yml) for configuration options.
 
-  # Filter refs (branches/tags) to include (default: "^master$" -- master branch)
-  # refs_regexp: "^master$"
 
-  # Fetch merge request pipelines refs (default: false)
-  # fetch_merge_request_pipelines_refs: false
+```bash
+# Clone the repository locally
+~$ git clone git@github.com:mvisonneau/gitlab-ci-pipelines-exporter.git
 
-  # Maximum number for merge requests pipelines to attempt fetch on each ref discovery (default: 1)
-  # fetch_merge_request_pipelines_refs_init_limit: 1
-
-# The list of the projects you want to monitor
-projects:
-  - name: foo/project
-  - name: bar/project
-    refs_regexp: "^master|dev$"
-    fetch_pipeline_job_metrics: true # optional, overrides global setting of the same name
-    output_sparse_status_metrics: true # optional, overrides global setting of the same name
-
-# Dynamically fetch projects to monitor using a wildcard
-wildcards:
-  # Fetch projects belonging to a group and potentially its subgroups
-  - owner:
-      name: foo
-      kind: group
-      include_subgroups: true # optional (default: false)
-    refs_regexp: "^master|1.0$"
-    search: 'bar' # optional (defaults to '')
-    archived: true # optional (default: false)
-    fetch_pipeline_job_metrics: true # optional, overrides global setting of the same name
-    output_sparse_status_metrics: true # optional, overrides global setting of the same name
-
-  # Fetch projects belonging to a specific user
-  - owner:
-      name: bar
-      kind: user
-    refs_regexp: ".*"
-    search: 'bar' # optional (defaults to '')
-    archived: true # optional (default: false)
-
-  # Search for projects globally
-  - refs_regexp: ".*"
-    search: 'baz' # optional (defaults to '')
-    archived: true # optional (default: false)
+# Configure a minimal configuration for the exporter
+~$ cat <<EOF > values.yml
+config:
+  gitlab:
+    url: https://gitlab.example.com
+    # You can also configure the token using --gitlab-token
+    # or the $GCPE_GITLAB_TOKEN environment variable
+    token: xrN14n9-ywvAFxxxxxx
+  projects:
+    - name: foo/project
 EOF
 
-# If you have docker installed, it is as easy as :
-~$ docker run -d \
+# Release the chart on your Kubernetes cluster
+~$ helm upgrade -i gitlab-ci-pipelines-exporter ./chart -f values.yml
+```
+
+## Configuration syntax
+
+The **complete configuration syntax** [is maintained here](docs/configuration_syntax.md).
+
+## Quickstart
+
+```bash
+# Write a minimal config file somewhere on disk
+~$ cat <<EOF > $(pwd)/config.yml
+config:
+  gitlab:
+    url: https://gitlab.example.com
+    # You can also configure the token using --gitlab-token
+    # or the $GCPE_GITLAB_TOKEN environment variable
+    token: <your_token>
+  projects:
+    - name: foo/project
+    - name: bar/project
+  wildcards:
+    - owner:
+        name: foo
+        kind: group
+EOF
+
+# If you have installed the binary
+~$ gitlab-ci-pipelines-exporter --config /etc/config.yml
+
+# Otherwise if you have docker available, it is as easy as :
+~$ docker run -it --rm \
    --name gitlab-ci-pipelines-exporter \
    -v $(pwd)/config.yml:/etc/config.yml \
    -p 8080:8080 \
    mvisonneau/gitlab-ci-pipelines-exporter:latest \
    --config /etc/config.yml
-
-# Otherwise for Mac OS X
-~$ brew install mvisonneau/tap/gitlab-ci-pipelines-exporter
-~$ gitlab-ci-pipelines-exporter --config /etc/config.yml
-
-# Linux
-~$ export GCPE_VERSION=$(curl -s "https://api.github.com/repos/mvisonneau/s5/gitlab-ci-pipelines-exporter/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-~$ wget https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/releases/download/${GCPE_VERSION}/gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_amd64.deb
-~$ tar zxvf gitlab-ci-pipelines-exporter_${GCPE_VERSION}_linux_amd64.deb -C /usr/local/bin
-~$ gitlab-ci-pipelines-exporter --config /etc/config.yml
-
-# Windows
-~$ scoop bucket add https://github.com/mvisonneau/scoops
-~$ scoop install gitlab-ci-pipelines-exporter
-~$ gitlab-ci-pipelines-exporter --config <path_to_config_file>
 ```
 
 You should then be able to see the following logs
 
 ```bash
-~$ docker logs -f gitlab-ci-pipelines-exporter
 INFO[0000] starting exporter                             gitlab-endpoint="https://gitlab.com" on-init-fetch-refs-from-pipelines=true polling-pipelines-every=60s polling-projects-every=15s polling-refs-every=10s rate-limit=10rps
 INFO[0000] configured wildcards                          count=1
 INFO[0000] found new project                             project-name=foo/project wildcard-archived=false wildcard-owner-include-subgroups=false wildcard-owner-kind=group wildcard-owner-name=foo wildcard-search=
@@ -164,7 +146,7 @@ INFO[0000] found project refs                            project-path-with-names
 And this is an example of the metrics you should expect to retrieve
 
 ```bash
-~$ curl -s localhost:8080/metrics | grep gitlab_ci_pipeline
+~$ curl -s localhost:8080/metrics | grep gitlab_ci
 # HELP gitlab_ci_pipeline_last_run_duration_seconds Duration of last pipeline run
 # TYPE gitlab_ci_pipeline_last_run_duration_seconds gauge
 gitlab_ci_pipeline_last_run_duration_seconds{project="foo/project",ref="dev",topics="",variables=""} 81
@@ -288,28 +270,6 @@ GLOBAL OPTIONS:
    --gitlab-token token                            GitLab access token. Can be use to override the gitlab token in config file [$GCPE_GITLAB_TOKEN]
    --help, -h                                      show help
    --version, -v                  print the version
-```
-
-## HELM
-
-If you want to make it run on [kubernetes](https://kubernetes.io/), there is a [helm chart](https://docs.helm.sh/) for that!
-
-```bash
-~$ git clone git@github.com:mvisonneau/gitlab-ci-pipelines-exporter.git
-~$ cat <<EOF > values.yml
-config:
-  gitlab:
-    url: https://gitlab.example.com
-    token: xrN14n9-ywvAFxxxxxx
-  projects:
-    - name: foo/project
-    - name: bar/project
-  wildcards:
-    - owner:
-        name: foo
-        kind: group
-EOF
-~$ helm upgrade -i gitlab-ci-pipelines-exporter ./chart -f values.yml
 ```
 
 ## Develop / Test
