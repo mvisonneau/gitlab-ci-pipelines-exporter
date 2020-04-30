@@ -61,7 +61,7 @@ projects_refs_discover_interval_seconds: 3
 projects_refs_polling_interval_seconds: 4
 on_init_fetch_refs_from_pipelines: true
 on_init_fetch_refs_from_pipelines_depth_limit: 1337
-maximum_projects_poller_workers: 4
+polling_workers: 4
 
 defaults:
   fetch_pipeline_job_metrics: true
@@ -109,7 +109,7 @@ wildcards:
 		ProjectsRefsPollingIntervalSeconds:       4,
 		OnInitFetchRefsFromPipelines:             true,
 		OnInitFetchRefsFromPipelinesDepthLimit:   1337,
-		MaximumProjectsPollingWorkers:            4,
+		PollingWorkers:                           4,
 		Defaults: Parameters{
 			FetchPipelineJobMetricsValue:   pointy.Bool(true),
 			OutputSparseStatusMetricsValue: pointy.Bool(true),
@@ -191,7 +191,7 @@ projects:
 		DisableOpenmetricsEncoding:               false,
 		OnInitFetchRefsFromPipelines:             false,
 		OnInitFetchRefsFromPipelinesDepthLimit:   defaultOnInitFetchRefsFromPipelinesDepthLimit,
-		MaximumProjectsPollingWorkers:            runtime.GOMAXPROCS(0),
+		PollingWorkers:                           runtime.GOMAXPROCS(0),
 		Projects: []Project{
 			{
 				Name: "foo/bar",
@@ -223,7 +223,7 @@ projects:
 	assert.True(t, config.DisableOpenmetricsEncoding)
 }
 
-func TestParseConfigWithoutProjectWorkersUsesGOMAXPROCS(t *testing.T) {
+func TestParseConfigWithoutPollingWorkersUsesGOMAXPROCS(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
 	assert.Nil(t, err)
 	defer os.Remove(f.Name())
@@ -237,7 +237,7 @@ projects:
 `)
 	config := &Config{}
 	assert.NoError(t, config.Parse(f.Name()))
-	assert.Equal(t, runtime.GOMAXPROCS(0), config.MaximumProjectsPollingWorkers)
+	assert.Equal(t, runtime.GOMAXPROCS(0), config.PollingWorkers)
 
 }
 

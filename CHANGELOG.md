@@ -7,6 +7,17 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- Added `--enable-pprof` flag which provides pprof http endpoint at **/debug/pprof**
+
+### Changed
+
+- Fixed a critical bug introduced with the refactoring of workers in **v0.3.0** where the exporter would hang if there are more project refs to poll than workers available
+- Fixed a bug where multiple go routines were accessing a single variable without semaphore
+- Renamed `maximum_projects_poller_workers` into `polling_workers`
+- Enhanced signals handling using a global context with derivatives throughout go routines
+
 ## [0.3.0] - 2019-04-29
 
 ### **BREAKING CHANGES**

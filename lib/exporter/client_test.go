@@ -185,8 +185,8 @@ func TestListProjectsAPIError(t *testing.T) {
 	assert.Equal(t, true, strings.HasPrefix(err.Error(), "unable to list projects with search pattern"))
 }
 
+// TODO: Reimplement these tests
 // Here an example of concurrent execution of projects polling
-// TODO: Reimplement with pollProjectsRefs instead
 // func TestProjectPolling(t *testing.T) {
 // 	projects := []schemas.Project{{Name: "test1"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
 // 	until := make(chan struct{})
@@ -211,6 +211,31 @@ func TestListProjectsAPIError(t *testing.T) {
 // 	return numErrs
 // }
 
+// func TestPollProjectsRefs(t *testing.T) {
+// 	message := "some error"
+// 	doing := func() func(*ProjectRef) error {
+// 		return func(*ProjectRef) error {
+// 			// set the already polled refs, simulate the pollProject(p Project) set of Client.hasPolledOnInit
+// 			// return an error to count them afterwards
+// 			return fmt.Errorf(message)
+// 		}
+// 	}
+// 	testProjects := ProjectsRefs{}
+// 	testProjects[1] = map[string]*ProjectRef{"master": &ProjectRef{}}
+// 	testProjects[2] = map[string]*ProjectRef{"master": &ProjectRef{}}
+
+// 	until := make(chan struct{})
+// 	errCh := pollProjectsRefs(2, doing(), until, testProjects)
+// 	var errCount int
+// 	for err := range errCh {
+// 		if assert.Error(t, err) {
+// 			assert.Equal(t, err.Error(), message)
+// 			errCount++
+// 		}
+// 	}
+// 	assert.Equal(t, len(testProjects), errCount)
+// }
+
 func readProjects(until chan struct{}, projects ...schemas.Project) <-chan schemas.Project {
 	p := make(chan schemas.Project)
 	go func() {
@@ -224,29 +249,4 @@ func readProjects(until chan struct{}, projects ...schemas.Project) <-chan schem
 		}
 	}()
 	return p
-}
-
-func TestPollProjectsRefs(t *testing.T) {
-	message := "some error"
-	doing := func() func(*ProjectRef) error {
-		return func(*ProjectRef) error {
-			// set the already polled refs, simulate the pollProject(p Project) set of Client.hasPolledOnInit
-			// return an error to count them afterwards
-			return fmt.Errorf(message)
-		}
-	}
-	testProjects := ProjectsRefs{}
-	testProjects[1] = map[string]*ProjectRef{"master": &ProjectRef{}}
-	testProjects[2] = map[string]*ProjectRef{"master": &ProjectRef{}}
-
-	until := make(chan struct{})
-	errCh := pollProjectsRefs(2, doing(), until, testProjects)
-	var errCount int
-	for err := range errCh {
-		if assert.Error(t, err) {
-			assert.Equal(t, err.Error(), message)
-			errCount++
-		}
-	}
-	assert.Equal(t, len(testProjects), errCount)
 }

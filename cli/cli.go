@@ -23,6 +23,27 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
+			Name:   "config, c",
+			EnvVar: "GCPE_CONFIG",
+			Usage:  "config `file`",
+			Value:  "~/.gitlab-ci-pipelines-exporter.yml",
+		},
+		cli.BoolFlag{
+			Name:   "enable-pprof",
+			EnvVar: "GCPE_ENABLE_PPROF",
+		},
+		cli.StringFlag{
+			Name:   "gitlab-token",
+			EnvVar: "GCPE_GITLAB_TOKEN",
+			Usage:  "GitLab access `token`. Can be use to override the gitlab token in config file",
+		},
+		cli.StringFlag{
+			Name:   "listen-address, l",
+			EnvVar: "GCPE_LISTEN_ADDRESS",
+			Usage:  "listen-address `address:port`",
+			Value:  ":8080",
+		},
+		cli.StringFlag{
 			Name:   "log-level",
 			EnvVar: "GCPE_LOG_LEVEL",
 			Usage:  "log `level` (debug,info,warn,fatal,panic)",
@@ -33,23 +54,6 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 			EnvVar: "GCPE_LOG_FORMAT",
 			Usage:  "log `format` (json,text)",
 			Value:  "text",
-		},
-		cli.StringFlag{
-			Name:   "listen-address, l",
-			EnvVar: "GCPE_LISTEN_ADDRESS",
-			Usage:  "listen-address `address:port`",
-			Value:  ":8080",
-		},
-		cli.StringFlag{
-			Name:   "config, c",
-			EnvVar: "GCPE_CONFIG",
-			Usage:  "config `file`",
-			Value:  "~/.gitlab-ci-pipelines-exporter.yml",
-		},
-		cli.StringFlag{
-			Name:   "gitlab-token",
-			EnvVar: "GCPE_GITLAB_TOKEN",
-			Usage:  "GitLab access `token`. Can be use to override the gitlab token in config file",
 		},
 	}
 

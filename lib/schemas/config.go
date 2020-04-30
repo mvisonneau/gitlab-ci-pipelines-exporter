@@ -46,8 +46,8 @@ type Config struct {
 	// Maximum number of pipelines to analyze per project to search for refs on init (default: 100)
 	OnInitFetchRefsFromPipelinesDepthLimit int `yaml:"on_init_fetch_refs_from_pipelines_depth_limit"`
 
-	// Sets the parallelism for polling projects from the API
-	MaximumProjectsPollingWorkers int `yaml:"maximum_projects_poller_workers"`
+	// Sets the parallelism for polling projects refs from the API
+	PollingWorkers int `yaml:"polling_workers"`
 
 	// Disable OpenMetrics content encoding in prometheus HTTP handler (default: false)
 	DisableOpenmetricsEncoding bool `yaml:"disable_openmetrics_encoding"`
@@ -120,8 +120,8 @@ func (cfg *Config) Parse(path string) error {
 		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/users/sign_in", cfg.Gitlab.URL)
 	}
 
-	if cfg.MaximumProjectsPollingWorkers == 0 {
-		cfg.MaximumProjectsPollingWorkers = runtime.GOMAXPROCS(0)
+	if cfg.PollingWorkers == 0 {
+		cfg.PollingWorkers = runtime.GOMAXPROCS(0)
 	}
 
 	return nil

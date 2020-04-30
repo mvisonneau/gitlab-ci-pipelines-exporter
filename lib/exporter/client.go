@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -52,6 +53,14 @@ type ProjectRef struct {
 // we have configured/discovered
 type ProjectsRefs map[int]map[string]*ProjectRef
 
+// Count returns the amount of projects refs in the map
+func (prs ProjectsRefs) Count() (count int) {
+	for _, projectRefs := range prs {
+		count += len(projectRefs)
+	}
+	return
+}
+
 // NewProjectRef is an helper which returns a new ProjectRef pointer
 func NewProjectRef(project *schemas.Project, gp *gitlab.Project, ref string, kind ProjectRefKind) *ProjectRef {
 	return &ProjectRef{
@@ -70,43 +79,58 @@ type Client struct {
 	Config       *schemas.Config
 	RateLimiter  ratelimit.Limiter
 	ProjectsRefs ProjectsRefs
+	Mutex        sync.Mutex
 }
 
 func (pr *ProjectRef) defaultLabelsValues() []string {
 	return []string{pr.PathWithNamespace, pr.Topics, pr.Ref, string(pr.Kind), pr.MostRecentPipelineVariables}
 }
 
+// runWithContext wraps polling function in order to be able to gracefully exit during potentially
+// long running operations.
+func runWithContext(ctx context.Context, f func(), functionName string) {
+	exit := make(chan bool)
+	go func(exit chan<- bool) {
+		f()
+		exit <- true
+	}(exit)
+
+	select {
+	case <-ctx.Done():
+		log.Infof("stopped %s", functionName)
+	case <-exit:
+		log.Debugf("finished %s", functionName)
+	}
+}
+
 // OrchestratePolling ...
-func (c *Client) OrchestratePolling(until <-chan bool) {
-	go func() {
+func (c *Client) OrchestratePolling(ctx context.Context) {
+	go func(ctx context.Context) {
 		discoverWildcardsProjectsEvery := time.NewTicker(time.Duration(c.Config.WildcardsProjectsDiscoverIntervalSeconds) * time.Second)
 		discoverProjectsRefsEvery := time.NewTicker(time.Duration(c.Config.ProjectsRefsDiscoverIntervalSeconds) * time.Second)
 		pollProjectsRefsEvery := time.NewTicker(time.Duration(c.Config.ProjectsRefsPollingIntervalSeconds) * time.Second)
-		stopWorkers := make(chan struct{})
-		defer close(stopWorkers)
-		// first execution, blocking call before entering orchestration loop to get the wildcards discovered
-		c.discoverProjectsRefsFromPipelinesOnInit()
-		c.discoverProjectsFromWildcards()
-		c.discoverProjectsRefs()
-		c.pollProjectsRefsUntil(stopWorkers)
 
+		// first execution, blocking call to initiate everything before entering the orchestration loop
+		runWithContext(ctx, c.discoverProjectsRefsFromPipelinesOnInit, "discoverProjectsRefsFromPipelinesOnInit")
+		runWithContext(ctx, c.discoverProjectsFromWildcards, "discoverProjectsFromWildcards")
+		runWithContext(ctx, c.discoverProjectsRefs, "discoverProjectsRefs")
+		c.pollProjectsRefs(ctx, c.pollProjectRefMostRecentPipeline)
+
+		// Then, waiting for the tickers to kick in
 		for {
 			select {
-			case <-until:
-				log.Info("stopping projects polling...")
+			case <-ctx.Done():
+				log.Info("stopped polling orchestration")
 				return
-			case <-pollProjectsRefsEvery.C:
-				// poll all the configured project refs pipelines
-				c.pollProjectsRefsUntil(stopWorkers)
-			case <-discoverProjectsRefsEvery.C:
-				// refresh the list of project refs
-				c.discoverProjectsRefs()
 			case <-discoverWildcardsProjectsEvery.C:
-				// refresh the list of projects from wildcards
-				c.discoverProjectsFromWildcards()
+				runWithContext(ctx, c.discoverProjectsFromWildcards, "discoverProjectsFromWildcards")
+			case <-discoverProjectsRefsEvery.C:
+				runWithContext(ctx, c.discoverProjectsRefs, "discoverProjectsRefs")
+			case <-pollProjectsRefsEvery.C:
+				c.pollProjectsRefs(ctx, c.pollProjectRefMostRecentPipeline)
 			}
 		}
-	}()
+	}(ctx)
 }
 
 func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
@@ -255,7 +279,7 @@ func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
 						"pipeline-id":                 pipeline.ID,
 						"error":                       err.Error(),
 					},
-				).Error("polling pipeline jobs")
+				).Error("polling pipeline jobs metrics")
 			}
 		}
 
@@ -266,9 +290,12 @@ func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
 }
 
 func (c *Client) discoverProjectsFromWildcards() {
+	c.Mutex.Lock()
+	defer c.Mutex.Unlock()
+
 	log.WithFields(
 		log.Fields{
-			"count": len(c.Config.Wildcards),
+			"total": len(c.Config.Wildcards),
 		},
 	).Info("discover wildcards")
 
@@ -354,62 +381,75 @@ func (c *Client) discoverProjectsRefsFromPipelinesOnInit() {
 	}
 }
 
-func (c *Client) pollProjectsRefsUntil(stop <-chan struct{}) {
+func (c *Client) pollProjectsRefs(ctx context.Context, pollFunction func(*ProjectRef) error) {
+	c.Mutex.Lock()
+	defer c.Mutex.Unlock()
+
 	log.WithFields(
 		log.Fields{
-			"count": len(c.ProjectsRefs),
+			"total": c.ProjectsRefs.Count(),
 		},
 	).Info("polling metrics from projects refs")
 
-	pollErrors := pollProjectsRefs(c.Config.MaximumProjectsPollingWorkers, c.pollProjectRefMostRecentPipeline, stop, c.ProjectsRefs)
-	for err := range pollErrors {
-		if err != nil {
-			log.WithFields(
-				log.Fields{
-					"error": err.Error(),
-				},
-			).Error("whilst metrics from polling projects refs")
-		}
-	}
-}
-
-func pollProjectsRefs(numWorkers int, pollFunction func(*ProjectRef) error, until <-chan struct{}, projectsRefs ProjectsRefs) <-chan error {
-	errorStream := make(chan error)
 	projectsRefsToPoll := make(chan *ProjectRef)
+
 	// sync closing the error channel via a waitGroup
 	var wg sync.WaitGroup
-	wg.Add(numWorkers)
-	// spawn maximum_projects_poller_workers to process project polling in parallel
-	for w := 0; w < numWorkers; w++ {
-		go func(wg *sync.WaitGroup) {
-			defer wg.Done()
-			for pr := range projectsRefsToPoll {
+	wg.Add(c.Config.PollingWorkers)
+	defer wg.Wait()
+
+	// spawn workers to process project polling in parallel
+	for workerID := 0; workerID < c.Config.PollingWorkers; workerID++ {
+		log.WithFields(
+			log.Fields{
+				"polling-worker-id": workerID,
+			},
+		).Debug("polling worker started")
+
+		go func(ctx context.Context, workerID int, wg *sync.WaitGroup, projectsRefsToPoll <-chan *ProjectRef) {
+			defer func() {
+				wg.Done()
+				log.WithFields(
+					log.Fields{
+						"polling-worker-id": workerID,
+					},
+				).Debug("polling worker stopped")
+			}()
+
+			for {
 				select {
-				case <-until:
+				case <-ctx.Done():
 					return
-				case errorStream <- pollFunction(pr):
+				case pr, open := <-projectsRefsToPoll:
+					if !open {
+						return
+					}
+					if err := pollFunction(pr); err != nil {
+						log.WithFields(
+							log.Fields{
+								"project-path-with-namespace": pr.PathWithNamespace,
+								"project-id":                  pr.ID,
+								"project-ref":                 pr.Ref,
+								"project-ref-kind":            pr.Kind,
+								"error":                       err.Error(),
+							},
+						).Error("whilst metrics from polling projects refs")
+					}
 				}
 			}
-		}(&wg)
+		}(ctx, workerID, &wg, projectsRefsToPoll)
 	}
-
-	// close the error channel when the workers won't write to it anymore
-	go func() {
-		wg.Wait()
-		close(errorStream)
-	}()
 
 	// start processing all the projects configured for this run;
 	// since the channel is buffered because we already know the length of the projects to process,
 	// we can close immediately and the runtime will handle the channel close only when the messages are dispatched
-	for _, refs := range projectsRefs {
+	for _, refs := range c.ProjectsRefs {
 		for _, pr := range refs {
 			projectsRefsToPoll <- pr
 		}
 	}
 
 	close(projectsRefsToPoll)
-	return errorStream
 }
 
 func (c *Client) getProjectPipelines(projectID int, options *gitlab.ListProjectPipelinesOptions) ([]*gitlab.PipelineInfo, error) {
@@ -493,7 +533,7 @@ func (c *Client) rateLimit() {
 			log.Fields{
 				"for": throttled.Sub(now),
 			},
-		).Debug("throttling GitLab requests")
+		).Debug("throttled GitLab requests")
 	}
 }
 
@@ -566,7 +606,6 @@ func (c *Client) listProjects(w *schemas.Wildcard) ([]schemas.Project, error) {
 
 		// Copy relevant settings from wildcard into created project
 		for _, gp := range gps {
-
 			projects = append(
 				projects,
 				schemas.Project{
@@ -587,6 +626,9 @@ func (c *Client) listProjects(w *schemas.Wildcard) ([]schemas.Project, error) {
 }
 
 func (c *Client) discoverProjectsRefs() {
+	c.Mutex.Lock()
+	defer c.Mutex.Unlock()
+
 	if c.ProjectsRefs == nil {
 		c.ProjectsRefs = ProjectsRefs{}
 	}

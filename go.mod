@@ -3,6 +3,8 @@ module github.com/mvisonneau/gitlab-ci-pipelines-exporter
 go 1.14
 
 require (
+	github.com/docker/distribution v2.7.1+incompatible
+	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/mvisonneau/go-helpers v0.0.0-20200224131125-cb5cc4e6def9
 	github.com/openlyinc/pointy v1.1.2

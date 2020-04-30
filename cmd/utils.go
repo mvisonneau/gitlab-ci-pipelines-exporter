@@ -55,6 +55,7 @@ func configure(ctx *cli.Context) (c *gcpe.Client, h healthcheck.Handler, err err
 	opts := []gitlab.ClientOptionFunc{
 		gitlab.WithHTTPClient(gitlabHTTPClient),
 		gitlab.WithBaseURL(cfg.Gitlab.URL),
+		gitlab.WithoutRetries(),
 	}
 
 	gc, err := gitlab.NewClient(cfg.Gitlab.Token, opts...)
