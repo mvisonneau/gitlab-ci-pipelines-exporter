@@ -43,7 +43,7 @@ projects_refs_polling_interval_seconds: 30
 
 # Sets the parallelism for polling projects from
 # the API (optional, default to available CPUs: runtime.GOMAXPROCS(0))
-maximum_projects_poller_workers: 1
+polling_workers: 2
 
 # Disable OpenMetrics content encoding in
 # prometheus HTTP handler (optional, default: false)

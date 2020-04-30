@@ -132,7 +132,7 @@ EOF
 You should then be able to see the following logs
 
 ```bash
-INFO[0000] starting exporter                             gitlab-endpoint="https://gitlab.com" on-init-fetch-refs-from-pipelines=true polling-pipelines-every=60s polling-projects-every=15s polling-refs-every=10s rate-limit=10rps
+INFO[0000] starting exporter                             gitlab-endpoint="https://gitlab.com" on-init-fetch-refs-from-pipelines=true polling-pipelines-every=60s polling-projects-every=15s polling-refs-every=10s polling-workers=2 rate-limit=10rps
 INFO[0000] configured wildcards                          count=1
 INFO[0000] found new project                             project-name=foo/project wildcard-archived=false wildcard-owner-include-subgroups=false wildcard-owner-kind=group wildcard-owner-name=foo wildcard-search=
 INFO[0000] found new project                             project-name=foo/bar wildcard-archived=false wildcard-owner-include-subgroups=false wildcard-owner-kind=group wildcard-owner-name=foo wildcard-search=

@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [0.3.1] - 2019-04-30
+
 ### Added
 
 - Added `--enable-pprof` flag which provides pprof http endpoint at **/debug/pprof**
@@ -268,7 +270,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.3.1...HEAD
+[0.3.1]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.1
 [0.3.0]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.0
 [0.2.14]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.14
 [0.2.13]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.13
