@@ -9,7 +9,7 @@ require (
 	github.com/mvisonneau/go-helpers v0.0.0-20200224131125-cb5cc4e6def9
 	github.com/openlyinc/pointy v1.1.2
 	github.com/prometheus/client_golang v1.6.0
-	github.com/sirupsen/logrus v1.5.0
+	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli v1.22.4
 	github.com/xanzy/go-gitlab v0.31.0
