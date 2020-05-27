@@ -12,7 +12,7 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli v1.22.4
-	github.com/xanzy/go-gitlab v0.31.0
+	github.com/xanzy/go-gitlab v0.32.0
 	go.uber.org/ratelimit v0.1.0
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
