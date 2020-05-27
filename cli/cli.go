@@ -31,6 +31,7 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 		cli.BoolFlag{
 			Name:   "enable-pprof",
 			EnvVar: "GCPE_ENABLE_PPROF",
+			Usage:  "Enable profiling endpoints at /debug/pprof",
 		},
 		cli.StringFlag{
 			Name:   "gitlab-token",

@@ -263,13 +263,13 @@ COMMANDS:
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
+   --config file, -c file                          config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
+   --enable-pprof                                  Enable profiling endpoints at /debug/pprof [$GCPE_ENABLE_PPROF]
+   --gitlab-token token                            GitLab access token. Can be use to override the gitlab token in config file [$GCPE_GITLAB_TOKEN]
+   --listen-address address:port, -l address:port  listen-address address:port (default: ":8080") [$GCPE_LISTEN_ADDRESS]
    --log-level level                               log level (debug,info,warn,fatal,panic) (default: "info") [$GCPE_LOG_LEVEL]
    --log-format format                             log format (json,text) (default: "text") [$GCPE_LOG_FORMAT]
-   --listen-address address:port, -l address:port  listen-address address:port (default: ":8080") [$GCPE_LISTEN_ADDRESS]
-   --config file, -c file                          config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
-   --gitlab-token token                            GitLab access token. Can be use to override the gitlab token in config file [$GCPE_GITLAB_TOKEN]
    --help, -h                                      show help
-   --version, -v                  print the version
 ```
 
 ## Develop / Test
