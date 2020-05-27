@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [0.3.2] - 2019-05-27
+
 ### Changed
 
 - Fixed a bug where `gitlab_ci_pipeline_last_run_status` would not get updated after being fetched for the first time (#102)
@@ -278,7 +280,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.3.1...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.3.2...HEAD
+[0.3.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.2
 [0.3.1]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.1
 [0.3.0]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.0
 [0.2.14]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.2.14
