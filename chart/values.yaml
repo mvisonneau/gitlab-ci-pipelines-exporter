@@ -86,23 +86,20 @@ args:
 ## Actual configuration of the exporter
 ##
 config: {}
+  # # Full configuration syntax reference available here:
+  # # https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/blob/master/docs/configuration_syntax.md
   # gitlab:
   #   url: https://gitlab.example.com
-  #   token: xrN14n9-ywvAFxxxxxx
-  # projects_polling_interval_seconds: 300            # Interval in seconds at which to poll projects from wildcards
-  # refs_polling_interval_seconds: 5                  # Interval in seconds to fetch refs from projects
-  # pipelines_polling_interval_seconds: 10            # Interval in seconds to get new pipelines from refs (exponentially backing of to maximum value)
+  #   # You can also configure the token using --gitlab-token
+  #   # or the $GCPE_GITLAB_TOKEN environment variable
+  #   token: <your_token>
   # projects:
   #   - name: foo/project
-  #     refs: "^master|develop|1.0$"
   #   - name: bar/project
-  #     refs: "^master|develop|1.0$"
   # wildcards:
   #   - owner:
   #       name: foo
   #       kind: group
-  #     refs: master
-  #     search: 'bar' # optional
 
 ## Environment variables for the container
 ##
