@@ -9,6 +9,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Changed
 
+- Fixed a bug where `gitlab_ci_pipeline_last_run_status` would not get updated after being fetched for the first time (#102)
+- Fixed a bug on `gitlab_ci_pipeline_run_count`, not being updated when a job in a pipeline gets restarted (linked to #102)
 - Bumped all dependencies
   - goreleaser to `0.136.0`
   - go-gitlab to `0.32.0`

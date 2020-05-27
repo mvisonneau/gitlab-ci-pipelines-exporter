@@ -247,7 +247,9 @@ func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
 		}
 
 		defaultLabelValues := pr.defaultLabelsValues()
-		runCount.WithLabelValues(defaultLabelValues...).Inc()
+		if pipeline.Status == "running" {
+			runCount.WithLabelValues(defaultLabelValues...).Inc()
+		}
 
 		if pipeline.Coverage != "" {
 			parsedCoverage, err := strconv.ParseFloat(pipeline.Coverage, 64)
