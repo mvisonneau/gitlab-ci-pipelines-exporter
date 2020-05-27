@@ -12,7 +12,7 @@ steps:
     commands:
       - make test
   - name: build
-    image: goreleaser/goreleaser:v0.132.1
+    image: goreleaser/goreleaser:v0.136.0
     commands:
       - apk add --no-cache make
       - make build
@@ -64,7 +64,7 @@ steps:
       - git fetch --tags
 
   - name: release
-    image: goreleaser/goreleaser:v0.132.1
+    image: goreleaser/goreleaser:v0.136.0
     environment:
       GITHUB_TOKEN:
         from_secret: GITHUB_TOKEN
@@ -84,6 +84,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: 30e43224be0073d72fd9e1983aec7a6af9be3ae84007ffd9873d1500a41816f7
+hmac: 8c908cd9b3521c68bb73cbf8f13b4b5813eff8bb7542cc825d49c583b0488cc0
 
 ...

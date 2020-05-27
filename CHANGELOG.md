@@ -7,6 +7,12 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped all dependencies
+  - goreleaser to `0.136.0`
+  - go-gitlab to `0.32.0`
+
 ## [0.3.1] - 2019-04-30
 
 ### Added
