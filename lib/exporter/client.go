@@ -3,6 +3,7 @@ package exporter
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -231,8 +232,7 @@ func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
 		return fmt.Errorf("could not read content of last pipeline %s:%s", pr.PathWithNamespace, pr.Ref)
 	}
 
-	// TODO: Evaluate if a > operator would not make even more sense here
-	if pr.MostRecentPipeline == nil || pipeline.ID != pr.MostRecentPipeline.ID {
+	if pr.MostRecentPipeline == nil || !reflect.DeepEqual(pipeline, pr.MostRecentPipeline) {
 		pr.MostRecentPipeline = pipeline
 
 		// fetch pipeline variables
