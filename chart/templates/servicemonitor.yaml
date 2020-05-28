@@ -22,7 +22,7 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/managed-by: {{ .Release.Service }}
       helm.sh/from: deploy.{{ include "app.fullname" . }}
-      {{- toYaml .Values.service.labels | indent 6 }}
+      {{- with .Values.service.labels }}{{ toYaml . | nindent 6 }}{{ end }}
   endpoints:
     - port: metrics
       interval: {{ .Values.serviceMonitor.scrapeInterval }}
