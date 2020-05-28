@@ -15,9 +15,10 @@ metadata:
   {{- end }}
 spec:
   selector:
-    app.kubernetes.io/name: {{ include "app.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    helm.sh/from: deploy.{{ include "app.fullname" . }}
+    matchLabels:
+      app.kubernetes.io/name: {{ include "app.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      helm.sh/from: deploy.{{ include "app.fullname" . }}
   endpoints:
     - port: metrics
       interval: {{ .Values.serviceMonitor.scrapeInterval }}
