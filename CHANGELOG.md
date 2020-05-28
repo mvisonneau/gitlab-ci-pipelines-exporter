@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- Fixed a bug where `gitlab_ci_pipeline_time_since_last_run_seconds` and `gitlab_ci_pipeline_time_since_last_job_run_seconds` would not get updated after beingfetched for the first time on each pipelines (#106)
+
 ## [0.3.2] - 2019-05-27
 
 ### Changed

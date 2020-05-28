@@ -41,13 +41,14 @@ const (
 type ProjectRef struct {
 	*schemas.Project
 
-	Kind                        ProjectRefKind
-	ID                          int
-	PathWithNamespace           string
-	Topics                      string
-	Ref                         string
-	MostRecentPipeline          *gitlab.Pipeline
-	MostRecentPipelineVariables string
+	Kind                          ProjectRefKind
+	ID                            int
+	PathWithNamespace             string
+	Topics                        string
+	Ref                           string
+	MostRecentPipeline            *gitlab.Pipeline
+	MostRecentPipelineVariables   string
+	PreviouslyEmittedPipelineJobs map[string]int
 }
 
 // ProjectsRefs allows us to keep track of all the ProjectRef
@@ -139,6 +140,11 @@ func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
 	var resp *gitlab.Response
 	var err error
 
+	// Initialize the variable
+	if pr.PreviouslyEmittedPipelineJobs == nil {
+		pr.PreviouslyEmittedPipelineJobs = map[string]int{}
+	}
+
 	options := &gitlab.ListJobsOptions{
 		ListOptions: gitlab.ListOptions{
 			PerPage: 20,
@@ -154,11 +160,41 @@ func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
 		}
 
 		// otherwise proceed
-		log.Infof("Found %d jobs for pipeline %d", len(jobs), pr.MostRecentPipeline.ID)
+		log.WithFields(
+			log.Fields{
+				"project-id":  pr.ID,
+				"pipeline-id": pr.MostRecentPipeline.ID,
+				"jobs-count":  len(jobs),
+			},
+		).Info("found pipeline jobs")
+
 		for _, job := range jobs {
 			jobValues := append(pr.defaultLabelsValues(), job.Stage, job.Name)
 
-			log.Debugf("Job %s for pipeline %d", job.Name, pr.MostRecentPipeline.ID)
+			// In case a job gets restarted, it will have an ID greated than the previous one(s)
+			// jobs in new pipelines should get greated IDs too
+			if previousJobID, ok := pr.PreviouslyEmittedPipelineJobs[job.Name]; ok {
+				if previousJobID == job.ID {
+					timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
+				}
+
+				if previousJobID >= job.ID {
+					continue
+				}
+			}
+
+			log.WithFields(
+				log.Fields{
+					"project-id":  pr.ID,
+					"pipeline-id": pr.MostRecentPipeline.ID,
+					"job-name":    job.Name,
+					"job-id":      job.ID,
+				},
+			).Debug("processing pipeline job metrics")
+
+			pr.PreviouslyEmittedPipelineJobs[job.Name] = job.ID
+
+			timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
 			lastRunJobDuration.WithLabelValues(jobValues...).Set(job.Duration)
 
 			emitStatusMetric(
@@ -232,6 +268,7 @@ func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
 		return fmt.Errorf("could not read content of last pipeline %s:%s", pr.PathWithNamespace, pr.Ref)
 	}
 
+	defaultLabelValues := pr.defaultLabelsValues()
 	if pr.MostRecentPipeline == nil || !reflect.DeepEqual(pipeline, pr.MostRecentPipeline) {
 		pr.MostRecentPipeline = pipeline
 
@@ -246,7 +283,6 @@ func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
 			pr.MostRecentPipelineVariables = ""
 		}
 
-		defaultLabelValues := pr.defaultLabelsValues()
 		if pipeline.Status == "running" {
 			runCount.WithLabelValues(defaultLabelValues...).Inc()
 		}
@@ -269,24 +305,24 @@ func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
 			pipeline.Status,
 			pr.OutputSparseStatusMetrics(c.Config),
 		)
-
-		if pr.FetchPipelineJobMetrics(c.Config) {
-			if err := c.pollPipelineJobs(pr); err != nil {
-				log.WithFields(
-					log.Fields{
-						"project-path-with-namespace": pr.PathWithNamespace,
-						"project-id":                  pr.ID,
-						"project-ref":                 pr.Ref,
-						"project-ref-kind":            pr.Kind,
-						"pipeline-id":                 pipeline.ID,
-						"error":                       err.Error(),
-					},
-				).Error("polling pipeline jobs metrics")
-			}
-		}
-
-		timeSinceLastRun.WithLabelValues(defaultLabelValues...).Set(time.Since(*pipeline.CreatedAt).Round(time.Second).Seconds())
 	}
+
+	if pr.FetchPipelineJobMetrics(c.Config) {
+		if err := c.pollPipelineJobs(pr); err != nil {
+			log.WithFields(
+				log.Fields{
+					"project-path-with-namespace": pr.PathWithNamespace,
+					"project-id":                  pr.ID,
+					"project-ref":                 pr.Ref,
+					"project-ref-kind":            pr.Kind,
+					"pipeline-id":                 pipeline.ID,
+					"error":                       err.Error(),
+				},
+			).Error("polling pipeline jobs metrics")
+		}
+	}
+
+	timeSinceLastRun.WithLabelValues(defaultLabelValues...).Set(time.Since(*pipeline.CreatedAt).Round(time.Second).Seconds())
 
 	return nil
 }
