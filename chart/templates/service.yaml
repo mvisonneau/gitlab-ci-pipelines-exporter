@@ -9,6 +9,7 @@ metadata:
     helm.sh/chart: {{ include "app.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/from: deploy.{{ include "app.fullname" . }}
 {{ with .Values.service.labels }}{{ toYaml . | indent 4 }}{{ end }}
   {{- with .Values.service.annotations }}
   annotations: {{ toYaml . | nindent 4 }}
