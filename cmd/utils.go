@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
@@ -46,6 +47,9 @@ func configure(ctx *cli.Context) (c *gcpe.Client, h healthcheck.Handler, err err
 	if len(ctx.GlobalString("gitlab-token")) > 0 {
 		cfg.Gitlab.Token = ctx.GlobalString("gitlab-token")
 	}
+
+	assertStringVariableDefined(ctx, "listen-address", ctx.GlobalString("listen-address"))
+	assertStringVariableDefined(ctx, "gitlab-token", cfg.Gitlab.Token)
 
 	// Configure GitLab client
 	gitlabHTTPClient := &http.Client{Transport: &http.Transport{
@@ -112,5 +116,13 @@ func exit(exitCode int, err error) *cli.ExitError {
 func ExecWrapper(f func(ctx *cli.Context) (int, error)) func(*cli.Context) error {
 	return func(ctx *cli.Context) error {
 		return exit(f(ctx))
+	}
+}
+
+func assertStringVariableDefined(ctx *cli.Context, k, v string) {
+	if len(v) == 0 {
+		cli.ShowAppHelp(ctx)
+		log.Errorf("'--%s' must be set!", k)
+		os.Exit(2)
 	}
 }
