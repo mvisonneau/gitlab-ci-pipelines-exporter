@@ -1,3 +1,4 @@
+
 {
   "annotations": {
     "list": [
@@ -16,25 +17,46 @@
   "editable": true,
   "gnetId": 10620,
   "graphTooltip": 0,
+  "id": 2,
+  "iteration": 1591719586104,
   "links": [],
   "panels": [
     {
       "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "#C4162A",
-        "#d44a3a"
-      ],
-      "decimals": 0,
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "mappings": [
+            {
+              "id": 0,
+              "op": "=",
+              "text": "N/A",
+              "type": 1,
+              "value": "null"
+            }
+          ],
+          "nullValueMode": "connected",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "#C4162A",
+                "value": 1
+              },
+              {
+                "color": "#d44a3a"
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 3,
@@ -45,39 +67,26 @@
       "id": 107,
       "interval": null,
       "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
       "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "options": {},
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
+      "options": {
+        "colorMode": "background",
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
         }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
       },
-      "tableColumn": "",
+      "pluginVersion": "7.0.3",
       "targets": [
         {
           "expr": "count(gitlab_ci_pipeline_last_run_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"} > 0) or vector(0)",
@@ -87,38 +96,48 @@
           "refId": "A"
         }
       ],
-      "thresholds": "1",
       "timeFrom": null,
       "timeShift": null,
       "title": "FAILED",
-      "type": "singlestat",
-      "valueFontSize": "120%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
+      "type": "stat"
     },
     {
       "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#C4162A"
-      ],
-      "decimals": 1,
-      "format": "dtdurations",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "mappings": [
+            {
+              "id": 0,
+              "op": "=",
+              "text": "N/A",
+              "type": 1,
+              "value": "null"
+            }
+          ],
+          "nullValueMode": "connected",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 5184000
+              },
+              {
+                "color": "#C4162A",
+                "value": 15552000
+              }
+            ]
+          },
+          "unit": "dtdurations"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 3,
@@ -129,39 +148,26 @@
       "id": 108,
       "interval": null,
       "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
       "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "options": {},
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
+      "options": {
+        "colorMode": "background",
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^Value$/",
+          "values": false
         }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
       },
-      "tableColumn": "",
+      "pluginVersion": "7.0.3",
       "targets": [
         {
           "expr": "avg(gitlab_ci_pipeline_time_since_last_run_seconds{project=~\"$PROJECT\", ref=~\"$REF\"})",
@@ -170,38 +176,48 @@
           "refId": "A"
         }
       ],
-      "thresholds": "5184000,15552000",
       "timeFrom": null,
       "timeShift": null,
       "title": "Average Pipeline Run Frequency",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
+      "type": "stat"
     },
     {
       "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "decimals": 1,
-      "format": "dtdurations",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "mappings": [
+            {
+              "id": 0,
+              "op": "=",
+              "text": "N/A",
+              "type": 1,
+              "value": "null"
+            }
+          ],
+          "nullValueMode": "connected",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 600
+              },
+              {
+                "color": "#d44a3a",
+                "value": 900
+              }
+            ]
+          },
+          "unit": "dtdurations"
+        },
+        "overrides": []
       },
       "gridPos": {
         "h": 3,
@@ -212,6 +228,60 @@
       "id": 106,
       "interval": null,
       "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "background",
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "pluginVersion": "7.0.3",
+      "targets": [
+        {
+          "expr": "avg(gitlab_ci_pipeline_last_run_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"})",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Average Pipeline Duration",
+      "type": "stat"
+    },
+    {
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 110,
+      "links": [],
       "mappingType": 1,
       "mappingTypes": [
         {
@@ -223,73 +293,15 @@
           "value": 2
         }
       ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "options": {},
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "expr": "avg(gitlab_ci_pipeline_last_run_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"})",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "A"
-        }
-      ],
-      "thresholds": "180,300",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Average Pipeline Duration",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
-      "id": 110,
-      "links": [],
-      "options": {},
       "polystat": {
         "animationSpeed": 2500,
         "columnAutoSize": true,
-        "columns": 15,
+        "columns": "",
         "defaultClickThrough": "",
+        "defaultClickThroughNewTab": false,
         "defaultClickThroughSanitize": false,
         "displayLimit": 100,
+        "fontAutoColor": true,
         "fontAutoScale": true,
         "fontSize": 12,
         "fontType": "Roboto",
@@ -299,27 +311,34 @@
         "globalOperatorName": "avg",
         "globalUnitFormat": "short",
         "gradientEnabled": false,
-        "hexagonSortByDirection": "asc",
+        "hexagonSortByDirection": 1,
         "hexagonSortByField": "name",
         "maxMetrics": 0,
         "polygonBorderColor": "#10111c",
         "polygonBorderSize": 1,
         "polygonGlobalFillColor": "#0a50a1",
-        "radius": 17,
-        "radiusAutoSize": false,
-        "rowAutoSize": false,
-        "rows": 10,
+        "radius": "",
+        "radiusAutoSize": true,
+        "rowAutoSize": true,
+        "rows": "",
         "shape": "hexagon_pointed_top",
         "tooltipDisplayMode": "all",
         "tooltipDisplayTextTriggeredEmpty": "OK",
         "tooltipFontSize": 12,
         "tooltipFontType": "Roboto",
-        "tooltipPrimarySortDirection": "desc",
+        "tooltipPrimarySortDirection": 2,
         "tooltipPrimarySortField": "thresholdLevel",
-        "tooltipSecondarySortDirection": "desc",
+        "tooltipSecondarySortDirection": 2,
         "tooltipSecondarySortField": "value",
         "tooltipTimestampEnabled": false
       },
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
       "savedComposites": [],
       "savedOverrides": [
         {
@@ -374,10 +393,24 @@
       "timeShift": null,
       "title": "",
       "transparent": true,
-      "type": "grafana-polystat-panel"
+      "type": "grafana-polystat-panel",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ]
     },
     {
       "columns": [],
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fontSize": "100%",
       "gridPos": {
         "h": 22,
@@ -387,7 +420,6 @@
       },
       "id": 104,
       "links": [],
-      "options": {},
       "pageSize": null,
       "scroll": true,
       "showHeader": true,
@@ -398,12 +430,14 @@
       "styles": [
         {
           "alias": "Time",
+          "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "pattern": "Time",
           "type": "hidden"
         },
         {
           "alias": "Status",
+          "align": "auto",
           "colorMode": "cell",
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -430,6 +464,7 @@
         },
         {
           "alias": "Last run",
+          "align": "auto",
           "colorMode": "cell",
           "colors": [
             "rgba(50, 172, 45, 0.97)",
@@ -449,6 +484,7 @@
         },
         {
           "alias": "Duration",
+          "align": "auto",
           "colorMode": "cell",
           "colors": [
             "rgba(50, 172, 45, 0.97)",
@@ -468,6 +504,7 @@
         },
         {
           "alias": "",
+          "align": "auto",
           "colorMode": null,
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -511,10 +548,17 @@
       "timeShift": null,
       "title": "FAILED",
       "transform": "table",
-      "type": "table"
+      "type": "table-old"
     },
     {
       "columns": [],
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fontSize": "100%",
       "gridPos": {
         "h": 25,
@@ -524,7 +568,6 @@
       },
       "id": 103,
       "links": [],
-      "options": {},
       "pageSize": null,
       "scroll": true,
       "showHeader": true,
@@ -535,12 +578,14 @@
       "styles": [
         {
           "alias": "Time",
+          "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "pattern": "Time",
           "type": "hidden"
         },
         {
           "alias": "Status",
+          "align": "auto",
           "colorMode": "cell",
           "colors": [
             "rgba(50, 172, 45, 0.97)",
@@ -571,6 +616,7 @@
         },
         {
           "alias": "Last run",
+          "align": "auto",
           "colorMode": "cell",
           "colors": [
             "rgba(50, 172, 45, 0.97)",
@@ -590,6 +636,7 @@
         },
         {
           "alias": "Duration",
+          "align": "auto",
           "colorMode": "cell",
           "colors": [
             "rgba(50, 172, 45, 0.97)",
@@ -609,6 +656,7 @@
         },
         {
           "alias": "",
+          "align": "auto",
           "colorMode": null,
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -650,30 +698,28 @@
       "timeShift": null,
       "title": "HEALTHY & RUNNING",
       "transform": "table",
-      "type": "table"
+      "type": "table-old"
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 18,
+  "schemaVersion": 25,
   "style": "dark",
-  "tags": [
-    "gitlab",
-    "ci"
-  ],
+  "tags": [],
   "templating": {
     "list": [
       {
         "allValue": "",
         "current": {
+          "selected": true,
           "text": "All",
           "value": [
             "$__all"
           ]
         },
+        "datasource": null,
         "definition": "label_values(gitlab_ci_pipeline_last_run_status, project)",
         "hide": 0,
         "includeAll": true,
-        "index": -1,
         "label": "project",
         "multi": true,
         "name": "PROJECT",
@@ -692,15 +738,16 @@
       {
         "allValue": "",
         "current": {
+          "selected": true,
           "text": "master",
           "value": [
             "master"
           ]
         },
+        "datasource": null,
         "definition": "label_values(gitlab_ci_pipeline_last_run_status{project=~\"$PROJECT\"}, ref)",
         "hide": 0,
         "includeAll": true,
-        "index": -1,
         "label": "ref",
         "multi": true,
         "name": "REF",
@@ -724,7 +771,6 @@
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
       "10s",
       "30s",
       "1m",
@@ -750,8 +796,5 @@
   "timezone": "",
   "title": "GitLab CI Pipelines Statuses",
   "uid": "gitlab_ci_pipeline_last_run_statuses",
-  "variables": {
-    "list": []
-  },
   "version": 2
 }

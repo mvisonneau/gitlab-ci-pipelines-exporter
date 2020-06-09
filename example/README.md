@@ -28,7 +28,7 @@ You should now have a stack completely configured and accessible at these locati
 
 - `gitlab-ci-pipelines-exporter`: [http://localhost:8080/metrics](http://localhost:8080/metrics)
 - `prometheus`: [http://localhost:9090](http://localhost:9090)
-- `grafana`: [http://localhost:3000](http://localhost:3000)
+- `grafana`: [http://localhost:3000/d/gitlab_ci_pipeline_last_run_statuses](localhost:3000/d/gitlab_ci_pipeline_last_run_statuses)
 
 ## Use and troubleshoot
 
