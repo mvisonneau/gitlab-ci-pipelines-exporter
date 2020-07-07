@@ -7,13 +7,13 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
-## [0.3.3] - 2019-06-09
+## [0.3.3] - 2020-06-09
 
 ### Changed
 
 - Fixed a bug where `gitlab_ci_pipeline_time_since_last_run_seconds` and `gitlab_ci_pipeline_time_since_last_job_run_seconds` would not get updated after beingfetched for the first time on each pipelines (#106)
 
-## [0.3.2] - 2019-05-27
+## [0.3.2] - 2020-05-27
 
 ### Changed
 
@@ -23,7 +23,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
   - goreleaser to `0.136.0`
   - go-gitlab to `0.32.0`
 
-## [0.3.1] - 2019-04-30
+## [0.3.1] - 2020-04-30
 
 ### Added
 
@@ -36,7 +36,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Renamed `maximum_projects_poller_workers` into `polling_workers`
 - Enhanced signals handling using a global context with derivatives throughout go routines
 
-## [0.3.0] - 2019-04-29
+## [0.3.0] - 2020-04-29
 
 ### **BREAKING CHANGES**
 
@@ -71,7 +71,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Updated logging, using more extensively the log.WithFields parameter for an enhanced troubleshooting experience
 - Bumped prometheus/client_golang to `1.6`
 
-## [0.2.14] - 2019-04-09
+## [0.2.14] - 2020-04-09
 
 ### Added
 
@@ -83,7 +83,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Renamed the `job` label into `job_name`
 - Fixed a bug in the helm deployment when using service labels
 
-## [0.2.13] - 2019-03-27
+## [0.2.13] - 2020-03-27
 
 ### Added
 
@@ -101,7 +101,7 @@ if not seen in a long time.
 - Updated the user agent to `gitlab-ci-pipelines-exporter`
 - Bumped goreleaser to 0.129.0
 
-## [0.2.12] - 2019-03-09
+## [0.2.12] - 2020-03-09
 
 ### Added
 
@@ -114,7 +114,7 @@ if not seen in a long time.
 - Bumped to go 1.14
 - Bumped goreleaser to 0.128.0
 
-## [0.2.11] - 2019-02-03
+## [0.2.11] - 2020-02-03
 
 ### Added
 
