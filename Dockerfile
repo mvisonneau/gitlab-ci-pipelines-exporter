@@ -15,7 +15,7 @@ make build-linux-amd64
 # RELEASE CONTAINER
 ##
 
-FROM busybox:1.31-glibc
+FROM busybox:1.32.0-glibc
 
 WORKDIR /
 
