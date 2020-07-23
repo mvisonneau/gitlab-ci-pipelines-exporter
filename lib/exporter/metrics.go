@@ -26,12 +26,44 @@ var (
 		defaultLabels,
 	)
 
+	jobRunCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "gitlab_ci_pipeline_job_run_count",
+			Help: "GitLab CI pipeline job run count",
+		},
+		append(defaultLabels, jobLabels...),
+	)
+
+	lastJobRunID = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_last_job_run_id",
+			Help: "ID of the most recent job",
+		},
+		append(defaultLabels, jobLabels...),
+	)
+
 	lastRunDuration = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_last_run_duration_seconds",
 			Help: "Duration of last pipeline run",
 		},
 		defaultLabels,
+	)
+
+	lastRunID = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_last_run_id",
+			Help: "ID of the most recent pipeline",
+		},
+		defaultLabels,
+	)
+
+	lastRunJobArtifactSize = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_last_job_run_artifact_size",
+			Help: "Filesize of the most recent job artifacts",
+		},
+		append(defaultLabels, jobLabels...),
 	)
 
 	lastRunJobDuration = prometheus.NewGaugeVec(
@@ -50,38 +82,6 @@ var (
 		append(defaultLabels, append(jobLabels, statusLabels...)...),
 	)
 
-	lastRunJobArtifactSize = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_job_run_artifact_size",
-			Help: "Filesize of the most recent job artifacts",
-		},
-		append(defaultLabels, jobLabels...),
-	)
-
-	timeSinceLastJobRun = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_time_since_last_job_run_seconds",
-			Help: "Elapsed time since most recent GitLab CI job run.",
-		},
-		append(defaultLabels, jobLabels...),
-	)
-
-	jobRunCount = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "gitlab_ci_pipeline_job_run_count",
-			Help: "GitLab CI pipeline job run count",
-		},
-		append(defaultLabels, jobLabels...),
-	)
-
-	lastRunID = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_run_id",
-			Help: "ID of the most recent pipeline",
-		},
-		defaultLabels,
-	)
-
 	lastRunStatus = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_last_run_status",
@@ -98,6 +98,14 @@ var (
 		defaultLabels,
 	)
 
+	timeSinceLastJobRun = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_time_since_last_job_run_seconds",
+			Help: "Elapsed time since most recent GitLab CI job run.",
+		},
+		append(defaultLabels, jobLabels...),
+	)
+
 	timeSinceLastRun = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_time_since_last_run_seconds",
@@ -108,15 +116,16 @@ var (
 
 	defaultMetrics = []prometheus.Collector{
 		coverage,
+		jobRunCount,
+		lastJobRunID,
 		lastRunDuration,
+		lastRunID,
+		lastRunJobArtifactSize,
 		lastRunJobDuration,
 		lastRunJobStatus,
-		lastRunJobArtifactSize,
-		timeSinceLastJobRun,
-		jobRunCount,
-		lastRunID,
 		lastRunStatus,
 		runCount,
+		timeSinceLastJobRun,
 		timeSinceLastRun,
 	}
 )

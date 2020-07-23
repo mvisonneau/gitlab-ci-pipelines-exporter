@@ -41,14 +41,14 @@ const (
 type ProjectRef struct {
 	*schemas.Project
 
-	Kind                          ProjectRefKind
-	ID                            int
-	PathWithNamespace             string
-	Topics                        string
-	Ref                           string
-	MostRecentPipeline            *gitlab.Pipeline
-	MostRecentPipelineVariables   string
-	PreviouslyEmittedPipelineJobs map[string]int
+	Kind                        ProjectRefKind
+	ID                          int
+	PathWithNamespace           string
+	Topics                      string
+	Ref                         string
+	MostRecentPipeline          *gitlab.Pipeline
+	MostRecentPipelineVariables string
+	Jobs                        map[string]*gitlab.Job
 }
 
 // ProjectsRefs allows us to keep track of all the ProjectRef
@@ -141,8 +141,8 @@ func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
 	var err error
 
 	// Initialize the variable
-	if pr.PreviouslyEmittedPipelineJobs == nil {
-		pr.PreviouslyEmittedPipelineJobs = map[string]int{}
+	if pr.Jobs == nil {
+		pr.Jobs = map[string]*gitlab.Job{}
 	}
 
 	options := &gitlab.ListJobsOptions{
@@ -173,12 +173,9 @@ func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
 
 			// In case a job gets restarted, it will have an ID greated than the previous one(s)
 			// jobs in new pipelines should get greated IDs too
-			if previousJobID, ok := pr.PreviouslyEmittedPipelineJobs[job.Name]; ok {
-				if previousJobID == job.ID {
+			if lastJob, ok := pr.Jobs[job.Name]; ok {
+				if lastJob.ID == job.ID {
 					timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
-				}
-
-				if previousJobID >= job.ID {
 					continue
 				}
 			}
@@ -192,8 +189,10 @@ func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
 				},
 			).Debug("processing pipeline job metrics")
 
-			pr.PreviouslyEmittedPipelineJobs[job.Name] = job.ID
+			// Keep the job in memory
+			pr.Jobs[job.Name] = job
 
+			lastJobRunID.WithLabelValues(jobValues...).Set(float64(job.ID))
 			timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
 			lastRunJobDuration.WithLabelValues(jobValues...).Set(job.Duration)
 

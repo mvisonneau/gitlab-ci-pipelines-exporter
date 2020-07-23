@@ -7,11 +7,22 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- New `gitlab_ci_pipeline_last_job_run_id` metric which returns the ID of the most recent job run.
+
+### Changed
+
+- Fixed some issues with the polling of the jobs information which led to innacurate results.
+- Bumped all dependencies
+  - goreleaser to `0.140.0`
+  - go-gitlab to `0.33.0`
+
 ## [0.3.3] - 2020-06-09
 
 ### Changed
 
-- Fixed a bug where `gitlab_ci_pipeline_time_since_last_run_seconds` and `gitlab_ci_pipeline_time_since_last_job_run_seconds` would not get updated after beingfetched for the first time on each pipelines (#106)
+- Fixed a bug where `gitlab_ci_pipeline_time_since_last_run_seconds` and `gitlab_ci_pipeline_time_since_last_job_run_seconds` would not get updated after being fetched for the first time on each pipelines (#106)
 
 ## [0.3.2] - 2020-05-27
 
