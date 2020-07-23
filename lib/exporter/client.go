@@ -130,6 +130,7 @@ func (c *Client) OrchestratePolling(ctx context.Context) {
 				runWithContext(ctx, c.discoverProjectsRefs, "discoverProjectsRefs")
 			case <-pollProjectsRefsEvery.C:
 				c.pollProjectsRefs(ctx, c.pollProjectRefMostRecentPipeline)
+				c.pollProjectsRefs(ctx, c.pollProjectRefJobs)
 			}
 		}
 	}(ctx)
@@ -159,69 +160,144 @@ func (c *Client) pollPipelineJobs(pr *ProjectRef) error {
 			return err
 		}
 
-		// otherwise proceed
-		log.WithFields(
-			log.Fields{
-				"project-id":  pr.ID,
-				"pipeline-id": pr.MostRecentPipeline.ID,
-				"jobs-count":  len(jobs),
-			},
-		).Info("found pipeline jobs")
-
 		for _, job := range jobs {
-			jobValues := append(pr.defaultLabelsValues(), job.Stage, job.Name)
-
-			// In case a job gets restarted, it will have an ID greated than the previous one(s)
-			// jobs in new pipelines should get greated IDs too
-			if lastJob, ok := pr.Jobs[job.Name]; ok {
-				if lastJob.ID == job.ID {
-					timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
-					continue
-				}
-			}
-
-			log.WithFields(
-				log.Fields{
-					"project-id":  pr.ID,
-					"pipeline-id": pr.MostRecentPipeline.ID,
-					"job-name":    job.Name,
-					"job-id":      job.ID,
-				},
-			).Debug("processing pipeline job metrics")
-
-			// Keep the job in memory
-			pr.Jobs[job.Name] = job
-
-			lastJobRunID.WithLabelValues(jobValues...).Set(float64(job.ID))
-			timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
-			lastRunJobDuration.WithLabelValues(jobValues...).Set(job.Duration)
-
-			emitStatusMetric(
-				lastRunJobStatus,
-				jobValues,
-				statusesList[:],
-				job.Status,
-				pr.OutputSparseStatusMetrics(c.Config),
-			)
-
-			timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
-			jobRunCount.WithLabelValues(jobValues...).Inc()
-
-			artifactSize := 0
-			for _, artifact := range job.Artifacts {
-				artifactSize += artifact.Size
-			}
-
-			lastRunJobArtifactSize.WithLabelValues(jobValues...).Set(float64(artifactSize))
+			pr.processJobMetrics(c.Config, job)
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
+			log.WithFields(
+				log.Fields{
+					"project-id":  pr.ID,
+					"project-ref": pr.Ref,
+					"pipeline-id": pr.MostRecentPipeline.ID,
+					"jobs-count":  resp.TotalItems,
+				},
+			).Info("found pipeline jobs")
 			break
 		}
 
 		options.Page = resp.NextPage
 	}
 	return err
+}
+
+func (c *Client) pollProjectRefJobs(pr *ProjectRef) error {
+	// Only run if configured
+	if !pr.FetchPipelineJobMetrics(c.Config) {
+		return nil
+	}
+
+	if pr.Jobs == nil {
+		log.WithFields(
+			log.Fields{
+				"project-id":  pr.ID,
+				"project-ref": pr.Ref,
+			},
+		).Debug("no jobs are currently held in memory")
+		return nil
+	}
+
+	jobsToRefresh := pr.Jobs
+
+	var jobs []gitlab.Job
+	var resp *gitlab.Response
+	var err error
+
+	options := &gitlab.ListJobsOptions{
+		ListOptions: gitlab.ListOptions{
+			PerPage: 20,
+			Page:    1,
+		},
+	}
+
+	for {
+		c.rateLimit()
+		jobs, resp, err = c.Jobs.ListProjectJobs(pr.ID, options)
+		if err != nil {
+			return err
+		}
+
+		for _, job := range jobs {
+			if jobToRefresh, ok := jobsToRefresh[job.Name]; ok {
+				if jobToRefresh.Ref == job.Ref {
+					pr.processJobMetrics(c.Config, &job)
+					delete(jobsToRefresh, job.Name)
+				}
+			}
+
+			if len(jobsToRefresh) == 0 {
+				log.WithFields(
+					log.Fields{
+						"project-id":  pr.ID,
+						"project-ref": pr.Ref,
+						"jobs-count":  len(pr.Jobs),
+					},
+				).Info("refreshed all jobs metrics")
+				return nil
+			}
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			log.WithFields(
+				log.Fields{
+					"project-id":  pr.ID,
+					"project-ref": pr.Ref,
+					"jobs-count":  resp.TotalItems,
+				},
+			).Warn("found some project ref jobs but did not manage to refresh all jobs which were in memory")
+			break
+		}
+
+		options.Page = resp.NextPage
+	}
+	return err
+}
+
+func (pr *ProjectRef) processJobMetrics(cfg *schemas.Config, job *gitlab.Job) {
+	jobValues := append(pr.defaultLabelsValues(), job.Stage, job.Name)
+
+	// In case a job gets restarted, it will have an ID greated than the previous one(s)
+	// jobs in new pipelines should get greated IDs too
+	if lastJob, ok := pr.Jobs[job.Name]; ok {
+		if lastJob.ID == job.ID {
+			timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
+			return
+		}
+	}
+
+	// Update the job in memory
+	pr.Jobs[job.Name] = job
+
+	log.WithFields(
+		log.Fields{
+			"project-id":  pr.ID,
+			"pipeline-id": pr.MostRecentPipeline.ID,
+			"job-name":    job.Name,
+			"job-id":      job.ID,
+		},
+	).Debug("processing job metrics")
+
+	lastJobRunID.WithLabelValues(jobValues...).Set(float64(job.ID))
+	timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
+	lastRunJobDuration.WithLabelValues(jobValues...).Set(job.Duration)
+
+	emitStatusMetric(
+		lastRunJobStatus,
+		jobValues,
+		statusesList[:],
+		job.Status,
+		pr.OutputSparseStatusMetrics(cfg),
+	)
+
+	timeSinceLastJobRun.WithLabelValues(jobValues...).Set(time.Since(*job.CreatedAt).Round(time.Second).Seconds())
+	jobRunCount.WithLabelValues(jobValues...).Inc()
+
+	artifactSize := 0
+	for _, artifact := range job.Artifacts {
+		artifactSize += artifact.Size
+	}
+
+	lastRunJobArtifactSize.WithLabelValues(jobValues...).Set(float64(artifactSize))
 }
 
 func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
@@ -304,20 +380,20 @@ func (c *Client) pollProjectRefMostRecentPipeline(pr *ProjectRef) error {
 			pipeline.Status,
 			pr.OutputSparseStatusMetrics(c.Config),
 		)
-	}
 
-	if pr.FetchPipelineJobMetrics(c.Config) {
-		if err := c.pollPipelineJobs(pr); err != nil {
-			log.WithFields(
-				log.Fields{
-					"project-path-with-namespace": pr.PathWithNamespace,
-					"project-id":                  pr.ID,
-					"project-ref":                 pr.Ref,
-					"project-ref-kind":            pr.Kind,
-					"pipeline-id":                 pipeline.ID,
-					"error":                       err.Error(),
-				},
-			).Error("polling pipeline jobs metrics")
+		if pr.FetchPipelineJobMetrics(c.Config) {
+			if err := c.pollPipelineJobs(pr); err != nil {
+				log.WithFields(
+					log.Fields{
+						"project-path-with-namespace": pr.PathWithNamespace,
+						"project-id":                  pr.ID,
+						"project-ref":                 pr.Ref,
+						"project-ref-kind":            pr.Kind,
+						"pipeline-id":                 pipeline.ID,
+						"error":                       err.Error(),
+					},
+				).Error("polling pipeline jobs metrics")
+			}
 		}
 	}
 
