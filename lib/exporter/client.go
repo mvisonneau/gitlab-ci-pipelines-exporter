@@ -376,7 +376,7 @@ func (c *Client) discoverProjectsRefsFromPipelinesOnInit() {
 			log.Fields{
 				"init-operation": true,
 			},
-		).Debug("not polling most recent project pipelines")
+		).Debug("not configured to fetch refs from most recent pipelines")
 		return
 	}
 
