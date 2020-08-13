@@ -74,12 +74,14 @@ projects:
   - name: foo/project
   - name: bar/project
     refs_regexp: "^master|dev$"
+  - name: new/project
+    refs_regexp: "^main|dev$"
 
 wildcards:
   - owner:
       name: foo
       kind: group
-    refs_regexp: "^master|1.0$"
+    refs_regexp: "^main|master|1.0$"
     search: 'bar'
     archived: true
 `)
@@ -130,6 +132,12 @@ wildcards:
 					RefsRegexpValue: pointy.String("^master|dev$"),
 				},
 			},
+			{
+				Name: "new/project",
+				Parameters: Parameters{
+					RefsRegexpValue: pointy.String("^main|dev$"),
+				},
+			},
 		},
 		Wildcards: []Wildcard{
 			{
@@ -143,7 +151,7 @@ wildcards:
 					Kind: "group",
 				},
 				Parameters: Parameters{
-					RefsRegexpValue: pointy.String("^master|1.0$"),
+					RefsRegexpValue: pointy.String("^main|master|1.0$"),
 				},
 				Archived: true,
 			},
@@ -215,7 +223,7 @@ disable_openmetrics_encoding: true
 projects:
   - name: foo/project
   - name: bar/project
-    refs_regexp: "^master|dev$"
+    refs_regexp: "^main|master|dev$"
 `)
 
 	config := &Config{}
@@ -233,7 +241,7 @@ func TestParseConfigWithoutPollingWorkersUsesGOMAXPROCS(t *testing.T) {
 projects:
   - name: foo/project
   - name: bar/project
-    refs_regexp: "^master|dev$"
+    refs_regexp: "^main|master|dev$"
 `)
 	config := &Config{}
 	assert.NoError(t, config.Parse(f.Name()))
@@ -253,7 +261,7 @@ defaults:
 projects:
   - name: foo/project
   - name: bar/project
-    refs_regexp: "^master|dev$"
+    refs_regexp: "^main|master|dev$"
 `)
 	cfg := &Config{}
 	assert.NoError(t, cfg.Parse(f.Name()))
