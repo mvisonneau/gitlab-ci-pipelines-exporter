@@ -739,9 +739,9 @@
         "allValue": "",
         "current": {
           "selected": true,
-          "text": "master",
+          "text": "All",
           "value": [
-            "master"
+            "$__all"
           ]
         },
         "datasource": null,
