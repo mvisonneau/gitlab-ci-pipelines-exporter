@@ -28,7 +28,7 @@ const (
 	defaultFetchPipelineJobMetrics              = false
 	defaultOutputSparseStatusMetrics            = false
 	defaultFetchPipelineVariables               = false
-	defaultRefsRegexp                           = `^master$`
+	defaultRefsRegexp                           = `^(main|master)$`
 	defaultPipelineVariablesRegexp              = `.*`
 	defaultFetchMergeRequestsPipelinesRefs      = false
 	defaultFetchMergeRequestsPipelinesRefsLimit = 1

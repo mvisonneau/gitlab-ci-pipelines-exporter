@@ -79,8 +79,8 @@ defaults:
   pipeline_variables_filter_regexp: ".*"
 
   # Filter refs (branches/tags) to include
-  # (optional, default: "^master$" -- master branch)
-  refs_regexp: "^master$"
+  # (optional, default: "^main|master$" -- main or master branch)
+  refs_regexp: "^main|master$"
 
   # Fetch merge request pipelines refs (optional, default: false)
   fetch_merge_request_pipelines_refs: false
@@ -113,8 +113,8 @@ projects:
     pipeline_variables_filter_regexp: ".*"
 
     # Filter refs (branches/tags) to include
-    # (optional, default: "^master$" -- master branch)
-    refs_regexp: "^master$"
+    # (optional, default: "^main|master$" -- main or master branch)
+    refs_regexp: "^main|master$"
 
     # Fetch merge request pipelines refs (optional, default: false)
     fetch_merge_request_pipelines_refs: false
@@ -167,8 +167,8 @@ wildcards:
     pipeline_variables_filter_regexp: ".*"
 
     # Filter refs (branches/tags) to include
-    # (optional, default: "^master$" -- master branch)
-    refs_regexp: "^master$"
+    # (optional, default: "^main|master$" -- main or master branch)
+    refs_regexp: "^main|master$"
 
     # Fetch merge request pipelines refs (optional, default: false)
     fetch_merge_request_pipelines_refs: false
