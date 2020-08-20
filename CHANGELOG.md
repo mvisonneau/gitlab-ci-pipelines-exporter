@@ -7,6 +7,11 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- Health endpoints
+- Bumped go-gitlab to `0.35.1`
+
 ## [0.3.4] - 2020-07-23
 
 ### Added
