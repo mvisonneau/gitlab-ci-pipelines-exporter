@@ -117,7 +117,12 @@ func (cfg *Config) Parse(path string) error {
 	}
 
 	if cfg.Gitlab.HealthURL == "" {
-		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/users/sign_in", cfg.Gitlab.URL)
+		// Hack to fix the missing health endpoint on gitlab.com
+		if cfg.Gitlab.URL == "https://gitlab.com" {
+			cfg.Gitlab.HealthURL = "https://gitlab.com/explore"
+		} else {
+			cfg.Gitlab.HealthURL = fmt.Sprintf("%s/-/health", cfg.Gitlab.URL)
+		}
 	}
 
 	if cfg.PollingWorkers == 0 {
