@@ -190,7 +190,7 @@ projects:
 		}{
 			URL:       "https://gitlab.com",
 			Token:     "",
-			HealthURL: "https://gitlab.com/users/sign_in",
+			HealthURL: "https://gitlab.com/explore",
 		},
 		MaximumGitLabAPIRequestsPerSecond:        defaultMaximumGitLabAPIRequestsPerSecond,
 		WildcardsProjectsDiscoverIntervalSeconds: defaultWildcardsProjectsDiscoverIntervalSeconds,
