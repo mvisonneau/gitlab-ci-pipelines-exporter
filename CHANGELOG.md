@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [0.3.5] - 2020-09-17
+
 ### Changed
 
 - Health endpoints to avoid issues with default configuration
@@ -306,7 +308,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.3.4...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.3.5...HEAD
+[0.3.5]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.5
 [0.3.4]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.4
 [0.3.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.3
 [0.3.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.2
