@@ -20,12 +20,10 @@ archives:
         format: zip
 
 brews:
-  - description: &description
-      GitLab CI pipelines exporter (prometheus/open-metrics)
-    homepage: &homepage
-      https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
+  - description: &description GitLab CI pipelines exporter (prometheus/open-metrics)
+    homepage: &homepage https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
     folder: Formula
-    github:
+    tap:
       owner: mvisonneau
       name: homebrew-tap
 
@@ -41,7 +39,7 @@ checksum:
   name_template: checksums.txt
 
 snapshot:
-  name_template: "{{ .Tag }}-{{ .ShortCommit }}"
+  name_template: '{{ .Tag }}-{{ .ShortCommit }}'
 
 changelog:
   skip: true
