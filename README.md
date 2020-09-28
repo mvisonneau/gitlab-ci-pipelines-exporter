@@ -103,19 +103,18 @@ The **complete configuration syntax** [is maintained here](docs/configuration_sy
 ```bash
 # Write a minimal config file somewhere on disk
 ~$ cat <<EOF > $(pwd)/config.yml
-config:
-  gitlab:
-    url: https://gitlab.example.com
-    # You can also configure the token using --gitlab-token
-    # or the $GCPE_GITLAB_TOKEN environment variable
-    token: <your_token>
-  projects:
-    - name: foo/project
-    - name: bar/project
-  wildcards:
-    - owner:
-        name: foo
-        kind: group
+gitlab:
+  url: https://gitlab.example.com
+  # You can also configure the token using --gitlab-token
+  # or the $GCPE_GITLAB_TOKEN environment variable
+  token: <your_token>
+projects:
+  - name: foo/project
+  - name: bar/project
+wildcards:
+  - owner:
+      name: foo
+      kind: group
 EOF
 
 # If you have installed the binary
