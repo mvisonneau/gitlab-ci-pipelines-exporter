@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -9,8 +10,12 @@ import (
 )
 
 // Run handles the instanciation of the CLI application
-func Run(version string) {
-	NewApp(version, time.Now()).Run(os.Args)
+func Run(version string, args []string) {
+	err := NewApp(version, time.Now()).Run(args)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 // NewApp configures the CLI application
