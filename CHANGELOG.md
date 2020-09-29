@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- Upgraded `urfave/cli` to **v2**
+
 ## [0.3.5] - 2020-09-17
 
 ### Changed

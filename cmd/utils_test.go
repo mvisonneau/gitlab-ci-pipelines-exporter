@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli"
+	cli "github.com/urfave/cli/v2"
 )
 
-func NewTestContext() (ctx *cli.Context, flags, globalFlags *flag.FlagSet) {
+func NewTestContext() (ctx *cli.Context, flags *flag.FlagSet) {
 	app := cli.NewApp()
 	app.Name = "gitlab-ci-pipelines-exporter"
 
@@ -18,13 +18,10 @@ func NewTestContext() (ctx *cli.Context, flags, globalFlags *flag.FlagSet) {
 		"startTime": time.Now(),
 	}
 
-	globalFlags = flag.NewFlagSet("test", flag.ContinueOnError)
-	globalCtx := cli.NewContext(app, globalFlags, nil)
-
 	flags = flag.NewFlagSet("test", flag.ContinueOnError)
-	ctx = cli.NewContext(app, flags, globalCtx)
+	ctx = cli.NewContext(app, flags, nil)
 
-	globalFlags.String("log-level", "fatal", "")
+	flags.String("log-level", "fatal", "")
 
 	return
 }

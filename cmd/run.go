@@ -12,7 +12,7 @@ import (
 
 	gcpe "github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/exporter"
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	cli "github.com/urfave/cli/v2"
 )
 
 // Run launches the exporter
@@ -53,7 +53,7 @@ func Run(ctx *cli.Context) (int, error) {
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
 	mux.Handle("/metrics", registry.MetricsHandler(c.Config.DisableOpenmetricsEncoding))
 
-	if ctx.GlobalBool("enable-pprof") {
+	if ctx.Bool("enable-pprof") {
 		mux.HandleFunc("/debug/pprof/", pprof.Index)
 		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
@@ -62,7 +62,7 @@ func Run(ctx *cli.Context) (int, error) {
 	}
 
 	srv := &http.Server{
-		Addr:    ctx.GlobalString("listen-address"),
+		Addr:    ctx.String("listen-address"),
 		Handler: mux,
 	}
 
@@ -73,7 +73,7 @@ func Run(ctx *cli.Context) (int, error) {
 	}()
 	log.WithFields(
 		log.Fields{
-			"listen-address": ctx.GlobalString("listen-address"),
+			"listen-address": ctx.String("listen-address"),
 		},
 	).Info("started, now serving requests")
 

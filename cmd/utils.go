@@ -9,7 +9,7 @@ import (
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/mvisonneau/go-helpers/logger"
-	"github.com/urfave/cli"
+	cli "github.com/urfave/cli/v2"
 	"github.com/xanzy/go-gitlab"
 	"go.uber.org/ratelimit"
 
@@ -30,8 +30,8 @@ func configure(ctx *cli.Context) (c *gcpe.Client, h healthcheck.Handler, err err
 
 	// Configure logger
 	lc := &logger.Config{
-		Level:  ctx.GlobalString("log-level"),
-		Format: ctx.GlobalString("log-format"),
+		Level:  ctx.String("log-level"),
+		Format: ctx.String("log-format"),
 	}
 
 	if err := lc.Configure(); err != nil {
@@ -40,15 +40,15 @@ func configure(ctx *cli.Context) (c *gcpe.Client, h healthcheck.Handler, err err
 
 	// Initialize config
 	cfg := &schemas.Config{}
-	if err := cfg.Parse(ctx.GlobalString("config")); err != nil {
+	if err := cfg.Parse(ctx.String("config")); err != nil {
 		return nil, nil, err
 	}
 
-	if len(ctx.GlobalString("gitlab-token")) > 0 {
-		cfg.Gitlab.Token = ctx.GlobalString("gitlab-token")
+	if len(ctx.String("gitlab-token")) > 0 {
+		cfg.Gitlab.Token = ctx.String("gitlab-token")
 	}
 
-	assertStringVariableDefined(ctx, "listen-address", ctx.GlobalString("listen-address"))
+	assertStringVariableDefined(ctx, "listen-address", ctx.String("listen-address"))
 	assertStringVariableDefined(ctx, "gitlab-token", cfg.Gitlab.Token)
 
 	// Configure GitLab client
@@ -98,7 +98,7 @@ func gitlabReadinessCheck(httpClient *http.Client, url string) healthcheck.Check
 	}
 }
 
-func exit(exitCode int, err error) *cli.ExitError {
+func exit(exitCode int, err error) cli.ExitCoder {
 	defer log.WithFields(
 		log.Fields{
 			"execution-time": time.Since(start),
@@ -113,7 +113,7 @@ func exit(exitCode int, err error) *cli.ExitError {
 }
 
 // ExecWrapper gracefully logs and exits our `run` functions
-func ExecWrapper(f func(ctx *cli.Context) (int, error)) func(*cli.Context) error {
+func ExecWrapper(f func(ctx *cli.Context) (int, error)) cli.ActionFunc {
 	return func(ctx *cli.Context) error {
 		return exit(f(ctx))
 	}
