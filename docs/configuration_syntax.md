@@ -177,3 +177,14 @@ wildcards:
     # attempt fetch on each ref discovery (optional, default: 1)
     fetch_merge_request_pipelines_refs_init_limit: 1
 ```
+
+## Poll all projects accessible by the provided token
+
+If you want to poll all your GitLab projects (accessible by the token), you can use the following wildcard:
+
+```yaml
+wildcards:
+  - {}
+```
+
+The exporter will then search for all accessible projects and start polling them.
