@@ -1,20 +1,23 @@
 package cmd
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/heptiolabs/healthcheck"
+	gcpe "github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/exporter"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/ratelimit"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/schemas"
 	"github.com/mvisonneau/go-helpers/logger"
+	"github.com/pkg/errors"
+
 	cli "github.com/urfave/cli/v2"
 	"github.com/xanzy/go-gitlab"
-	"go.uber.org/ratelimit"
-
-	gcpe "github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/exporter"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/schemas"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -67,10 +70,31 @@ func configure(ctx *cli.Context) (c *gcpe.Client, h healthcheck.Handler, err err
 		return nil, nil, err
 	}
 
+	var redisClient *redis.Client
+	var rateLimiter ratelimit.Limiter
+	if len(ctx.String("redis-url")) > 0 {
+		log.Debug("redis-url flag set, initializing connection..")
+		opt, err := redis.ParseURL(ctx.String("redis-url"))
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "parsing redis-url")
+		}
+
+		redisClient = redis.NewClient(opt)
+		_, err = redisClient.Ping(context.Background()).Result()
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "connecting to redis")
+		}
+
+		rateLimiter = ratelimit.NewRedisLimiter(context.Background(), redisClient, cfg.MaximumGitLabAPIRequestsPerSecond)
+	} else {
+		rateLimiter = ratelimit.NewLocalLimiter(cfg.MaximumGitLabAPIRequestsPerSecond)
+	}
+
 	c = &gcpe.Client{
 		Client:      gc,
+		RedisClient: redisClient,
 		Config:      cfg,
-		RateLimiter: ratelimit.New(cfg.MaximumGitLabAPIRequestsPerSecond),
+		RateLimiter: rateLimiter,
 	}
 
 	c.UserAgent = userAgent
