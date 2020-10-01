@@ -81,11 +81,11 @@ func Run(ctx *cli.Context) (int, error) {
 	log.Info("received signal, attempting to gracefully exit..")
 	stopOrchestratePolling()
 
-	httpServerContext, forceHTTPServerShutdown := context.WithTimeout(orchestratePollingContext, 5*time.Second)
+	httpServerContext, forceHTTPServerShutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer forceHTTPServerShutdown()
 
 	if err := srv.Shutdown(httpServerContext); err != nil {
-		return 1, fmt.Errorf("shutdown failed: %+v", err)
+		log.Fatalf("shutdown failed: %+v", err)
 	}
 
 	log.Info("stopped!")
