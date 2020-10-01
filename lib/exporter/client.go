@@ -10,11 +10,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
-	"go.uber.org/ratelimit"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/ratelimit"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/lib/schemas"
 )
 
@@ -78,6 +79,7 @@ func NewProjectRef(project *schemas.Project, gp *gitlab.Project, ref string, kin
 // Client holds a GitLab client
 type Client struct {
 	*gitlab.Client
+	RedisClient  *redis.Client
 	Config       *schemas.Config
 	RateLimiter  ratelimit.Limiter
 	ProjectsRefs ProjectsRefs

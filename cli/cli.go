@@ -34,6 +34,11 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 			Usage:   "config `file`",
 			Value:   "~/.gitlab-ci-pipelines-exporter.yml",
 		},
+		&cli.StringFlag{
+			Name:    "redis-url",
+			EnvVars: []string{"GCPE_REDIS_URL"},
+			Usage:   "redis `url` for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value])",
+		},
 		&cli.BoolFlag{
 			Name:    "enable-pprof",
 			EnvVars: []string{"GCPE_ENABLE_PPROF"},
