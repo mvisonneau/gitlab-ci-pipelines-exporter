@@ -80,6 +80,10 @@ coverage: ## Generates coverage report
 	rm -rf *.out
 	go test -v ./... -coverpkg=./... -coverprofile=coverage.out
 
+.PHONY: coverage-html
+coverage-html: coverage ## Generates coverage report and displays it in the browser
+	go tool cover -html=coverage.out
+
 .PHONY: dev-env
 dev-env: ## Build a local development environment using Docker
 	@docker run -it --rm \
