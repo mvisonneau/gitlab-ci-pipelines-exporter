@@ -91,6 +91,7 @@ dev-env: ## Build a local development environment using Docker
 
 .PHONY: is-git-dirty
 is-git-dirty: ## Tests if git is in a dirty state
+	@git status --porcelain
 	@test $(shell git status --porcelain | grep -c .) -eq 0
 
 .PHONY: sign-drone
