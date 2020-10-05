@@ -208,6 +208,27 @@ projects:
 	assert.Equal(t, expectedCfg, *cfg)
 }
 
+func TestParseSelfHostedGitLab(t *testing.T) {
+	f, err := ioutil.TempFile("/tmp", "test-")
+	assert.Nil(t, err)
+	defer os.Remove(f.Name())
+
+	// Valid minimal configuration
+	f.WriteString(`
+---
+gitlab:
+  url: https://gitlab.example.com
+
+wildcards:
+  - {}
+`)
+
+	// Reset config var before parsing
+	cfg = &Config{}
+	assert.Nil(t, cfg.Parse(f.Name()))
+	assert.Equal(t, "https://gitlab.example.com/-/health", cfg.Gitlab.HealthURL)
+}
+
 func TestParsePrometheusConfig(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
 	assert.Nil(t, err)

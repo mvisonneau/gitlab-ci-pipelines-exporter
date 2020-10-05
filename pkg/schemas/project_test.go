@@ -7,6 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestProjectKey(t *testing.T) {
+	p := Project{
+		Name: "foo",
+	}
+
+	assert.Equal(t, ProjectKey("C-7Hteo_D9vJXQ3UfzxbwnXaijM="), p.Key())
+}
+
 func NewTestProjectVariables() (cfg *Config, project *Project) {
 	cfg = &Config{}
 

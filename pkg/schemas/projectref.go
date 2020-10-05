@@ -51,12 +51,12 @@ func (pr ProjectRef) Key() ProjectRefKey {
 type ProjectsRefs map[ProjectRefKey]ProjectRef
 
 // Count returns the amount of projects refs in the map
-func (prs *ProjectsRefs) Count() int {
-	return len(*prs)
+func (prs ProjectsRefs) Count() int {
+	return len(prs)
 }
 
 // DefaultLabelsValues ..
-func (pr *ProjectRef) DefaultLabelsValues() map[string]string {
+func (pr ProjectRef) DefaultLabelsValues() map[string]string {
 	return map[string]string{
 		"project":   pr.PathWithNamespace,
 		"topics":    pr.Topics,
