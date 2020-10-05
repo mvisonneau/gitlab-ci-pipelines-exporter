@@ -3,7 +3,8 @@ before:
     - go mod download
 
 builds:
-  - env:
+  - main: ./cmd/gitlab-ci-pipelines-exporter
+    env:
       - CGO_ENABLED=0
     goos:
       - darwin
@@ -13,6 +14,11 @@ builds:
       - 386
       - amd64
       - arm64
+    flags:
+      - -trimpath
+    ignore:
+      - goos: darwin
+        goarch: 386
 
 archives:
   - format_overrides:
@@ -36,7 +42,8 @@ scoop:
     name: scoops
 
 checksum:
-  name_template: checksums.txt
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
 
 snapshot:
   name_template: '{{ .Tag }}-{{ .ShortCommit }}'

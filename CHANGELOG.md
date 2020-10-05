@@ -7,9 +7,21 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- HA configuration capabilities using Redis
+
 ### Changed
 
 - Upgraded `urfave/cli` to **v2**
+- Refactored the codebase to make it compliant with golang standards and more domain-driven
+- Included the version of the app in the user agent of GitLab queries
+- Rewritten the scheduling of the polling using `vmihailenco/taskq`
+- Updated the rate limiter to work globally across several workers
+
+### Removed
+
+- `polling_workers` configuration parameter
 
 ## [0.3.5] - 2020-09-17
 
