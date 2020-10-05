@@ -41,10 +41,6 @@ projects_refs_discover_interval_seconds: 300
 # discovered project refs (optional, default: 30)
 projects_refs_polling_interval_seconds: 30
 
-# Sets the parallelism for polling projects from
-# the API (optional, default to available CPUs: runtime.GOMAXPROCS(0))
-polling_workers: 2
-
 # Disable OpenMetrics content encoding in
 # prometheus HTTP handler (optional, default: false)
 # see: https://godoc.org/github.com/prometheus/client_golang/prometheus/promhttp#HandlerOpts

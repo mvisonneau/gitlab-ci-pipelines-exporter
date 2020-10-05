@@ -16,14 +16,14 @@ Here is a [Grafana dashboard](https://grafana.com/grafana/dashboards/10620) I ha
 
 ![grafana_dashboard](/docs/images/grafana_dashboard.png)
 
-If you are interested into trying it out, have a look into the [example/](./example) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in **~5min** using `docker-compose`
+If you are interested into trying it out, have a look into the [examples/docker-compose](./examples/docker-compose) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in **~5min** using `docker-compose`
 
 ## Install
 
 ### Go
 
 ```bash
-~$ go get -u github.com/mvisonneau/gitlab-ci-pipelines-exporter
+~$ go get -u github.com/mvisonneau/gitlab-ci-pipelines-exporter/cmd/gitlab-ci-pipelines-exporter
 ```
 
 ### Homebrew
@@ -71,7 +71,7 @@ Have a look onto the [latest release page](https://github.com/mvisonneau/gitlab-
 
 If you want to make it run on [kubernetes](https://kubernetes.io/), there is a [helm chart](https://docs.helm.sh/) available for this purpose.
 
-You can check [chart/values.yml](chart/values.yml) for configuration options.
+You can check [deployments/helm/values.yml](deployments/helm/values.yml) for configuration options.
 
 
 ```bash
@@ -91,7 +91,7 @@ config:
 EOF
 
 # Release the chart on your Kubernetes cluster
-~$ helm upgrade -i gitlab-ci-pipelines-exporter ./chart -f values.yml
+~$ helm upgrade -i gitlab-ci-pipelines-exporter ./deployments/helm -f values.yml
 ```
 
 ## Configuration syntax
@@ -264,12 +264,13 @@ COMMANDS:
 
 GLOBAL OPTIONS:
    --config file, -c file                          config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
-   --enable-pprof                                  Enable profiling endpoints at /debug/pprof [$GCPE_ENABLE_PPROF]
+   --redis-url url                                 redis url for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) [$GCPE_REDIS_URL]
+   --enable-pprof                                  Enable profiling endpoints at /debug/pprof (default: false) [$GCPE_ENABLE_PPROF]
    --gitlab-token token                            GitLab access token. Can be use to override the gitlab token in config file [$GCPE_GITLAB_TOKEN]
    --listen-address address:port, -l address:port  listen-address address:port (default: ":8080") [$GCPE_LISTEN_ADDRESS]
    --log-level level                               log level (debug,info,warn,fatal,panic) (default: "info") [$GCPE_LOG_LEVEL]
    --log-format format                             log format (json,text) (default: "text") [$GCPE_LOG_FORMAT]
-   --help, -h                                      show help
+   --help, -h                                      show help (default: false)
 ```
 
 ## Develop / Test

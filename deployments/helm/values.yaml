@@ -1,0 +1,141 @@
+---
+replicas: 1
+
+image:
+  repository: mvisonneau/gitlab-ci-pipelines-exporter
+  pullPolicy: IfNotPresent
+  # tag: <default to chart version>
+
+## Additional labels and annotations for the deployment resource
+##
+labels: {}
+annotations: {}
+
+## Additional labels and annotations for the pods
+podLabels: {}
+podAnnotations: {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+  ## Additional labels and annotations for the service
+  annotations: {}
+  labels: {}
+
+## Resources to allocate to the pods
+##
+resources: {}
+#  limits:
+#    cpu: 50m
+#    memory: 64Mi
+#  requests:
+#    cpu: 50m
+#    memory: 64Mi
+
+## Deployment strategy
+##
+strategy:
+  type: RollingUpdate
+
+## Liveness and Readiness probes
+##
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 8080
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8080
+  initialDelaySeconds: 5
+  timeoutSeconds: 5
+  failureThreshold: 3
+  periodSeconds: 30
+
+## Node labels for pod assignment
+## ref: https://kubernetes.io/docs/user-guide/node-selection/
+#
+nodeSelector: {}
+
+## Tolerations for pod assignment
+## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: []
+
+## Affinity for pod assignment
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+##
+affinity: {}
+
+## Set the security context of the pods
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context
+##
+securityContext:
+  # runAsUser: 65534  # run as nobody user
+
+## Arguments for the exporter binary
+##
+args:
+  - --config
+  - /etc/config.yml
+  - --log-format
+  - json
+
+## Actual configuration of the exporter
+##
+config: {}
+  # # Full configuration syntax reference available here:
+  # # https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/blob/master/docs/configuration_syntax.md
+  # gitlab:
+  #   url: https://gitlab.example.com
+  #   # You can also configure the token using --gitlab-token
+  #   # or the $GCPE_GITLAB_TOKEN environment variable
+  #   token: <your_token>
+  # projects:
+  #   - name: foo/project
+  #   - name: bar/project
+  # wildcards:
+  #   - owner:
+  #       name: foo
+  #       kind: group
+
+## Environment variables for the container
+##
+envVariables: []
+  # - name: GCPE_LOG_FORMAT
+  #   value: json
+  # - name: GCPE_LOG_LEVEL
+  #   value: debug
+  # - name: GCPE_GITLAB_TOKEN
+  #   value: "<your-gitlab-token>"
+
+## Manage a ServiceMonitor resource to automatically configure the endpoint
+## through the Prometheus operator: https://github.com/coreos/prometheus-operator
+serviceMonitor:
+  enabled: false
+  scrapeInterval: 10s
+
+  ## Additional labels and annotations for the service monitor
+  annotations: {}
+  labels: {}
+
+## Spin up a redis pod using the bitnami chart
+## https://github.com/bitnami/charts/blob/master/bitnami/redis
+redis:
+  enabled: true
+
+  usePassword: false
+
+  metrics:
+    enabled: false
+    serviceMonitor:
+      enabled: false
+
+  cluster:
+    enabled: false
+  
+  master:
+    persistence:
+      enabled: false
