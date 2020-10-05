@@ -38,7 +38,7 @@ func TestRedisTake(t *testing.T) {
 	)
 
 	assert.LessOrEqual(t, MeasureTakeDuration(l), int64(100*time.Millisecond))
-	assert.GreaterOrEqual(t, MeasureTakeDuration(l), int64(time.Second))
+	assert.GreaterOrEqual(t, MeasureTakeDuration(l), int64(900*time.Millisecond))
 }
 
 func TestRedisTakeError(t *testing.T) {
