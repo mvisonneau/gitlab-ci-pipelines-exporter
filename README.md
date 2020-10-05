@@ -16,7 +16,7 @@ Here is a [Grafana dashboard](https://grafana.com/grafana/dashboards/10620) I ha
 
 ![grafana_dashboard](/docs/images/grafana_dashboard.png)
 
-If you are interested into trying it out, have a look into the [examples/docker-compose](./examples/docker-compose) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in **~5min** using `docker-compose`
+If you are interested into trying it out, have a look into the [examples/quickstart](./examples/quickstart/README.md) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in **~5min** using `docker-compose`
 
 ## Install
 
@@ -248,6 +248,16 @@ gitlab_ci_pipeline_last_job_run_status{job="test",project="bar/project",ref="mai
 # output_sparse_status_metrics: true
 gitlab_ci_pipeline_last_job_run_status{job="test",project="bar/project",ref="main",stage="test",status="success",topics=""} 1
 ```
+
+## HA implementation
+
+We support running multiple instances of the exporter in an HA fashion leveraging redis as storage middleware. You simply need to set a redis URL using the `--redis-url` flag or `$GCPE_REDIS_URL` env variable. A quick example using docker-compose is also available here: [examples/ha-setup](examples/ha-setup/README.md)
+
+### How it works
+
+- Polling of all of the GitLab resources (projects, refs, pipelines, jobs, etc..) is spread evenly across all the running instances
+- Rate limit is global across the workers. eg: 3 workers at a 10 rps limit will result in a ~3.3rps limit/worker
+- Exported metrics are fetched from the shared storage layer on each call to ensure data integrity/consistency of the requests across the instances
 
 ## Usage
 

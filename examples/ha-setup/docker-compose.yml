@@ -1,0 +1,36 @@
+version: '3.7'
+services:
+  redis:
+    image: bitnami/redis:6.0.8
+    ports:
+      - 6379:6379
+    environment:
+      ALLOW_EMPTY_PASSWORD: 'yes'
+
+  gitlab-ci-pipelines-exporter-1: &gitlab-ci-pipelines-exporter
+    image: mvisonneau/gitlab-ci-pipelines-exporter:latest
+    ports:
+      - 8081:8080
+    links:
+      - redis
+    environment:
+      GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter/config.yml
+      GCPE_REDIS_URL: redis://redis:6379
+      GCPE_LOG_LEVEL: debug
+      GCPE_ENABLED_PPROF: 'true'
+    volumes:
+      - ./gitlab-ci-pipelines-exporter/config.yml:/etc/gitlab-ci-pipelines-exporter/config.yml
+
+  gitlab-ci-pipelines-exporter-2:
+    <<: *gitlab-ci-pipelines-exporter
+    ports:
+      - 8082:8080
+
+  gitlab-ci-pipelines-exporter-3:
+    <<: *gitlab-ci-pipelines-exporter
+    ports:
+      - 8083:8080
+
+networks:
+  default:
+    driver: bridge

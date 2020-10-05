@@ -1,0 +1,8 @@
+gitlab:
+  url: https://gitlab.com
+  token: <your_token>
+
+# Example public projects to monitor
+projects:
+  - name: gitlab-org/gitlab-runner
+  - name: gitlab-org/charts/auto-deploy-app

@@ -11,17 +11,17 @@
 ```bash
 # Clone this repository
 ~$ git clone https://github.com/mvisonneau/gitlab-ci-pipelines-exporter.git
-~$ cd gitlab-ci-pipelines-exporter/example
+~$ cd gitlab-ci-pipelines-exporter/examples/quickstart
 
 # Provide your personal access token
 ~$ sed -i 's/<your_token>/xXF_xxjV_xxyzxzz' gitlab-ci-pipelines-exporter/config.yml
 
 # Start gitlab-ci-pipelines-exporter, prometheus and grafana containers !
 ~$ docker-compose up -d
-Creating network "example_default" with driver "bridge"
-Creating example_gitlab-ci-pipelines-exporter_1 ... done
-Creating example_prometheus_1                   ... done
-Creating example_grafana_1                      ... done
+Creating network "quickstart_default" with driver "bridge"
+Creating quickstart_gitlab-ci-pipelines-exporter_1 ... done
+Creating quickstart_prometheus_1                   ... done
+Creating quickstart_grafana_1                      ... done
 ```
 
 You should now have a stack completely configured and accessible at these locations:
@@ -37,15 +37,15 @@ You should now have a stack completely configured and accessible at these locati
 ```bash
 ~$ docker ps
 CONTAINER ID        IMAGE                                            COMMAND                  CREATED             STATUS              PORTS                    NAMES
-c9aedfdefe41        grafana/grafana:6.2.5                            "/run.sh"                6 seconds ago       Up 4 seconds        0.0.0.0:3000->3000/tcp   example_grafana_1
-b3500bff6038        prom/prometheus:v2.11.1                          "/bin/prometheus --c…"   7 seconds ago       Up 5 seconds        0.0.0.0:9090->9090/tcp   example_prometheus_1
-930b76005b13        mvisonneau/gitlab-ci-pipelines-exporter:latest   "/usr/local/bin/gitl…"   8 seconds ago       Up 6 seconds        0.0.0.0:8080->8080/tcp   example_gitlab-ci-pipelines-exporter_1
+c9aedfdefe41        grafana/grafana:latest                          "/run.sh"                6 seconds ago       Up 4 seconds        0.0.0.0:3000->3000/tcp   quickstart_grafana_1
+b3500bff6038        prom/prometheus:latest                          "/bin/prometheus --c…"   7 seconds ago       Up 5 seconds        0.0.0.0:9090->9090/tcp   quickstart_prometheus_1
+930b76005b13        mvisonneau/gitlab-ci-pipelines-exporter:latest  "/usr/local/bin/gitl…"   8 seconds ago       Up 6 seconds        0.0.0.0:8080->8080/tcp   quickstart_gitlab-ci-pipelines-exporter_1
 ```
 
 ### Check logs from the gitlab-ci-pipelines-exporter container
 
 ```bash
-~$ docker logs -f example_gitlab-ci-pipelines-exporter_1
+~$ docker logs -f quickstart_gitlab-ci-pipelines-exporter_1
 time="2020-04-28T23:09:01Z" level=info msg="starting exporter" discover-projects-refs-interval=300s discover-wildcard-projects-interval=1800s gitlab-endpoint="https://gitlab.com" on-init-fetch-refs-from-pipelines=false polling-projects-refs-interval=30s rate-limit=10rps
 time="2020-04-28T23:09:01Z" level=info msg="started, now serving requests" listen-address=":8080"
 time="2020-04-28T23:09:01Z" level=info msg="discover wildcards" count=0
