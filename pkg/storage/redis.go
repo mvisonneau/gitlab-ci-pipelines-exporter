@@ -44,11 +44,11 @@ func (r *Redis) DelProject(k schemas.ProjectKey) error {
 
 // ProjectExists ..
 func (r *Redis) ProjectExists(k schemas.ProjectKey) (bool, error) {
-	pExists, err := r.HExists(r.ctx, redisProjectsKey, string(k)).Result()
+	exists, err := r.HExists(r.ctx, redisProjectsKey, string(k)).Result()
 	if err != nil {
 		return false, err
 	}
-	return pExists, nil
+	return exists, nil
 }
 
 // Projects ..
@@ -99,11 +99,11 @@ func (r *Redis) DelProjectRef(k schemas.ProjectRefKey) error {
 
 // ProjectRefExists ..
 func (r *Redis) ProjectRefExists(k schemas.ProjectRefKey) (bool, error) {
-	pExists, err := r.HExists(r.ctx, redisProjectsRefsKey, string(k)).Result()
+	exists, err := r.HExists(r.ctx, redisProjectsRefsKey, string(k)).Result()
 	if err != nil {
 		return false, err
 	}
-	return pExists, nil
+	return exists, nil
 }
 
 // ProjectsRefs ..
@@ -154,7 +154,7 @@ func (r *Redis) DelMetric(k schemas.MetricKey) error {
 
 // MetricExists ..
 func (r *Redis) MetricExists(k schemas.MetricKey) (bool, error) {
-	exists, err := r.HExists(r.ctx, redisProjectsRefsKey, string(k)).Result()
+	exists, err := r.HExists(r.ctx, redisMetricsKey, string(k)).Result()
 	if err != nil {
 		return false, err
 	}
