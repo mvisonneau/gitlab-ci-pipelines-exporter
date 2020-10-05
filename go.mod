@@ -3,6 +3,7 @@ module github.com/mvisonneau/gitlab-ci-pipelines-exporter
 go 1.15
 
 require (
+	github.com/alicebob/miniredis/v2 v2.13.3
 	github.com/apex/log v1.9.0
 	github.com/go-redis/redis/v8 v8.2.3
 	github.com/go-redis/redis_rate/v9 v9.0.2

@@ -18,6 +18,15 @@ type Redis struct {
 	MaxRPS  int
 }
 
+// NewRedisLimiter ..
+func NewRedisLimiter(ctx context.Context, redisClient *redis.Client, maxRPS int) Limiter {
+	return Redis{
+		Limiter: redis_rate.NewLimiter(redisClient),
+		Context: ctx,
+		MaxRPS:  maxRPS,
+	}
+}
+
 // Take ..
 func (r Redis) Take() time.Time {
 	res, err := r.Allow(r.Context, redisKey, redis_rate.PerSecond(r.MaxRPS))
@@ -26,13 +35,4 @@ func (r Redis) Take() time.Time {
 	}
 	time.Sleep(res.RetryAfter)
 	return time.Now()
-}
-
-// NewRedisLimiter ..
-func NewRedisLimiter(ctx context.Context, redisClient *redis.Client, maxRPS int) Limiter {
-	return Redis{
-		Limiter: redis_rate.NewLimiter(redisClient),
-		Context: ctx,
-		MaxRPS:  maxRPS,
-	}
 }
