@@ -8,7 +8,7 @@ import (
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
-	"github.com/xanzy/go-gitlab"
+	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
@@ -31,13 +31,13 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 		}
 	}
 
-	pipelines, err := gitlabClient.GetProjectPipelines(pr.ID, &gitlab.ListProjectPipelinesOptions{
+	pipelines, err := gitlabClient.GetProjectPipelines(pr.ID, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
-		ListOptions: gitlab.ListOptions{
+		ListOptions: goGitlab.ListOptions{
 			PerPage: 1,
 			Page:    1,
 		},
-		Ref: gitlab.String(pr.Ref),
+		Ref: goGitlab.String(pr.Ref),
 	})
 
 	if err != nil {
