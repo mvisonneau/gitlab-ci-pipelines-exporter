@@ -131,7 +131,8 @@ func TestRedisMetricFunctions(t *testing.T) {
 
 	// Pull value
 	m.Value = 0
-	r.PullMetricValue(&m)
+	err = r.PullMetricValue(&m)
+	assert.NoError(t, err)
 	assert.Equal(t, float64(1), m.Value)
 
 	// Delete Metric
@@ -143,4 +144,10 @@ func TestRedisMetricFunctions(t *testing.T) {
 	exists, err = r.MetricExists(m.Key())
 	assert.NoError(t, err)
 	assert.False(t, exists)
+
+	// Pull value
+	m.Value = 10
+	err = r.PullMetricValue(&m)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(10), m.Value)
 }
