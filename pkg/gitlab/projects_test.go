@@ -3,7 +3,6 @@ package gitlab
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
@@ -22,7 +21,7 @@ func TestGetProject(t *testing.T) {
 		})
 
 	p, err := c.GetProject(project)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, p)
 	assert.Equal(t, 1, p.ID)
 }
@@ -52,8 +51,8 @@ func TestListUserProjects(t *testing.T) {
 		})
 
 	projects, err := c.ListProjects(w)
-	assert.Nil(t, err)
-	assert.Equal(t, 2, len(projects))
+	assert.NoError(t, err)
+	assert.Len(t, projects, 2)
 }
 
 func TestListGroupProjects(t *testing.T) {
@@ -81,8 +80,8 @@ func TestListGroupProjects(t *testing.T) {
 		})
 
 	projects, err := c.ListProjects(w)
-	assert.Nil(t, err)
-	assert.Equal(t, 2, len(projects))
+	assert.NoError(t, err)
+	assert.Len(t, projects, 2)
 }
 
 func TestListProjects(t *testing.T) {
@@ -110,8 +109,8 @@ func TestListProjects(t *testing.T) {
 		})
 
 	projects, err := c.ListProjects(w)
-	assert.Nil(t, err)
-	assert.Equal(t, 2, len(projects))
+	assert.NoError(t, err)
+	assert.Len(t, projects, 2)
 }
 
 func TestListProjectsAPIError(t *testing.T) {
@@ -138,8 +137,8 @@ func TestListProjectsAPIError(t *testing.T) {
 		})
 
 	_, err := c.ListProjects(w)
-	assert.NotNil(t, err)
-	assert.Equal(t, true, strings.HasPrefix(err.Error(), "unable to list projects with search pattern"))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unable to list projects with search pattern")
 }
 
 func readProjects(until chan struct{}, projects ...schemas.Project) <-chan schemas.Project {

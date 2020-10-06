@@ -11,7 +11,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-func pollProjectRefMostRecentPipeline(pr *schemas.ProjectRef) error {
+func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 	// TODO: Figure out if we want to have a similar approach for ProjectRefKindTag with
 	// an additional configuration parameeter perhaps
 	if pr.Kind == schemas.ProjectRefKindMergeRequest && pr.MostRecentPipeline != nil {

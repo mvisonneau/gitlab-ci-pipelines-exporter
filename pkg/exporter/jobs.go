@@ -8,7 +8,7 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func pollProjectRefPipelineJobs(pr *schemas.ProjectRef) error {
+func pollProjectRefPipelineJobs(pr schemas.ProjectRef) error {
 	jobs, err := gitlabClient.ListProjectRefPipelineJobs(pr)
 	if err != nil {
 		return err
@@ -21,7 +21,7 @@ func pollProjectRefPipelineJobs(pr *schemas.ProjectRef) error {
 	return nil
 }
 
-func pollProjectRefMostRecentJobs(pr *schemas.ProjectRef) error {
+func pollProjectRefMostRecentJobs(pr schemas.ProjectRef) error {
 	if !pr.FetchPipelineJobMetrics() {
 		return nil
 	}
@@ -38,7 +38,7 @@ func pollProjectRefMostRecentJobs(pr *schemas.ProjectRef) error {
 	return nil
 }
 
-func processJobMetrics(pr *schemas.ProjectRef, job *goGitlab.Job) {
+func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 	labels := pr.DefaultLabelsValues()
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
@@ -58,7 +58,7 @@ func processJobMetrics(pr *schemas.ProjectRef, job *goGitlab.Job) {
 
 	// Update the job in memory
 	pr.Jobs[job.Name] = job
-	store.SetProjectRef(*pr)
+	store.SetProjectRef(pr)
 
 	log.WithFields(
 		log.Fields{

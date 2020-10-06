@@ -95,7 +95,7 @@ func getRefsFromProject(p schemas.Project) {
 				},
 			).Info("discovered new project ref")
 
-			store.SetProjectRef(*pr)
+			store.SetProjectRef(pr)
 			go pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(context.Background(), pr))
 
 			if pr.FetchPipelineJobMetrics() {
@@ -153,7 +153,7 @@ func getProjectRefsFromPipelines(p schemas.Project) {
 				},
 			).Info("discovered new project ref from pipelines")
 
-			store.SetProjectRef(*pr)
+			store.SetProjectRef(pr)
 			go pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(context.Background(), pr))
 
 			if pr.FetchPipelineJobMetrics() {

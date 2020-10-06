@@ -8,7 +8,6 @@ import (
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
-	"github.com/xanzy/go-gitlab"
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -49,12 +48,12 @@ func NewHTTPClient(disableTLSVerify bool) *http.Client {
 // NewClient ..
 func NewClient(cfg ClientConfig) (*Client, error) {
 	opts := []goGitlab.ClientOptionFunc{
-		gitlab.WithHTTPClient(NewHTTPClient(cfg.DisableTLSVerify)),
-		gitlab.WithBaseURL(cfg.URL),
-		gitlab.WithoutRetries(),
+		goGitlab.WithHTTPClient(NewHTTPClient(cfg.DisableTLSVerify)),
+		goGitlab.WithBaseURL(cfg.URL),
+		goGitlab.WithoutRetries(),
 	}
 
-	gc, err := gitlab.NewClient(cfg.Token, opts...)
+	gc, err := goGitlab.NewClient(cfg.Token, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,10 +79,15 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 // ReadinessCheck ..
 func (c *Client) ReadinessCheck() healthcheck.Check {
 	return func() error {
+		if c.Readiness.HTTPClient == nil {
+			return fmt.Errorf("readiness http client not configured")
+		}
+
 		resp, err := c.Readiness.HTTPClient.Get(c.Readiness.URL)
 		if err == nil && resp.StatusCode != 200 {
 			return fmt.Errorf("HTTP error: %d", resp.StatusCode)
 		}
+
 		return err
 	}
 }

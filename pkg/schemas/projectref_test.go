@@ -56,7 +56,7 @@ func TestNewProjectRef(t *testing.T) {
 		TagList:           []string{"baz", "yolo"},
 	}
 
-	expectedValue := &ProjectRef{
+	expectedValue := ProjectRef{
 		Project: Project{
 			Name: "foo/bar",
 		},

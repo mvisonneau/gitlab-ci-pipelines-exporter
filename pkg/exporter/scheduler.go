@@ -34,14 +34,14 @@ var (
 	})
 	pollProjectRefMostRecentPipelineTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "pollProjectRefMostRecentPipelineTask",
-		Handler: func(pr *schemas.ProjectRef) error {
+		Handler: func(pr schemas.ProjectRef) error {
 			pollProjectRefMostRecentPipeline(pr)
 			return nil
 		},
 	})
 	pollProjectRefMostRecentJobsTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "pollProjectRefMostRecentJobsTask",
-		Handler: func(pr *schemas.ProjectRef) error {
+		Handler: func(pr schemas.ProjectRef) error {
 			pollProjectRefMostRecentJobs(pr)
 			return nil
 		},

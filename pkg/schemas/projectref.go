@@ -34,7 +34,7 @@ type ProjectRef struct {
 	Ref                         string
 	MostRecentPipeline          *goGitlab.Pipeline
 	MostRecentPipelineVariables string
-	Jobs                        map[string]*goGitlab.Job
+	Jobs                        map[string]goGitlab.Job
 }
 
 // ProjectRefKey ..
@@ -67,8 +67,8 @@ func (pr ProjectRef) DefaultLabelsValues() map[string]string {
 }
 
 // NewProjectRef is an helper which returns a new ProjectRef pointer
-func NewProjectRef(project Project, gp *goGitlab.Project, ref string, kind ProjectRefKind) *ProjectRef {
-	return &ProjectRef{
+func NewProjectRef(project Project, gp *goGitlab.Project, ref string, kind ProjectRefKind) ProjectRef {
+	return ProjectRef{
 		Project:           project,
 		Kind:              kind,
 		ID:                gp.ID,

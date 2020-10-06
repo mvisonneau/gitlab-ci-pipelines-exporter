@@ -17,7 +17,7 @@ const (
 )
 
 // GetProjectRefPipeline ..
-func (c *Client) GetProjectRefPipeline(pr *schemas.ProjectRef, pipelineID int) (pipeline *goGitlab.Pipeline, err error) {
+func (c *Client) GetProjectRefPipeline(pr schemas.ProjectRef, pipelineID int) (pipeline *goGitlab.Pipeline, err error) {
 	c.rateLimit()
 	pipeline, _, err = c.Pipelines.GetPipeline(pr.ID, pipelineID)
 	if err != nil || pipeline == nil {
@@ -30,6 +30,14 @@ func (c *Client) GetProjectRefPipeline(pr *schemas.ProjectRef, pipelineID int) (
 func (c *Client) GetProjectPipelines(projectID int, options *goGitlab.ListProjectPipelinesOptions) ([]*goGitlab.PipelineInfo, error) {
 	fields := log.Fields{
 		"project-id": projectID,
+	}
+
+	if options.Page == 0 {
+		options.Page = 1
+	}
+
+	if options.PerPage == 0 {
+		options.PerPage = 20
 	}
 
 	if options.Ref != nil {
@@ -90,7 +98,17 @@ func (c *Client) GetProjectMergeRequestsPipelines(projectID int, fetchLimit int)
 }
 
 // GetProjectRefPipelineVariablesAsConcatenatedString ..
-func (c *Client) GetProjectRefPipelineVariablesAsConcatenatedString(pr *schemas.ProjectRef) (string, error) {
+func (c *Client) GetProjectRefPipelineVariablesAsConcatenatedString(pr schemas.ProjectRef) (string, error) {
+	if pr.MostRecentPipeline == nil {
+		log.WithFields(
+			log.Fields{
+				"project-id":  pr.ID,
+				"project-ref": pr.Ref,
+			},
+		).Debug("most recent pipeline not defined, exiting..")
+		return "", nil
+	}
+
 	log.WithFields(
 		log.Fields{
 			"project-path-with-namespace": pr.PathWithNamespace,
@@ -123,7 +141,12 @@ func (c *Client) GetProjectRefPipelineVariablesAsConcatenatedString(pr *schemas.
 }
 
 // GetProjectRefsFromPipelines ..
-func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Project, limit int) (map[string]*schemas.ProjectRef, error) {
+func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Project, limit int) (map[string]schemas.ProjectRef, error) {
+	re, err := regexp.Compile(p.RefsRegexp())
+	if err != nil {
+		return nil, err
+	}
+
 	options := &goGitlab.ListProjectPipelinesOptions{
 		ListOptions: goGitlab.ListOptions{
 			Page: 1,
@@ -144,12 +167,7 @@ func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Pro
 		return nil, err
 	}
 
-	re, err := regexp.Compile(p.RefsRegexp())
-	if err != nil {
-		return nil, err
-	}
-
-	projectRefs := map[string]*schemas.ProjectRef{}
+	projectRefs := map[string]schemas.ProjectRef{}
 	for kind, pipelines := range map[schemas.ProjectRefKind][]*gitlab.PipelineInfo{
 		schemas.ProjectRefKindBranch: branchPipelines,
 		schemas.ProjectRefKindTag:    tagsPipelines,
@@ -157,7 +175,6 @@ func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Pro
 		for _, pipeline := range pipelines {
 			if re.MatchString(pipeline.Ref) {
 				if _, ok := projectRefs[pipeline.Ref]; !ok {
-
 					log.WithFields(
 						log.Fields{
 							"project-id":                  gp.ID,

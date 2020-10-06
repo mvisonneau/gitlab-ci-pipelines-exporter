@@ -7,19 +7,24 @@ import (
 )
 
 // ListProjectRefPipelineJobs ..
-func (c *Client) ListProjectRefPipelineJobs(pr *schemas.ProjectRef) (jobs []*goGitlab.Job, err error) {
+func (c *Client) ListProjectRefPipelineJobs(pr schemas.ProjectRef) (jobs []goGitlab.Job, err error) {
 	var foundJobs []*goGitlab.Job
 	var resp *goGitlab.Response
 
-	// Initialize the variable
-	if pr.Jobs == nil {
-		pr.Jobs = map[string]*goGitlab.Job{}
+	if pr.MostRecentPipeline == nil {
+		log.WithFields(
+			log.Fields{
+				"project-id":  pr.ID,
+				"project-ref": pr.Ref,
+			},
+		).Debug("most recent pipeline not defined, exiting..")
+		return
 	}
 
 	options := &goGitlab.ListJobsOptions{
 		ListOptions: goGitlab.ListOptions{
-			PerPage: 20,
 			Page:    1,
+			PerPage: 20,
 		},
 	}
 
@@ -31,7 +36,7 @@ func (c *Client) ListProjectRefPipelineJobs(pr *schemas.ProjectRef) (jobs []*goG
 		}
 
 		for _, job := range foundJobs {
-			jobs = append(jobs, job)
+			jobs = append(jobs, *job)
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
@@ -52,7 +57,7 @@ func (c *Client) ListProjectRefPipelineJobs(pr *schemas.ProjectRef) (jobs []*goG
 }
 
 // ListProjectRefMostRecentJobs ..
-func (c *Client) ListProjectRefMostRecentJobs(pr *schemas.ProjectRef) (jobs []*goGitlab.Job, err error) {
+func (c *Client) ListProjectRefMostRecentJobs(pr schemas.ProjectRef) (jobs []goGitlab.Job, err error) {
 	if pr.Jobs == nil {
 		log.WithFields(
 			log.Fields{
@@ -63,15 +68,19 @@ func (c *Client) ListProjectRefMostRecentJobs(pr *schemas.ProjectRef) (jobs []*g
 		return
 	}
 
-	jobsToRefresh := pr.Jobs
+	// Deep copy of the pr.Jobs
+	jobsToRefresh := make(map[string]goGitlab.Job)
+	for k, v := range pr.Jobs {
+		jobsToRefresh[k] = v
+	}
 
 	var foundJobs []goGitlab.Job
 	var resp *goGitlab.Response
 
 	options := &goGitlab.ListJobsOptions{
 		ListOptions: goGitlab.ListOptions{
-			PerPage: 20,
 			Page:    1,
+			PerPage: 20,
 		},
 	}
 
@@ -83,9 +92,9 @@ func (c *Client) ListProjectRefMostRecentJobs(pr *schemas.ProjectRef) (jobs []*g
 		}
 
 		for _, job := range foundJobs {
-			if jobToRefresh, ok := jobsToRefresh[job.Name]; ok {
-				if jobToRefresh.Ref == job.Ref {
-					jobs = append(jobs, &job)
+			if _, ok := jobsToRefresh[job.Name]; ok {
+				if pr.Ref == job.Ref {
+					jobs = append(jobs, job)
 					delete(jobsToRefresh, job.Name)
 				}
 			}
