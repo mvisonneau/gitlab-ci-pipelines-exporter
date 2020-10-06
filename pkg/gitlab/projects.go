@@ -3,8 +3,8 @@ package gitlab
 import (
 	"fmt"
 
-	"github.com/apex/log"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 	goGitlab "github.com/xanzy/go-gitlab"
 )
@@ -12,6 +12,11 @@ import (
 // GetProject ..
 func (c *Client) GetProject(name string) (*goGitlab.Project, error) {
 	c.rateLimit()
+	log.WithFields(
+		log.Fields{
+			"project-name": name,
+		},
+	).Debug("reading project")
 	p, _, err := c.Projects.GetProject(name, &goGitlab.GetProjectOptions{})
 	return p, err
 }

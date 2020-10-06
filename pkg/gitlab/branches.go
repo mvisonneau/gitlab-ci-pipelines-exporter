@@ -1,11 +1,13 @@
 package gitlab
 
 import (
+	"regexp"
+
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 // GetProjectBranches ..
-func (c *Client) GetProjectBranches(projectID int, search string) ([]string, error) {
+func (c *Client) GetProjectBranches(projectID int, refsRegexp string) ([]string, error) {
 	var names []string
 
 	options := &goGitlab.ListBranchesOptions{
@@ -13,7 +15,11 @@ func (c *Client) GetProjectBranches(projectID int, search string) ([]string, err
 			Page:    1,
 			PerPage: 20,
 		},
-		Search: &search,
+	}
+
+	re, err := regexp.Compile(refsRegexp)
+	if err != nil {
+		return nil, err
 	}
 
 	for {
@@ -24,7 +30,9 @@ func (c *Client) GetProjectBranches(projectID int, search string) ([]string, err
 		}
 
 		for _, branch := range branches {
-			names = append(names, branch.Name)
+			if re.MatchString(branch.Name) {
+				names = append(names, branch.Name)
+			}
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
