@@ -65,6 +65,7 @@ func TestNewProjectRef(t *testing.T) {
 		ID:                1,
 		Topics:            "baz,yolo",
 		Ref:               "v0.0.7",
+		Jobs:              make(map[string]goGitlab.Job),
 	}
 
 	assert.Equal(t, expectedValue, NewProjectRef(p, gp, "v0.0.7", ProjectRefKindTag))

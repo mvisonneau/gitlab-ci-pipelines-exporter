@@ -29,6 +29,7 @@ func TestPollProjectRefPipelineJobs(t *testing.T) {
 		MostRecentPipeline: &goGitlab.Pipeline{
 			ID: 1,
 		},
+		Jobs: make(map[string]goGitlab.Job),
 	}
 
 	assert.NoError(t, pollProjectRefPipelineJobs(pr))
