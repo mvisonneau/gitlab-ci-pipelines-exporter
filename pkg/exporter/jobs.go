@@ -53,7 +53,7 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 		if lastJob.ID == job.ID {
 			store.SetMetric(schemas.Metric{
 				Kind:   schemas.MetricKindTimeSinceLastRun,
-				Labels: labels,
+				Labels: pr.DefaultLabelsValues(),
 				Value:  time.Since(*job.CreatedAt).Round(time.Second).Seconds(),
 			})
 			return
@@ -93,7 +93,7 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 
 	store.SetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindTimeSinceLastRun,
-		Labels: labels,
+		Labels: pr.DefaultLabelsValues(),
 		Value:  time.Since(*job.CreatedAt).Round(time.Second).Seconds(),
 	})
 

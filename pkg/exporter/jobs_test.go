@@ -170,7 +170,7 @@ func TestProcessJobMetrics(t *testing.T) {
 
 	timeSinceLastRun := schemas.Metric{
 		Kind:   schemas.MetricKindTimeSinceLastRun,
-		Labels: labels,
+		Labels: pr.DefaultLabelsValues(),
 		Value:  time.Since(*newJob.CreatedAt).Round(time.Second).Seconds(),
 	}
 	assert.Equal(t, timeSinceLastRun, metrics[timeSinceLastRun.Key()])
