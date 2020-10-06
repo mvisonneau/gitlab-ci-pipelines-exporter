@@ -18,6 +18,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Included the version of the app in the user agent of GitLab queries
 - Rewritten the scheduling of the polling using `vmihailenco/taskq`
 - Updated the rate limiter to work globally across several workers
+- Fixed an issue preventing the jobs from being updated accordingly when restarted
 
 ### Removed
 
