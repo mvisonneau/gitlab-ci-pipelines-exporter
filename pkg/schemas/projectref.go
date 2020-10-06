@@ -75,5 +75,6 @@ func NewProjectRef(project Project, gp *goGitlab.Project, ref string, kind Proje
 		PathWithNamespace: gp.PathWithNamespace,
 		Topics:            strings.Join(gp.TagList, ","),
 		Ref:               ref,
+		Jobs:              make(map[string]goGitlab.Job),
 	}
 }

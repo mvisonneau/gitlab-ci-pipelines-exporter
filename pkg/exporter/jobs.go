@@ -43,9 +43,7 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
 
-	if pr.Jobs == nil {
-		pr.Jobs = make(map[string]goGitlab.Job)
-	}
+	store.GetProjectRef(&pr)
 
 	// In case a job gets restarted, it will have an ID greated than the previous one(s)
 	// jobs in new pipelines should get greated IDs too
@@ -58,6 +56,10 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 			})
 			return
 		}
+
+		if lastJob.ID > job.ID {
+			return
+		}
 	}
 
 	// Update the project ref in the store
@@ -66,10 +68,9 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 
 	log.WithFields(
 		log.Fields{
-			"project-id":  pr.ID,
-			"pipeline-id": pr.MostRecentPipeline.ID,
-			"job-name":    job.Name,
-			"job-id":      job.ID,
+			"project-id": pr.ID,
+			"job-name":   job.Name,
+			"job-id":     job.ID,
 		},
 	).Debug("processing job metrics")
 
