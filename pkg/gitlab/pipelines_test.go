@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetProjectRefPipeline(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines/1"),
@@ -36,7 +36,7 @@ func TestGetProjectRefPipeline(t *testing.T) {
 }
 
 func TestGetProjectPipelines(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
@@ -62,7 +62,7 @@ func TestGetProjectPipelines(t *testing.T) {
 }
 
 func TestGetProjectMergeRequestsPipelines(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
@@ -82,7 +82,7 @@ func TestGetProjectMergeRequestsPipelines(t *testing.T) {
 }
 
 func TestGetProjectRefPipelineVariablesAsConcatenatedString(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines/1/variables"),
@@ -124,7 +124,7 @@ func TestGetProjectRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 }
 
 func TestGetProjectRefsFromPipelines(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),

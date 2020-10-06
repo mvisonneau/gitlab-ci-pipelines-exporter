@@ -100,12 +100,15 @@ func emitStatusMetric(metricKind schemas.MetricKind, labelValues map[string]stri
 	// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
 	for _, s := range statuses {
 		var value float64
-		labels := labelValues
-		labels["status"] = s
+		statusLabels := make(map[string]string)
+		for k, v := range labelValues {
+			statusLabels[k] = v
+		}
+		statusLabels["status"] = s
 
 		statusMetric := schemas.Metric{
 			Kind:   metricKind,
-			Labels: labels,
+			Labels: statusLabels,
 			Value:  value,
 		}
 

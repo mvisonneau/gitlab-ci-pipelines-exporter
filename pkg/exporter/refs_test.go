@@ -6,7 +6,7 @@ package exporter
 // 	projects := []schemas.Project{{Name: "test1"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
 // 	until := make(chan struct{})
 // 	defer close(until)
-// 	_, _, c := getMockedGitlabClient()
+// 	_, _, c := getMockedClient()
 // 	// provided we are able to intercept an error from from pollProject method
 // 	// we can iterate over a channel of Project and collect its results
 // 	assert.Equal(t, len(projects), pollingResult(until, readProjects(until, projects...), c, t))

@@ -14,7 +14,7 @@ import (
 )
 
 // Mocking helpers
-func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *Client) {
+func getMockedClient() (*http.ServeMux, *httptest.Server, *Client) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
@@ -63,7 +63,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestReadinessCheck(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	mux.HandleFunc(fmt.Sprintf("/200"),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)

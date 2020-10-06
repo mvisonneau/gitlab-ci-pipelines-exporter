@@ -43,6 +43,10 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
 
+	if pr.Jobs == nil {
+		pr.Jobs = make(map[string]goGitlab.Job)
+	}
+
 	// In case a job gets restarted, it will have an ID greated than the previous one(s)
 	// jobs in new pipelines should get greated IDs too
 	if lastJob, ok := pr.Jobs[job.Name]; ok {
@@ -56,7 +60,7 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 		}
 	}
 
-	// Update the job in memory
+	// Update the project ref in the store
 	pr.Jobs[job.Name] = job
 	store.SetProjectRef(pr)
 
@@ -87,14 +91,6 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 		Value:  job.Duration,
 	})
 
-	emitStatusMetric(
-		schemas.MetricKindLastRunJobStatus,
-		labels,
-		statusesList[:],
-		job.Status,
-		pr.OutputSparseStatusMetrics(),
-	)
-
 	store.SetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindTimeSinceLastRun,
 		Labels: labels,
@@ -119,4 +115,12 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 		Labels: labels,
 		Value:  float64(artifactSize),
 	})
+
+	emitStatusMetric(
+		schemas.MetricKindLastRunJobStatus,
+		labels,
+		statusesList[:],
+		job.Status,
+		pr.OutputSparseStatusMetrics(),
+	)
 }

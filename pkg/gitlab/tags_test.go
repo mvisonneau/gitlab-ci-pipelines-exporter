@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetProjectTags(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/tags"),

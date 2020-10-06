@@ -12,7 +12,7 @@ import (
 )
 
 func TestListProjectRefPipelineJobs(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	pr := schemas.ProjectRef{
@@ -45,7 +45,7 @@ func TestListProjectRefPipelineJobs(t *testing.T) {
 }
 
 func TestListProjectRefMostRecentJobs(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	pr := schemas.ProjectRef{

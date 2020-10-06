@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetProjectBranches(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	projectID := 1

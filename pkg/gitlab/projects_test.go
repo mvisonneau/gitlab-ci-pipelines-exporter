@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetProject(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	project := "foo/bar"
@@ -27,7 +27,7 @@ func TestGetProject(t *testing.T) {
 }
 
 func TestListUserProjects(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	w := schemas.Wildcard{
@@ -56,7 +56,7 @@ func TestListUserProjects(t *testing.T) {
 }
 
 func TestListGroupProjects(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	w := schemas.Wildcard{
@@ -85,7 +85,7 @@ func TestListGroupProjects(t *testing.T) {
 }
 
 func TestListProjects(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	w := schemas.Wildcard{
@@ -114,7 +114,7 @@ func TestListProjects(t *testing.T) {
 }
 
 func TestListProjectsAPIError(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server, c := getMockedClient()
 	defer server.Close()
 
 	w := schemas.Wildcard{
