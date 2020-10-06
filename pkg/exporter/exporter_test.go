@@ -108,7 +108,7 @@ func TestConfigureStore(t *testing.T) {
 	assert.Equal(t, expectedProjects, projects)
 }
 
-func TestProcessPollingQueue(t *testing.T) {
+func TestProcessPollingQueue(_ *testing.T) {
 	// TODO: Test with redis client, miniredis does not seem to support it yet
 	redisClient = nil
 	ProcessPollingQueue(context.TODO())
