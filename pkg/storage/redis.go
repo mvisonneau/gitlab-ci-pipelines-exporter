@@ -38,6 +38,31 @@ func (r *Redis) DelProject(k schemas.ProjectKey) error {
 	return err
 }
 
+// GetProject ..
+func (r *Redis) GetProject(p *schemas.Project) error {
+	exists, err := r.ProjectExists(p.Key())
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		k := p.Key()
+		marshalledProject, err := r.HGet(r.ctx, redisProjectsKey, string(k)).Result()
+		if err != nil {
+			return err
+		}
+
+		storedProject := schemas.Project{}
+		if err = msgpack.Unmarshal([]byte(marshalledProject), &storedProject); err != nil {
+			return err
+		}
+
+		*p = storedProject
+	}
+
+	return nil
+}
+
 // ProjectExists ..
 func (r *Redis) ProjectExists(k schemas.ProjectKey) (bool, error) {
 	return r.HExists(r.ctx, redisProjectsKey, string(k)).Result()
@@ -83,6 +108,31 @@ func (r *Redis) SetProjectRef(pr schemas.ProjectRef) error {
 func (r *Redis) DelProjectRef(k schemas.ProjectRefKey) error {
 	_, err := r.HDel(r.ctx, redisProjectsRefsKey, string(k)).Result()
 	return err
+}
+
+// GetProjectRef ..
+func (r *Redis) GetProjectRef(pr *schemas.ProjectRef) error {
+	exists, err := r.ProjectRefExists(pr.Key())
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		k := pr.Key()
+		marshalledProjectRef, err := r.HGet(r.ctx, redisProjectsRefsKey, string(k)).Result()
+		if err != nil {
+			return err
+		}
+
+		storedProjectRef := schemas.ProjectRef{}
+		if err = msgpack.Unmarshal([]byte(marshalledProjectRef), &storedProjectRef); err != nil {
+			return err
+		}
+
+		*pr = storedProjectRef
+	}
+
+	return nil
 }
 
 // ProjectRefExists ..
@@ -137,29 +187,28 @@ func (r *Redis) MetricExists(k schemas.MetricKey) (bool, error) {
 	return r.HExists(r.ctx, redisMetricsKey, string(k)).Result()
 }
 
-// PullMetricValue ..
-func (r *Redis) PullMetricValue(m *schemas.Metric) error {
+// GetMetric ..
+func (r *Redis) GetMetric(m *schemas.Metric) error {
 	exists, err := r.MetricExists(m.Key())
 	if err != nil {
 		return err
 	}
 
-	if !exists {
-		return nil
+	if exists {
+		k := m.Key()
+		marshalledMetric, err := r.HGet(r.ctx, redisMetricsKey, string(k)).Result()
+		if err != nil {
+			return err
+		}
+
+		storedMetric := schemas.Metric{}
+		if err = msgpack.Unmarshal([]byte(marshalledMetric), &storedMetric); err != nil {
+			return err
+		}
+
+		*m = storedMetric
 	}
 
-	k := m.Key()
-	marshalledMetric, err := r.HGet(r.ctx, redisMetricsKey, string(k)).Result()
-	if err != nil {
-		return err
-	}
-
-	storedMetric := schemas.Metric{}
-	if err = msgpack.Unmarshal([]byte(marshalledMetric), &storedMetric); err != nil {
-		return err
-	}
-
-	m.Value = storedMetric.Value
 	return nil
 }
 

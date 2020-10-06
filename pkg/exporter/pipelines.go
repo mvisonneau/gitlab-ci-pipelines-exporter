@@ -73,7 +73,7 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 				Kind:   schemas.MetricKindRunCount,
 				Labels: pr.DefaultLabelsValues(),
 			}
-			store.PullMetricValue(&runCount)
+			store.GetMetric(&runCount)
 			runCount.Value++
 			store.SetMetric(runCount)
 		}

@@ -101,7 +101,7 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 		Kind:   schemas.MetricKindJobRunCount,
 		Labels: labels,
 	}
-	store.PullMetricValue(&jobRunCount)
+	store.GetMetric(&jobRunCount)
 	jobRunCount.Value++
 	store.SetMetric(jobRunCount)
 

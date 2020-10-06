@@ -11,21 +11,22 @@ import (
 type Storage interface {
 	SetProject(schemas.Project) error
 	DelProject(schemas.ProjectKey) error
+	GetProject(*schemas.Project) error
 	ProjectExists(schemas.ProjectKey) (bool, error)
 	Projects() (schemas.Projects, error)
 	ProjectsCount() (int64, error)
 
 	SetProjectRef(schemas.ProjectRef) error
 	DelProjectRef(schemas.ProjectRefKey) error
+	GetProjectRef(*schemas.ProjectRef) error
 	ProjectRefExists(schemas.ProjectRefKey) (bool, error)
 	ProjectsRefs() (schemas.ProjectsRefs, error)
 	ProjectsRefsCount() (int64, error)
 
 	SetMetric(schemas.Metric) error
 	DelMetric(schemas.MetricKey) error
+	GetMetric(*schemas.Metric) error
 	MetricExists(schemas.MetricKey) (bool, error)
-	PullMetricValue(*schemas.Metric) error
-
 	Metrics() (schemas.Metrics, error)
 	MetricsCount() (int64, error)
 }

@@ -30,6 +30,20 @@ func (l *Local) DelProject(k schemas.ProjectKey) error {
 	return nil
 }
 
+// GetProject ..
+func (l *Local) GetProject(p *schemas.Project) error {
+	exists, err := l.ProjectExists(p.Key())
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		*p = l.projects[p.Key()]
+	}
+
+	return nil
+}
+
 // ProjectExists ..
 func (l *Local) ProjectExists(k schemas.ProjectKey) (bool, error) {
 	_, ok := l.projects[k]
@@ -59,6 +73,20 @@ func (l *Local) DelProjectRef(k schemas.ProjectRefKey) error {
 	l.mutex.Lock()
 	delete(l.projectsRefs, k)
 	l.mutex.Unlock()
+	return nil
+}
+
+// GetProjectRef ..
+func (l *Local) GetProjectRef(pr *schemas.ProjectRef) error {
+	exists, err := l.ProjectRefExists(pr.Key())
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		*pr = l.projectsRefs[pr.Key()]
+	}
+
 	return nil
 }
 
@@ -94,15 +122,24 @@ func (l *Local) DelMetric(k schemas.MetricKey) error {
 	return nil
 }
 
+// GetMetric ..
+func (l *Local) GetMetric(m *schemas.Metric) error {
+	exists, err := l.MetricExists(m.Key())
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		*m = l.metrics[m.Key()]
+	}
+
+	return nil
+}
+
 // MetricExists ..
 func (l *Local) MetricExists(k schemas.MetricKey) (bool, error) {
 	_, ok := l.metrics[k]
 	return ok, nil
-}
-
-// PullMetricValue ..
-func (l *Local) PullMetricValue(_ *schemas.Metric) error {
-	return nil
 }
 
 // Metrics ..
