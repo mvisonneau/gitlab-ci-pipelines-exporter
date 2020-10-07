@@ -19,7 +19,7 @@ type Parameters struct {
 	// Whether to attempt to retrieve variables included in the pipeline execution
 	FetchPipelineVariablesValue *bool `yaml:"fetch_pipeline_variables"`
 
-	// Whether to report all pipeline / job statuses, or only report the one from the last job.
+	// Whether to export all pipeline/job statuses (being 0) or solely the one of the last job (being 1).
 	OutputSparseStatusMetricsValue *bool `yaml:"output_sparse_status_metrics"`
 
 	// Regular expression to filter pipeline variables values to fetch (defaults to '.*')
@@ -34,7 +34,7 @@ var (
 	defaultFetchMergeRequestsPipelinesRefsLimit = 1
 	defaultFetchPipelineJobMetrics              = false
 	defaultFetchPipelineVariables               = false
-	defaultOutputSparseStatusMetrics            = false
+	defaultOutputSparseStatusMetrics            = true
 	defaultPipelineVariablesRegexp              = `.*`
 	defaultRefsRegexp                           = `^(main|master)$`
 )

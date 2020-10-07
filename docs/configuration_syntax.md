@@ -67,8 +67,8 @@ defaults:
 
   # Whether to output sparse job and pipeline status metrics.
   # When enabled, only the status label matching the last run
-  # of a pipeline or jb will be submitted (optional, default: false)
-  output_sparse_status_metrics: false
+  # of a pipeline or job will be submitted (optional, default: true)
+  output_sparse_status_metrics: true
 
   # Filter pipelines variables to include
   # (optional, default: ".*", all variables)
@@ -101,8 +101,8 @@ projects:
 
     # Whether to output sparse job and pipeline status metrics.
     # When enabled, only the status label matching the last run
-    # of a pipeline or jb will be submitted (optional, default: false)
-    output_sparse_status_metrics: false
+    # of a pipeline or job will be submitted (optional, default: true)
+    output_sparse_status_metrics: true
 
     # Filter pipelines variables to include
     # (optional, default: ".*", all variables)
