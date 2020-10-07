@@ -1,9 +1,8 @@
 package schemas
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
 	"fmt"
+	"hash/crc32"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -65,6 +64,5 @@ type Metrics map[MetricKey]Metric
 
 // Key ..
 func (m Metric) Key() MetricKey {
-	sum := sha1.Sum([]byte(strconv.Itoa(int(m.Kind)) + fmt.Sprintf("%v", m.Labels)))
-	return MetricKey(base64.URLEncoding.EncodeToString(sum[:]))
+	return MetricKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(strconv.Itoa(int(m.Kind)) + fmt.Sprintf("%v", m.Labels))))))
 }

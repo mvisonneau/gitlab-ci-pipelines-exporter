@@ -12,7 +12,7 @@ func TestProjectKey(t *testing.T) {
 		Name: "foo",
 	}
 
-	assert.Equal(t, ProjectKey("C-7Hteo_D9vJXQ3UfzxbwnXaijM="), p.Key())
+	assert.Equal(t, ProjectKey("2356372769"), p.Key())
 }
 
 func NewTestProjectVariables() (cfg *Config, project *Project) {

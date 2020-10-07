@@ -15,7 +15,7 @@ func TestProjectRefKey(t *testing.T) {
 		Ref: "bar",
 	}
 
-	assert.Equal(t, ProjectRefKey("iEPX-SQWIR3p67lj_0zigSWTKHg="), pr.Key())
+	assert.Equal(t, ProjectRefKey("2666930069"), pr.Key())
 }
 
 func TestProjectRefsCount(t *testing.T) {

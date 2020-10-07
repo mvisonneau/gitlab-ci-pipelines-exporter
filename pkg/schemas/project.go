@@ -1,8 +1,8 @@
 package schemas
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
+	"hash/crc32"
+	"strconv"
 )
 
 // Parameters for the fetching configuration of Projects and Wildcards
@@ -82,8 +82,7 @@ type ProjectKey string
 
 // Key ..
 func (p Project) Key() ProjectKey {
-	sum := sha1.Sum([]byte(p.Name))
-	return ProjectKey(base64.URLEncoding.EncodeToString(sum[:]))
+	return ProjectKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(p.Name)))))
 }
 
 // Projects ..

@@ -86,7 +86,7 @@ func TestConfigureStore(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedProjects := schemas.Projects{
-		"F83q76XMYCJIHIJOFaR6dyb1k90=": schemas.Project{
+		"3861188962": schemas.Project{
 			Name: "foo/bar",
 		},
 	}

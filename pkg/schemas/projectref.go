@@ -1,8 +1,8 @@
 package schemas
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
+	"hash/crc32"
+	"strconv"
 	"strings"
 
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -42,8 +42,7 @@ type ProjectRefKey string
 
 // Key ..
 func (pr ProjectRef) Key() ProjectRefKey {
-	sum := sha1.Sum([]byte(pr.Name + pr.Ref))
-	return ProjectRefKey(base64.URLEncoding.EncodeToString(sum[:]))
+	return ProjectRefKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(pr.Name + pr.Ref)))))
 }
 
 // ProjectsRefs allows us to keep track of all the ProjectRef

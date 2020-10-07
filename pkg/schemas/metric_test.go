@@ -15,5 +15,5 @@ func TestMetricKey(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, MetricKey("SBbFyHaOYDqfbN0hhFI13xHQ6MY="), m.Key())
+	assert.Equal(t, MetricKey("2152003002"), m.Key())
 }
