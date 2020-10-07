@@ -14,36 +14,31 @@ var (
 	getProjectsFromWildcardTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "getProjectsFromWildcardTask",
 		Handler: func(ctx context.Context, w schemas.Wildcard) error {
-			getProjectsFromWildcard(w)
-			return nil
+			return getProjectsFromWildcard(w)
 		},
 	})
 	getProjectRefsFromPipelinesTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "getProjectRefsFromPipelinesTask",
 		Handler: func(p schemas.Project) error {
-			getProjectRefsFromPipelines(p)
-			return nil
+			return getProjectRefsFromPipelines(p)
 		},
 	})
 	getRefsFromProjectTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "getRefsFromProjectTask",
 		Handler: func(p schemas.Project) error {
-			getRefsFromProject(p)
-			return nil
+			return getRefsFromProject(p)
 		},
 	})
 	pollProjectRefMostRecentPipelineTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "pollProjectRefMostRecentPipelineTask",
 		Handler: func(pr schemas.ProjectRef) error {
-			pollProjectRefMostRecentPipeline(pr)
-			return nil
+			return pollProjectRefMostRecentPipeline(pr)
 		},
 	})
 	pollProjectRefMostRecentJobsTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "pollProjectRefMostRecentJobsTask",
 		Handler: func(pr schemas.ProjectRef) error {
-			pollProjectRefMostRecentJobs(pr)
-			return nil
+			return pollProjectRefMostRecentJobs(pr)
 		},
 	})
 )

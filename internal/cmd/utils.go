@@ -116,7 +116,7 @@ func ExecWrapper(f func(ctx *cli.Context) (int, error)) cli.ActionFunc {
 
 func assertStringVariableDefined(ctx *cli.Context, k, v string) {
 	if len(v) == 0 {
-		cli.ShowAppHelp(ctx)
+		_ = cli.ShowAppHelp(ctx)
 		log.Errorf("'--%s' must be set!", k)
 		os.Exit(2)
 	}

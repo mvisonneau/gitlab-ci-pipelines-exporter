@@ -73,9 +73,9 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 				Kind:   schemas.MetricKindRunCount,
 				Labels: pr.DefaultLabelsValues(),
 			}
-			store.GetMetric(&runCount)
+			storeGetMetric(&runCount)
 			runCount.Value++
-			store.SetMetric(runCount)
+			storeSetMetric(runCount)
 		}
 
 		if pipeline.Coverage != "" {
@@ -84,20 +84,20 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 				log.Warnf("Could not parse coverage string returned from GitLab API '%s' into Float64: %v", pipeline.Coverage, err)
 			}
 
-			store.SetMetric(schemas.Metric{
+			storeSetMetric(schemas.Metric{
 				Kind:   schemas.MetricKindCoverage,
 				Labels: pr.DefaultLabelsValues(),
 				Value:  parsedCoverage,
 			})
 		}
 
-		store.SetMetric(schemas.Metric{
+		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindLastRunDuration,
 			Labels: pr.DefaultLabelsValues(),
 			Value:  float64(pipeline.Duration),
 		})
 
-		store.SetMetric(schemas.Metric{
+		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindLastRunID,
 			Labels: pr.DefaultLabelsValues(),
 			Value:  float64(pipeline.ID),
@@ -127,7 +127,7 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 		}
 	}
 
-	store.SetMetric(schemas.Metric{
+	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindTimeSinceLastRun,
 		Labels: pr.DefaultLabelsValues(),
 		Value:  time.Since(*pipeline.CreatedAt).Round(time.Second).Seconds(),

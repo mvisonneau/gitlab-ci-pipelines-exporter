@@ -7,48 +7,27 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func getProjectsFromWildcard(w schemas.Wildcard) {
+func getProjectsFromWildcard(w schemas.Wildcard) error {
 	foundProjects, err := gitlabClient.ListProjects(w)
 	if err != nil {
-		log.WithFields(
-			log.Fields{
-				"wildcard-search":                  w.Search,
-				"wildcard-owner-kind":              w.Owner.Kind,
-				"wildcard-owner-name":              w.Owner.Name,
-				"wildcard-owner-include-subgroups": w.Owner.IncludeSubgroups,
-				"wildcard-archived":                w.Archived,
-				"error":                            err.Error(),
-			},
-		).Errorf("listing wildcard projects")
-		return
+		return err
 	}
 
 	for _, p := range foundProjects {
 		projectExists, err := store.ProjectExists(p.Key())
 		if err != nil {
-			log.WithFields(
-				log.Fields{
-					"wildcard-search":                  w.Search,
-					"wildcard-owner-kind":              w.Owner.Kind,
-					"wildcard-owner-name":              w.Owner.Name,
-					"wildcard-owner-include-subgroups": w.Owner.IncludeSubgroups,
-					"wildcard-archived":                w.Archived,
-					"error":                            err.Error(),
-				},
-			).Errorf("checking if project exists in the store")
+			return err
 		}
 
 		if !projectExists {
-			log.WithFields(
-				log.Fields{
-					"wildcard-search":                  w.Search,
-					"wildcard-owner-kind":              w.Owner.Kind,
-					"wildcard-owner-name":              w.Owner.Name,
-					"wildcard-owner-include-subgroups": w.Owner.IncludeSubgroups,
-					"wildcard-archived":                w.Archived,
-					"project-name":                     p.Name,
-				},
-			).Infof("discovered new project")
+			log.WithFields(log.Fields{
+				"wildcard-search":                  w.Search,
+				"wildcard-owner-kind":              w.Owner.Kind,
+				"wildcard-owner-name":              w.Owner.Name,
+				"wildcard-owner-include-subgroups": w.Owner.IncludeSubgroups,
+				"wildcard-archived":                w.Archived,
+				"project-name":                     p.Name,
+			}).Info("discovered new project")
 
 			if err := store.SetProject(p); err != nil {
 				log.Errorf(err.Error())
@@ -61,4 +40,5 @@ func getProjectsFromWildcard(w schemas.Wildcard) {
 			go pollingQueue.Add(getRefsFromProjectTask.WithArgs(context.Background(), p))
 		}
 	}
+	return nil
 }

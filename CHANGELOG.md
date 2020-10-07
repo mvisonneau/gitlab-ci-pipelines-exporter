@@ -10,6 +10,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Added
 
 - HA configuration capabilities using Redis
+- gosec testing
 
 ### Changed
 

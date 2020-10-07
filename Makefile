@@ -1,6 +1,6 @@
 NAME          := gitlab-ci-pipelines-exporter
 VERSION       := $(shell git describe --tags --abbrev=1)
-FILES         := $(shell git ls-files '*.go')
+FILES         := $(shell git ls-files */*.go)
 REPOSITORY    := mvisonneau/$(NAME)
 .DEFAULT_GOAL := help
 
@@ -10,6 +10,7 @@ export GO111MODULE=on
 setup: ## Install required libraries/tools for build tasks
 	@command -v cover 2>&1 >/dev/null       || GO111MODULE=off go get -u -v golang.org/x/tools/cmd/cover
 	@command -v goimports 2>&1 >/dev/null   || GO111MODULE=off go get -u -v golang.org/x/tools/cmd/goimports
+	@command -v gosec 2>&1 >/dev/null       || GO111MODULE=off go get -u -v github.com/securego/gosec/cmd/gosec
 	@command -v goveralls 2>&1 >/dev/null   || GO111MODULE=off go get -u -v github.com/mattn/goveralls
 	@command -v ineffassign 2>&1 >/dev/null || GO111MODULE=off go get -u -v github.com/gordonklaus/ineffassign
 	@command -v misspell 2>&1 >/dev/null    || GO111MODULE=off go get -u -v github.com/client9/misspell/cmd/misspell
@@ -20,7 +21,7 @@ fmt: setup ## Format source code
 	goimports -w $(FILES)
 
 .PHONY: lint
-lint: revive vet goimports ineffassign misspell ## Run all lint related tests against the codebase
+lint: revive vet goimports ineffassign misspell gosec ## Run all lint related tests against the codebase
 
 .PHONY: revive
 revive: setup ## Test code syntax with revive
@@ -42,6 +43,10 @@ ineffassign: setup ## Test code syntax for ineffassign
 .PHONY: misspell
 misspell: setup ## Test code with misspell
 	misspell -error $(FILES)
+
+.PHONY: gosec
+gosec: setup ## Test code for security vulnerabilities
+	gosec ./...
 
 .PHONY: test
 test: ## Run the tests against the codebase

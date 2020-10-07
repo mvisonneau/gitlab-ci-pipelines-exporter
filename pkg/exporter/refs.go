@@ -47,16 +47,10 @@ func getProjectRefs(
 	return foundRefs, nil
 }
 
-func getRefsFromProject(p schemas.Project) {
+func getRefsFromProject(p schemas.Project) error {
 	gp, err := gitlabClient.GetProject(p.Name)
 	if err != nil {
-		log.WithFields(
-			log.Fields{
-				"project-name": p.Name,
-				"error":        err.Error(),
-			},
-		).Errorf("getting project by name")
-		return
+		return err
 	}
 
 	refs, err := getProjectRefs(
@@ -67,35 +61,28 @@ func getRefsFromProject(p schemas.Project) {
 	)
 
 	if err != nil {
-		log.WithFields(
-			log.Fields{
-				"project-id":                  gp.ID,
-				"project-path-with-namespace": gp.PathWithNamespace,
-				"error":                       err.Error(),
-			},
-		).Error("getting project refs")
-		return
+		return err
 	}
 
 	for ref, kind := range refs {
 		pr := schemas.NewProjectRef(p, gp, ref, kind)
 		projectRefExists, err := store.ProjectRefExists(pr.Key())
 		if err != nil {
-			log.Error(err.Error())
-			continue
+			return err
 		}
 
 		if !projectRefExists {
-			log.WithFields(
-				log.Fields{
-					"project-id":                  gp.ID,
-					"project-path-with-namespace": gp.PathWithNamespace,
-					"project-ref":                 ref,
-					"project-ref-kind":            kind,
-				},
-			).Info("discovered new project ref")
+			log.WithFields(log.Fields{
+				"project-id":                  gp.ID,
+				"project-path-with-namespace": gp.PathWithNamespace,
+				"project-ref":                 ref,
+				"project-ref-kind":            kind,
+			}).Info("discovered new project ref")
 
-			store.SetProjectRef(pr)
+			if err = store.SetProjectRef(pr); err != nil {
+				return err
+			}
+
 			go pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(context.Background(), pr))
 
 			if pr.FetchPipelineJobMetrics() {
@@ -103,57 +90,44 @@ func getRefsFromProject(p schemas.Project) {
 			}
 		}
 	}
+	return nil
 }
 
-func getProjectRefsFromPipelines(p schemas.Project) {
-	log.WithFields(
-		log.Fields{
-			"init-operation": true,
-			"project-name":   p.Name,
-		},
-	).Debug("fetching project")
+func getProjectRefsFromPipelines(p schemas.Project) error {
+	log.WithFields(log.Fields{
+		"init-operation": true,
+		"project-name":   p.Name,
+	}).Debug("fetching project")
 
 	gp, err := gitlabClient.GetProject(p.Name)
 	if err != nil {
-		log.WithFields(
-			log.Fields{
-				"init-operation": true,
-				"project-name":   p.Name,
-				"error":          err.Error(),
-			},
-		).Errorf("getting GitLab project by name")
-		return
+		return err
 	}
 
 	projectRefs, err := gitlabClient.GetProjectRefsFromPipelines(p, gp, Config.OnInitFetchRefsFromPipelinesDepthLimit)
 	if err != nil {
-		log.WithFields(
-			log.Fields{
-				"init-operation": true,
-				"project-name":   p.Name,
-			},
-		).Errorf("unable to fetch refs from project pipelines: %s", err.Error())
+		return err
 	}
 
 	// Immediately trigger a poll of the ref
 	for _, pr := range projectRefs {
 		projectRefExists, err := store.ProjectRefExists(pr.Key())
 		if err != nil {
-			log.Error(err.Error())
-			continue
+			return err
 		}
 
 		if !projectRefExists {
-			log.WithFields(
-				log.Fields{
-					"project-id":                  gp.ID,
-					"project-path-with-namespace": gp.PathWithNamespace,
-					"project-ref":                 pr.Ref,
-					"project-ref-kind":            pr.Kind,
-				},
-			).Info("discovered new project ref from pipelines")
+			log.WithFields(log.Fields{
+				"project-id":                  gp.ID,
+				"project-path-with-namespace": gp.PathWithNamespace,
+				"project-ref":                 pr.Ref,
+				"project-ref-kind":            pr.Kind,
+			}).Info("discovered new project ref from pipelines")
 
-			store.SetProjectRef(pr)
+			if err = store.SetProjectRef(pr); err != nil {
+				return err
+			}
+
 			go pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(context.Background(), pr))
 
 			if pr.FetchPipelineJobMetrics() {
@@ -161,4 +135,5 @@ func getProjectRefsFromPipelines(p schemas.Project) {
 			}
 		}
 	}
+	return nil
 }

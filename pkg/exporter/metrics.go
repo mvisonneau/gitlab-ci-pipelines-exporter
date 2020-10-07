@@ -40,7 +40,11 @@ func NewRegistry() *Registry {
 			schemas.MetricKindTimeSinceLastRun:       NewCollectorTimeSinceLastRun(),
 		},
 	}
-	r.RegisterCollectors()
+
+	if err := r.RegisterCollectors(); err != nil {
+		log.Fatal(err)
+	}
+
 	return r
 }
 
@@ -116,12 +120,12 @@ func emitStatusMetric(metricKind schemas.MetricKind, labelValues map[string]stri
 			statusMetric.Value = 1
 		} else {
 			if sparseMetrics {
-				store.DelMetric(statusMetric.Key())
+				storeDelMetric(statusMetric)
 				continue
 			}
 			statusMetric.Value = 0
 		}
 
-		store.SetMetric(statusMetric)
+		storeSetMetric(statusMetric)
 	}
 }

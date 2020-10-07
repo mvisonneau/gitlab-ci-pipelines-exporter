@@ -3,6 +3,7 @@ package schemas
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -73,7 +74,7 @@ const (
 
 // Parse loads a yaml file into a Config structure
 func (cfg *Config) Parse(path string) error {
-	configFile, err := ioutil.ReadFile(path)
+	configFile, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return fmt.Errorf(errConfigFileNotFound, err)
 	}

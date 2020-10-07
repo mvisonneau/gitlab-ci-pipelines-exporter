@@ -43,13 +43,24 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
 
-	store.GetProjectRef(&pr)
+	projectRefLogFields := log.Fields{
+		"project-id": pr.ID,
+		"job-name":   job.Name,
+		"job-id":     job.ID,
+	}
+
+	if err := store.GetProjectRef(&pr); err != nil {
+		log.WithFields(
+			projectRefLogFields,
+		).WithField("error", err.Error()).Error("getting project ref from the store")
+		return
+	}
 
 	// In case a job gets restarted, it will have an ID greated than the previous one(s)
 	// jobs in new pipelines should get greated IDs too
 	if lastJob, ok := pr.Jobs[job.Name]; ok {
 		if lastJob.ID == job.ID {
-			store.SetMetric(schemas.Metric{
+			storeSetMetric(schemas.Metric{
 				Kind:   schemas.MetricKindTimeSinceLastRun,
 				Labels: pr.DefaultLabelsValues(),
 				Value:  time.Since(*job.CreatedAt).Round(time.Second).Seconds(),
@@ -64,35 +75,34 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 
 	// Update the project ref in the store
 	pr.Jobs[job.Name] = job
-	store.SetProjectRef(pr)
+	if err := store.SetProjectRef(pr); err != nil {
+		log.WithFields(
+			projectRefLogFields,
+		).WithField("error", err.Error()).Error("writing project ref in the store")
+		return
+	}
 
-	log.WithFields(
-		log.Fields{
-			"project-id": pr.ID,
-			"job-name":   job.Name,
-			"job-id":     job.ID,
-		},
-	).Debug("processing job metrics")
+	log.WithFields(projectRefLogFields).Debug("processing job metrics")
 
-	store.SetMetric(schemas.Metric{
+	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindLastJobRunID,
 		Labels: labels,
 		Value:  float64(job.ID),
 	})
 
-	store.SetMetric(schemas.Metric{
+	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindTimeSinceLastJobRun,
 		Labels: labels,
 		Value:  time.Since(*job.CreatedAt).Round(time.Second).Seconds(),
 	})
 
-	store.SetMetric(schemas.Metric{
+	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindLastRunJobDuration,
 		Labels: labels,
 		Value:  job.Duration,
 	})
 
-	store.SetMetric(schemas.Metric{
+	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindTimeSinceLastRun,
 		Labels: pr.DefaultLabelsValues(),
 		Value:  time.Since(*job.CreatedAt).Round(time.Second).Seconds(),
@@ -102,16 +112,16 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 		Kind:   schemas.MetricKindJobRunCount,
 		Labels: labels,
 	}
-	store.GetMetric(&jobRunCount)
+	storeGetMetric(&jobRunCount)
 	jobRunCount.Value++
-	store.SetMetric(jobRunCount)
+	storeSetMetric(jobRunCount)
 
 	artifactSize := 0
 	for _, artifact := range job.Artifacts {
 		artifactSize += artifact.Size
 	}
 
-	store.SetMetric(schemas.Metric{
+	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindLastRunJobArtifactSize,
 		Labels: labels,
 		Value:  float64(artifactSize),

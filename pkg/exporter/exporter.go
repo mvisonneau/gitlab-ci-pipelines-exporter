@@ -57,7 +57,9 @@ func ConfigurePollingQueue() {
 
 	// Purge the queue when we start
 	// I am only partially convinced this will not cause issues in HA fashion
-	pollingQueue.Purge()
+	if err := pollingQueue.Purge(); err != nil {
+		log.WithField("error", err.Error()).Error("purging the polling queue")
+	}
 }
 
 // ConfigureStore ..
@@ -70,7 +72,12 @@ func ConfigureStore() {
 
 	// Load all the configured projects in the store
 	for _, p := range Config.Projects {
-		store.SetProject(p)
+		if err := store.SetProject(p); err != nil {
+			log.WithFields(log.Fields{
+				"project-name": p.Name,
+				"error":        err.Error(),
+			}).Error("writing project in the store")
+		}
 	}
 }
 
