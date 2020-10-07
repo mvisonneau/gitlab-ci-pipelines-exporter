@@ -10,14 +10,14 @@ import (
 func TestNewCollectorFunctions(t *testing.T) {
 	for _, f := range [](func() prometheus.Collector){
 		NewCollectorCoverage,
-		NewCollectorLastJobRunID,
+		NewCollectorJobLastRunID,
 		NewCollectorLastRunDuration,
 		NewCollectorLastRunID,
-		NewCollectorLastRunJobArtifactSize,
-		NewCollectorLastRunJobDuration,
-		NewCollectorLastRunJobStatus,
+		NewCollectorJobLastRunArtifactSize,
+		NewCollectorJobLastRunDuration,
+		NewCollectorJobLastRunStatus,
 		NewCollectorLastRunStatus,
-		NewCollectorTimeSinceLastJobRun,
+		NewCollectorJobTimeSinceLastRun,
 		NewCollectorTimeSinceLastRun,
 	} {
 		c := f()

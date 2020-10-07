@@ -85,19 +85,19 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 	log.WithFields(projectRefLogFields).Debug("processing job metrics")
 
 	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindLastJobRunID,
+		Kind:   schemas.MetricKindJobLastRunID,
 		Labels: labels,
 		Value:  float64(job.ID),
 	})
 
 	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindTimeSinceLastJobRun,
+		Kind:   schemas.MetricKindJobTimeSinceLastRun,
 		Labels: labels,
 		Value:  time.Since(*job.CreatedAt).Round(time.Second).Seconds(),
 	})
 
 	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindLastRunJobDuration,
+		Kind:   schemas.MetricKindJobLastRunDuration,
 		Labels: labels,
 		Value:  job.Duration,
 	})
@@ -122,13 +122,13 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 	}
 
 	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindLastRunJobArtifactSize,
+		Kind:   schemas.MetricKindJobLastRunArtifactSize,
 		Labels: labels,
 		Value:  float64(artifactSize),
 	})
 
 	emitStatusMetric(
-		schemas.MetricKindLastRunJobStatus,
+		schemas.MetricKindJobLastRunStatus,
 		labels,
 		statusesList[:],
 		job.Status,

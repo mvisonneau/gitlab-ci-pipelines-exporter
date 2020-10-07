@@ -20,6 +20,50 @@ func NewCollectorCoverage() prometheus.Collector {
 	)
 }
 
+// NewCollectorJobLastRunArtifactSize returns a new collector for the gitlab_ci_pipeline_job_last_run_artifact_size metric
+func NewCollectorJobLastRunArtifactSize() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_job_last_run_artifact_size",
+			Help: "Filesize of the artifacts of the most recent job",
+		},
+		append(defaultLabels, jobLabels...),
+	)
+}
+
+// NewCollectorJobLastRunDuration returns a new collector for the gitlab_ci_pipeline_job_last_run_duration_seconds metric
+func NewCollectorJobLastRunDuration() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_job_last_run_duration_seconds",
+			Help: "Duration of last job run",
+		},
+		append(defaultLabels, jobLabels...),
+	)
+}
+
+// NewCollectorJobLastRunID returns a new collector for the gitlab_ci_pipeline_job_last_run_id metric
+func NewCollectorJobLastRunID() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_job_last_run_id",
+			Help: "ID of the most recent job",
+		},
+		append(defaultLabels, jobLabels...),
+	)
+}
+
+// NewCollectorJobLastRunStatus returns a new collector for the gitlab_ci_pipeline_job_last_run_status metric
+func NewCollectorJobLastRunStatus() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_job_last_run_status",
+			Help: "Status of the most recent job",
+		},
+		append(defaultLabels, append(jobLabels, statusLabels...)...),
+	)
+}
+
 // NewCollectorJobRunCount returns a new collector for the gitlab_ci_pipeline_job_run_count metric
 func NewCollectorJobRunCount() prometheus.Collector {
 	return prometheus.NewCounterVec(
@@ -31,12 +75,12 @@ func NewCollectorJobRunCount() prometheus.Collector {
 	)
 }
 
-// NewCollectorLastJobRunID returns a new collector for the gitlab_ci_pipeline_last_job_run_id metric
-func NewCollectorLastJobRunID() prometheus.Collector {
+// NewCollectorJobTimeSinceLastRun returns a new collector for the gitlab_ci_pipeline_job_time_since_last_run_seconds metric
+func NewCollectorJobTimeSinceLastRun() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_job_run_id",
-			Help: "ID of the most recent job",
+			Name: "gitlab_ci_pipeline_job_time_since_last_run_seconds",
+			Help: "Elapsed time since most recent GitLab CI job run.",
 		},
 		append(defaultLabels, jobLabels...),
 	)
@@ -64,39 +108,6 @@ func NewCollectorLastRunID() prometheus.Collector {
 	)
 }
 
-// NewCollectorLastRunJobArtifactSize returns a new collector for the gitlab_ci_pipeline_last_job_run_artifact_size metric
-func NewCollectorLastRunJobArtifactSize() prometheus.Collector {
-	return prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_job_run_artifact_size",
-			Help: "Filesize of the most recent job artifacts",
-		},
-		append(defaultLabels, jobLabels...),
-	)
-}
-
-// NewCollectorLastRunJobDuration returns a new collector for the gitlab_ci_pipeline_last_job_run_duration_seconds metric
-func NewCollectorLastRunJobDuration() prometheus.Collector {
-	return prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_job_run_duration_seconds",
-			Help: "Duration of last job run",
-		},
-		append(defaultLabels, jobLabels...),
-	)
-}
-
-// NewCollectorLastRunJobStatus returns a new collector for the gitlab_ci_pipeline_last_job_run_status metric
-func NewCollectorLastRunJobStatus() prometheus.Collector {
-	return prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_last_job_run_status",
-			Help: "Status of the most recent job",
-		},
-		append(defaultLabels, append(jobLabels, statusLabels...)...),
-	)
-}
-
 // NewCollectorLastRunStatus returns a new collector for the gitlab_ci_pipeline_last_run_status metric
 func NewCollectorLastRunStatus() prometheus.Collector {
 	return prometheus.NewGaugeVec(
@@ -116,17 +127,6 @@ func NewCollectorRunCount() prometheus.Collector {
 			Help: "GitLab CI pipeline run count",
 		},
 		defaultLabels,
-	)
-}
-
-// NewCollectorTimeSinceLastJobRun returns a new collector for the gitlab_ci_pipeline_time_since_last_job_run_seconds metric
-func NewCollectorTimeSinceLastJobRun() prometheus.Collector {
-	return prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "gitlab_ci_pipeline_time_since_last_job_run_seconds",
-			Help: "Elapsed time since most recent GitLab CI job run.",
-		},
-		append(defaultLabels, jobLabels...),
 	)
 }
 

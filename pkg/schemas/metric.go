@@ -12,11 +12,23 @@ const (
 	// MetricKindCoverage refers to the coerage of a job/pipeline
 	MetricKindCoverage MetricKind = iota
 
+	// MetricKindJobLastRunArtifactSize ..
+	MetricKindJobLastRunArtifactSize
+
+	// MetricKindJobLastRunDuration ..
+	MetricKindJobLastRunDuration
+
+	// MetricKindJobLastRunID ..
+	MetricKindJobLastRunID
+
+	// MetricKindJobLastRunStatus ..
+	MetricKindJobLastRunStatus
+
 	// MetricKindJobRunCount ..
 	MetricKindJobRunCount
 
-	// MetricKindLastJobRunID ..
-	MetricKindLastJobRunID
+	// MetricKindJobTimeSinceLastRun ..
+	MetricKindJobTimeSinceLastRun
 
 	// MetricKindLastRunDuration ..
 	MetricKindLastRunDuration
@@ -24,23 +36,11 @@ const (
 	// MetricKindLastRunID ..
 	MetricKindLastRunID
 
-	// MetricKindLastRunJobArtifactSize ..
-	MetricKindLastRunJobArtifactSize
-
-	// MetricKindLastRunJobDuration ..
-	MetricKindLastRunJobDuration
-
-	// MetricKindLastRunJobStatus ..
-	MetricKindLastRunJobStatus
-
 	// MetricKindLastRunStatus ..
 	MetricKindLastRunStatus
 
 	// MetricKindRunCount ..
 	MetricKindRunCount
-
-	// MetricKindTimeSinceLastJobRun ..
-	MetricKindTimeSinceLastJobRun
 
 	// MetricKindTimeSinceLastRun ..
 	MetricKindTimeSinceLastRun

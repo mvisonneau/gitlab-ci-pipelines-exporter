@@ -7,6 +7,14 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+**BREAKING CHANGES**
+
+- Renamed `gitlab_ci_pipeline_last_job_run_artifact_size` metric into `gitlab_ci_pipeline_job_last_run_artifact_size`
+- Renamed `gitlab_ci_pipeline_last_job_run_duration_seconds` metric into `gitlab_ci_pipeline_job_last_run_duration_seconds`
+- Renamed `gitlab_ci_pipeline_last_job_run_id` metric into `gitlab_ci_pipeline_job_last_run_id`
+- Renamed `gitlab_ci_pipeline_last_job_run_status` metric into `gitlab_ci_pipeline_job_last_run_status`
+- Renamed `gitlab_ci_pipeline_time_since_last_job_run_seconds` metric into `gitlab_ci_pipeline_job_time_since_last_run_seconds`
+
 ### Added
 
 - HA configuration capabilities using Redis

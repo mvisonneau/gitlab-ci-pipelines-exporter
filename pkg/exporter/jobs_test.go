@@ -149,21 +149,21 @@ func TestProcessJobMetrics(t *testing.T) {
 	}
 
 	lastJobRunID := schemas.Metric{
-		Kind:   schemas.MetricKindLastJobRunID,
+		Kind:   schemas.MetricKindJobLastRunID,
 		Labels: labels,
 		Value:  2,
 	}
 	assert.Equal(t, lastJobRunID, metrics[lastJobRunID.Key()])
 
 	timeSinceLastJobRun := schemas.Metric{
-		Kind:   schemas.MetricKindTimeSinceLastJobRun,
+		Kind:   schemas.MetricKindJobTimeSinceLastRun,
 		Labels: labels,
 		Value:  time.Since(*newJob.CreatedAt).Round(time.Second).Seconds(),
 	}
 	assert.Equal(t, timeSinceLastJobRun, metrics[timeSinceLastJobRun.Key()])
 
 	lastRunJobDuration := schemas.Metric{
-		Kind:   schemas.MetricKindLastRunJobDuration,
+		Kind:   schemas.MetricKindJobLastRunDuration,
 		Labels: labels,
 		Value:  newJob.Duration,
 	}
@@ -184,7 +184,7 @@ func TestProcessJobMetrics(t *testing.T) {
 	assert.Equal(t, jobRunCount, metrics[jobRunCount.Key()])
 
 	artifactSize := schemas.Metric{
-		Kind:   schemas.MetricKindLastRunJobArtifactSize,
+		Kind:   schemas.MetricKindJobLastRunArtifactSize,
 		Labels: labels,
 		Value:  float64(150),
 	}
@@ -192,7 +192,7 @@ func TestProcessJobMetrics(t *testing.T) {
 
 	labels["status"] = newJob.Status
 	status := schemas.Metric{
-		Kind:   schemas.MetricKindLastRunJobStatus,
+		Kind:   schemas.MetricKindJobLastRunStatus,
 		Labels: labels,
 		Value:  float64(1),
 	}
