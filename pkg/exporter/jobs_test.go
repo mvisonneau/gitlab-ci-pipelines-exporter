@@ -158,7 +158,7 @@ func TestProcessJobMetrics(t *testing.T) {
 	timeSinceLastJobRun := schemas.Metric{
 		Kind:   schemas.MetricKindJobTimestamp,
 		Labels: labels,
-		Value:  time.Since(*newJob.CreatedAt).Round(time.Second).Seconds(),
+		Value:  float64(now.Unix()),
 	}
 	assert.Equal(t, timeSinceLastJobRun, metrics[timeSinceLastJobRun.Key()])
 
