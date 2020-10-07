@@ -1,8 +1,6 @@
 package exporter
 
 import (
-	"time"
-
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -59,15 +57,6 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 	// In case a job gets restarted, it will have an ID greated than the previous one(s)
 	// jobs in new pipelines should get greated IDs too
 	if lastJob, ok := pr.Jobs[job.Name]; ok {
-		if lastJob.ID == job.ID {
-			storeSetMetric(schemas.Metric{
-				Kind:   schemas.MetricKindTimeSinceLastRun,
-				Labels: pr.DefaultLabelsValues(),
-				Value:  time.Since(*job.CreatedAt).Round(time.Second).Seconds(),
-			})
-			return
-		}
-
 		if lastJob.ID > job.ID {
 			return
 		}
@@ -85,27 +74,21 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 	log.WithFields(projectRefLogFields).Debug("processing job metrics")
 
 	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindJobLastRunID,
+		Kind:   schemas.MetricKindJobID,
 		Labels: labels,
 		Value:  float64(job.ID),
 	})
 
 	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindJobTimeSinceLastRun,
+		Kind:   schemas.MetricKindJobTimestamp,
 		Labels: labels,
-		Value:  time.Since(*job.CreatedAt).Round(time.Second).Seconds(),
+		Value:  float64(job.CreatedAt.Unix()),
 	})
 
 	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindJobLastRunDuration,
+		Kind:   schemas.MetricKindJobDurationSeconds,
 		Labels: labels,
 		Value:  job.Duration,
-	})
-
-	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindTimeSinceLastRun,
-		Labels: pr.DefaultLabelsValues(),
-		Value:  time.Since(*job.CreatedAt).Round(time.Second).Seconds(),
 	})
 
 	jobRunCount := schemas.Metric{
@@ -122,13 +105,13 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 	}
 
 	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindJobLastRunArtifactSize,
+		Kind:   schemas.MetricKindJobArtifactSizeBytes,
 		Labels: labels,
 		Value:  float64(artifactSize),
 	})
 
 	emitStatusMetric(
-		schemas.MetricKindJobLastRunStatus,
+		schemas.MetricKindJobStatus,
 		labels,
 		statusesList[:],
 		job.Status,

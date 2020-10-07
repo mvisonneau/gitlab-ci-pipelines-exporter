@@ -2,6 +2,9 @@ version: '3.7'
 services:
   gitlab-ci-pipelines-exporter:
     image: mvisonneau/gitlab-ci-pipelines-exporter:0.3.5
+    # You can comment out the image name and use the following statement
+    # to build the image against the current version of the repository
+    #build: ../..
     ports:
       - 8080:8080
     environment:

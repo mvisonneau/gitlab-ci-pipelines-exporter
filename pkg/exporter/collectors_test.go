@@ -10,15 +10,15 @@ import (
 func TestNewCollectorFunctions(t *testing.T) {
 	for _, f := range [](func() prometheus.Collector){
 		NewCollectorCoverage,
-		NewCollectorJobLastRunID,
-		NewCollectorLastRunDuration,
-		NewCollectorLastRunID,
-		NewCollectorJobLastRunArtifactSize,
-		NewCollectorJobLastRunDuration,
-		NewCollectorJobLastRunStatus,
-		NewCollectorLastRunStatus,
-		NewCollectorJobTimeSinceLastRun,
-		NewCollectorTimeSinceLastRun,
+		NewCollectorDurationSeconds,
+		NewCollectorID,
+		NewCollectorJobArtifactSizeBytes,
+		NewCollectorJobDurationSeconds,
+		NewCollectorJobID,
+		NewCollectorJobStatus,
+		NewCollectorJobTimestamp,
+		NewCollectorStatus,
+		NewCollectorTimestamp,
 	} {
 		c := f()
 		assert.NotNil(t, c)

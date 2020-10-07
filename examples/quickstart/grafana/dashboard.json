@@ -1,4 +1,3 @@
-
 {
   "annotations": {
     "list": [
@@ -13,12 +12,11 @@
       }
     ]
   },
-  "description": "This leverages the Prometheus exporter I wrote to fetch information about GitLab CI pipelines statuses.\n\nhttps://github.com/mvisonneau/gitlab-ci-pipelines-exporter",
+  "description": "This dashboard leverages the Prometheus exporter I wrote to fetch information about GitLab CI pipelines statuses. More information here: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter",
   "editable": true,
   "gnetId": 10620,
   "graphTooltip": 0,
-  "id": 2,
-  "iteration": 1591719586104,
+  "iteration": 1602076063881,
   "links": [],
   "panels": [
     {
@@ -84,15 +82,18 @@
           ],
           "fields": "",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.3",
+      "pluginVersion": "7.2.0",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_last_run_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"} > 0) or vector(0)",
+          "expr": "count(gitlab_ci_pipeline_status{status=\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
+          "interval": "",
           "intervalFactor": 1,
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -165,14 +166,17 @@
           ],
           "fields": "/^Value$/",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.3",
+      "pluginVersion": "7.2.0",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_pipeline_time_since_last_run_seconds{project=~\"$PROJECT\", ref=~\"$REF\"})",
+          "expr": "avg(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"})",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 1,
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -245,14 +249,17 @@
           ],
           "fields": "",
           "values": false
-        }
+        },
+        "textMode": "auto"
       },
-      "pluginVersion": "7.0.3",
+      "pluginVersion": "7.2.0",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_pipeline_last_run_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"})",
+          "expr": "avg(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"})",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 1,
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -265,7 +272,8 @@
       "colors": [
         "#299c46",
         "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
+        "#d44a3a",
+        "#4040a0"
       ],
       "datasource": null,
       "fieldConfig": {
@@ -303,14 +311,14 @@
         "displayLimit": 100,
         "fontAutoColor": true,
         "fontAutoScale": true,
-        "fontSize": 12,
+        "fontSize": 4,
         "fontType": "Roboto",
         "globalDecimals": 2,
         "globalDisplayMode": "all",
         "globalDisplayTextTriggeredEmpty": "OK",
-        "globalOperatorName": "avg",
+        "globalOperatorName": "current",
         "globalUnitFormat": "short",
-        "gradientEnabled": false,
+        "gradientEnabled": true,
         "hexagonSortByDirection": 1,
         "hexagonSortByField": "name",
         "maxMetrics": 0,
@@ -330,7 +338,8 @@
         "tooltipPrimarySortField": "thresholdLevel",
         "tooltipSecondarySortDirection": 2,
         "tooltipSecondarySortField": "value",
-        "tooltipTimestampEnabled": false
+        "tooltipTimestampEnabled": false,
+        "valueEnabled": false
       },
       "rangeMaps": [
         {
@@ -380,10 +389,11 @@
       ],
       "targets": [
         {
-          "expr": "(gitlab_ci_pipeline_last_run_status{status=\"success\", project=~\"$PROJECT\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_last_run_status{status=\"running\", project=~\"$PROJECT\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_last_run_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"} * 3 > 0)",
+          "expr": "(gitlab_ci_pipeline_status{status=\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status=\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 3 > 0)",
           "format": "time_series",
           "hide": false,
           "instant": true,
+          "interval": "",
           "intervalFactor": 1,
           "legendFormat": "{{project}}",
           "refId": "A"
@@ -429,6 +439,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:1373",
           "alias": "Time",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -436,6 +447,7 @@
           "type": "hidden"
         },
         {
+          "$$hashKey": "object:1374",
           "alias": "Status",
           "align": "auto",
           "colorMode": "cell",
@@ -457,12 +469,14 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:1416",
               "text": "FAILED",
               "value": "1"
             }
           ]
         },
         {
+          "$$hashKey": "object:1375",
           "alias": "Last run",
           "align": "auto",
           "colorMode": "cell",
@@ -483,6 +497,7 @@
           "unit": "s"
         },
         {
+          "$$hashKey": "object:3308",
           "alias": "Duration",
           "align": "auto",
           "colorMode": "cell",
@@ -492,17 +507,18 @@
             "rgba(245, 54, 54, 0.9)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 1,
+          "decimals": 0,
           "mappingType": 1,
           "pattern": "Value #C",
           "thresholds": [
-            "900",
-            "1200"
+            "1200",
+            "2400"
           ],
           "type": "number",
-          "unit": "dtdurations"
+          "unit": "s"
         },
         {
+          "$$hashKey": "object:1377",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -520,27 +536,33 @@
       ],
       "targets": [
         {
-          "expr": "(max(gitlab_ci_pipeline_time_since_last_run_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) * min(gitlab_ci_pipeline_last_run_status{status=~\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref)) > 0",
+          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) unless (max(gitlab_ci_pipeline_status{status!~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
+          "interval": "",
           "intervalFactor": 1,
+          "legendFormat": "",
           "refId": "B"
         },
         {
-          "expr": "(max(gitlab_ci_pipeline_last_run_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) * min(gitlab_ci_pipeline_last_run_status{status=~\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref)) > 0",
+          "expr": "(max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) unless (max(gitlab_ci_pipeline_status{status!~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref)) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
+          "interval": "",
           "intervalFactor": 1,
+          "legendFormat": "",
           "refId": "C"
         },
         {
-          "expr": "min(gitlab_ci_pipeline_last_run_status{status=~\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) > 0",
+          "expr": "min(gitlab_ci_pipeline_status{status=~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
+          "interval": "",
           "intervalFactor": 1,
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -577,6 +599,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:1116",
           "alias": "Time",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -584,6 +607,7 @@
           "type": "hidden"
         },
         {
+          "$$hashKey": "object:1117",
           "alias": "Status",
           "align": "auto",
           "colorMode": "cell",
@@ -594,6 +618,7 @@
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
+          "link": false,
           "mappingType": 1,
           "pattern": "Value #A",
           "preserveFormat": false,
@@ -605,16 +630,19 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:1159",
               "text": "OK",
               "value": "1"
             },
             {
+              "$$hashKey": "object:1160",
               "text": "RUNNING",
               "value": "2"
             }
           ]
         },
         {
+          "$$hashKey": "object:1118",
           "alias": "Last run",
           "align": "auto",
           "colorMode": "cell",
@@ -635,6 +663,7 @@
           "unit": "s"
         },
         {
+          "$$hashKey": "object:1119",
           "alias": "Duration",
           "align": "auto",
           "colorMode": "cell",
@@ -655,6 +684,7 @@
           "unit": "dtdurations"
         },
         {
+          "$$hashKey": "object:1120",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -672,25 +702,33 @@
       ],
       "targets": [
         {
-          "expr": "max(gitlab_ci_pipeline_time_since_last_run_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) unless (min(gitlab_ci_pipeline_last_run_status{status!~\"success|running\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) > 0)",
-          "format": "table",
-          "instant": true,
-          "intervalFactor": 1,
-          "refId": "B"
-        },
-        {
-          "expr": "max(gitlab_ci_pipeline_last_run_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) unless (min(gitlab_ci_pipeline_last_run_status{status!~\"success|running\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref) > 0)",
+          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) unless max(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
+          "interval": "",
           "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) unless (max(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) > 0)",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
           "refId": "C"
         },
         {
-          "expr": "min(gitlab_ci_pipeline_last_run_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"} * 1) by (project, ref) > 0 or min(gitlab_ci_pipeline_last_run_status{status=~\"running\", project=~\"$PROJECT\", ref=~\"$REF\"} * 2) by (project, ref) > 0",
+          "expr": "max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"success\"} * 1) by (project, ref) > 0 or max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"running\"} * 2) by (project, ref) > 0",
           "format": "table",
+          "hide": true,
           "instant": true,
+          "interval": "",
           "intervalFactor": 1,
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -702,7 +740,7 @@
     }
   ],
   "refresh": "10s",
-  "schemaVersion": 25,
+  "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -711,22 +749,24 @@
         "allValue": "",
         "current": {
           "selected": true,
-          "text": "All",
+          "text": [
+            "All"
+          ],
           "value": [
             "$__all"
           ]
         },
-        "datasource": null,
-        "definition": "label_values(gitlab_ci_pipeline_last_run_status, project)",
+        "datasource": "prometheus",
+        "definition": "label_values(gitlab_ci_pipeline_id, project)",
         "hide": 0,
         "includeAll": true,
-        "label": "project",
+        "label": "owner",
         "multi": true,
-        "name": "PROJECT",
+        "name": "OWNER",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_last_run_status, project)",
-        "refresh": 1,
-        "regex": "",
+        "query": "label_values(gitlab_ci_pipeline_id, project)",
+        "refresh": 2,
+        "regex": "/(.*)\\/.*$/",
         "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",
@@ -739,24 +779,26 @@
         "allValue": "",
         "current": {
           "selected": true,
-          "text": "All",
+          "text": [
+            "All"
+          ],
           "value": [
             "$__all"
           ]
         },
-        "datasource": null,
-        "definition": "label_values(gitlab_ci_pipeline_last_run_status{project=~\"$PROJECT\"}, ref)",
+        "datasource": "prometheus",
+        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, ref)",
         "hide": 0,
         "includeAll": true,
         "label": "ref",
         "multi": true,
         "name": "REF",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_last_run_status{project=~\"$PROJECT\"}, ref)",
-        "refresh": 1,
+        "query": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, ref)",
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 0,
+        "sort": 1,
         "tagValuesQuery": "",
         "tags": [],
         "tagsQuery": "",
@@ -795,6 +837,6 @@
   },
   "timezone": "",
   "title": "GitLab CI Pipelines Statuses",
-  "uid": "gitlab_ci_pipeline_last_run_statuses",
-  "version": 2
+  "uid": "gitlab_ci_pipeline_statuses",
+  "version": 1
 }

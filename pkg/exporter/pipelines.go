@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
@@ -92,24 +91,30 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 		}
 
 		storeSetMetric(schemas.Metric{
-			Kind:   schemas.MetricKindLastRunDuration,
-			Labels: pr.DefaultLabelsValues(),
-			Value:  float64(pipeline.Duration),
-		})
-
-		storeSetMetric(schemas.Metric{
-			Kind:   schemas.MetricKindLastRunID,
+			Kind:   schemas.MetricKindID,
 			Labels: pr.DefaultLabelsValues(),
 			Value:  float64(pipeline.ID),
 		})
 
 		emitStatusMetric(
-			schemas.MetricKindLastRunStatus,
+			schemas.MetricKindStatus,
 			defaultLabelValues,
 			statusesList[:],
 			pipeline.Status,
 			pr.OutputSparseStatusMetrics(),
 		)
+
+		storeSetMetric(schemas.Metric{
+			Kind:   schemas.MetricKindDurationSeconds,
+			Labels: pr.DefaultLabelsValues(),
+			Value:  float64(pipeline.Duration),
+		})
+
+		storeSetMetric(schemas.Metric{
+			Kind:   schemas.MetricKindTimestamp,
+			Labels: pr.DefaultLabelsValues(),
+			Value:  float64(pipeline.UpdatedAt.Unix()),
+		})
 
 		if pr.FetchPipelineJobMetrics() {
 			if err := pollProjectRefPipelineJobs(pr); err != nil {
@@ -126,12 +131,6 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 			}
 		}
 	}
-
-	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindTimeSinceLastRun,
-		Labels: pr.DefaultLabelsValues(),
-		Value:  time.Since(*pipeline.CreatedAt).Round(time.Second).Seconds(),
-	})
 
 	return nil
 }

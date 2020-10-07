@@ -9,11 +9,23 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 **BREAKING CHANGES**
 
-- Renamed `gitlab_ci_pipeline_last_job_run_artifact_size` metric into `gitlab_ci_pipeline_job_last_run_artifact_size`
-- Renamed `gitlab_ci_pipeline_last_job_run_duration_seconds` metric into `gitlab_ci_pipeline_job_last_run_duration_seconds`
-- Renamed `gitlab_ci_pipeline_last_job_run_id` metric into `gitlab_ci_pipeline_job_last_run_id`
-- Renamed `gitlab_ci_pipeline_last_job_run_status` metric into `gitlab_ci_pipeline_job_last_run_status`
-- Renamed `gitlab_ci_pipeline_time_since_last_job_run_seconds` metric into `gitlab_ci_pipeline_job_time_since_last_run_seconds`
+Some metrics have been renamed:
+
+| Original metric name | New metric name|
+|---|---|
+|*gitlab_ci_pipeline_last_job_run_artifact_size*|`gitlab_ci_pipeline_job_artifact_size_bytes`|
+|*gitlab_ci_pipeline_last_job_run_artifact_size*|`gitlab_ci_pipeline_job_artifact_size_bytes`|
+|*gitlab_ci_pipeline_last_job_run_duration_seconds*|`gitlab_ci_pipeline_job_duration_seconds`|
+|*gitlab_ci_pipeline_last_job_run_id*|`gitlab_ci_pipeline_job_id`|
+|*gitlab_ci_pipeline_last_job_run_status*|`gitlab_ci_pipeline_job_status`|
+|*gitlab_ci_pipeline_last_run_duration_seconds*|`gitlab_ci_pipeline_duration_seconds`|
+|*gitlab_ci_pipeline_last_run_id*|`gitlab_ci_pipeline_id`|
+|*gitlab_ci_pipeline_last_run_status*|`gitlab_ci_pipeline_status`|
+|*gitlab_ci_pipeline_time_since_last_job_run_seconds*|`gitlab_ci_pipeline_job_timestamp`|
+|*gitlab_ci_pipeline_time_since_last_run_seconds*|`gitlab_ci_pipeline_timestamp`|
+
+On top of being renamed, the `.*time_since.*` metrics have been also converted to timestamps.
+You will need to update your PromQL queries to leverage the new format. eg: `time() - gitlab_ci_pipeline_timestamp`
 
 ### Added
 
@@ -28,6 +40,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Rewritten the scheduling of the polling using `vmihailenco/taskq`
 - Updated the rate limiter to work globally across several workers
 - Fixed an issue preventing the jobs from being updated accordingly when restarted
+- Updated the example grafana dashboard with the new metrics naming
+- Bumped Grafana and Prometheus versions in the example
 
 ### Removed
 
