@@ -88,8 +88,8 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 			projects = append(
 				projects,
 				schemas.Project{
-					Parameters: w.Parameters,
-					Name:       gp.PathWithNamespace,
+					ProjectParameters: w.ProjectParameters,
+					Name:              gp.PathWithNamespace,
 				},
 			)
 		}

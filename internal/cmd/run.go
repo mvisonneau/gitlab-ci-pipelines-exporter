@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -17,21 +16,9 @@ import (
 
 // Run launches the exporter
 func Run(ctx *cli.Context) (int, error) {
-	health, err := configure(ctx)
-	if err != nil {
+	if err := configure(ctx); err != nil {
 		return 1, err
 	}
-
-	log.WithFields(
-		log.Fields{
-			"gitlab-endpoint":                     exporter.Config.Gitlab.URL,
-			"discover-wildcard-projects-interval": fmt.Sprintf("%ds", exporter.Config.WildcardsProjectsDiscoverIntervalSeconds),
-			"discover-projects-refs-interval":     fmt.Sprintf("%ds", exporter.Config.ProjectsRefsDiscoverIntervalSeconds),
-			"polling-projects-refs-interval":      fmt.Sprintf("%ds", exporter.Config.ProjectsRefsPollingIntervalSeconds),
-			"rate-limit":                          fmt.Sprintf("%drps", exporter.Config.MaximumGitLabAPIRequestsPerSecond),
-			"on-init-fetch-refs-from-pipelines":   exporter.Config.OnInitFetchRefsFromPipelines,
-		},
-	).Info("starting exporter")
 
 	// Graceful shutdowns
 	onShutdown := make(chan os.Signal, 1)
@@ -43,9 +30,12 @@ func Run(ctx *cli.Context) (int, error) {
 
 	// Expose the registered registry via HTTP
 	mux := http.NewServeMux()
+	mux.HandleFunc("/metrics", exporter.MetricsHandler)
+
+	// Healthcheck
+	health := exporter.HealthCheckHandler()
 	mux.HandleFunc("/health/live", health.LiveEndpoint)
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
-	mux.HandleFunc("/metrics", exporter.MetricsHandler)
 
 	if ctx.Bool("enable-pprof") {
 		mux.HandleFunc("/debug/pprof/", pprof.Index)
@@ -65,6 +55,7 @@ func Run(ctx *cli.Context) (int, error) {
 			log.Fatal(err)
 		}
 	}()
+
 	log.WithFields(
 		log.Fields{
 			"listen-address": ctx.String("listen-address"),

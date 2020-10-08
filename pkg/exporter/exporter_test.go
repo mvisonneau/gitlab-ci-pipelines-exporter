@@ -15,7 +15,7 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *gitlab.Client) {
+func configureMockedGitlabClient() (*http.ServeMux, *httptest.Server) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
@@ -26,24 +26,27 @@ func getMockedGitlabClient() (*http.ServeMux, *httptest.Server, *gitlab.Client) 
 
 	gc, _ := goGitlab.NewClient("", opts...)
 
-	c := &gitlab.Client{
+	gitlabClient = &gitlab.Client{
 		Client:      gc,
 		RateLimiter: ratelimit.NewLocalLimiter(100),
 	}
 
-	return mux, server, c
+	return mux, server
+}
+
+func TestSetConfig(t *testing.T) {
+	cfg := schemas.Config{
+		Gitlab: schemas.GitlabConfig{
+			URL: "http://foo.bar",
+		},
+	}
+	SetConfig(cfg)
+	assert.Equal(t, cfg, config)
 }
 
 func TestConfigureGitlabClient(t *testing.T) {
-	gc, err := goGitlab.NewClient("")
-	assert.NoError(t, err)
-
-	c := &gitlab.Client{
-		Client:      gc,
-		RateLimiter: ratelimit.NewLocalLimiter(10),
-	}
-	ConfigureGitlabClient(c)
-	assert.Equal(t, gitlabClient, c)
+	ConfigureGitlabClient("yolo")
+	assert.NotNil(t, gitlabClient)
 }
 
 func TestConfigureRedisClient(t *testing.T) {
@@ -69,7 +72,7 @@ func TestConfigurePollingQueue(t *testing.T) {
 }
 
 func TestConfigureStore(t *testing.T) {
-	Config = schemas.Config{
+	config = schemas.Config{
 		Projects: []schemas.Project{
 			{
 				Name: "foo/bar",

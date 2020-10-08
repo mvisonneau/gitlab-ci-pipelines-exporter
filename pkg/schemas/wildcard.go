@@ -2,7 +2,7 @@ package schemas
 
 // Wildcard is a specific handler to dynamically search projects
 type Wildcard struct {
-	Parameters `yaml:",inline"`
+	ProjectParameters `yaml:",inline"`
 
 	Search string `yaml:"search"`
 	Owner  struct {

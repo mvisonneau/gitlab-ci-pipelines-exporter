@@ -55,9 +55,9 @@ func getRefsFromProject(p schemas.Project) error {
 
 	refs, err := getProjectRefs(
 		gp.ID,
-		p.RefsRegexp(),
-		p.FetchMergeRequestsPipelinesRefs(),
-		p.FetchMergeRequestsPipelinesRefsLimit(),
+		p.Pull.Refs.Regexp(),
+		p.Pull.Refs.From.MergeRequests.Enabled(),
+		p.Pull.Refs.From.MergeRequests.Depth(),
 	)
 
 	if err != nil {
@@ -85,7 +85,7 @@ func getRefsFromProject(p schemas.Project) error {
 
 			go pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(context.Background(), pr))
 
-			if pr.FetchPipelineJobMetrics() {
+			if pr.Pull.Pipeline.Jobs.Enabled() {
 				go pollingQueue.Add(pollProjectRefMostRecentJobsTask.WithArgs(context.Background(), pr))
 			}
 		}
@@ -104,7 +104,7 @@ func getProjectRefsFromPipelines(p schemas.Project) error {
 		return err
 	}
 
-	projectRefs, err := gitlabClient.GetProjectRefsFromPipelines(p, gp, Config.OnInitFetchRefsFromPipelinesDepthLimit)
+	projectRefs, err := gitlabClient.GetProjectRefsFromPipelines(p, gp)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func getProjectRefsFromPipelines(p schemas.Project) error {
 
 			go pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(context.Background(), pr))
 
-			if pr.FetchPipelineJobMetrics() {
+			if pr.Pull.Pipeline.Jobs.Enabled() {
 				go pollingQueue.Add(pollProjectRefMostRecentJobsTask.WithArgs(context.Background(), pr))
 			}
 		}

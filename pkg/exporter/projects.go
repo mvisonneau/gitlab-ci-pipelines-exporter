@@ -33,7 +33,7 @@ func getProjectsFromWildcard(w schemas.Wildcard) error {
 				log.Errorf(err.Error())
 			}
 
-			if Config.OnInitFetchRefsFromPipelines {
+			if p.Pull.Refs.From.Pipelines.Enabled() {
 				go pollingQueue.Add(getProjectRefsFromPipelinesTask.WithArgs(context.Background(), p))
 			}
 

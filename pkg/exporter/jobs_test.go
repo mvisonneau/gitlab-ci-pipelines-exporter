@@ -13,9 +13,8 @@ import (
 )
 
 func TestPollProjectRefPipelineJobs(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	ConfigureGitlabClient(c)
 	ConfigureStore()
 
 	mux.HandleFunc("/api/v4/projects/1/pipelines/1/jobs",
@@ -38,9 +37,8 @@ func TestPollProjectRefPipelineJobs(t *testing.T) {
 }
 
 func TestPollProjectRefMostRecentJobs(t *testing.T) {
-	mux, server, c := getMockedGitlabClient()
+	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	ConfigureGitlabClient(c)
 	ConfigureStore()
 
 	mux.HandleFunc("/api/v4/projects/1/jobs",
@@ -62,7 +60,7 @@ func TestPollProjectRefMostRecentJobs(t *testing.T) {
 	assert.NoError(t, pollProjectRefMostRecentJobs(pr))
 
 	// Enable FetchPipelineJobMetrics
-	pr.FetchPipelineJobMetricsValue = pointy.Bool(true)
+	pr.Pull.Pipeline.Jobs.EnabledValue = pointy.Bool(true)
 	assert.NoError(t, pollProjectRefMostRecentJobs(pr))
 	server.Close()
 	assert.Error(t, pollProjectRefMostRecentJobs(pr))
@@ -113,7 +111,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		},
 		MostRecentPipelineVariables: "none",
 		Project: schemas.Project{
-			Parameters: schemas.Parameters{
+			ProjectParameters: schemas.ProjectParameters{
 				OutputSparseStatusMetricsValue: pointy.Bool(true),
 			},
 		},

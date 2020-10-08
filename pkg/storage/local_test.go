@@ -12,8 +12,8 @@ import (
 func TestLocalProjectFunctions(t *testing.T) {
 	p := schemas.Project{
 		Name: "foo/bar",
-		Parameters: schemas.Parameters{
-			FetchMergeRequestsPipelinesRefsValue: pointy.Bool(true),
+		ProjectParameters: schemas.ProjectParameters{
+			OutputSparseStatusMetricsValue: pointy.Bool(false),
 		},
 	}
 

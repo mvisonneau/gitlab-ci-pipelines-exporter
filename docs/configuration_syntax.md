@@ -25,65 +25,107 @@ gitlab:
   # GitLab instance (handy when self-hosting) (optional)
   disable_tls_verify: false
 
-# Global rate limit for the GitLab API request/sec
-# (optional, default: 10)
-maximum_gitlab_api_requests_per_second: 10
-
-# Interval in seconds to discover projects
-# from wildcards (optional, default: 1800)
-wildcards_projects_discover_interval_seconds: 1800
-
-# Interval in seconds to discover refs
-# from projects (optional, default: 300)
-projects_refs_discover_interval_seconds: 300
-
-# Interval in seconds to poll metrics from
-# discovered project refs (optional, default: 30)
-projects_refs_polling_interval_seconds: 30
-
 # Disable OpenMetrics content encoding in
 # prometheus HTTP handler (optional, default: false)
 # see: https://godoc.org/github.com/prometheus/client_golang/prometheus/promhttp#HandlerOpts
 disable_openmetrics_encoding: false
 
-# Whether to attempt retrieving refs from pipelines
-# when the exporter starts (optional, default: false)
-on_init_fetch_refs_from_pipelines: false
+pull:
+  # Global rate limit for the GitLab API request/sec
+  # (optional, default: 10)
+  maximum_gitlab_api_requests_per_second: 10
 
-# Maximum number of pipelines to analyze per project
-# to search for refs on init (optional, default: 100)
-on_init_fetch_refs_from_pipelines_depth_limit: 100
+  metrics:
+    # Whether or not to trigger a pull of the metrics when the
+    # exporter starts (optional, default: true)
+    on_init: true
+
+    # Whether or not to attempt refreshing the metrics
+    # on a regular basis (optional, default: true)
+    scheduled: true
+
+    # Interval in seconds to pull metrics from
+    # discovered project refs (optional, default: 30)
+    interval_seconds: 30
+
+  projects_from_wildcards:
+    # Whether to trigger a discovery or not when the
+    # exporter starts (optional, default: true)
+    on_init: true
+
+    # Whether to attempt retrieving new projects from wildcards
+    # on a regular basis (optional, default: true)
+    scheduled: true
+
+    # Interval in seconds to discover projects
+    # from wildcards (optional, default: 1800)
+    interval_seconds: 1800
+
+  project_refs_from_branches_tags_and_mrs:
+    # Whether to trigger a discovery of project refs from
+    # branches, tags and merge requests when the
+    # exporter starts (optional, default: true)
+    # nb: merge requests refs discovery needs to be
+    # additionally enabled on a per project basis
+    on_init: true
+
+    # Whether to attempt retrieving project refs from branches,
+    # tags & merge requests on a regular basis (optional, default: true)
+    scheduled: true
+
+    # Interval in seconds to discover refs
+    # from projects branches and tags (optional, default: 300)
+    interval_seconds: 300
 
 # Default settings which can be overridden at the project
 # or wildcard level (optional)
-defaults:
-  # Whether to attempt retrieving job level metrics from pipelines.
-  # Increases the number of output metrics significantly!
-  # (optional, default: false)
-  fetch_pipeline_job_metrics: false
-
-  # Fetch pipeline variables in a separate metric (optional, default: false)
-  fetch_pipeline_variables: false
-
+project_defaults:
   # Whether to output sparse job and pipeline status metrics.
   # When enabled, only the status label matching the last run
   # of a pipeline or job will be submitted (optional, default: true)
   output_sparse_status_metrics: true
 
-  # Filter pipelines variables to include
-  # (optional, default: ".*", all variables)
-  pipeline_variables_filter_regexp: ".*"
+  pull:
+    refs:
+      # Filter refs (branches/tags only) to include
+      # (optional, default: "^main|master$" -- main or master branch)
+      regexp: "^main|master$"
 
-  # Filter refs (branches/tags) to include
-  # (optional, default: "^main|master$" -- main or master branch)
-  refs_regexp: "^main|master$"
+      from:
+        pipelines:
+          # Whether to trigger a discovery of the projects refs
+          # from the most recent project pipelines when the
+          # project is configured/discovered (optional, default: false)
+          # This flag is useful if you want/need to obtain pipelines
+          # metrics of deleted refs
+          enabled: false
 
-  # Fetch merge request pipelines refs (optional, default: false)
-  fetch_merge_request_pipelines_refs: false
+          # Maximum number of pipelines to analyze per project
+          # to search for refs on init (optional, default: 100)
+          depth: 100
 
-  # Maximum number for merge requests pipelines to
-  # attempt fetch on each ref discovery (optional, default: 1)
-  fetch_merge_request_pipelines_refs_init_limit: 1
+        merge_requests:
+          # Fetch merge request pipelines refs (optional, default: false)
+          enabled: false
+
+          # Maximum number for merge requests pipelines to
+          # attempt fetch on each project ref discovery (optional, default: 1)
+          depth: 1
+
+    pipeline:
+      jobs:
+        # Whether to attempt retrieving job level metrics from pipelines.
+        # Increases the number of outputed metrics significantly!
+        # (optional, default: false)
+        enabled: false
+
+      variables:
+        # Fetch pipeline variables in a separate metric (optional, default: false)
+        enabled: false
+
+        # Filter pipelines variables to include
+        # (optional, default: ".*", all variables)
+        regexp: ".*"
 
 # The list of the projects you want to monitor (optional)
 projects:
@@ -91,39 +133,52 @@ projects:
     # (required)
     name: foo/bar
 
-    # Whether to attempt retrieving job level metrics from pipelines.
-    # Increases the number of output metrics significantly!
-    # (optional, default: false)
-    fetch_pipeline_job_metrics: false
+    # Here are all the project parameters which can be overriden (optional)
+    pull:
+      refs:
+        # Filter refs (branches/tags only) to include
+        # (optional, default: "^main|master$" -- main or master branch)
+        regexp: "^main|master$"
 
-    # Fetch pipeline variables in a separate metric (optional, default: false)
-    fetch_pipeline_variables: false
+        from:
+          pipelines:
+            # Whether to trigger a discovery of the projects refs
+            # from the most recent project pipelines when the
+            # project is configured/discovered (optional, default: false)
+            # This flag is useful if you want/need to obtain pipelines
+            # metrics of deleted refs
+            enabled: false
 
-    # Whether to output sparse job and pipeline status metrics.
-    # When enabled, only the status label matching the last run
-    # of a pipeline or job will be submitted (optional, default: true)
-    output_sparse_status_metrics: true
+            # Maximum number of pipelines to analyze per project
+            # to search for refs on init (optional, default: 100)
+            depth: 100
 
-    # Filter pipelines variables to include
-    # (optional, default: ".*", all variables)
-    pipeline_variables_filter_regexp: ".*"
+          merge_requests:
+            # Fetch merge request pipelines refs (optional, default: false)
+            enabled: false
 
-    # Filter refs (branches/tags) to include
-    # (optional, default: "^main|master$" -- main or master branch)
-    refs_regexp: "^main|master$"
+            # Maximum number for merge requests pipelines to
+            # attempt fetch on each project ref discovery (optional, default: 1)
+            depth: 1
 
-    # Fetch merge request pipelines refs (optional, default: false)
-    fetch_merge_request_pipelines_refs: false
+      pipeline:
+        jobs:
+          # Whether to attempt retrieving job level metrics from pipelines.
+          # Increases the number of outputed metrics significantly!
+          # (optional, default: false)
+          enabled: false
 
-    # Maximum number for merge requests pipelines to
-    # attempt fetch on each ref discovery (optional, default: 1)
-    fetch_merge_request_pipelines_refs_init_limit: 1
+        variables:
+          # Fetch pipeline variables in a separate metric (optional, default: false)
+          enabled: false
 
+          # Filter pipelines variables to include
+          # (optional, default: ".*", all variables)
+          regexp: ".*"
 
 # Dynamically fetch projects to monitor using a wildcard (optional)
 wildcards:
-  - # Define the owner of the projects we want to look for
-    # (required)
+  - # Define the owner of the projects we want to look for (optional)
     owner:
       # Name of the owner (required)
       name: foo
@@ -143,44 +198,57 @@ wildcards:
     # (optional, default: false)
     archived: false
 
-    # Here are all the default parameters which can be overriden
+    # Here are all the project parameters which can be overriden (optional)
+    pull:
+      refs:
+        # Filter refs (branches/tags only) to include
+        # (optional, default: "^main|master$" -- main or master branch)
+        regexp: "^main|master$"
 
-    # Whether to attempt retrieving job level metrics from pipelines.
-    # Increases the number of output metrics significantly!
-    # (optional, default: false)
-    fetch_pipeline_job_metrics: false
+        from:
+          pipelines:
+            # Whether to trigger a discovery of the projects refs
+            # from the most recent project pipelines when the
+            # project is configured/discovered (optional, default: false)
+            # This flag is useful if you want/need to obtain pipelines
+            # metrics of deleted refs
+            enabled: false
 
-    # Fetch pipeline variables in a separate metric (optional, default: false)
-    fetch_pipeline_variables: false
+            # Maximum number of pipelines to analyze per project
+            # to search for refs on init (optional, default: 100)
+            depth: 100
 
-    # Whether to output sparse job and pipeline status metrics.
-    # When enabled, only the status label matching the last run
-    # of a pipeline or jb will be submitted (optional, default: false)
-    output_sparse_status_metrics: false
+          merge_requests:
+            # Fetch merge request pipelines refs (optional, default: false)
+            enabled: false
 
-    # Filter pipelines variables to include
-    # (optional, default: ".*", all variables)
-    pipeline_variables_filter_regexp: ".*"
+            # Maximum number for merge requests pipelines to
+            # attempt fetch on each project ref discovery (optional, default: 1)
+            depth: 1
 
-    # Filter refs (branches/tags) to include
-    # (optional, default: "^main|master$" -- main or master branch)
-    refs_regexp: "^main|master$"
+      pipeline:
+        jobs:
+          # Whether to attempt retrieving job level metrics from pipelines.
+          # Increases the number of outputed metrics significantly!
+          # (optional, default: false)
+          enabled: false
 
-    # Fetch merge request pipelines refs (optional, default: false)
-    fetch_merge_request_pipelines_refs: false
+        variables:
+          # Fetch pipeline variables in a separate metric (optional, default: false)
+          enabled: false
 
-    # Maximum number for merge requests pipelines to
-    # attempt fetch on each ref discovery (optional, default: 1)
-    fetch_merge_request_pipelines_refs_init_limit: 1
+          # Filter pipelines variables to include
+          # (optional, default: ".*", all variables)
+          regexp: ".*"
 ```
 
-## Poll all projects accessible by the provided token
+## Pull all projects accessible by the provided token
 
-If you want to poll all your GitLab projects (accessible by the token), you can use the following wildcard:
+If you want to pull all your GitLab projects (accessible by the token), you can use the following wildcard:
 
 ```yaml
 wildcards:
   - {}
 ```
 
-The exporter will then search for all accessible projects and start polling them.
+The exporter will then search for all accessible projects and start pulling their metrics.

@@ -9,6 +9,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 **BREAKING CHANGES**
 
+1. The [configuration syntax](./docs/configuration_syntax.md) has been restructured quite a bit so please refer to the documentation to check what you may need to update accordingly.
+
 1. Some metrics have been renamed:
 
 | Original metric name | New metric name|
@@ -24,10 +26,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 |*gitlab_ci_pipeline_time_since_last_job_run_seconds*|`gitlab_ci_pipeline_job_timestamp`|
 |*gitlab_ci_pipeline_time_since_last_run_seconds*|`gitlab_ci_pipeline_timestamp`|
 
-2. On top of being renamed, the `.*time_since.*` metrics have been also converted to timestamps.
+3. On top of being renamed, the `.*time_since.*` metrics have been also converted to timestamps.
 You will need to update your PromQL queries to leverage the new format. eg: `time() - gitlab_ci_pipeline_timestamp`
 
-3. We now output sparse status metrics by default, if you want to revert to the default behaviour you will need to add this
+4. We now output sparse status metrics by default, if you want to revert to the default behaviour you will need to add this
 statement to your config file:
 
 ```yaml
@@ -37,7 +39,7 @@ defaults:
 
 ### Added
 
-- HA configuration capabilities using Redis
+- **HA configuration capabilities using Redis**
 - gosec testing
 
 ### Changed

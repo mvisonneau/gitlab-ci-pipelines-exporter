@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/taskq/v3"
@@ -11,14 +12,13 @@ import (
 	"github.com/vmihailenco/taskq/v3/redisq"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/storage"
 )
 
 var (
-	// Config ..
-	Config schemas.Config
-
+	config       schemas.Config
 	gitlabClient *gitlab.Client
 	redisClient  *redis.Client
 	taskFactory  taskq.Factory
@@ -26,9 +26,29 @@ var (
 	store        storage.Storage
 )
 
+// SetConfig ..
+func SetConfig(cfg schemas.Config) {
+	config = cfg
+}
+
 // ConfigureGitlabClient ..
-func ConfigureGitlabClient(c *gitlab.Client) {
-	gitlabClient = c
+func ConfigureGitlabClient(userAgentVersion string) (err error) {
+	gitlabClient, err = gitlab.NewClient(gitlab.ClientConfig{
+		URL:              config.Gitlab.URL,
+		Token:            config.Gitlab.Token,
+		DisableTLSVerify: config.Gitlab.DisableTLSVerify,
+		UserAgentVersion: userAgentVersion,
+		RateLimiter:      newRateLimiter(),
+		ReadinessURL:     config.Gitlab.HealthURL,
+	})
+	return
+}
+
+func newRateLimiter() ratelimit.Limiter {
+	if redisClient != nil {
+		return ratelimit.NewRedisLimiter(context.Background(), redisClient, config.Pull.MaximumGitLabAPIRequestsPerSecond())
+	}
+	return ratelimit.NewLocalLimiter(config.Pull.MaximumGitLabAPIRequestsPerSecond())
 }
 
 // ConfigureRedisClient ..
@@ -71,12 +91,31 @@ func ConfigureStore() {
 	}
 
 	// Load all the configured projects in the store
-	for _, p := range Config.Projects {
-		if err := store.SetProject(p); err != nil {
+	for _, p := range config.Projects {
+		exists, err := store.ProjectExists(p.Key())
+		if err != nil {
 			log.WithFields(log.Fields{
 				"project-name": p.Name,
 				"error":        err.Error(),
-			}).Error("writing project in the store")
+			}).Error("reading project from the store")
+		}
+
+		if !exists {
+			if err = store.SetProject(p); err != nil {
+				log.WithFields(log.Fields{
+					"project-name": p.Name,
+					"error":        err.Error(),
+				}).Error("writing project in the store")
+			}
+
+			if p.Pull.Refs.From.Pipelines.Enabled() {
+				if err = pollingQueue.Add(getProjectRefsFromPipelinesTask.WithArgs(context.Background(), p)); err != nil {
+					log.WithFields(log.Fields{
+						"project-name": p.Name,
+						"error":        err.Error(),
+					}).Error("pulling project refs from existing project pipelines")
+				}
+			}
 		}
 	}
 }
@@ -88,4 +127,16 @@ func ProcessPollingQueue(ctx context.Context) {
 			log.Fatal(err)
 		}
 	}
+}
+
+// HealthCheckHandler ..
+func HealthCheckHandler() (h healthcheck.Handler) {
+	h = healthcheck.NewHandler()
+	if !config.Gitlab.DisableHealthCheck {
+		h.AddReadinessCheck("gitlab-reachable", gitlabClient.ReadinessCheck())
+	} else {
+		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
+	}
+
+	return
 }

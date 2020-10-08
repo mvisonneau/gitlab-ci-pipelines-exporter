@@ -46,72 +46,61 @@ var (
 // Schedule ..
 func Schedule(ctx context.Context) {
 	go func(ctx context.Context) {
-		discoverWildcardsProjectsEvery := time.NewTicker(time.Duration(Config.WildcardsProjectsDiscoverIntervalSeconds) * time.Second)
-		discoverProjectsRefsEvery := time.NewTicker(time.Duration(Config.ProjectsRefsDiscoverIntervalSeconds) * time.Second)
-		pollProjectsRefsEvery := time.NewTicker(time.Duration(Config.ProjectsRefsPollingIntervalSeconds) * time.Second)
+		pullProjectsFromWildcardsTicker := time.NewTicker(time.Duration(config.Pull.ProjectsFromWildcards.IntervalSeconds()) * time.Second)
+		pullProjectRefsFromBranchesTagsMergeRequestsTicker := time.NewTicker(time.Duration(config.Pull.ProjectRefsFromBranchesTagsMergeRequests.IntervalSeconds()) * time.Second)
+		pullMetricsTicker := time.NewTicker(time.Duration(config.Pull.Metrics.IntervalSeconds()) * time.Second)
 
 		// init
-		scheduleProjectsRefsFromPipelinesDiscovery(ctx)
-		scheduleWildcardsProjectsDiscovery(ctx)
-		scheduleProjectsRefsDiscovery(ctx)
-		scheduleProjectsRefsMostRecentPipelinesPolling(ctx)
-		scheduleProjectsRefsMostRecentJobsPolling(ctx)
+		if config.Pull.ProjectsFromWildcards.OnInit() {
+			schedulePullProjectsFromWildcards(ctx)
+		}
 
-		// Then, waiting for the tickers to kick in
+		if config.Pull.ProjectRefsFromBranchesTagsMergeRequests.OnInit() {
+			schedulePullProjectRefsFromBranchesTagsMergeRequests(ctx)
+		}
+
+		if config.Pull.Metrics.OnInit() {
+			schedulePullMetrics(ctx)
+		}
+
+		// Scheduler configuration
+		if !config.Pull.ProjectsFromWildcards.Scheduled() {
+			pullProjectsFromWildcardsTicker.Stop()
+		}
+
+		if !config.Pull.ProjectRefsFromBranchesTagsMergeRequests.Scheduled() {
+			pullProjectRefsFromBranchesTagsMergeRequestsTicker.Stop()
+		}
+
+		if !config.Pull.Metrics.Scheduled() {
+			pullMetricsTicker.Stop()
+		}
+
+		// Waiting for the tickers to kick in
 		for {
 			select {
 			case <-ctx.Done():
-				log.Info("stopped polling orchestration")
+				log.Info("stopped gitlab api pull orchestration")
 				return
-			case <-discoverWildcardsProjectsEvery.C:
-				scheduleWildcardsProjectsDiscovery(ctx)
-			case <-discoverProjectsRefsEvery.C:
-				scheduleProjectsRefsDiscovery(ctx)
-			case <-pollProjectsRefsEvery.C:
-				scheduleProjectsRefsMostRecentPipelinesPolling(ctx)
-				scheduleProjectsRefsMostRecentJobsPolling(ctx)
+			case <-pullProjectsFromWildcardsTicker.C:
+				schedulePullProjectsFromWildcards(ctx)
+			case <-pullProjectRefsFromBranchesTagsMergeRequestsTicker.C:
+				schedulePullProjectRefsFromBranchesTagsMergeRequests(ctx)
+			case <-pullMetricsTicker.C:
+				schedulePullMetrics(ctx)
 			}
 		}
 	}(ctx)
 }
 
-func scheduleProjectsRefsFromPipelinesDiscovery(ctx context.Context) {
-	if !Config.OnInitFetchRefsFromPipelines {
-		log.WithFields(
-			log.Fields{
-				"init-operation": true,
-			},
-		).Debug("not configured to fetch refs from most recent pipelines")
-		return
-	}
-
+func schedulePullProjectsFromWildcards(ctx context.Context) {
 	log.WithFields(
 		log.Fields{
-			"init-operation": true,
+			"total": len(config.Wildcards),
 		},
-	).Debug("scheduling the polling of the most recent project pipelines")
+	).Info("scheduling projects from wildcards pull")
 
-	projects, err := store.Projects()
-	if err != nil {
-		log.Error(err)
-	}
-
-	for _, p := range projects {
-		err := pollingQueue.Add(getProjectRefsFromPipelinesTask.WithArgs(ctx, p))
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
-func scheduleWildcardsProjectsDiscovery(ctx context.Context) {
-	log.WithFields(
-		log.Fields{
-			"total": len(Config.Wildcards),
-		},
-	).Info("scheduling wildcards projects discovery")
-
-	for _, w := range Config.Wildcards {
+	for _, w := range config.Wildcards {
 		err := pollingQueue.Add(getProjectsFromWildcardTask.WithArgs(ctx, w))
 		if err != nil {
 			log.Error(err)
@@ -119,7 +108,7 @@ func scheduleWildcardsProjectsDiscovery(ctx context.Context) {
 	}
 }
 
-func scheduleProjectsRefsDiscovery(ctx context.Context) {
+func schedulePullProjectRefsFromBranchesTagsMergeRequests(ctx context.Context) {
 	projectsCount, err := store.ProjectsCount()
 	if err != nil {
 		log.Error(err.Error())
@@ -129,7 +118,7 @@ func scheduleProjectsRefsDiscovery(ctx context.Context) {
 		log.Fields{
 			"total": projectsCount,
 		},
-	).Info("scheduling projects refs discovery")
+	).Info("scheduling projects refs from branches, tags and merge requests pull")
 
 	projects, err := store.Projects()
 	if err != nil {
@@ -143,7 +132,7 @@ func scheduleProjectsRefsDiscovery(ctx context.Context) {
 	}
 }
 
-func scheduleProjectsRefsMostRecentPipelinesPolling(ctx context.Context) {
+func schedulePullMetrics(ctx context.Context) {
 	projectsRefsCount, err := store.ProjectsRefsCount()
 	if err != nil {
 		log.Error(err)
@@ -153,7 +142,7 @@ func scheduleProjectsRefsMostRecentPipelinesPolling(ctx context.Context) {
 		log.Fields{
 			"total": projectsRefsCount,
 		},
-	).Info("scheduling projects refs most recent pipelines polling")
+	).Info("scheduling metrics pull")
 
 	projectRefs, err := store.ProjectsRefs()
 	if err != nil {
@@ -164,29 +153,11 @@ func scheduleProjectsRefsMostRecentPipelinesPolling(ctx context.Context) {
 		if err = pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(ctx, pr)); err != nil {
 			log.Error(err)
 		}
-	}
-}
 
-func scheduleProjectsRefsMostRecentJobsPolling(ctx context.Context) {
-	projectsRefsCount, err := store.ProjectsRefsCount()
-	if err != nil {
-		log.Error(err)
-	}
-
-	log.WithFields(
-		log.Fields{
-			"total": projectsRefsCount,
-		},
-	).Info("scheduling projects refs most recent jobs polling")
-
-	projectRefs, err := store.ProjectsRefs()
-	if err != nil {
-		log.Error(err)
-	}
-
-	for _, pr := range projectRefs {
-		if err = pollingQueue.Add(pollProjectRefMostRecentJobsTask.WithArgs(ctx, pr)); err != nil {
-			log.Error(err)
+		if pr.Pull.Pipeline.Jobs.Enabled() {
+			if err = pollingQueue.Add(pollProjectRefMostRecentJobsTask.WithArgs(ctx, pr)); err != nil {
+				log.Error(err)
+			}
 		}
 	}
 }

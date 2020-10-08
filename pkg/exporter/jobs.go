@@ -20,7 +20,7 @@ func pollProjectRefPipelineJobs(pr schemas.ProjectRef) error {
 }
 
 func pollProjectRefMostRecentJobs(pr schemas.ProjectRef) error {
-	if !pr.FetchPipelineJobMetrics() {
+	if !pr.Pull.Pipeline.Jobs.Enabled() {
 		return nil
 	}
 

@@ -4,43 +4,37 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"testing"
 
 	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
 )
 
-var cfg = &Config{}
-
-func TestParseInvalidPath(t *testing.T) {
-	err := cfg.Parse("/path_do_not_exist")
-	assert.Equal(t, fmt.Errorf("couldn't open config file : open /path_do_not_exist: no such file or directory"), err)
+func TestParseConfigInvalidPath(t *testing.T) {
+	assert.Equal(t, fmt.Errorf("couldn't open config file : open /path_do_not_exist: no such file or directory"), ParseConfig("/path_do_not_exist", &Config{}))
 }
 
-func TestParseInvalidYaml(t *testing.T) {
+func TestParseConfigInvalidYaml(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
 	assert.Nil(t, err)
 	defer os.Remove(f.Name())
 
 	// Invalid YAML content
 	f.WriteString("invalid_yaml")
-	err = cfg.Parse(f.Name())
-	assert.NotNil(t, err)
+	assert.Error(t, ParseConfig(f.Name(), &Config{}))
 }
 
-func TestParseEmptyYaml(t *testing.T) {
+func TestParseConfigEmptyYaml(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
 	assert.Nil(t, err)
 	defer os.Remove(f.Name())
 
 	// Invalid YAML content
 	f.WriteString("---")
-	err = cfg.Parse(f.Name())
-	assert.Equal(t, fmt.Errorf("you need to configure at least one project/wildcard to poll, none given"), err)
+	assert.Equal(t, fmt.Errorf("you need to configure at least one project/wildcard to poll, none given"), ParseConfig(f.Name(), &Config{}))
 }
 
-func TestParseValidConfig(t *testing.T) {
+func TestParseConfigValidYaml(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
 	assert.Nil(t, err)
 	defer os.Remove(f.Name())
@@ -53,86 +47,145 @@ gitlab:
   token: xrN14n9-ywvAFxxxxxx
   health_url: https://gitlab.example.com/-/health
   disable_health_check: true
+  disable_tls_verify: true
 
-maximum_gitlab_api_requests_per_second: 1
-wildcards_projects_discover_interval_seconds: 2
-projects_refs_discover_interval_seconds: 3
-projects_refs_polling_interval_seconds: 4
-on_init_fetch_refs_from_pipelines: true
-on_init_fetch_refs_from_pipelines_depth_limit: 1337
+disable_openmetrics_encoding: true
 
-defaults:
-  fetch_pipeline_job_metrics: true
-  fetch_pipeline_variables: true
-  output_sparse_status_metrics: true
-  pipeline_variables_regexp: "^CI_"
-  refs_regexp: "^dev$"
+pull:
+  maximum_gitlab_api_requests_per_second: 1
+  metrics:
+    on_init: false
+    scheduled: false
+    interval_seconds: 1
+  projects_from_wildcards:
+    on_init: false
+    scheduled: false
+    interval_seconds: 2
+  project_refs_from_branches_tags_and_mrs:
+    on_init: false
+    scheduled: false
+    interval_seconds: 3
+
+project_defaults:
+  output_sparse_status_metrics: false
+  pull:
+    refs:
+      regexp: "^baz$"
+      from:
+        pipelines:
+          enabled: true
+          depth: 1
+        merge_requests:
+          enabled: true
+          depth: 2
+    pipeline:
+      jobs:
+        enabled: true
+      variables:
+        enabled: true
+        regexp: "^CI_"
 
 projects:
   - name: foo/project
   - name: bar/project
-    refs_regexp: "^master|dev$"
+    pull:
+      refs:
+        regexp: "^foo$"
   - name: new/project
-    refs_regexp: "^main|dev$"
+    pull:
+      refs:
+        regexp: "^bar$"
 
 wildcards:
   - owner:
       name: foo
       kind: group
-    refs_regexp: "^main|master|1.0$"
     search: 'bar'
     archived: true
+    pull:
+      refs:
+        regexp: "^yolo$"
 `)
 
-	// Reset config var before parsing
-	cfg = &Config{}
-
-	err = cfg.Parse(f.Name())
-	assert.Nil(t, err)
+	cfg := &Config{}
+	assert.NoError(t, ParseConfig(f.Name(), cfg))
 
 	expectedCfg := Config{
-		Gitlab: struct {
-			URL                string "yaml:\"url\""
-			Token              string "yaml:\"token\""
-			HealthURL          string "yaml:\"health_url\""
-			DisableHealthCheck bool   "yaml:\"disable_health_check\""
-			DisableTLSVerify   bool   "yaml:\"disable_tls_verify\""
-		}{
+		Gitlab: GitlabConfig{
 			URL:                "https://gitlab.example.com",
 			HealthURL:          "https://gitlab.example.com/-/health",
 			Token:              "xrN14n9-ywvAFxxxxxx",
 			DisableHealthCheck: true,
+			DisableTLSVerify:   true,
 		},
-		MaximumGitLabAPIRequestsPerSecond:        1,
-		WildcardsProjectsDiscoverIntervalSeconds: 2,
-		ProjectsRefsDiscoverIntervalSeconds:      3,
-		ProjectsRefsPollingIntervalSeconds:       4,
-		OnInitFetchRefsFromPipelines:             true,
-		OnInitFetchRefsFromPipelinesDepthLimit:   1337,
-		Defaults: Parameters{
-			FetchPipelineJobMetricsValue:   pointy.Bool(true),
-			OutputSparseStatusMetricsValue: pointy.Bool(true),
-			FetchPipelineVariablesValue:    pointy.Bool(true),
-			PipelineVariablesRegexpValue:   pointy.String("^CI_"),
-			RefsRegexpValue:                pointy.String("^dev$"),
+		DisableOpenmetricsEncoding: true,
+		Pull: PullConfig{
+			MaximumGitLabAPIRequestsPerSecondValue: pointy.Int(1),
+			Metrics: PullConfigMetrics{
+				OnInitValue:          pointy.Bool(false),
+				ScheduledValue:       pointy.Bool(false),
+				IntervalSecondsValue: pointy.Int(1),
+			},
+			ProjectsFromWildcards: PullConfigProjectsFromWildcards{
+				OnInitValue:          pointy.Bool(false),
+				ScheduledValue:       pointy.Bool(false),
+				IntervalSecondsValue: pointy.Int(2),
+			},
+			ProjectRefsFromBranchesTagsMergeRequests: PullConfigProjectRefsFromBranchesTagsMergeRequests{
+				OnInitValue:          pointy.Bool(false),
+				ScheduledValue:       pointy.Bool(false),
+				IntervalSecondsValue: pointy.Int(3),
+			},
+		},
+		ProjectDefaults: ProjectParameters{
+			OutputSparseStatusMetricsValue: pointy.Bool(false),
+			Pull: ProjectPull{
+				Refs: ProjectPullRefs{
+					RegexpValue: pointy.String("^baz$"),
+					From: ProjectPullRefsFrom{
+						Pipelines: ProjectPullRefsFromPipelines{
+							EnabledValue: pointy.Bool(true),
+							DepthValue:   pointy.Int(1),
+						},
+						MergeRequests: ProjectPullRefsFromMergeRequests{
+							EnabledValue: pointy.Bool(true),
+							DepthValue:   pointy.Int(2),
+						},
+					},
+				},
+				Pipeline: ProjectPullPipeline{
+					Jobs: ProjectPullPipelineJobs{
+						EnabledValue: pointy.Bool(true),
+					},
+					Variables: ProjectPullPipelineVariables{
+						EnabledValue: pointy.Bool(true),
+						RegexpValue:  pointy.String("^CI_"),
+					},
+				},
+			},
 		},
 		Projects: []Project{
 			{
 				Name: "foo/project",
-				Parameters: Parameters{
-					RefsRegexpValue: nil,
-				},
 			},
 			{
 				Name: "bar/project",
-				Parameters: Parameters{
-					RefsRegexpValue: pointy.String("^master|dev$"),
+				ProjectParameters: ProjectParameters{
+					Pull: ProjectPull{
+						Refs: ProjectPullRefs{
+							RegexpValue: pointy.String("^foo$"),
+						},
+					},
 				},
 			},
 			{
 				Name: "new/project",
-				Parameters: Parameters{
-					RefsRegexpValue: pointy.String("^main|dev$"),
+				ProjectParameters: ProjectParameters{
+					Pull: ProjectPull{
+						Refs: ProjectPullRefs{
+							RegexpValue: pointy.String("^bar$"),
+						},
+					},
 				},
 			},
 		},
@@ -147,8 +200,12 @@ wildcards:
 					Name: "foo",
 					Kind: "group",
 				},
-				Parameters: Parameters{
-					RefsRegexpValue: pointy.String("^main|master|1.0$"),
+				ProjectParameters: ProjectParameters{
+					Pull: ProjectPull{
+						Refs: ProjectPullRefs{
+							RegexpValue: pointy.String("^yolo$"),
+						},
+					},
 				},
 				Archived: true,
 			},
@@ -159,7 +216,7 @@ wildcards:
 	assert.Equal(t, expectedCfg, *cfg)
 }
 
-func TestParseDefaultsValues(t *testing.T) {
+func TestParseConfigDefaultsValues(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
 	assert.Nil(t, err)
 	defer os.Remove(f.Name())
@@ -167,48 +224,58 @@ func TestParseDefaultsValues(t *testing.T) {
 	// Valid minimal configuration
 	f.WriteString(`
 ---
-projects:
-  - name: foo/bar
+wildcards:
+  - {}
 `)
 
-	// Reset config var before parsing
-	cfg = &Config{}
-
-	err = cfg.Parse(f.Name())
-	assert.Nil(t, err)
+	cfg := &Config{}
+	assert.NoError(t, ParseConfig(f.Name(), cfg))
 
 	expectedCfg := Config{
-		Gitlab: struct {
-			URL                string "yaml:\"url\""
-			Token              string "yaml:\"token\""
-			HealthURL          string "yaml:\"health_url\""
-			DisableHealthCheck bool   "yaml:\"disable_health_check\""
-			DisableTLSVerify   bool   "yaml:\"disable_tls_verify\""
-		}{
+		Gitlab: GitlabConfig{
 			URL:       "https://gitlab.com",
 			Token:     "",
 			HealthURL: "https://gitlab.com/explore",
 		},
-		MaximumGitLabAPIRequestsPerSecond:        defaultMaximumGitLabAPIRequestsPerSecond,
-		WildcardsProjectsDiscoverIntervalSeconds: defaultWildcardsProjectsDiscoverIntervalSeconds,
-		ProjectsRefsDiscoverIntervalSeconds:      defaultProjectsRefsDiscoverIntervalSeconds,
-		ProjectsRefsPollingIntervalSeconds:       defaultProjectsRefsPollingIntervalSeconds,
-		DisableOpenmetricsEncoding:               false,
-		OnInitFetchRefsFromPipelines:             false,
-		OnInitFetchRefsFromPipelinesDepthLimit:   defaultOnInitFetchRefsFromPipelinesDepthLimit,
-		Projects: []Project{
-			{
-				Name: "foo/bar",
-			},
+		DisableOpenmetricsEncoding: false,
+		Wildcards: Wildcards{
+			{},
 		},
-		Wildcards: nil,
 	}
 
 	// Test variable assignments
 	assert.Equal(t, expectedCfg, *cfg)
+
+	// Validate default values
+	assert.Equal(t, defaultPullConfigMaximumGitLabAPIRequestsPerSecond, cfg.Pull.MaximumGitLabAPIRequestsPerSecond())
+
+	assert.Equal(t, defaultPullConfigMetricsOnInit, cfg.Pull.Metrics.OnInit())
+	assert.Equal(t, defaultPullConfigMetricsScheduled, cfg.Pull.Metrics.Scheduled())
+	assert.Equal(t, defaultPullConfigMetricsIntervalSeconds, cfg.Pull.Metrics.IntervalSeconds())
+
+	assert.Equal(t, defaultPullConfigProjectsFromWildcardsOnInit, cfg.Pull.ProjectsFromWildcards.OnInit())
+	assert.Equal(t, defaultPullConfigProjectsFromWildcardsScheduled, cfg.Pull.ProjectsFromWildcards.Scheduled())
+	assert.Equal(t, defaultPullConfigProjectsFromWildcardsIntervalSeconds, cfg.Pull.ProjectsFromWildcards.IntervalSeconds())
+
+	assert.Equal(t, defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsOnInit, cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.OnInit())
+	assert.Equal(t, defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsScheduled, cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.Scheduled())
+	assert.Equal(t, defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsIntervalSeconds, cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.IntervalSeconds())
+
+	assert.Equal(t, defaultProjectOutputSparseStatusMetrics, cfg.ProjectDefaults.OutputSparseStatusMetrics())
+	assert.Equal(t, defaultProjectPullRefsRegexp, cfg.ProjectDefaults.Pull.Refs.Regexp())
+	assert.Equal(t, defaultProjectPullRefsFromPipelinesEnabled, cfg.ProjectDefaults.Pull.Refs.From.Pipelines.Enabled())
+	assert.Equal(t, defaultProjectPullRefsFromPipelinesDepth, cfg.ProjectDefaults.Pull.Refs.From.Pipelines.Depth())
+
+	assert.Equal(t, defaultProjectPullRefsFromMergeRequestsEnabled, cfg.ProjectDefaults.Pull.Refs.From.MergeRequests.Enabled())
+	assert.Equal(t, defaultProjectPullRefsFromMergeRequestsDepth, cfg.ProjectDefaults.Pull.Refs.From.MergeRequests.Depth())
+
+	assert.Equal(t, defaultProjectPullPipelineJobsEnabled, cfg.ProjectDefaults.Pull.Pipeline.Jobs.Enabled())
+
+	assert.Equal(t, defaultProjectPullPipelineVariablesEnabled, cfg.ProjectDefaults.Pull.Pipeline.Variables.Enabled())
+	assert.Equal(t, defaultProjectPullPipelineVariablesRegexp, cfg.ProjectDefaults.Pull.Pipeline.Variables.Regexp())
 }
 
-func TestParseSelfHostedGitLab(t *testing.T) {
+func TestParseConfigSelfHostedGitLab(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
 	assert.Nil(t, err)
 	defer os.Remove(f.Name())
@@ -223,53 +290,7 @@ wildcards:
   - {}
 `)
 
-	// Reset config var before parsing
-	cfg = &Config{}
-	assert.Nil(t, cfg.Parse(f.Name()))
-	assert.Equal(t, "https://gitlab.example.com/-/health", cfg.Gitlab.HealthURL)
-}
-
-func TestParsePrometheusConfig(t *testing.T) {
-	f, err := ioutil.TempFile("/tmp", "test-")
-	assert.Nil(t, err)
-	defer os.Remove(f.Name())
-
-	// Valid minimal configuration
-	f.WriteString(`
-disable_openmetrics_encoding: true
-projects:
-  - name: foo/project
-  - name: bar/project
-    refs_regexp: "^main|master|dev$"
-`)
-
-	config := &Config{}
-	assert.NoError(t, config.Parse(f.Name()))
-	assert.True(t, config.DisableOpenmetricsEncoding)
-}
-
-func TestParseConfigHasPipelineVariablesAndDefaultRegex(t *testing.T) {
-	f, err := ioutil.TempFile("/tmp", "test-")
-	assert.Nil(t, err)
-	defer os.Remove(f.Name())
-
-	// Valid minimal configuration
-	f.WriteString(`
-defaults:
-  fetch_pipeline_variables: true
-projects:
-  - name: foo/project
-  - name: bar/project
-    refs_regexp: "^main|master|dev$"
-`)
 	cfg := &Config{}
-	assert.NoError(t, cfg.Parse(f.Name()))
-	assert.NotNil(t, cfg.Defaults.FetchPipelineVariablesValue)
-	assert.True(t, *cfg.Defaults.FetchPipelineVariablesValue)
-	assert.Len(t, cfg.Projects, 2)
-	assert.IsType(t, Project{}, cfg.Projects[0])
-	assert.Equal(t, defaultPipelineVariablesRegexp, cfg.Projects[0].PipelineVariablesRegexp())
-
-	rx := regexp.MustCompile(cfg.Projects[0].PipelineVariablesRegexp())
-	assert.True(t, rx.MatchString("blahblah"))
+	assert.NoError(t, ParseConfig(f.Name(), cfg))
+	assert.Equal(t, "https://gitlab.example.com/-/health", cfg.Gitlab.HealthURL)
 }

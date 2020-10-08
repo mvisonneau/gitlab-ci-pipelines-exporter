@@ -57,7 +57,7 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 		pr.MostRecentPipeline = pipeline
 
 		// fetch pipeline variables
-		if pr.FetchPipelineVariables() {
+		if pr.Pull.Pipeline.Variables.Enabled() {
 			pr.MostRecentPipelineVariables, err = gitlabClient.GetProjectRefPipelineVariablesAsConcatenatedString(pr)
 			if err != nil {
 				return err
@@ -116,7 +116,7 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 			Value:  float64(pipeline.UpdatedAt.Unix()),
 		})
 
-		if pr.FetchPipelineJobMetrics() {
+		if pr.Pull.Pipeline.Jobs.Enabled() {
 			if err := pollProjectRefPipelineJobs(pr); err != nil {
 				log.WithFields(
 					log.Fields{

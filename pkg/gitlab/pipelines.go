@@ -117,9 +117,9 @@ func (c *Client) GetProjectRefPipelineVariablesAsConcatenatedString(pr schemas.P
 		},
 	).Debug("fetching pipeline variables")
 
-	variablesFilter, err := regexp.Compile(pr.PipelineVariablesRegexp())
+	variablesFilter, err := regexp.Compile(pr.Pull.Pipeline.Variables.Regexp())
 	if err != nil {
-		return "", fmt.Errorf("the provided filter regex for pipeline variables is invalid '(%s)': %v", pr.PipelineVariablesRegexp(), err)
+		return "", fmt.Errorf("the provided filter regex for pipeline variables is invalid '(%s)': %v", pr.Pull.Pipeline.Variables.Regexp(), err)
 	}
 
 	c.rateLimit()
@@ -141,8 +141,8 @@ func (c *Client) GetProjectRefPipelineVariablesAsConcatenatedString(pr schemas.P
 }
 
 // GetProjectRefsFromPipelines ..
-func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Project, limit int) (map[string]schemas.ProjectRef, error) {
-	re, err := regexp.Compile(p.RefsRegexp())
+func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Project) (map[string]schemas.ProjectRef, error) {
+	re, err := regexp.Compile(p.Pull.Refs.Regexp())
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Pro
 		ListOptions: goGitlab.ListOptions{
 			Page: 1,
 			// TODO: Get a proper loop to split this query up
-			PerPage: limit,
+			PerPage: p.Pull.Refs.From.Pipelines.Depth(),
 		},
 		Scope: pointy.String("branches"),
 	}

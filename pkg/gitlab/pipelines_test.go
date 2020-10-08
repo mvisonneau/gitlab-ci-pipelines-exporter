@@ -95,8 +95,14 @@ func TestGetProjectRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 		ID:  1,
 		Ref: "yay",
 		Project: schemas.Project{
-			Parameters: schemas.Parameters{
-				PipelineVariablesRegexpValue: pointy.String("["), // invalid regexp pattern
+			ProjectParameters: schemas.ProjectParameters{
+				Pull: schemas.ProjectPull{
+					Pipeline: schemas.ProjectPullPipeline{
+						Variables: schemas.ProjectPullPipelineVariables{
+							RegexpValue: pointy.String("["), // invalid regexp pattern
+						},
+					},
+				},
 			},
 		},
 	}
@@ -117,7 +123,7 @@ func TestGetProjectRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	assert.Equal(t, "", variables)
 
 	// Should work
-	pr.Parameters.PipelineVariablesRegexpValue = pointy.String(".*")
+	pr.Pull.Pipeline.Variables.RegexpValue = pointy.String(".*")
 	variables, err = c.GetProjectRefPipelineVariablesAsConcatenatedString(pr)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo:bar,bar:baz", variables)
@@ -132,7 +138,7 @@ func TestGetProjectRefsFromPipelines(t *testing.T) {
 			assert.Equal(t, "GET", r.Method)
 			urlValues := r.URL.Query()
 			assert.Equal(t, []string{"1"}, urlValues["page"])
-			assert.Equal(t, []string{"10"}, urlValues["per_page"])
+			assert.Equal(t, []string{"33"}, urlValues["per_page"])
 
 			if scope, ok := r.URL.Query()["scope"]; ok && len(scope) == 1 && scope[0] == "branches" {
 				fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"}]`)
@@ -149,8 +155,18 @@ func TestGetProjectRefsFromPipelines(t *testing.T) {
 
 	p := schemas.Project{
 		Name: "foo/bar",
-		Parameters: schemas.Parameters{
-			RefsRegexpValue: pointy.String("["), // invalid regexp pattern
+		ProjectParameters: schemas.ProjectParameters{
+			Pull: schemas.ProjectPull{
+				Refs: schemas.ProjectPullRefs{
+					RegexpValue: pointy.String("["), // invalid regexp pattern
+					From: schemas.ProjectPullRefsFrom{
+						Pipelines: schemas.ProjectPullRefsFromPipelines{
+							EnabledValue: pointy.Bool(true),
+							DepthValue:   pointy.Int(33),
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -159,13 +175,13 @@ func TestGetProjectRefsFromPipelines(t *testing.T) {
 		PathWithNamespace: "foo/bar",
 	}
 
-	prs, err := c.GetProjectRefsFromPipelines(p, gp, 10)
+	prs, err := c.GetProjectRefsFromPipelines(p, gp)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
 	assert.Len(t, prs, 0)
 
-	p.RefsRegexpValue = pointy.String("^keep.*")
-	prs, err = c.GetProjectRefsFromPipelines(p, gp, 10)
+	p.Pull.Refs.RegexpValue = pointy.String("^keep.*")
+	prs, err = c.GetProjectRefsFromPipelines(p, gp)
 	assert.NoError(t, err)
 	assert.Len(t, prs, 3)
 }

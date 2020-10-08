@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"context"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/heptiolabs/healthcheck"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/exporter"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/go-helpers/logger"
 	"github.com/pkg/errors"
@@ -21,7 +18,7 @@ import (
 
 var start time.Time
 
-func configure(ctx *cli.Context) (h healthcheck.Handler, err error) {
+func configure(ctx *cli.Context) (err error) {
 	start = ctx.App.Metadata["startTime"].(time.Time)
 
 	// Configure logger
@@ -30,65 +27,54 @@ func configure(ctx *cli.Context) (h healthcheck.Handler, err error) {
 		Format: ctx.String("log-format"),
 	}
 
-	if err := lc.Configure(); err != nil {
-		return nil, err
+	if err = lc.Configure(); err != nil {
+		return
 	}
 
 	// Initialize config
-	if err := exporter.Config.Parse(ctx.String("config")); err != nil {
-		return nil, err
+	cfg := schemas.Config{}
+	if err = schemas.ParseConfig(ctx.String("config"), &cfg); err != nil {
+		return
 	}
 
 	if len(ctx.String("gitlab-token")) > 0 {
-		exporter.Config.Gitlab.Token = ctx.String("gitlab-token")
+		cfg.Gitlab.Token = ctx.String("gitlab-token")
 	}
 
 	assertStringVariableDefined(ctx, "listen-address", ctx.String("listen-address"))
-	assertStringVariableDefined(ctx, "gitlab-token", exporter.Config.Gitlab.Token)
+	assertStringVariableDefined(ctx, "gitlab-token", cfg.Gitlab.Token)
 
-	schemas.UpdateProjectDefaults(exporter.Config.Defaults)
+	schemas.UpdateProjectDefaults(cfg.ProjectDefaults)
 
-	var rateLimiter ratelimit.Limiter
 	if len(ctx.String("redis-url")) > 0 {
 		log.Debug("redis-url flag set, initializing connection..")
-		opt, err := redis.ParseURL(ctx.String("redis-url"))
-		if err != nil {
-			return nil, errors.Wrap(err, "parsing redis-url")
+		var opt *redis.Options
+		if opt, err = redis.ParseURL(ctx.String("redis-url")); err != nil {
+			return errors.Wrap(err, "parsing redis-url")
 		}
 
-		redisClient := redis.NewClient(opt)
-		if err := exporter.ConfigureRedisClient(redisClient); err != nil {
-			return nil, err
+		if err = exporter.ConfigureRedisClient(redis.NewClient(opt)); err != nil {
+			return
 		}
-
-		rateLimiter = ratelimit.NewRedisLimiter(context.Background(), redisClient, exporter.Config.MaximumGitLabAPIRequestsPerSecond)
-	} else {
-		rateLimiter = ratelimit.NewLocalLimiter(exporter.Config.MaximumGitLabAPIRequestsPerSecond)
 	}
 
-	gc, err := gitlab.NewClient(gitlab.ClientConfig{
-		URL:              exporter.Config.Gitlab.URL,
-		Token:            exporter.Config.Gitlab.Token,
-		DisableTLSVerify: exporter.Config.Gitlab.DisableTLSVerify,
-		UserAgentVersion: ctx.App.Version,
-		RateLimiter:      rateLimiter,
-		ReadinessURL:     exporter.Config.Gitlab.HealthURL,
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	exporter.ConfigureGitlabClient(gc)
+	exporter.SetConfig(cfg)
 	exporter.ConfigurePollingQueue()
 	exporter.ConfigureStore()
 
-	h = healthcheck.NewHandler()
-	if !exporter.Config.Gitlab.DisableHealthCheck {
-		h.AddReadinessCheck("gitlab-reachable", gc.ReadinessCheck())
-	} else {
-		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
+	if err = exporter.ConfigureGitlabClient(ctx.App.Version); err != nil {
+		return
 	}
+
+	log.WithFields(
+		log.Fields{
+			"gitlab-endpoint":                                    cfg.Gitlab.URL,
+			"pull-projects-from-wildcards-interval":              fmt.Sprintf("%ds", cfg.Pull.ProjectsFromWildcards.IntervalSeconds()),
+			"pull-projects-refs-from-branches-tags-mrs-interval": fmt.Sprintf("%ds", cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.IntervalSeconds()),
+			"pull-metrics-interval":                              fmt.Sprintf("%ds", cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.IntervalSeconds()),
+			"pull-rate-limit":                                    fmt.Sprintf("%drps", cfg.Pull.MaximumGitLabAPIRequestsPerSecond()),
+		},
+	).Info("exporter configured")
 
 	return
 }
