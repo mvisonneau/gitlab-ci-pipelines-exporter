@@ -17,8 +17,8 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - name: metrics
-      port: 80
+    - name: http
+      port: 8080
       targetPort: 8080
       protocol: TCP
 {{- with .Values.service.externalIPs }}

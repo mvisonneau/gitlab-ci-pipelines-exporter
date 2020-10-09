@@ -24,6 +24,6 @@ spec:
       helm.sh/from: deploy.{{ include "app.fullname" . }}
       {{- with .Values.service.labels }}{{ toYaml . | nindent 6 }}{{ end }}
   endpoints:
-    - port: metrics
+    - port: http
       interval: {{ .Values.serviceMonitor.scrapeInterval }}
 {{- end }}
