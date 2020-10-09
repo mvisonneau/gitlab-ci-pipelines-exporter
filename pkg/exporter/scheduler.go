@@ -95,10 +95,7 @@ func schedulePullProjectsFromWildcards(ctx context.Context) {
 	).Info("scheduling projects from wildcards pull")
 
 	for _, w := range config.Wildcards {
-		err := pullingQueue.Add(pullProjectsFromWildcardTask.WithArgs(ctx, w))
-		if err != nil {
-			log.Error(err)
-		}
+		go schedulePullProjectsFromWildcardTask(ctx, w)
 	}
 }
 
@@ -120,9 +117,7 @@ func schedulePullProjectRefsFromProjects(ctx context.Context) {
 	}
 
 	for _, p := range projects {
-		if err = pullingQueue.Add(pullProjectRefsFromProjectTask.WithArgs(ctx, p)); err != nil {
-			log.Error(err)
-		}
+		go schedulePullProjectRefsFromProject(ctx, p)
 	}
 }
 
@@ -144,8 +139,43 @@ func schedulePullProjectRefsMetrics(ctx context.Context) {
 	}
 
 	for _, pr := range projectRefs {
-		if err = pullingQueue.Add(pullProjectRefMetricsTask.WithArgs(ctx, pr)); err != nil {
-			log.Error(err)
-		}
+		go schedulePullProjectRefMetrics(ctx, pr)
+	}
+}
+
+func schedulePullProjectsFromWildcardTask(ctx context.Context, w schemas.Wildcard) {
+	if err := pullingQueue.Add(pullProjectsFromWildcardTask.WithArgs(ctx, w)); err != nil {
+		log.WithFields(log.Fields{
+			"wildcard-owner-kind": w.Owner.Kind,
+			"wildcard-owner-name": w.Owner.Name,
+			"error":               err.Error(),
+		}).Error("scheduling 'projects from wildcard' pull")
+	}
+}
+
+func schedulePullProjectRefsFromPipeline(ctx context.Context, p schemas.Project) {
+	if err := pullingQueue.Add(pullProjectRefsFromPipelinesTask.WithArgs(ctx, p)); err != nil {
+		log.WithFields(log.Fields{
+			"project-name": p.Name,
+			"error":        err.Error(),
+		}).Error("scheduling 'project refs from pipeline' pull")
+	}
+}
+
+func schedulePullProjectRefsFromProject(ctx context.Context, p schemas.Project) {
+	if err := pullingQueue.Add(pullProjectRefsFromProjectTask.WithArgs(ctx, p)); err != nil {
+		log.WithFields(log.Fields{
+			"project-name": p.Name,
+			"error":        err.Error(),
+		}).Error("scheduling 'project refs from project' pull")
+	}
+}
+
+func schedulePullProjectRefMetrics(ctx context.Context, pr schemas.ProjectRef) {
+	if err := pullingQueue.Add(pullProjectRefMetricsTask.WithArgs(ctx, pr)); err != nil {
+		log.WithFields(log.Fields{
+			"project-name": pr.Name,
+			"error":        err.Error(),
+		}).Error("scheduling 'project ref most recent pipeline metrics' pull")
 	}
 }

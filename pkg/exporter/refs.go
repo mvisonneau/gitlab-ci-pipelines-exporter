@@ -83,12 +83,7 @@ func pullProjectRefsFromProject(p schemas.Project) error {
 				return err
 			}
 
-			if err = pullingQueue.Add(pullProjectRefMetricsTask.WithArgs(context.Background(), pr)); err != nil {
-				log.WithFields(log.Fields{
-					"project-name": pr.Name,
-					"error":        err.Error(),
-				}).Error("scheduling 'project ref most recent pipeline metrics' pull")
-			}
+			go schedulePullProjectRefMetrics(context.Background(), pr)
 		}
 	}
 	return nil
@@ -129,12 +124,7 @@ func pullProjectRefsFromPipelines(p schemas.Project) error {
 				return err
 			}
 
-			if err = pullingQueue.Add(pullProjectRefMetricsTask.WithArgs(context.Background(), pr)); err != nil {
-				log.WithFields(log.Fields{
-					"project-name": pr.Name,
-					"error":        err.Error(),
-				}).Error("scheduling 'project ref most recent pipeline metrics' pull")
-			}
+			go schedulePullProjectRefMetrics(context.Background(), pr)
 		}
 	}
 	return nil

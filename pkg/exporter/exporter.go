@@ -111,12 +111,7 @@ func configureStore() {
 			}
 
 			if p.Pull.Refs.From.Pipelines.Enabled() {
-				if err = pullingQueue.Add(pullProjectRefsFromPipelinesTask.WithArgs(context.Background(), p)); err != nil {
-					log.WithFields(log.Fields{
-						"project-name": p.Name,
-						"error":        err.Error(),
-					}).Error("scheduling 'project refs from pipelines' pull")
-				}
+				go schedulePullProjectRefsFromPipeline(context.Background(), p)
 			}
 		}
 	}

@@ -83,13 +83,7 @@ func triggerProjectRefMetricsPull(pr schemas.ProjectRef) {
 schedulePull:
 	// TODO: When all the metrics will be sent over the webhook, we might be able to avoid redoing a pull
 	// eg: 'coverage' is not in the pipeline payload yet, neither is 'artifacts' in the job one
-	if err = pullingQueue.Add(pullProjectRefMetricsTask.WithArgs(context.Background(), pr)); err != nil {
-		log.WithFields(log.Fields{
-			"project-name": pr.Name,
-			"error":        err.Error(),
-		}).Error("scheduling 'project ref metrics' pull")
-	}
-
+	go schedulePullProjectRefMetrics(context.Background(), pr)
 }
 
 func processPipelineEvent(e goGitlab.PipelineEvent) {
