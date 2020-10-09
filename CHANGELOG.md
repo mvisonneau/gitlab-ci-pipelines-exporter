@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [0.4.0] - 2020-10-09
+
 **BREAKING CHANGES**
 
 1. The [configuration syntax](./docs/configuration_syntax.md) has been restructured quite a bit and some runtime flags have been moved in it as well. Refer to the updated documentation to check what you may need to update.
@@ -359,7 +361,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.3.5...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.4.0
 [0.3.5]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.5
 [0.3.4]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.4
 [0.3.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.3
