@@ -119,80 +119,26 @@ Go onto the project's configuration page and configure a new webhook using:
 - Untick `Push events` and tick `Pipeline events`
 - Hit the `Add webhook` button
 
-![grafana_dashboard](../../docs/images/webhook_configuration.png)
+![webhook_configuration](../../docs/images/webhook_configuration.png)
 
-## Use and troubleshoot
+You can then trigger a manual test:
 
-### Validate the container is running
+![webhook_trigger_test](../../docs/images/webhook_trigger_test.png)
 
-```bash
-~$ docker ps
-CONTAINER ID        IMAGE                                            COMMAND                  CREATED             STATUS              PORTS                    NAMES
-a5c379c7203c        mvisonneau/gitlab-ci-pipelines-exporter:latest   "/usr/local/bin/gitl…"   5 seconds ago       Up 4 seconds        0.0.0.0:8081->8080/tcp   webhooks_gitlab-ci-pipelines-exporter_1
-```
-
-### Check logs from all containers
+If the last pipeline which ran on your project is on a ref that is configured to be exported, you will see the following logs:
 
 ```bash
-~$ docker-compose logs -f | grep -v redis
-gitlab-ci-pipelines-exporter-3_1  | time="2020-10-05T19:57:05Z" level=debug msg="listing project pipelines" project-id=11915984 project-ref=master
-gitlab-ci-pipelines-exporter-2_1  | time="2020-10-05T19:57:06Z" level=info msg="discovered new project ref" project-id=250833 project-path-with-namespace=gitlab-org/gitlab-runner project-ref=master project-ref-kind=branch
-
-gitlab-ci-pipelines-exporter-3_1  | time="2020-10-05T19:57:22Z" level=info msg="scheduling projects refs most recent pipelines pulling" total=2
-gitlab-ci-pipelines-exporter-1_1  | time="2020-10-05T19:57:22Z" level=debug msg="listing project pipelines" project-id=11915984 project-ref=master
-gitlab-ci-pipelines-exporter-3_1  | time="2020-10-05T19:57:22Z" level=info msg="scheduling projects refs most recent jobs pulling" total=2
-gitlab-ci-pipelines-exporter-2_1  | time="2020-10-05T19:57:22Z" level=info msg="scheduling projects refs most recent pipelines pulling" total=2
-gitlab-ci-pipelines-exporter-2_1  | time="2020-10-05T19:57:22Z" level=info msg="scheduling projects refs most recent jobs pulling" total=2
-gitlab-ci-pipelines-exporter-1_1  | time="2020-10-05T19:57:22Z" level=info msg="scheduling projects refs most recent pipelines pulling" total=2
-gitlab-ci-pipelines-exporter-1_1  | time="2020-10-05T19:57:22Z" level=info msg="scheduling projects refs most recent jobs pulling" total=2
-gitlab-ci-pipelines-exporter-2_1  | time="2020-10-05T19:57:22Z" level=debug msg="listing project pipelines" project-id=250833 project-ref=master
-gitlab-ci-pipelines-exporter-1_1  | time="2020-10-05T19:57:22Z" level=debug msg="listing project pipelines" project-id=250833 project-ref=master
-gitlab-ci-pipelines-exporter-2_1  | time="2020-10-05T19:57:22Z" level=debug msg="listing project pipelines" project-id=250833 project-ref=master
-gitlab-ci-pipelines-exporter-1_1  | time="2020-10-05T19:57:23Z" level=debug msg="listing project pipelines" project-id=11915984 project-ref=master
-gitlab-ci-pipelines-exporter-2_1  | time="2020-10-05T19:57:23Z" level=debug msg="listing project pipelines" project-id=11915984 project-ref=master
-gitlab-ci-pipelines-exporter-2_1  | time="2020-10-05T19:57:24Z" level=debug msg="listing project pipelines" project-id=250833 project-ref=master
-```
-
-### Check we can fetch metrics from any exporter container
-
-```bash
-~$ curl -s http://localhost:8081/metrics | grep project
-gitlab_ci_pipeline_coverage{kind="branch",project="gitlab-org/gitlab-runner",ref="master",topics="",variables=""} 75.6
-gitlab_ci_pipeline_last_run_duration_seconds{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",topics="",variables=""} 198
-gitlab_ci_pipeline_last_run_duration_seconds{kind="branch",project="gitlab-org/gitlab-runner",ref="master",topics="",variables=""} 2831
-gitlab_ci_pipeline_last_run_id{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",topics="",variables=""} 1.64436288e+08
-gitlab_ci_pipeline_last_run_id{kind="branch",project="gitlab-org/gitlab-runner",ref="master",topics="",variables=""} 1.9807024e+08
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",status="canceled",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",status="failed",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",status="manual",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",status="pending",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",status="running",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",status="skipped",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",status="success",topics="",variables=""} 1
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/gitlab-runner",ref="master",status="canceled",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/gitlab-runner",ref="master",status="failed",topics="",variables=""} 1
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/gitlab-runner",ref="master",status="manual",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/gitlab-runner",ref="master",status="pending",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/gitlab-runner",ref="master",status="running",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/gitlab-runner",ref="master",status="skipped",topics="",variables=""} 0
-gitlab_ci_pipeline_last_run_status{kind="branch",project="gitlab-org/gitlab-runner",ref="master",status="success",topics="",variables=""} 0
-gitlab_ci_pipeline_time_since_last_run_seconds{kind="branch",project="gitlab-org/charts/auto-deploy-app",ref="master",topics="",variables=""} 7.706591e+06
-gitlab_ci_pipeline_time_since_last_run_seconds{kind="branch",project="gitlab-org/gitlab-runner",ref="master",topics="",variables=""} 42310
-```
-
-You can validate that you get the same results from any container :
-
-```bash
-~$ curl -s http://localhost:8081/metrics | grep project
-35
-~$ curl -s http://localhost:8082/metrics | grep project
-35
-~$ curl -s http://localhost:8083/metrics | grep project
-35
+~$ docker-compose logs -f
+[..]
+DEBU[2020-10-09T15:03:49+01:00] webhook request         ip-address="127.0.0.1:62838" user-agent=
+[..]
 ```
 
 ## Cleanup
 
 ```bash
+# Delete the container
+~$ docker-compose down
+# Delete the inlets exit node
 ~$ docker-compose down
 ```
