@@ -69,11 +69,11 @@ func TestListProjectRefMostRecentJobs(t *testing.T) {
 		})
 
 	pr.Jobs = map[string]goGitlab.Job{
-		"foo": goGitlab.Job{
+		"foo": {
 			ID:   1,
 			Name: "foo",
 		},
-		"bar": goGitlab.Job{
+		"bar": {
 			ID:   2,
 			Name: "bar",
 		},

@@ -1,0 +1,15 @@
+version: '3.7'
+services:
+  gitlab-ci-pipelines-exporter:
+    image: mvisonneau/gitlab-ci-pipelines-exporter:latest
+    ports:
+      - 8000:8080
+    environment:
+      GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter/config.yml
+      GCPE_LOG_LEVEL: debug
+    volumes:
+      - ./gitlab-ci-pipelines-exporter/config.yml:/etc/gitlab-ci-pipelines-exporter/config.yml
+
+networks:
+  default:
+    driver: bridge

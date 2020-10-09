@@ -23,7 +23,7 @@ const (
 type ProjectRefKind string
 
 // ProjectRef is what we will use a metrics entity on which we will
-// perform regular polling operations
+// perform regular pulling operations
 type ProjectRef struct {
 	Project
 
@@ -42,7 +42,7 @@ type ProjectRefKey string
 
 // Key ..
 func (pr ProjectRef) Key() ProjectRefKey {
-	return ProjectRefKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(pr.Name + pr.Ref)))))
+	return ProjectRefKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(strconv.Itoa(pr.ID) + pr.Ref)))))
 }
 
 // ProjectsRefs allows us to keep track of all the ProjectRef

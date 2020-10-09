@@ -9,15 +9,16 @@ services:
 
   gitlab-ci-pipelines-exporter-1: &gitlab-ci-pipelines-exporter
     image: mvisonneau/gitlab-ci-pipelines-exporter:latest
+    # You can comment out the image name and use the following statement
+    # to build the image against the current version of the repository
+    #build: ../..
     ports:
       - 8081:8080
     links:
       - redis
     environment:
       GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter/config.yml
-      GCPE_REDIS_URL: redis://redis:6379
       GCPE_LOG_LEVEL: debug
-      GCPE_ENABLED_PPROF: 'true'
     volumes:
       - ./gitlab-ci-pipelines-exporter/config.yml:/etc/gitlab-ci-pipelines-exporter/config.yml
 

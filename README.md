@@ -132,7 +132,7 @@ EOF
 You should then be able to see the following logs
 
 ```bash
-INFO[0000] starting exporter                             gitlab-endpoint="https://gitlab.com" on-init-fetch-refs-from-pipelines=true polling-pipelines-every=60s polling-projects-every=15s polling-refs-every=10s polling-workers=2 rate-limit=10rps
+INFO[0000] starting exporter                             gitlab-endpoint="https://gitlab.com" on-init-fetch-refs-from-pipelines=true pulling-pipelines-every=60s pulling-projects-every=15s pulling-refs-every=10s pulling-workers=2 rate-limit=10rps
 INFO[0000] configured wildcards                          count=1
 INFO[0000] found new project                             project-name=foo/project wildcard-archived=false wildcard-owner-include-subgroups=false wildcard-owner-kind=group wildcard-owner-name=foo wildcard-search=
 INFO[0000] found new project                             project-name=foo/bar wildcard-archived=false wildcard-owner-include-subgroups=false wildcard-owner-kind=group wildcard-owner-name=foo wildcard-search=
@@ -251,11 +251,24 @@ gitlab_ci_pipeline_last_job_run_status{job="test",project="bar/project",ref="mai
 
 ## HA implementation
 
-We support running multiple instances of the exporter in an HA fashion leveraging redis as storage middleware. You simply need to set a redis URL using the `--redis-url` flag or `$GCPE_REDIS_URL` env variable. A quick example using docker-compose is also available here: [examples/ha-setup](examples/ha-setup/README.md)
+It supports running multiple instances of the exporter in an HA fashion leveraging redis as storage middleware. You simply need to set a redis URL in the `config.yml` or using the `--redis-url` flag or `$GCPE_REDIS_URL` env variable. A quick example using docker-compose is also available here: [examples/ha-setup](examples/ha-setup/README.md)
+
+## Push based implementation (leveraging GitLab webhooks)
+
+The exporter supports receiving project pipeline events through GitLab webhooks on the `/webhook` path. This feature is not enabled by default and requires the following parameters to be set in the `config.yml`:
+
+```yaml
+server:
+   webhook:
+      enabled: true
+      secret_token: <a_secret_token>
+```
+
+A complete example is available here: [examples/webhooks](examples/webhooks/README.md). You can also refer to the [configuration syntax](docs/configuration_syntax.md) for me information.
 
 ### How it works
 
-- Polling of all of the GitLab resources (projects, refs, pipelines, jobs, etc..) is spread evenly across all the running instances
+- Pulling of all of the GitLab resources (projects, refs, pipelines, jobs, etc..) is spread evenly across all the running instances
 - Rate limit is global across the workers. eg: 3 workers at a 10 rps limit will result in a ~3.3rps limit/worker
 - Exported metrics are fetched from the shared storage layer on each call to ensure data integrity/consistency of the requests across the instances
 

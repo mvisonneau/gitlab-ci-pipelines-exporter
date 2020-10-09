@@ -10,28 +10,37 @@ import (
 
 // Default values
 const (
-	defaultPullConfigMaximumGitLabAPIRequestsPerSecond                       = 10
-	defaultPullConfigMetricsOnInit                                           = true
-	defaultPullConfigMetricsScheduled                                        = true
-	defaultPullConfigMetricsIntervalSeconds                                  = 30
-	defaultPullConfigProjectsFromWildcardsOnInit                             = true
-	defaultPullConfigProjectsFromWildcardsScheduled                          = true
-	defaultPullConfigProjectsFromWildcardsIntervalSeconds                    = 1800
-	defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsOnInit          = true
-	defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsScheduled       = true
-	defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsIntervalSeconds = 300
-
-	errNoProjectsOrWildcardConfigured = "you need to configure at least one project/wildcard to poll, none given"
-	errConfigFileNotFound             = "couldn't open config file : %v"
+	defaultServerConfigEnablePprof                          = false
+	defaultServerConfigListenAddress                        = ":8080"
+	defaultServerConfigMetricsEnabled                       = true
+	defaultServerConfigMetricsEnableOpenmetricsEncoding     = false
+	defaultServerConfigWebhookEnabled                       = false
+	defaultGitlabConfigURL                                  = "https://gitlab.com"
+	defaultGitlabConfigHealthURL                            = "https://gitlab.com/explore"
+	defaultGitlabConfigEnableHealthCheck                    = true
+	defaultGitlabConfigEnableTLSVerify                      = true
+	defaultPullConfigMaximumGitLabAPIRequestsPerSecond      = 10
+	defaultPullConfigProjectsFromWildcardsOnInit            = true
+	defaultPullConfigProjectsFromWildcardsScheduled         = true
+	defaultPullConfigProjectsFromWildcardsIntervalSeconds   = 1800
+	defaultPullConfigProjectRefsFromProjectsOnInit          = true
+	defaultPullConfigProjectRefsFromProjectsScheduled       = true
+	defaultPullConfigProjectRefsFromProjectsIntervalSeconds = 300
+	defaultPullConfigProjectRefsMetricsOnInit               = true
+	defaultPullConfigProjectRefsMetricsScheduled            = true
+	defaultPullConfigProjectRefsMetricsIntervalSeconds      = 30
 )
 
 // Config represents what can be defined as a yaml config file
 type Config struct {
-	// GitLab configuration
+	// Server related configuration
+	Server ServerConfig `yaml:"server"`
+
+	// GitLab related configuration
 	Gitlab GitlabConfig `yaml:"gitlab"`
 
-	// Disable OpenMetrics content encoding in prometheus HTTP handler (default: false)
-	DisableOpenmetricsEncoding bool `yaml:"disable_openmetrics_encoding"`
+	// Redis related configuration
+	Redis RedisConfig `yaml:"redis"`
 
 	// Pull configuration
 	Pull PullConfig `yaml:"pull"`
@@ -39,16 +48,46 @@ type Config struct {
 	// Default parameters which can be overridden at either the Project or Wildcard level
 	ProjectDefaults ProjectParameters `yaml:"project_defaults"`
 
-	// List of projects to poll
+	// List of projects to pull
 	Projects []Project `yaml:"projects"`
 
 	// List of wildcards to search projects from
 	Wildcards Wildcards `yaml:"wildcards"`
 }
 
+// ServerConfig ..
+type ServerConfig struct {
+	// Enable profiling pages
+	EnablePprof bool `yaml:"enable_pprof"`
+
+	// [address:port] to make the process listen upon
+	ListenAddress string `yaml:"listen_address"`
+
+	Metrics ServerConfigMetrics `yaml:"metrics"`
+	Webhook ServerConfigWebhook `yaml:"webhook"`
+}
+
+// ServerConfigMetrics ..
+type ServerConfigMetrics struct {
+	// Enable /metrics endpoint
+	Enabled bool `yaml:"enabled"`
+
+	// Enable OpenMetrics content encoding in prometheus HTTP handler
+	EnableOpenmetricsEncoding bool `yaml:"enable_openmetrics_encoding"`
+}
+
+// ServerConfigWebhook ..
+type ServerConfigWebhook struct {
+	// Enable /webhook endpoint to support GitLab requests
+	Enabled bool `yaml:"enabled"`
+
+	// Secret token to authenticate legitimate webhook requests coming from the GitLab server
+	SecretToken string `yaml:"secret_token"`
+}
+
 // GitlabConfig ..
 type GitlabConfig struct {
-	// The URL of the GitLab server/api (default to https://gitlab.com)
+	// The URL of the GitLab server/api
 	URL string `yaml:"url"`
 
 	// Token to use to authenticate against the API
@@ -58,162 +97,107 @@ type GitlabConfig struct {
 	HealthURL string `yaml:"health_url"`
 
 	// Whether to validate the service is reachable calling HealthURL
-	DisableHealthCheck bool `yaml:"disable_health_check"`
+	EnableHealthCheck bool `yaml:"enable_health_check"`
 
 	// Whether to skip TLS validation when querying HealthURL
-	DisableTLSVerify bool `yaml:"disable_tls_verify"`
+	EnableTLSVerify bool `yaml:"enable_tls_verify"`
+}
+
+// RedisConfig ..
+type RedisConfig struct {
+	// URL used to connect onto the redis endpoint
+	// format: redis[s]://[:password@]host[:port][/db-number][?option=value])
+	URL string `yaml:"url"`
 }
 
 // PullConfig ..
 type PullConfig struct {
 	// Maximum amount of requests per seconds to make against the GitLab API (default: 10)
-	MaximumGitLabAPIRequestsPerSecondValue *int `yaml:"maximum_gitlab_api_requests_per_second"`
-
-	// PullMetrics configuration
-	Metrics PullConfigMetrics `yaml:"metrics"`
+	MaximumGitLabAPIRequestsPerSecond int `yaml:"maximum_gitlab_api_requests_per_second"`
 
 	// ProjectsFromWildcards configuration
 	ProjectsFromWildcards PullConfigProjectsFromWildcards `yaml:"projects_from_wildcards"`
 
-	// ProjectRefsFromBranchesTagsMergeRequests configuration
-	ProjectRefsFromBranchesTagsMergeRequests PullConfigProjectRefsFromBranchesTagsMergeRequests `yaml:"project_refs_from_branches_tags_and_mrs"`
+	// ProjectRefsFromProjects configuration
+	ProjectRefsFromProjects PullConfigProjectRefsFromProjects `yaml:"refs_from_projects"`
+
+	// PullMetrics configuration
+	ProjectRefsMetrics PullConfigProjectRefsMetrics `yaml:"metrics"`
 }
 
 // PullConfigParameters ..
 type PullConfigParameters struct {
-	OnInitValue          *bool `yaml:"on_init"`
-	ScheduledValue       *bool `yaml:"scheduled"`
-	IntervalSecondsValue *int  `yaml:"interval_seconds"`
+	OnInit          bool `yaml:"on_init"`
+	Scheduled       bool `yaml:"scheduled"`
+	IntervalSeconds int  `yaml:"interval_seconds"`
 }
-
-// PullConfigMetrics ..
-type PullConfigMetrics PullConfigParameters
 
 // PullConfigProjectsFromWildcards ..
 type PullConfigProjectsFromWildcards PullConfigParameters
 
-// PullConfigProjectRefsFromBranchesTagsMergeRequests ..
-type PullConfigProjectRefsFromBranchesTagsMergeRequests PullConfigParameters
+// PullConfigProjectRefsFromProjects ..
+type PullConfigProjectRefsFromProjects PullConfigParameters
 
-// ParseConfig loads a yaml file into a Config structure
-func ParseConfig(path string, cfg *Config) error {
+// PullConfigProjectRefsMetrics ..
+type PullConfigProjectRefsMetrics PullConfigParameters
+
+// NewConfig returns a Config with default parameters values
+func NewConfig() Config {
+	return Config{
+		Server: ServerConfig{
+			EnablePprof:   defaultServerConfigEnablePprof,
+			ListenAddress: defaultServerConfigListenAddress,
+			Metrics: ServerConfigMetrics{
+				Enabled:                   defaultServerConfigMetricsEnabled,
+				EnableOpenmetricsEncoding: defaultServerConfigMetricsEnableOpenmetricsEncoding,
+			},
+			Webhook: ServerConfigWebhook{
+				Enabled: defaultServerConfigWebhookEnabled,
+			},
+		},
+		Gitlab: GitlabConfig{
+			URL:               defaultGitlabConfigURL,
+			HealthURL:         defaultGitlabConfigHealthURL,
+			EnableHealthCheck: defaultGitlabConfigEnableHealthCheck,
+			EnableTLSVerify:   defaultGitlabConfigEnableTLSVerify,
+		},
+		Pull: PullConfig{
+			MaximumGitLabAPIRequestsPerSecond: defaultPullConfigMaximumGitLabAPIRequestsPerSecond,
+			ProjectsFromWildcards: PullConfigProjectsFromWildcards{
+				OnInit:          defaultPullConfigProjectsFromWildcardsOnInit,
+				Scheduled:       defaultPullConfigProjectsFromWildcardsScheduled,
+				IntervalSeconds: defaultPullConfigProjectsFromWildcardsIntervalSeconds,
+			},
+			ProjectRefsFromProjects: PullConfigProjectRefsFromProjects{
+				OnInit:          defaultPullConfigProjectRefsFromProjectsOnInit,
+				Scheduled:       defaultPullConfigProjectRefsFromProjectsScheduled,
+				IntervalSeconds: defaultPullConfigProjectRefsFromProjectsIntervalSeconds,
+			},
+			ProjectRefsMetrics: PullConfigProjectRefsMetrics{
+				OnInit:          defaultPullConfigProjectRefsMetricsOnInit,
+				Scheduled:       defaultPullConfigProjectRefsMetricsScheduled,
+				IntervalSeconds: defaultPullConfigProjectRefsMetricsIntervalSeconds,
+			},
+		},
+	}
+}
+
+// ParseConfigFile loads a yaml file into a Config structure
+func ParseConfigFile(path string) (Config, error) {
+	cfg := NewConfig()
 	configFile, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return fmt.Errorf(errConfigFileNotFound, err)
+		return cfg, fmt.Errorf("couldn't open config file : %v", err)
 	}
 
-	err = yaml.Unmarshal(configFile, cfg)
-	if err != nil {
-		return fmt.Errorf("unable to parse config file: %v", err)
+	if err = yaml.Unmarshal(configFile, &cfg); err != nil {
+		return cfg, fmt.Errorf("unable to parse config file: %v", err)
 	}
 
-	if len(cfg.Projects) < 1 && len(cfg.Wildcards) < 1 {
-		return fmt.Errorf(errNoProjectsOrWildcardConfigured)
+	// Hack to fix the missing health endpoint on gitlab.com
+	if cfg.Gitlab.URL != "https://gitlab.com" {
+		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/-/health", cfg.Gitlab.URL)
 	}
 
-	// Configure GitLab parameters
-	if cfg.Gitlab.URL == "" {
-		cfg.Gitlab.URL = "https://gitlab.com"
-	}
-
-	if cfg.Gitlab.HealthURL == "" {
-		// Hack to fix the missing health endpoint on gitlab.com
-		if cfg.Gitlab.URL == "https://gitlab.com" {
-			cfg.Gitlab.HealthURL = "https://gitlab.com/explore"
-		} else {
-			cfg.Gitlab.HealthURL = fmt.Sprintf("%s/-/health", cfg.Gitlab.URL)
-		}
-	}
-
-	return nil
-}
-
-// MaximumGitLabAPIRequestsPerSecond ...
-func (pc *PullConfig) MaximumGitLabAPIRequestsPerSecond() int {
-	if pc.MaximumGitLabAPIRequestsPerSecondValue != nil {
-		return *pc.MaximumGitLabAPIRequestsPerSecondValue
-	}
-
-	return defaultPullConfigMaximumGitLabAPIRequestsPerSecond
-}
-
-// OnInit ..
-func (pc *PullConfigMetrics) OnInit() bool {
-	if pc.OnInitValue != nil {
-		return *pc.OnInitValue
-	}
-
-	return defaultPullConfigMetricsOnInit
-}
-
-// Scheduled ..
-func (pc *PullConfigMetrics) Scheduled() bool {
-	if pc.ScheduledValue != nil {
-		return *pc.ScheduledValue
-	}
-
-	return defaultPullConfigMetricsScheduled
-}
-
-// IntervalSeconds ..
-func (pc *PullConfigMetrics) IntervalSeconds() int {
-	if pc.IntervalSecondsValue != nil {
-		return *pc.IntervalSecondsValue
-	}
-
-	return defaultPullConfigMetricsIntervalSeconds
-}
-
-// OnInit ..
-func (pc *PullConfigProjectsFromWildcards) OnInit() bool {
-	if pc.OnInitValue != nil {
-		return *pc.OnInitValue
-	}
-
-	return defaultPullConfigProjectsFromWildcardsOnInit
-}
-
-// Scheduled ..
-func (pc *PullConfigProjectsFromWildcards) Scheduled() bool {
-	if pc.ScheduledValue != nil {
-		return *pc.ScheduledValue
-	}
-
-	return defaultPullConfigProjectsFromWildcardsScheduled
-}
-
-// IntervalSeconds ..
-func (pc *PullConfigProjectsFromWildcards) IntervalSeconds() int {
-	if pc.IntervalSecondsValue != nil {
-		return *pc.IntervalSecondsValue
-	}
-
-	return defaultPullConfigProjectsFromWildcardsIntervalSeconds
-}
-
-// OnInit ..
-func (pc *PullConfigProjectRefsFromBranchesTagsMergeRequests) OnInit() bool {
-	if pc.OnInitValue != nil {
-		return *pc.OnInitValue
-	}
-
-	return defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsOnInit
-}
-
-// Scheduled ..
-func (pc *PullConfigProjectRefsFromBranchesTagsMergeRequests) Scheduled() bool {
-	if pc.ScheduledValue != nil {
-		return *pc.ScheduledValue
-	}
-
-	return defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsScheduled
-}
-
-// IntervalSeconds ..
-func (pc *PullConfigProjectRefsFromBranchesTagsMergeRequests) IntervalSeconds() int {
-	if pc.IntervalSecondsValue != nil {
-		return *pc.IntervalSecondsValue
-	}
-
-	return defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsIntervalSeconds
+	return cfg, nil
 }

@@ -4,13 +4,16 @@ package schemas
 type Wildcard struct {
 	ProjectParameters `yaml:",inline"`
 
-	Search string `yaml:"search"`
-	Owner  struct {
-		Name             string `yaml:"name"`
-		Kind             string `yaml:"kind"`
-		IncludeSubgroups bool   `yaml:"include_subgroups"`
-	} `yaml:"owner"`
-	Archived bool `yaml:"archived"`
+	Search   string        `yaml:"search"`
+	Owner    WildcardOwner `yaml:"owner"`
+	Archived bool          `yaml:"archived"`
+}
+
+// WildcardOwner ..
+type WildcardOwner struct {
+	Name             string `yaml:"name"`
+	Kind             string `yaml:"kind"`
+	IncludeSubgroups bool   `yaml:"include_subgroups"`
 }
 
 // Wildcards ..

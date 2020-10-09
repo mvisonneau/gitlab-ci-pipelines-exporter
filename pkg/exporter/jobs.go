@@ -6,7 +6,7 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func pollProjectRefPipelineJobs(pr schemas.ProjectRef) error {
+func pullProjectRefPipelineJobsMetrics(pr schemas.ProjectRef) error {
 	jobs, err := gitlabClient.ListProjectRefPipelineJobs(pr)
 	if err != nil {
 		return err
@@ -19,7 +19,7 @@ func pollProjectRefPipelineJobs(pr schemas.ProjectRef) error {
 	return nil
 }
 
-func pollProjectRefMostRecentJobs(pr schemas.ProjectRef) error {
+func pullProjectRefMostRecentJobsMetrics(pr schemas.ProjectRef) error {
 	if !pr.Pull.Pipeline.Jobs.Enabled() {
 		return nil
 	}

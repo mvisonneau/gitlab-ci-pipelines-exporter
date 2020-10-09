@@ -11,69 +11,63 @@ import (
 )
 
 var (
-	getProjectsFromWildcardTask = taskq.RegisterTask(&taskq.TaskOptions{
+	pullProjectsFromWildcardTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "getProjectsFromWildcardTask",
 		Handler: func(ctx context.Context, w schemas.Wildcard) error {
-			return getProjectsFromWildcard(w)
+			return pullProjectsFromWildcard(w)
 		},
 	})
-	getProjectRefsFromPipelinesTask = taskq.RegisterTask(&taskq.TaskOptions{
+	pullProjectRefsFromPipelinesTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "getProjectRefsFromPipelinesTask",
 		Handler: func(p schemas.Project) error {
-			return getProjectRefsFromPipelines(p)
+			return pullProjectRefsFromPipelines(p)
 		},
 	})
-	getRefsFromProjectTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "getRefsFromProjectTask",
+	pullProjectRefsFromProjectTask = taskq.RegisterTask(&taskq.TaskOptions{
+		Name: "pullProjectRefsFromProjectTask",
 		Handler: func(p schemas.Project) error {
-			return getRefsFromProject(p)
+			return pullProjectRefsFromProject(p)
 		},
 	})
-	pollProjectRefMostRecentPipelineTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "pollProjectRefMostRecentPipelineTask",
+	pullProjectRefMetricsTask = taskq.RegisterTask(&taskq.TaskOptions{
+		Name: "pullProjectRefMetricsTask",
 		Handler: func(pr schemas.ProjectRef) error {
-			return pollProjectRefMostRecentPipeline(pr)
-		},
-	})
-	pollProjectRefMostRecentJobsTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "pollProjectRefMostRecentJobsTask",
-		Handler: func(pr schemas.ProjectRef) error {
-			return pollProjectRefMostRecentJobs(pr)
+			return pullProjectRefMetrics(pr)
 		},
 	})
 )
 
 // Schedule ..
-func Schedule(ctx context.Context) {
+func schedule(ctx context.Context) {
 	go func(ctx context.Context) {
-		pullProjectsFromWildcardsTicker := time.NewTicker(time.Duration(config.Pull.ProjectsFromWildcards.IntervalSeconds()) * time.Second)
-		pullProjectRefsFromBranchesTagsMergeRequestsTicker := time.NewTicker(time.Duration(config.Pull.ProjectRefsFromBranchesTagsMergeRequests.IntervalSeconds()) * time.Second)
-		pullMetricsTicker := time.NewTicker(time.Duration(config.Pull.Metrics.IntervalSeconds()) * time.Second)
+		pullProjectsFromWildcardsTicker := time.NewTicker(time.Duration(config.Pull.ProjectsFromWildcards.IntervalSeconds) * time.Second)
+		pullProjectRefsFromProjectsTicker := time.NewTicker(time.Duration(config.Pull.ProjectRefsFromProjects.IntervalSeconds) * time.Second)
+		pullProjectRefsMetricsTicker := time.NewTicker(time.Duration(config.Pull.ProjectRefsMetrics.IntervalSeconds) * time.Second)
 
 		// init
-		if config.Pull.ProjectsFromWildcards.OnInit() {
+		if config.Pull.ProjectsFromWildcards.OnInit {
 			schedulePullProjectsFromWildcards(ctx)
 		}
 
-		if config.Pull.ProjectRefsFromBranchesTagsMergeRequests.OnInit() {
-			schedulePullProjectRefsFromBranchesTagsMergeRequests(ctx)
+		if config.Pull.ProjectRefsFromProjects.OnInit {
+			schedulePullProjectRefsFromProjects(ctx)
 		}
 
-		if config.Pull.Metrics.OnInit() {
-			schedulePullMetrics(ctx)
+		if config.Pull.ProjectRefsMetrics.OnInit {
+			schedulePullProjectRefsMetrics(ctx)
 		}
 
 		// Scheduler configuration
-		if !config.Pull.ProjectsFromWildcards.Scheduled() {
+		if !config.Pull.ProjectsFromWildcards.Scheduled {
 			pullProjectsFromWildcardsTicker.Stop()
 		}
 
-		if !config.Pull.ProjectRefsFromBranchesTagsMergeRequests.Scheduled() {
-			pullProjectRefsFromBranchesTagsMergeRequestsTicker.Stop()
+		if !config.Pull.ProjectRefsFromProjects.Scheduled {
+			pullProjectRefsFromProjectsTicker.Stop()
 		}
 
-		if !config.Pull.Metrics.Scheduled() {
-			pullMetricsTicker.Stop()
+		if !config.Pull.ProjectRefsMetrics.Scheduled {
+			pullProjectRefsMetricsTicker.Stop()
 		}
 
 		// Waiting for the tickers to kick in
@@ -84,10 +78,10 @@ func Schedule(ctx context.Context) {
 				return
 			case <-pullProjectsFromWildcardsTicker.C:
 				schedulePullProjectsFromWildcards(ctx)
-			case <-pullProjectRefsFromBranchesTagsMergeRequestsTicker.C:
-				schedulePullProjectRefsFromBranchesTagsMergeRequests(ctx)
-			case <-pullMetricsTicker.C:
-				schedulePullMetrics(ctx)
+			case <-pullProjectRefsFromProjectsTicker.C:
+				schedulePullProjectRefsFromProjects(ctx)
+			case <-pullProjectRefsMetricsTicker.C:
+				schedulePullProjectRefsMetrics(ctx)
 			}
 		}
 	}(ctx)
@@ -101,14 +95,14 @@ func schedulePullProjectsFromWildcards(ctx context.Context) {
 	).Info("scheduling projects from wildcards pull")
 
 	for _, w := range config.Wildcards {
-		err := pollingQueue.Add(getProjectsFromWildcardTask.WithArgs(ctx, w))
+		err := pullingQueue.Add(pullProjectsFromWildcardTask.WithArgs(ctx, w))
 		if err != nil {
 			log.Error(err)
 		}
 	}
 }
 
-func schedulePullProjectRefsFromBranchesTagsMergeRequests(ctx context.Context) {
+func schedulePullProjectRefsFromProjects(ctx context.Context) {
 	projectsCount, err := store.ProjectsCount()
 	if err != nil {
 		log.Error(err.Error())
@@ -118,7 +112,7 @@ func schedulePullProjectRefsFromBranchesTagsMergeRequests(ctx context.Context) {
 		log.Fields{
 			"total": projectsCount,
 		},
-	).Info("scheduling projects refs from branches, tags and merge requests pull")
+	).Info("scheduling projects refs from projects pull")
 
 	projects, err := store.Projects()
 	if err != nil {
@@ -126,13 +120,13 @@ func schedulePullProjectRefsFromBranchesTagsMergeRequests(ctx context.Context) {
 	}
 
 	for _, p := range projects {
-		if err = pollingQueue.Add(getRefsFromProjectTask.WithArgs(ctx, p)); err != nil {
+		if err = pullingQueue.Add(pullProjectRefsFromProjectTask.WithArgs(ctx, p)); err != nil {
 			log.Error(err)
 		}
 	}
 }
 
-func schedulePullMetrics(ctx context.Context) {
+func schedulePullProjectRefsMetrics(ctx context.Context) {
 	projectsRefsCount, err := store.ProjectsRefsCount()
 	if err != nil {
 		log.Error(err)
@@ -150,14 +144,8 @@ func schedulePullMetrics(ctx context.Context) {
 	}
 
 	for _, pr := range projectRefs {
-		if err = pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(ctx, pr)); err != nil {
+		if err = pullingQueue.Add(pullProjectRefMetricsTask.WithArgs(ctx, pr)); err != nil {
 			log.Error(err)
-		}
-
-		if pr.Pull.Pipeline.Jobs.Enabled() {
-			if err = pollingQueue.Add(pollProjectRefMostRecentJobsTask.WithArgs(ctx, pr)); err != nil {
-				log.Error(err)
-			}
 		}
 	}
 }

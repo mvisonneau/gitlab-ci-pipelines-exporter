@@ -9,9 +9,9 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 **BREAKING CHANGES**
 
-1. The [configuration syntax](./docs/configuration_syntax.md) has been restructured quite a bit so please refer to the documentation to check what you may need to update accordingly.
+1. The [configuration syntax](./docs/configuration_syntax.md) has been restructured quite a bit and some runtime flags have been moved in it as well. Refer to the updated documentation to check what you may need to update.
 
-1. Some metrics have been renamed:
+2. Some metrics have been renamed:
 
 | Original metric name | New metric name|
 |---|---|
@@ -39,7 +39,8 @@ defaults:
 
 ### Added
 
-- **HA configuration capabilities using Redis**
+- **HA configuration capabilities using Redis** (optional feature, [example here](examples/ha-setup/README.md))
+- **Push based approach leveraging pipelines & jobs webhooks** (optional feature, [example here](examples/webhooks/README.md))
 - gosec testing
 
 ### Changed

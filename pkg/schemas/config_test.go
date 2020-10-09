@@ -11,61 +11,67 @@ import (
 )
 
 func TestParseConfigInvalidPath(t *testing.T) {
-	assert.Equal(t, fmt.Errorf("couldn't open config file : open /path_do_not_exist: no such file or directory"), ParseConfig("/path_do_not_exist", &Config{}))
+	cfg, err := ParseConfigFile("/path_do_not_exist")
+	assert.Equal(t, fmt.Errorf("couldn't open config file : open /path_do_not_exist: no such file or directory"), err)
+	assert.Equal(t, NewConfig(), cfg)
 }
 
-func TestParseConfigInvalidYaml(t *testing.T) {
+func TestParseConfigFileInvalidYaml(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
 	assert.Nil(t, err)
 	defer os.Remove(f.Name())
 
 	// Invalid YAML content
 	f.WriteString("invalid_yaml")
-	assert.Error(t, ParseConfig(f.Name(), &Config{}))
-}
-
-func TestParseConfigEmptyYaml(t *testing.T) {
-	f, err := ioutil.TempFile("/tmp", "test-")
-	assert.Nil(t, err)
-	defer os.Remove(f.Name())
-
-	// Invalid YAML content
-	f.WriteString("---")
-	assert.Equal(t, fmt.Errorf("you need to configure at least one project/wildcard to poll, none given"), ParseConfig(f.Name(), &Config{}))
+	cfg, err := ParseConfigFile(f.Name())
+	assert.Error(t, err)
+	assert.Equal(t, NewConfig(), cfg)
 }
 
 func TestParseConfigValidYaml(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp", "test-")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	defer os.Remove(f.Name())
 
 	// Valid minimal configuration
 	f.WriteString(`
 ---
+server:
+  enable_pprof: true
+  listen_address: :1025
+
+  metrics:
+    enabled: false
+    enable_openmetrics_encoding: false
+
+  webhook:
+    enabled: true
+    secret_token: secret
+
 gitlab:
   url: https://gitlab.example.com
   token: xrN14n9-ywvAFxxxxxx
   health_url: https://gitlab.example.com/-/health
-  disable_health_check: true
-  disable_tls_verify: true
+  enable_health_check: false
+  enable_tls_verify: false
 
-disable_openmetrics_encoding: true
+redis:
+  url: redis://popopo:1337
 
 pull:
   maximum_gitlab_api_requests_per_second: 1
-  metrics:
-    on_init: false
-    scheduled: false
-    interval_seconds: 1
   projects_from_wildcards:
     on_init: false
     scheduled: false
+    interval_seconds: 1
+  refs_from_projects:
+    on_init: false
+    scheduled: false
     interval_seconds: 2
-  project_refs_from_branches_tags_and_mrs:
+  metrics:
     on_init: false
     scheduled: false
     interval_seconds: 3
-
 project_defaults:
   output_sparse_status_metrics: false
   pull:
@@ -107,34 +113,48 @@ wildcards:
         regexp: "^yolo$"
 `)
 
-	cfg := &Config{}
-	assert.NoError(t, ParseConfig(f.Name(), cfg))
+	cfg, err := ParseConfigFile(f.Name())
+	assert.NoError(t, err)
 
 	expectedCfg := Config{
-		Gitlab: GitlabConfig{
-			URL:                "https://gitlab.example.com",
-			HealthURL:          "https://gitlab.example.com/-/health",
-			Token:              "xrN14n9-ywvAFxxxxxx",
-			DisableHealthCheck: true,
-			DisableTLSVerify:   true,
+		Server: ServerConfig{
+			EnablePprof:   true,
+			ListenAddress: ":1025",
+			Metrics: ServerConfigMetrics{
+				Enabled:                   false,
+				EnableOpenmetricsEncoding: false,
+			},
+			Webhook: ServerConfigWebhook{
+				Enabled:     true,
+				SecretToken: "secret",
+			},
 		},
-		DisableOpenmetricsEncoding: true,
+		Gitlab: GitlabConfig{
+			URL:               "https://gitlab.example.com",
+			HealthURL:         "https://gitlab.example.com/-/health",
+			Token:             "xrN14n9-ywvAFxxxxxx",
+			EnableHealthCheck: false,
+			EnableTLSVerify:   false,
+		},
+		Redis: RedisConfig{
+			URL: "redis://popopo:1337",
+		},
 		Pull: PullConfig{
-			MaximumGitLabAPIRequestsPerSecondValue: pointy.Int(1),
-			Metrics: PullConfigMetrics{
-				OnInitValue:          pointy.Bool(false),
-				ScheduledValue:       pointy.Bool(false),
-				IntervalSecondsValue: pointy.Int(1),
-			},
+			MaximumGitLabAPIRequestsPerSecond: 1,
 			ProjectsFromWildcards: PullConfigProjectsFromWildcards{
-				OnInitValue:          pointy.Bool(false),
-				ScheduledValue:       pointy.Bool(false),
-				IntervalSecondsValue: pointy.Int(2),
+				OnInit:          false,
+				Scheduled:       false,
+				IntervalSeconds: 1,
 			},
-			ProjectRefsFromBranchesTagsMergeRequests: PullConfigProjectRefsFromBranchesTagsMergeRequests{
-				OnInitValue:          pointy.Bool(false),
-				ScheduledValue:       pointy.Bool(false),
-				IntervalSecondsValue: pointy.Int(3),
+			ProjectRefsFromProjects: PullConfigProjectRefsFromProjects{
+				OnInit:          false,
+				Scheduled:       false,
+				IntervalSeconds: 2,
+			},
+			ProjectRefsMetrics: PullConfigProjectRefsMetrics{
+				OnInit:          false,
+				Scheduled:       false,
+				IntervalSeconds: 3,
 			},
 		},
 		ProjectDefaults: ProjectParameters{
@@ -213,7 +233,7 @@ wildcards:
 	}
 
 	// Test variable assignments
-	assert.Equal(t, expectedCfg, *cfg)
+	assert.Equal(t, expectedCfg, cfg)
 }
 
 func TestParseConfigDefaultsValues(t *testing.T) {
@@ -224,43 +244,16 @@ func TestParseConfigDefaultsValues(t *testing.T) {
 	// Valid minimal configuration
 	f.WriteString(`
 ---
-wildcards:
-  - {}
 `)
 
-	cfg := &Config{}
-	assert.NoError(t, ParseConfig(f.Name(), cfg))
-
-	expectedCfg := Config{
-		Gitlab: GitlabConfig{
-			URL:       "https://gitlab.com",
-			Token:     "",
-			HealthURL: "https://gitlab.com/explore",
-		},
-		DisableOpenmetricsEncoding: false,
-		Wildcards: Wildcards{
-			{},
-		},
-	}
+	cfg, err := ParseConfigFile(f.Name())
+	assert.NoError(t, err)
+	expectedCfg := NewConfig()
 
 	// Test variable assignments
-	assert.Equal(t, expectedCfg, *cfg)
+	assert.Equal(t, expectedCfg, cfg)
 
-	// Validate default values
-	assert.Equal(t, defaultPullConfigMaximumGitLabAPIRequestsPerSecond, cfg.Pull.MaximumGitLabAPIRequestsPerSecond())
-
-	assert.Equal(t, defaultPullConfigMetricsOnInit, cfg.Pull.Metrics.OnInit())
-	assert.Equal(t, defaultPullConfigMetricsScheduled, cfg.Pull.Metrics.Scheduled())
-	assert.Equal(t, defaultPullConfigMetricsIntervalSeconds, cfg.Pull.Metrics.IntervalSeconds())
-
-	assert.Equal(t, defaultPullConfigProjectsFromWildcardsOnInit, cfg.Pull.ProjectsFromWildcards.OnInit())
-	assert.Equal(t, defaultPullConfigProjectsFromWildcardsScheduled, cfg.Pull.ProjectsFromWildcards.Scheduled())
-	assert.Equal(t, defaultPullConfigProjectsFromWildcardsIntervalSeconds, cfg.Pull.ProjectsFromWildcards.IntervalSeconds())
-
-	assert.Equal(t, defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsOnInit, cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.OnInit())
-	assert.Equal(t, defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsScheduled, cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.Scheduled())
-	assert.Equal(t, defaultPullConfigProjectRefsFromBranchesTagsMergeRequestsIntervalSeconds, cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.IntervalSeconds())
-
+	// Validate project default values
 	assert.Equal(t, defaultProjectOutputSparseStatusMetrics, cfg.ProjectDefaults.OutputSparseStatusMetrics())
 	assert.Equal(t, defaultProjectPullRefsRegexp, cfg.ProjectDefaults.Pull.Refs.Regexp())
 	assert.Equal(t, defaultProjectPullRefsFromPipelinesEnabled, cfg.ProjectDefaults.Pull.Refs.From.Pipelines.Enabled())
@@ -285,12 +278,9 @@ func TestParseConfigSelfHostedGitLab(t *testing.T) {
 ---
 gitlab:
   url: https://gitlab.example.com
-
-wildcards:
-  - {}
 `)
 
-	cfg := &Config{}
-	assert.NoError(t, ParseConfig(f.Name(), cfg))
+	cfg, err := ParseConfigFile(f.Name())
+	assert.NoError(t, err)
 	assert.Equal(t, "https://gitlab.example.com/-/health", cfg.Gitlab.HealthURL)
 }

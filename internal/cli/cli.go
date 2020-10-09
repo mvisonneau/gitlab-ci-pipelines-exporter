@@ -39,22 +39,15 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 			EnvVars: []string{"GCPE_REDIS_URL"},
 			Usage:   "redis `url` for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value])",
 		},
-		&cli.BoolFlag{
-			Name:    "enable-pprof",
-			EnvVars: []string{"GCPE_ENABLE_PPROF"},
-			Usage:   "Enable profiling endpoints at /debug/pprof",
-		},
 		&cli.StringFlag{
 			Name:    "gitlab-token",
 			EnvVars: []string{"GCPE_GITLAB_TOKEN"},
-			Usage:   "GitLab access `token`. Can be use to override the gitlab token in config file",
+			Usage:   "GitLab API access `token` (can be used to override the value set in the config file)",
 		},
 		&cli.StringFlag{
-			Name:    "listen-address",
-			Aliases: []string{"l"},
-			EnvVars: []string{"GCPE_LISTEN_ADDRESS"},
-			Usage:   "listen-address `address:port`",
-			Value:   ":8080",
+			Name:    "webhook-secret-token",
+			EnvVars: []string{"GCPE_WEBHOOK_SECRET_TOKEN"},
+			Usage:   "`token` used to authenticate legitimate requests (can be used to override the value set in the config file)",
 		},
 		&cli.StringFlag{
 			Name:    "log-level",

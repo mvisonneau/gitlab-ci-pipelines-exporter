@@ -12,10 +12,10 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func TestPollProjectRefPipelineJobs(t *testing.T) {
+func TestPullProjectRefPipelineJobsMetrics(t *testing.T) {
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	ConfigureStore()
+	configureStore()
 
 	mux.HandleFunc("/api/v4/projects/1/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -31,15 +31,15 @@ func TestPollProjectRefPipelineJobs(t *testing.T) {
 		Jobs: make(map[string]goGitlab.Job),
 	}
 
-	assert.NoError(t, pollProjectRefPipelineJobs(pr))
+	assert.NoError(t, pullProjectRefPipelineJobsMetrics(pr))
 	server.Close()
-	assert.Error(t, pollProjectRefPipelineJobs(pr))
+	assert.Error(t, pullProjectRefPipelineJobsMetrics(pr))
 }
 
-func TestPollProjectRefMostRecentJobs(t *testing.T) {
+func TestPullProjectRefMostRecentJobsMetrics(t *testing.T) {
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	ConfigureStore()
+	configureStore()
 
 	mux.HandleFunc("/api/v4/projects/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -57,13 +57,13 @@ func TestPollProjectRefMostRecentJobs(t *testing.T) {
 	}
 
 	// Test with FetchPipelineJobMetrics disabled
-	assert.NoError(t, pollProjectRefMostRecentJobs(pr))
+	assert.NoError(t, pullProjectRefMostRecentJobsMetrics(pr))
 
 	// Enable FetchPipelineJobMetrics
 	pr.Pull.Pipeline.Jobs.EnabledValue = pointy.Bool(true)
-	assert.NoError(t, pollProjectRefMostRecentJobs(pr))
+	assert.NoError(t, pullProjectRefMostRecentJobsMetrics(pr))
 	server.Close()
-	assert.Error(t, pollProjectRefMostRecentJobs(pr))
+	assert.Error(t, pullProjectRefMostRecentJobsMetrics(pr))
 }
 
 func TestProcessJobMetrics(t *testing.T) {
@@ -117,7 +117,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		},
 	}
 
-	ConfigureStore()
+	configureStore()
 	store.SetProjectRef(pr)
 
 	// If we run it against the same job, nothing should change in the store

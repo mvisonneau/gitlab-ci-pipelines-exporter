@@ -33,21 +33,30 @@ func configure(ctx *cli.Context) (err error) {
 
 	// Initialize config
 	cfg := schemas.Config{}
-	if err = schemas.ParseConfig(ctx.String("config"), &cfg); err != nil {
+	if cfg, err = schemas.ParseConfigFile(ctx.String("config")); err != nil {
 		return
 	}
 
 	if len(ctx.String("gitlab-token")) > 0 {
 		cfg.Gitlab.Token = ctx.String("gitlab-token")
 	}
-
-	assertStringVariableDefined(ctx, "listen-address", ctx.String("listen-address"))
 	assertStringVariableDefined(ctx, "gitlab-token", cfg.Gitlab.Token)
+
+	if cfg.Server.Webhook.Enabled {
+		if len(ctx.String("webhook-secret-token")) > 0 {
+			cfg.Server.Webhook.SecretToken = ctx.String("webhook-secret-token")
+		}
+		assertStringVariableDefined(ctx, "webhook-secret-token", cfg.Server.Webhook.SecretToken)
+	}
 
 	schemas.UpdateProjectDefaults(cfg.ProjectDefaults)
 
 	if len(ctx.String("redis-url")) > 0 {
-		log.Debug("redis-url flag set, initializing connection..")
+		cfg.Redis.URL = ctx.String("redis-url")
+	}
+
+	if len(cfg.Redis.URL) > 0 {
+		log.Debug("redis url configured, initializing connection..")
 		var opt *redis.Options
 		if opt, err = redis.ParseURL(ctx.String("redis-url")); err != nil {
 			return errors.Wrap(err, "parsing redis-url")
@@ -58,21 +67,17 @@ func configure(ctx *cli.Context) (err error) {
 		}
 	}
 
-	exporter.SetConfig(cfg)
-	exporter.ConfigurePollingQueue()
-	exporter.ConfigureStore()
-
-	if err = exporter.ConfigureGitlabClient(ctx.App.Version); err != nil {
+	if err = exporter.Configure(cfg, ctx.App.Version); err != nil {
 		return
 	}
 
 	log.WithFields(
 		log.Fields{
-			"gitlab-endpoint":                                    cfg.Gitlab.URL,
-			"pull-projects-from-wildcards-interval":              fmt.Sprintf("%ds", cfg.Pull.ProjectsFromWildcards.IntervalSeconds()),
-			"pull-projects-refs-from-branches-tags-mrs-interval": fmt.Sprintf("%ds", cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.IntervalSeconds()),
-			"pull-metrics-interval":                              fmt.Sprintf("%ds", cfg.Pull.ProjectRefsFromBranchesTagsMergeRequests.IntervalSeconds()),
-			"pull-rate-limit":                                    fmt.Sprintf("%drps", cfg.Pull.MaximumGitLabAPIRequestsPerSecond()),
+			"gitlab-endpoint":                           cfg.Gitlab.URL,
+			"pull-projects-from-wildcards-interval":     fmt.Sprintf("%ds", cfg.Pull.ProjectsFromWildcards.IntervalSeconds),
+			"pull-projects-refs-from-projects-interval": fmt.Sprintf("%ds", cfg.Pull.ProjectRefsFromProjects.IntervalSeconds),
+			"pull-projects-refs-metrics-interval":       fmt.Sprintf("%ds", cfg.Pull.ProjectRefsMetrics.IntervalSeconds),
+			"pull-rate-limit":                           fmt.Sprintf("%drps", cfg.Pull.MaximumGitLabAPIRequestsPerSecond),
 		},
 	).Info("exporter configured")
 

@@ -1,52 +1,82 @@
 # GitLab CI Pipelines Exporter - Configuration syntax
 
 ```yaml
+# Exporter HTTP servers configuration
+server:
+  metrics:
+    # Enable main server, handling /metrics and
+    # /health endpoints (optional, default: true)
+    enabled: true
+
+    # [address:port] to make the process listen
+    # upon (optional, default: :8080)
+    listen_address: :8080
+
+    # Enable profiling pages
+    # at /debug/pprof (optional, default: false)
+    enable_pprof: false
+
+    # Enable OpenMetrics content encoding in
+    # prometheus HTTP handler (optional, default: false)
+    # see: https://godoc.org/github.com/prometheus/client_golang/prometheus/promhttp#HandlerOpts
+    enable_openmetrics_encoding: true
+
+  webhook:
+    # Enable webhook server, handling /webhook to
+    # support GitLab requests (optional, default: false)
+    enabled: false
+
+    # [address:port] to make the process listen
+    # upon (optional, default: :8081)
+    listen_address: :8081
+
+    # Secret token to authenticate legitimate webhook
+    # requests coming from the GitLab server
+    # (required if enabled but can also be configured using
+    # the --webhook-secret-token flag or $GCPE_WEBHOOK_SECRET_TOKEN
+    # environment variable)
+    secret_token: 063f51ec-09a4-11eb-adc1-0242ac120002
+
+# Redis configuration, optional and solely useful for an HA setup.
+# By default the data is held in memory of the exporter
+redis:
+  # URL used to connect onto the redis endpoint
+  # format: redis[s]://[:password@]host[:port][/db-number][?option=value])
+  # (required to use the feature but can also be configured using
+  # the --redis-url flag or $GCPE_REDIS_URL
+  # environment variable)
+  url: redis://foo:bar@redis.example.net:6379
+
 # URL and Token with sufficient permissions to access
 # your GitLab's projects pipelines informations (optional)
 gitlab:
-  # URL of your GitLab instance (optional, defaults to https://gitlab.com)
+  # URL of your GitLab instance (optional, default: https://gitlab.com)
   url: https://gitlab.com
 
   # Token to use to authenticate against the GitLab API
   # it requires api and read_repository permissions
-  # (required but can also be configured using --gitlab-token
-  # or the $GCPE_GITLAB_TOKEN environment variable)
+  # (required but can also be configured using the --gitlab-token
+  # flag or the $GCPE_GITLAB_TOKEN environment variable)
   token: xrN14n9-ywvAFxxxxxx
 
   # Alternative URL for determining health of
-  # GitLab API for the readiness probe (optional)
+  # GitLab API for the readiness probe (optional, default: https://gitlab.com)
+  # it can also be defined using the --gitlab-health-url flag or $GCPE_GITLAB_HEALTH_URL
+  # environment variable
   health_url: https://gitlab.example.com/-/health
   
-  # disable verification of readiness for target
-  # GitLab instance calling `health_url` (optional)
-  disable_health_check: false
+  # Enable verification of readiness for target
+  # GitLab instance calling `health_url` (optional, default: true)
+  enable_health_check: true
 
-  # disable TLS validation for target
-  # GitLab instance (handy when self-hosting) (optional)
-  disable_tls_verify: false
-
-# Disable OpenMetrics content encoding in
-# prometheus HTTP handler (optional, default: false)
-# see: https://godoc.org/github.com/prometheus/client_golang/prometheus/promhttp#HandlerOpts
-disable_openmetrics_encoding: false
+  # Enable TLS validation for target
+  # GitLab instance (handy when self-hosting) (optional, default: true)
+  enable_tls_verify: true
 
 pull:
   # Global rate limit for the GitLab API request/sec
   # (optional, default: 10)
   maximum_gitlab_api_requests_per_second: 10
-
-  metrics:
-    # Whether or not to trigger a pull of the metrics when the
-    # exporter starts (optional, default: true)
-    on_init: true
-
-    # Whether or not to attempt refreshing the metrics
-    # on a regular basis (optional, default: true)
-    scheduled: true
-
-    # Interval in seconds to pull metrics from
-    # discovered project refs (optional, default: 30)
-    interval_seconds: 30
 
   projects_from_wildcards:
     # Whether to trigger a discovery or not when the
@@ -61,7 +91,7 @@ pull:
     # from wildcards (optional, default: 1800)
     interval_seconds: 1800
 
-  project_refs_from_branches_tags_and_mrs:
+  refs_from_projects:
     # Whether to trigger a discovery of project refs from
     # branches, tags and merge requests when the
     # exporter starts (optional, default: true)
@@ -76,6 +106,19 @@ pull:
     # Interval in seconds to discover refs
     # from projects branches and tags (optional, default: 300)
     interval_seconds: 300
+
+  metrics:
+    # Whether or not to trigger a pull of the metrics when the
+    # exporter starts (optional, default: true)
+    on_init: true
+
+    # Whether or not to attempt refreshing the metrics
+    # on a regular basis (optional, default: true)
+    scheduled: true
+
+    # Interval in seconds to pull metrics from
+    # discovered project refs (optional, default: 30)
+    interval_seconds: 30
 
 # Default settings which can be overridden at the project
 # or wildcard level (optional)

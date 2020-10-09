@@ -10,22 +10,21 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
+func pullProjectRefMetrics(pr schemas.ProjectRef) error {
+	logFields := log.Fields{
+		"project-path-with-namespace": pr.PathWithNamespace,
+		"project-id":                  pr.ID,
+		"project-ref":                 pr.Ref,
+		"project-ref-kind":            pr.Kind,
+	}
+
 	// TODO: Figure out if we want to have a similar approach for ProjectRefKindTag with
 	// an additional configuration parameeter perhaps
 	if pr.Kind == schemas.ProjectRefKindMergeRequest && pr.MostRecentPipeline != nil {
 		switch pr.MostRecentPipeline.Status {
 		case "success", "failed", "canceled", "skipped":
 			// The pipeline will not evolve, lets not bother querying the API
-			log.WithFields(
-				log.Fields{
-					"project-path-with-namespace": pr.PathWithNamespace,
-					"project-id":                  pr.ID,
-					"project-ref":                 pr.Ref,
-					"project-ref-kind":            pr.Kind,
-					"pipeline-id":                 pr.MostRecentPipeline.ID,
-				},
-			).Debug("skipping finished merge-request pipeline")
+			log.WithFields(logFields).WithField("most-recent-pipeline-id", pr.MostRecentPipeline.ID).Debug("skipping finished merge-request pipeline")
 			return nil
 		}
 	}
@@ -80,7 +79,7 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 		if pipeline.Coverage != "" {
 			parsedCoverage, err := strconv.ParseFloat(pipeline.Coverage, 64)
 			if err != nil {
-				log.Warnf("Could not parse coverage string returned from GitLab API '%s' into Float64: %v", pipeline.Coverage, err)
+				log.WithFields(logFields).WithField("error", err.Error()).Warnf("could not parse coverage string returned from GitLab API '%s' into Float64", pipeline.Coverage)
 			}
 
 			storeSetMetric(schemas.Metric{
@@ -117,18 +116,15 @@ func pollProjectRefMostRecentPipeline(pr schemas.ProjectRef) error {
 		})
 
 		if pr.Pull.Pipeline.Jobs.Enabled() {
-			if err := pollProjectRefPipelineJobs(pr); err != nil {
-				log.WithFields(
-					log.Fields{
-						"project-path-with-namespace": pr.PathWithNamespace,
-						"project-id":                  pr.ID,
-						"project-ref":                 pr.Ref,
-						"project-ref-kind":            pr.Kind,
-						"pipeline-id":                 pipeline.ID,
-						"error":                       err.Error(),
-					},
-				).Error("polling pipeline jobs metrics")
+			if err = pullProjectRefPipelineJobsMetrics(pr); err != nil {
+				return err
 			}
+		}
+	}
+
+	if pr.Pull.Pipeline.Jobs.Enabled() {
+		if err := pullProjectRefMostRecentJobsMetrics(pr); err != nil {
+			return err
 		}
 	}
 

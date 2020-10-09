@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func getProjectsFromWildcard(w schemas.Wildcard) error {
+func pullProjectsFromWildcard(w schemas.Wildcard) error {
 	foundProjects, err := gitlabClient.ListProjects(w)
 	if err != nil {
 		return err
@@ -34,10 +34,20 @@ func getProjectsFromWildcard(w schemas.Wildcard) error {
 			}
 
 			if p.Pull.Refs.From.Pipelines.Enabled() {
-				go pollingQueue.Add(getProjectRefsFromPipelinesTask.WithArgs(context.Background(), p))
+				if err = pullingQueue.Add(pullProjectRefsFromPipelinesTask.WithArgs(context.Background(), p)); err != nil {
+					log.WithFields(log.Fields{
+						"project-name": p.Name,
+						"error":        err.Error(),
+					}).Error("scheduling 'project refs from pipelines' pull")
+				}
 			}
 
-			go pollingQueue.Add(getRefsFromProjectTask.WithArgs(context.Background(), p))
+			if err = pullingQueue.Add(pullProjectRefsFromProjectTask.WithArgs(context.Background(), p)); err != nil {
+				log.WithFields(log.Fields{
+					"project-name": p.Name,
+					"error":        err.Error(),
+				}).Error("scheduling 'project refs from project' pull")
+			}
 		}
 	}
 	return nil

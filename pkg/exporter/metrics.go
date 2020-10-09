@@ -68,7 +68,7 @@ func MetricsHandler(w http.ResponseWriter, r *http.Request) {
 
 	promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		Registry:          registry,
-		EnableOpenMetrics: !config.DisableOpenmetricsEncoding,
+		EnableOpenMetrics: config.Server.Metrics.EnableOpenmetricsEncoding,
 	}).ServeHTTP(w, r)
 }
 

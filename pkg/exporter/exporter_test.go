@@ -34,18 +34,23 @@ func configureMockedGitlabClient() (*http.ServeMux, *httptest.Server) {
 	return mux, server
 }
 
-func TestSetConfig(t *testing.T) {
+func TestConfigure(t *testing.T) {
 	cfg := schemas.Config{
 		Gitlab: schemas.GitlabConfig{
 			URL: "http://foo.bar",
 		},
+		Pull: schemas.PullConfig{
+			MaximumGitLabAPIRequestsPerSecond: 1,
+		},
 	}
-	SetConfig(cfg)
+	assert.NoError(t, Configure(cfg, ""))
 	assert.Equal(t, cfg, config)
 }
 
 func TestConfigureGitlabClient(t *testing.T) {
-	ConfigureGitlabClient("yolo")
+	config.Pull.MaximumGitLabAPIRequestsPerSecond = 1
+	redisClient = nil
+	configureGitlabClient("yolo")
 	assert.NotNil(t, gitlabClient)
 }
 
@@ -64,11 +69,11 @@ func TestConfigureRedisClient(t *testing.T) {
 	assert.Error(t, ConfigureRedisClient(c))
 }
 
-func TestConfigurePollingQueue(t *testing.T) {
+func TestConfigurePullingQueue(t *testing.T) {
 	// TODO: Test with redis client, miniredis does not seem to support it yet
 	redisClient = nil
-	ConfigurePollingQueue()
-	assert.Equal(t, "poll", pollingQueue.Options().Name)
+	configurePullingQueue()
+	assert.Equal(t, "pull", pullingQueue.Options().Name)
 }
 
 func TestConfigureStore(t *testing.T) {
@@ -82,7 +87,7 @@ func TestConfigureStore(t *testing.T) {
 
 	// Test with local storage
 	redisClient = nil
-	ConfigureStore()
+	configureStore()
 	assert.NotNil(t, store)
 
 	projects, err := store.Projects()
@@ -105,14 +110,14 @@ func TestConfigureStore(t *testing.T) {
 	c := redis.NewClient(&redis.Options{Addr: s.Addr()})
 	assert.NoError(t, ConfigureRedisClient(c))
 
-	ConfigureStore()
+	configureStore()
 	projects, err = store.Projects()
 	assert.NoError(t, err)
 	assert.Equal(t, expectedProjects, projects)
 }
 
-func TestProcessPollingQueue(_ *testing.T) {
+func TestProcessPullingQueue(_ *testing.T) {
 	// TODO: Test with redis client, miniredis does not seem to support it yet
 	redisClient = nil
-	ProcessPollingQueue(context.TODO())
+	processPullingQueue(context.TODO())
 }

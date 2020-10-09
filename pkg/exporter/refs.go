@@ -47,7 +47,7 @@ func getProjectRefs(
 	return foundRefs, nil
 }
 
-func getRefsFromProject(p schemas.Project) error {
+func pullProjectRefsFromProject(p schemas.Project) error {
 	gp, err := gitlabClient.GetProject(p.Name)
 	if err != nil {
 		return err
@@ -83,17 +83,18 @@ func getRefsFromProject(p schemas.Project) error {
 				return err
 			}
 
-			go pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(context.Background(), pr))
-
-			if pr.Pull.Pipeline.Jobs.Enabled() {
-				go pollingQueue.Add(pollProjectRefMostRecentJobsTask.WithArgs(context.Background(), pr))
+			if err = pullingQueue.Add(pullProjectRefMetricsTask.WithArgs(context.Background(), pr)); err != nil {
+				log.WithFields(log.Fields{
+					"project-name": pr.Name,
+					"error":        err.Error(),
+				}).Error("scheduling 'project ref most recent pipeline metrics' pull")
 			}
 		}
 	}
 	return nil
 }
 
-func getProjectRefsFromPipelines(p schemas.Project) error {
+func pullProjectRefsFromPipelines(p schemas.Project) error {
 	log.WithFields(log.Fields{
 		"init-operation": true,
 		"project-name":   p.Name,
@@ -109,7 +110,7 @@ func getProjectRefsFromPipelines(p schemas.Project) error {
 		return err
 	}
 
-	// Immediately trigger a poll of the ref
+	// Immediately trigger a pull of the ref
 	for _, pr := range projectRefs {
 		projectRefExists, err := store.ProjectRefExists(pr.Key())
 		if err != nil {
@@ -128,10 +129,11 @@ func getProjectRefsFromPipelines(p schemas.Project) error {
 				return err
 			}
 
-			go pollingQueue.Add(pollProjectRefMostRecentPipelineTask.WithArgs(context.Background(), pr))
-
-			if pr.Pull.Pipeline.Jobs.Enabled() {
-				go pollingQueue.Add(pollProjectRefMostRecentJobsTask.WithArgs(context.Background(), pr))
+			if err = pullingQueue.Add(pullProjectRefMetricsTask.WithArgs(context.Background(), pr)); err != nil {
+				log.WithFields(log.Fields{
+					"project-name": pr.Name,
+					"error":        err.Error(),
+				}).Error("scheduling 'project ref most recent pipeline metrics' pull")
 			}
 		}
 	}
