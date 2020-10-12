@@ -7,7 +7,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.13.3
 	github.com/apex/log v1.9.0
 	github.com/go-redis/redis v6.15.9+incompatible
-	github.com/go-redis/redis/v8 v8.2.3
+	github.com/go-redis/redis/v8 v8.3.0
 	github.com/go-redis/redis_rate/v9 v9.0.2
 	github.com/gomodule/redigo v1.8.2 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
