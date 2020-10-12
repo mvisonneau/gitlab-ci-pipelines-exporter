@@ -3,18 +3,17 @@
 ```yaml
 # Exporter HTTP servers configuration
 server:
+  # [address:port] to make the process listen
+  # upon (optional, default: :8080)
+  listen_address: :8080
+  
+  # Enable profiling pages
+  # at /debug/pprof (optional, default: false)
+  enable_pprof: false
+  
   metrics:
-    # Enable main server, handling /metrics and
-    # /health endpoints (optional, default: true)
+    # Enable /metrics endpoint (optional, default: true)
     enabled: true
-
-    # [address:port] to make the process listen
-    # upon (optional, default: :8080)
-    listen_address: :8080
-
-    # Enable profiling pages
-    # at /debug/pprof (optional, default: false)
-    enable_pprof: false
 
     # Enable OpenMetrics content encoding in
     # prometheus HTTP handler (optional, default: false)
@@ -22,13 +21,9 @@ server:
     enable_openmetrics_encoding: true
 
   webhook:
-    # Enable webhook server, handling /webhook to
+    # Enable /webhook endpoint to
     # support GitLab requests (optional, default: false)
     enabled: false
-
-    # [address:port] to make the process listen
-    # upon (optional, default: :8081)
-    listen_address: :8081
 
     # Secret token to authenticate legitimate webhook
     # requests coming from the GitLab server
