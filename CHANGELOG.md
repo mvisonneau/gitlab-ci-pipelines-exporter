@@ -7,6 +7,11 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- Disabled taskq consumers system resources checks which may leave the exporter in a hanging state
+- Embeded taskq logs into logrus
+
 ## [0.4.0] - 2020-10-09
 
 **BREAKING CHANGES**
