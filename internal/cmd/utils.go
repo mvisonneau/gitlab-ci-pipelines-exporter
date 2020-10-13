@@ -60,7 +60,7 @@ func configure(ctx *cli.Context) (err error) {
 	if len(cfg.Redis.URL) > 0 {
 		log.Debug("redis url configured, initializing connection..")
 		var opt *redis.Options
-		if opt, err = redis.ParseURL(ctx.String("redis-url")); err != nil {
+		if opt, err = redis.ParseURL(cfg.Redis.URL); err != nil {
 			return errors.Wrap(err, "parsing redis-url")
 		}
 
