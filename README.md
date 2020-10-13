@@ -91,6 +91,7 @@ config:
 EOF
 
 # Release the chart on your Kubernetes cluster
+~% helm dependency build ./deployments/helm
 ~$ helm upgrade -i gitlab-ci-pipelines-exporter ./deployments/helm -f values.yml
 ```
 
