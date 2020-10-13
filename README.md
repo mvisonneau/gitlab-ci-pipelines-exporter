@@ -286,14 +286,13 @@ COMMANDS:
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --config file, -c file                          config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
-   --redis-url url                                 redis url for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) [$GCPE_REDIS_URL]
-   --enable-pprof                                  Enable profiling endpoints at /debug/pprof (default: false) [$GCPE_ENABLE_PPROF]
-   --gitlab-token token                            GitLab access token. Can be use to override the gitlab token in config file [$GCPE_GITLAB_TOKEN]
-   --listen-address address:port, -l address:port  listen-address address:port (default: ":8080") [$GCPE_LISTEN_ADDRESS]
-   --log-level level                               log level (debug,info,warn,fatal,panic) (default: "info") [$GCPE_LOG_LEVEL]
-   --log-format format                             log format (json,text) (default: "text") [$GCPE_LOG_FORMAT]
-   --help, -h                                      show help (default: false)
+   --config file, -c file        config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
+   --redis-url url               redis url for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) [$GCPE_REDIS_URL]
+   --gitlab-token token          GitLab API access token (can be used to override the value set in the config file) [$GCPE_GITLAB_TOKEN]
+   --webhook-secret-token token  token used to authenticate legitimate requests (can be used to override the value set in the config file) [$GCPE_WEBHOOK_SECRET_TOKEN]
+   --log-level level             log level (debug,info,warn,fatal,panic) (default: "info") [$GCPE_LOG_LEVEL]
+   --log-format format           log format (json,text) (default: "text") [$GCPE_LOG_FORMAT]
+   --help, -h                    show help (default: false)
 ```
 
 ## Develop / Test
