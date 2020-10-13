@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	stdlibLog "log"
 	"os"
 	"time"
 
@@ -10,10 +11,10 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/go-helpers/logger"
 	"github.com/pkg/errors"
-
-	cli "github.com/urfave/cli/v2"
+	"github.com/vmihailenco/taskq/v3"
 
 	log "github.com/sirupsen/logrus"
+	cli "github.com/urfave/cli/v2"
 )
 
 var start time.Time
@@ -22,14 +23,15 @@ func configure(ctx *cli.Context) (err error) {
 	start = ctx.App.Metadata["startTime"].(time.Time)
 
 	// Configure logger
-	lc := &logger.Config{
+	if err = logger.Configure(logger.Config{
 		Level:  ctx.String("log-level"),
 		Format: ctx.String("log-format"),
-	}
-
-	if err = lc.Configure(); err != nil {
+	}); err != nil {
 		return
 	}
+
+	// This hack is to embed taskq logs with logrus
+	taskq.SetLogger(stdlibLog.New(log.StandardLogger().Writer(), "taskq", 0))
 
 	// Initialize config
 	cfg := schemas.Config{}

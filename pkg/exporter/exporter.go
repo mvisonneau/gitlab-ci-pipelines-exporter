@@ -66,6 +66,12 @@ func ConfigureRedisClient(c *redis.Client) error {
 func configurePullingQueue() {
 	pullingQueueOptions := &taskq.QueueOptions{
 		Name: "pull",
+		// Disable system resources checks
+		MinSystemResources: taskq.SystemResources{
+			Load1PerCPU:          -1,
+			MemoryFreeMB:         -1,
+			MemoryFreePercentage: -1,
+		},
 	}
 
 	if redisClient != nil {
