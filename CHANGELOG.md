@@ -12,6 +12,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Disabled taskq consumers system resources checks which may leave the exporter in a hanging state
 - Embeded taskq logs into logrus
 - Fixed a bug preventing the redis URL to be read from the config
+- Bumped goreleaser to v0.144.1
 
 ## [0.4.0] - 2020-10-09
 
