@@ -7,6 +7,12 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- **Garbage collector for projects, refs and metrics**
+
+By default, on regular basis, the exporter will now attempt to remove unconfigured/wanted projects, refs and associated metrics
+
 ### Changed
 
 - Disabled taskq consumers system resources checks which may leave the exporter in a hanging state

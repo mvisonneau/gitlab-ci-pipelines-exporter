@@ -51,8 +51,12 @@ func (l *Local) ProjectExists(k schemas.ProjectKey) (bool, error) {
 }
 
 // Projects ..
-func (l *Local) Projects() (schemas.Projects, error) {
-	return l.projects, nil
+func (l *Local) Projects() (projects schemas.Projects, err error) {
+	projects = make(schemas.Projects)
+	for k, v := range l.projects {
+		projects[k] = v
+	}
+	return
 }
 
 // ProjectsCount ..
@@ -97,8 +101,12 @@ func (l *Local) ProjectRefExists(k schemas.ProjectRefKey) (bool, error) {
 }
 
 // ProjectsRefs ..
-func (l *Local) ProjectsRefs() (schemas.ProjectsRefs, error) {
-	return l.projectsRefs, nil
+func (l *Local) ProjectsRefs() (projectsRefs schemas.ProjectsRefs, err error) {
+	projectsRefs = make(schemas.ProjectsRefs)
+	for k, v := range l.projectsRefs {
+		projectsRefs[k] = v
+	}
+	return
 }
 
 // ProjectsRefsCount ..
@@ -143,8 +151,12 @@ func (l *Local) MetricExists(k schemas.MetricKey) (bool, error) {
 }
 
 // Metrics ..
-func (l *Local) Metrics() (schemas.Metrics, error) {
-	return l.metrics, nil
+func (l *Local) Metrics() (metrics schemas.Metrics, err error) {
+	metrics = make(schemas.Metrics)
+	for k, v := range l.metrics {
+		metrics[k] = v
+	}
+	return
 }
 
 // MetricsCount ..

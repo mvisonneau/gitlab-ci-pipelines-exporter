@@ -9,11 +9,11 @@ import (
 
 func TestProjectRefKey(t *testing.T) {
 	pr := ProjectRef{
-		ID:  1,
-		Ref: "bar",
+		PathWithNamespace: "foo/bar",
+		Ref:               "baz",
 	}
 
-	assert.Equal(t, ProjectRefKey("3765245280"), pr.Key())
+	assert.Equal(t, ProjectRefKey("732621927"), pr.Key())
 }
 
 func TestProjectRefsCount(t *testing.T) {

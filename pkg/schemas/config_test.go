@@ -72,6 +72,21 @@ pull:
     on_init: false
     scheduled: false
     interval_seconds: 3
+
+garbage_collect:
+  projects:
+    on_init: true
+    scheduled: false
+    interval_seconds: 1
+  refs:
+    on_init: true
+    scheduled: false
+    interval_seconds: 2
+  metrics:
+    on_init: true
+    scheduled: false
+    interval_seconds: 3
+
 project_defaults:
   output_sparse_status_metrics: false
   pull:
@@ -141,18 +156,35 @@ wildcards:
 		},
 		Pull: PullConfig{
 			MaximumGitLabAPIRequestsPerSecond: 1,
-			ProjectsFromWildcards: PullConfigProjectsFromWildcards{
+			ProjectsFromWildcards: SchedulerConfig{
 				OnInit:          false,
 				Scheduled:       false,
 				IntervalSeconds: 1,
 			},
-			ProjectRefsFromProjects: PullConfigProjectRefsFromProjects{
+			ProjectRefsFromProjects: SchedulerConfig{
 				OnInit:          false,
 				Scheduled:       false,
 				IntervalSeconds: 2,
 			},
-			ProjectRefsMetrics: PullConfigProjectRefsMetrics{
+			ProjectRefsMetrics: SchedulerConfig{
 				OnInit:          false,
+				Scheduled:       false,
+				IntervalSeconds: 3,
+			},
+		},
+		GarbageCollect: GarbageCollectConfig{
+			Projects: SchedulerConfig{
+				OnInit:          true,
+				Scheduled:       false,
+				IntervalSeconds: 1,
+			},
+			ProjectsRefs: SchedulerConfig{
+				OnInit:          true,
+				Scheduled:       false,
+				IntervalSeconds: 2,
+			},
+			ProjectsRefsMetrics: SchedulerConfig{
+				OnInit:          true,
 				Scheduled:       false,
 				IntervalSeconds: 3,
 			},

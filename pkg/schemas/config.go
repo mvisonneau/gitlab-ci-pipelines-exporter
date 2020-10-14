@@ -10,25 +10,34 @@ import (
 
 // Default values
 const (
-	defaultServerConfigEnablePprof                          = false
-	defaultServerConfigListenAddress                        = ":8080"
-	defaultServerConfigMetricsEnabled                       = true
-	defaultServerConfigMetricsEnableOpenmetricsEncoding     = false
-	defaultServerConfigWebhookEnabled                       = false
-	defaultGitlabConfigURL                                  = "https://gitlab.com"
-	defaultGitlabConfigHealthURL                            = "https://gitlab.com/explore"
-	defaultGitlabConfigEnableHealthCheck                    = true
-	defaultGitlabConfigEnableTLSVerify                      = true
-	defaultPullConfigMaximumGitLabAPIRequestsPerSecond      = 10
-	defaultPullConfigProjectsFromWildcardsOnInit            = true
-	defaultPullConfigProjectsFromWildcardsScheduled         = true
-	defaultPullConfigProjectsFromWildcardsIntervalSeconds   = 1800
-	defaultPullConfigProjectRefsFromProjectsOnInit          = true
-	defaultPullConfigProjectRefsFromProjectsScheduled       = true
-	defaultPullConfigProjectRefsFromProjectsIntervalSeconds = 300
-	defaultPullConfigProjectRefsMetricsOnInit               = true
-	defaultPullConfigProjectRefsMetricsScheduled            = true
-	defaultPullConfigProjectRefsMetricsIntervalSeconds      = 30
+	defaultServerConfigEnablePprof                                = false
+	defaultServerConfigListenAddress                              = ":8080"
+	defaultServerConfigMetricsEnabled                             = true
+	defaultServerConfigMetricsEnableOpenmetricsEncoding           = false
+	defaultServerConfigWebhookEnabled                             = false
+	defaultGitlabConfigURL                                        = "https://gitlab.com"
+	defaultGitlabConfigHealthURL                                  = "https://gitlab.com/explore"
+	defaultGitlabConfigEnableHealthCheck                          = true
+	defaultGitlabConfigEnableTLSVerify                            = true
+	defaultPullConfigMaximumGitLabAPIRequestsPerSecond            = 10
+	defaultPullConfigProjectsFromWildcardsOnInit                  = true
+	defaultPullConfigProjectsFromWildcardsScheduled               = true
+	defaultPullConfigProjectsFromWildcardsIntervalSeconds         = 1800
+	defaultPullConfigProjectRefsFromProjectsOnInit                = true
+	defaultPullConfigProjectRefsFromProjectsScheduled             = true
+	defaultPullConfigProjectRefsFromProjectsIntervalSeconds       = 300
+	defaultPullConfigProjectRefsMetricsOnInit                     = true
+	defaultPullConfigProjectRefsMetricsScheduled                  = true
+	defaultPullConfigProjectRefsMetricsIntervalSeconds            = 30
+	defaultGarbageCollectConfigProjectsOnInit                     = false
+	defaultGarbageCollectConfigProjectsScheduled                  = true
+	defaultGarbageCollectConfigProjectsIntervalSeconds            = 14400
+	defaultGarbageCollectConfigProjectsRefsOnInit                 = false
+	defaultGarbageCollectConfigProjectsRefsScheduled              = true
+	defaultGarbageCollectConfigProjectsRefsIntervalSeconds        = 1800
+	defaultGarbageCollectConfigProjectsRefsMetricsOnInit          = false
+	defaultGarbageCollectConfigProjectsRefsMetricsScheduled       = true
+	defaultGarbageCollectConfigProjectsRefsMetricsIntervalSeconds = 300
 )
 
 // Config represents what can be defined as a yaml config file
@@ -44,6 +53,9 @@ type Config struct {
 
 	// Pull configuration
 	Pull PullConfig `yaml:"pull"`
+
+	// GarbageCollect configuration
+	GarbageCollect GarbageCollectConfig `yaml:"garbage_collect"`
 
 	// Default parameters which can be overridden at either the Project or Wildcard level
 	ProjectDefaults ProjectParameters `yaml:"project_defaults"`
@@ -110,36 +122,39 @@ type RedisConfig struct {
 	URL string `yaml:"url"`
 }
 
+// SchedulerConfig ..
+type SchedulerConfig struct {
+	OnInit          bool `yaml:"on_init"`
+	Scheduled       bool `yaml:"scheduled"`
+	IntervalSeconds int  `yaml:"interval_seconds"`
+}
+
 // PullConfig ..
 type PullConfig struct {
 	// Maximum amount of requests per seconds to make against the GitLab API (default: 10)
 	MaximumGitLabAPIRequestsPerSecond int `yaml:"maximum_gitlab_api_requests_per_second"`
 
 	// ProjectsFromWildcards configuration
-	ProjectsFromWildcards PullConfigProjectsFromWildcards `yaml:"projects_from_wildcards"`
+	ProjectsFromWildcards SchedulerConfig `yaml:"projects_from_wildcards"`
 
 	// ProjectRefsFromProjects configuration
-	ProjectRefsFromProjects PullConfigProjectRefsFromProjects `yaml:"refs_from_projects"`
+	ProjectRefsFromProjects SchedulerConfig `yaml:"refs_from_projects"`
 
 	// PullMetrics configuration
-	ProjectRefsMetrics PullConfigProjectRefsMetrics `yaml:"metrics"`
+	ProjectRefsMetrics SchedulerConfig `yaml:"metrics"`
 }
 
-// PullConfigParameters ..
-type PullConfigParameters struct {
-	OnInit          bool `yaml:"on_init"`
-	Scheduled       bool `yaml:"scheduled"`
-	IntervalSeconds int  `yaml:"interval_seconds"`
+// GarbageCollectConfig ..
+type GarbageCollectConfig struct {
+	// Projects configuration
+	Projects SchedulerConfig `yaml:"projects"`
+
+	// ProjectsRefs configuration
+	ProjectsRefs SchedulerConfig `yaml:"refs"`
+
+	// ProjectsRefsMetrics configuration
+	ProjectsRefsMetrics SchedulerConfig `yaml:"metrics"`
 }
-
-// PullConfigProjectsFromWildcards ..
-type PullConfigProjectsFromWildcards PullConfigParameters
-
-// PullConfigProjectRefsFromProjects ..
-type PullConfigProjectRefsFromProjects PullConfigParameters
-
-// PullConfigProjectRefsMetrics ..
-type PullConfigProjectRefsMetrics PullConfigParameters
 
 // NewConfig returns a Config with default parameters values
 func NewConfig() Config {
@@ -163,20 +178,37 @@ func NewConfig() Config {
 		},
 		Pull: PullConfig{
 			MaximumGitLabAPIRequestsPerSecond: defaultPullConfigMaximumGitLabAPIRequestsPerSecond,
-			ProjectsFromWildcards: PullConfigProjectsFromWildcards{
+			ProjectsFromWildcards: SchedulerConfig{
 				OnInit:          defaultPullConfigProjectsFromWildcardsOnInit,
 				Scheduled:       defaultPullConfigProjectsFromWildcardsScheduled,
 				IntervalSeconds: defaultPullConfigProjectsFromWildcardsIntervalSeconds,
 			},
-			ProjectRefsFromProjects: PullConfigProjectRefsFromProjects{
+			ProjectRefsFromProjects: SchedulerConfig{
 				OnInit:          defaultPullConfigProjectRefsFromProjectsOnInit,
 				Scheduled:       defaultPullConfigProjectRefsFromProjectsScheduled,
 				IntervalSeconds: defaultPullConfigProjectRefsFromProjectsIntervalSeconds,
 			},
-			ProjectRefsMetrics: PullConfigProjectRefsMetrics{
+			ProjectRefsMetrics: SchedulerConfig{
 				OnInit:          defaultPullConfigProjectRefsMetricsOnInit,
 				Scheduled:       defaultPullConfigProjectRefsMetricsScheduled,
 				IntervalSeconds: defaultPullConfigProjectRefsMetricsIntervalSeconds,
+			},
+		},
+		GarbageCollect: GarbageCollectConfig{
+			Projects: SchedulerConfig{
+				OnInit:          defaultGarbageCollectConfigProjectsOnInit,
+				Scheduled:       defaultGarbageCollectConfigProjectsScheduled,
+				IntervalSeconds: defaultGarbageCollectConfigProjectsIntervalSeconds,
+			},
+			ProjectsRefs: SchedulerConfig{
+				OnInit:          defaultGarbageCollectConfigProjectsRefsOnInit,
+				Scheduled:       defaultGarbageCollectConfigProjectsRefsScheduled,
+				IntervalSeconds: defaultGarbageCollectConfigProjectsRefsIntervalSeconds,
+			},
+			ProjectsRefsMetrics: SchedulerConfig{
+				OnInit:          defaultGarbageCollectConfigProjectsRefsMetricsOnInit,
+				Scheduled:       defaultGarbageCollectConfigProjectsRefsMetricsScheduled,
+				IntervalSeconds: defaultGarbageCollectConfigProjectsRefsMetricsIntervalSeconds,
 			},
 		},
 	}

@@ -115,10 +115,10 @@ func TestPullPipelineVariablesEnabled(t *testing.T) {
 
 	cfg.ProjectDefaults.Pull.Pipeline.Variables.EnabledValue = pointy.Bool(!defaultProjectPullPipelineVariablesEnabled)
 	UpdateProjectDefaults(cfg.ProjectDefaults)
-	assert.Equal(t, defaultProjectPullPipelineJobsEnabled, project.Pull.Pipeline.Variables.Enabled())
+	assert.Equal(t, defaultProjectPullPipelineVariablesEnabled, project.Pull.Pipeline.Variables.Enabled())
 
-	project.Pull.Pipeline.Jobs.EnabledValue = pointy.Bool(defaultProjectPullPipelineJobsEnabled)
-	assert.Equal(t, defaultProjectPullPipelineJobsEnabled, project.Pull.Pipeline.Variables.Enabled())
+	project.Pull.Pipeline.Variables.EnabledValue = pointy.Bool(defaultProjectPullPipelineVariablesEnabled)
+	assert.Equal(t, defaultProjectPullPipelineVariablesEnabled, project.Pull.Pipeline.Variables.Enabled())
 }
 
 func TestPullPipelineVariablesRegexp(t *testing.T) {

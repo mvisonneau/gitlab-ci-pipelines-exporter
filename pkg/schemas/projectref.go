@@ -42,7 +42,7 @@ type ProjectRefKey string
 
 // Key ..
 func (pr ProjectRef) Key() ProjectRefKey {
-	return ProjectRefKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(strconv.Itoa(pr.ID) + pr.Ref)))))
+	return ProjectRefKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(pr.PathWithNamespace + pr.Ref)))))
 }
 
 // ProjectsRefs allows us to keep track of all the ProjectRef

@@ -115,6 +115,46 @@ pull:
     # discovered project refs (optional, default: 30)
     interval_seconds: 30
 
+garbage_collect:
+  projects:
+    # Whether or not to trigger a garbage collection of the
+    # projects when the exporter starts (optional, default: false)
+    on_init: false
+
+    # Whether or not to attempt garbage collecting the projects
+    # on a regular basis (optional, default: true)
+    scheduled: true
+
+    # Interval in seconds to garbage collect projects
+    # (optional, default: 14400)
+    interval_seconds: 14400
+
+  refs:
+    # Whether or not to trigger a garbage collection of the
+    # projects refs when the exporter starts (optional, default: false)
+    on_init: false
+
+    # Whether or not to attempt garbage collecting the projects refs
+    # on a regular basis (optional, default: true)
+    scheduled: true
+
+    # Interval in seconds to garbage collect projects refs
+    # from projects branches and tags (optional, default: 1800)
+    interval_seconds: 1800
+
+  metrics:
+    # Whether or not to trigger a garbage collection of the
+    # metrics when the exporter starts (optional, default: false)
+    on_init: false
+
+    # Whether or not to attempt garbage collecting the metrics
+    # on a regular basis (optional, default: true)
+    scheduled: true
+
+    # Interval in seconds to garbage collect metrics
+    # (optional, default: 300)
+    interval_seconds: 300
+
 # Default settings which can be overridden at the project
 # or wildcard level (optional)
 project_defaults:

@@ -47,7 +47,7 @@ func TestListUserProjects(t *testing.T) {
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
+			fmt.Fprint(w, `[{"id":1,"jobs_enabled":true},{"id":2,"jobs_enabled":true}]`)
 		})
 
 	projects, err := c.ListProjects(w)
@@ -76,7 +76,7 @@ func TestListGroupProjects(t *testing.T) {
 	mux.HandleFunc(fmt.Sprintf("/api/v4/groups/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
+			fmt.Fprint(w, `[{"id":1,"jobs_enabled":true},{"id":2,"jobs_enabled":true}]`)
 		})
 
 	projects, err := c.ListProjects(w)
@@ -105,7 +105,7 @@ func TestListProjects(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
+			fmt.Fprint(w, `[{"id":1,"jobs_enabled":true},{"id":2,"jobs_enabled":true}]`)
 		})
 
 	projects, err := c.ListProjects(w)

@@ -35,29 +35,41 @@ var (
 			return pullProjectRefMetrics(pr)
 		},
 	})
+	garbageCollectProjectsTask = taskq.RegisterTask(&taskq.TaskOptions{
+		Name: "garbageCollectProjectsTask",
+		Handler: func() error {
+			return garbageCollectProjects()
+		},
+	})
+
+	garbageCollectProjectsRefsTask = taskq.RegisterTask(&taskq.TaskOptions{
+		Name: "garbageCollectProjectsRefsTask",
+		Handler: func() error {
+			return garbageCollectProjectsRefs()
+		},
+	})
+	garbageCollectProjectsRefsMetricsTask = taskq.RegisterTask(&taskq.TaskOptions{
+		Name: "garbageCollectProjectsRefsMetricsTask",
+		Handler: func() error {
+			return garbageCollectProjectsRefsMetrics()
+		},
+	})
 )
 
 // Schedule ..
 func schedule(ctx context.Context) {
+	// Check if some tasks are configured to be run on start
+	schedulerInit(ctx)
+
 	go func(ctx context.Context) {
 		pullProjectsFromWildcardsTicker := time.NewTicker(time.Duration(config.Pull.ProjectsFromWildcards.IntervalSeconds) * time.Second)
 		pullProjectRefsFromProjectsTicker := time.NewTicker(time.Duration(config.Pull.ProjectRefsFromProjects.IntervalSeconds) * time.Second)
 		pullProjectRefsMetricsTicker := time.NewTicker(time.Duration(config.Pull.ProjectRefsMetrics.IntervalSeconds) * time.Second)
+		garbageCollectProjectsTicker := time.NewTicker(time.Duration(config.GarbageCollect.Projects.IntervalSeconds) * time.Second)
+		garbageCollectProjectsRefsTicker := time.NewTicker(time.Duration(config.GarbageCollect.ProjectsRefs.IntervalSeconds) * time.Second)
+		garbageCollectProjectsRefsMetricsTicker := time.NewTicker(time.Duration(config.GarbageCollect.ProjectsRefsMetrics.IntervalSeconds) * time.Second)
 
-		// init
-		if config.Pull.ProjectsFromWildcards.OnInit {
-			schedulePullProjectsFromWildcards(ctx)
-		}
-
-		if config.Pull.ProjectRefsFromProjects.OnInit {
-			schedulePullProjectRefsFromProjects(ctx)
-		}
-
-		if config.Pull.ProjectRefsMetrics.OnInit {
-			schedulePullProjectRefsMetrics(ctx)
-		}
-
-		// Scheduler configuration
+		// Ticker configuration
 		if !config.Pull.ProjectsFromWildcards.Scheduled {
 			pullProjectsFromWildcardsTicker.Stop()
 		}
@@ -68,6 +80,18 @@ func schedule(ctx context.Context) {
 
 		if !config.Pull.ProjectRefsMetrics.Scheduled {
 			pullProjectRefsMetricsTicker.Stop()
+		}
+
+		if !config.GarbageCollect.Projects.Scheduled {
+			garbageCollectProjectsTicker.Stop()
+		}
+
+		if !config.GarbageCollect.ProjectsRefs.Scheduled {
+			garbageCollectProjectsRefsTicker.Stop()
+		}
+
+		if !config.GarbageCollect.ProjectsRefsMetrics.Scheduled {
+			garbageCollectProjectsRefsMetricsTicker.Stop()
 		}
 
 		// Waiting for the tickers to kick in
@@ -82,9 +106,41 @@ func schedule(ctx context.Context) {
 				schedulePullProjectRefsFromProjects(ctx)
 			case <-pullProjectRefsMetricsTicker.C:
 				schedulePullProjectRefsMetrics(ctx)
+			case <-garbageCollectProjectsTicker.C:
+				schedulePullProjectRefsMetrics(ctx)
+			case <-garbageCollectProjectsRefsTicker.C:
+				scheduleGarbageCollectProjectsRefs(ctx)
+			case <-garbageCollectProjectsRefsMetricsTicker.C:
+				scheduleGarbageCollectProjectsRefsMetrics(ctx)
 			}
 		}
 	}(ctx)
+}
+
+func schedulerInit(ctx context.Context) {
+	if config.Pull.ProjectsFromWildcards.OnInit {
+		schedulePullProjectsFromWildcards(ctx)
+	}
+
+	if config.Pull.ProjectRefsFromProjects.OnInit {
+		schedulePullProjectRefsFromProjects(ctx)
+	}
+
+	if config.Pull.ProjectRefsMetrics.OnInit {
+		schedulePullProjectRefsMetrics(ctx)
+	}
+
+	if config.GarbageCollect.Projects.OnInit {
+		scheduleGarbageCollectProjects(ctx)
+	}
+
+	if config.GarbageCollect.ProjectsRefs.OnInit {
+		scheduleGarbageCollectProjectsRefs(ctx)
+	}
+
+	if config.GarbageCollect.ProjectsRefsMetrics.OnInit {
+		scheduleGarbageCollectProjectsRefsMetrics(ctx)
+	}
 }
 
 func schedulePullProjectsFromWildcards(ctx context.Context) {
@@ -177,5 +233,29 @@ func schedulePullProjectRefMetrics(ctx context.Context, pr schemas.ProjectRef) {
 			"project-name": pr.Name,
 			"error":        err.Error(),
 		}).Error("scheduling 'project ref most recent pipeline metrics' pull")
+	}
+}
+
+func scheduleGarbageCollectProjects(ctx context.Context) {
+	if err := pullingQueue.Add(garbageCollectProjectsTask.WithArgs(ctx)); err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("scheduling 'projects garbage collection' task")
+	}
+}
+
+func scheduleGarbageCollectProjectsRefs(ctx context.Context) {
+	if err := pullingQueue.Add(garbageCollectProjectsRefsTask.WithArgs(ctx)); err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("scheduling 'projects refs garbage collection' task")
+	}
+}
+
+func scheduleGarbageCollectProjectsRefsMetrics(ctx context.Context) {
+	if err := pullingQueue.Add(garbageCollectProjectsRefsMetricsTask.WithArgs(ctx)); err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("scheduling 'metrics garbage collection' task")
 	}
 }

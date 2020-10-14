@@ -45,7 +45,7 @@ func TestRedisTakeError(t *testing.T) {
 	if os.Getenv("SHOULD_ERROR") == "1" {
 		l := NewRedisLimiter(
 			context.Background(),
-			redis.NewClient(&redis.Options{}),
+			redis.NewClient(&redis.Options{Addr: "doesnotexist"}),
 			1,
 		)
 		Take(l)
