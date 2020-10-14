@@ -24,7 +24,7 @@ func (c *Client) ListProjectRefPipelineJobs(pr schemas.ProjectRef) (jobs []goGit
 	options := &goGitlab.ListJobsOptions{
 		ListOptions: goGitlab.ListOptions{
 			Page:    1,
-			PerPage: 20,
+			PerPage: 100,
 		},
 	}
 
@@ -80,7 +80,7 @@ func (c *Client) ListProjectRefMostRecentJobs(pr schemas.ProjectRef) (jobs []goG
 	options := &goGitlab.ListJobsOptions{
 		ListOptions: goGitlab.ListOptions{
 			Page:    1,
-			PerPage: 20,
+			PerPage: 100,
 		},
 	}
 

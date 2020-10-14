@@ -18,7 +18,7 @@ func TestGetProjectTags(t *testing.T) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
 				"page":     []string{"1"},
-				"per_page": []string{"20"},
+				"per_page": []string{"100"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
 			fmt.Fprint(w, `[{"name":"foo"},{"name":"bar"}]`)

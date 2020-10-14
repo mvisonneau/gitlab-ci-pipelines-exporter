@@ -44,7 +44,7 @@ func TestGetProjectPipelines(t *testing.T) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
 				"page":     []string{"1"},
-				"per_page": []string{"20"},
+				"per_page": []string{"100"},
 				"ref":      []string{"foo"},
 				"scope":    []string{"bar"},
 			}
@@ -70,7 +70,7 @@ func TestGetProjectMergeRequestsPipelines(t *testing.T) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
 				"page":     []string{"1"},
-				"per_page": []string{"20"},
+				"per_page": []string{"100"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
 			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"},{"id":2,"ref":"refs/merge-requests/bar"},{"id":3,"ref":"yolo"}]`)

@@ -37,7 +37,7 @@ func (c *Client) GetProjectPipelines(projectID int, options *goGitlab.ListProjec
 	}
 
 	if options.PerPage == 0 {
-		options.PerPage = 20
+		options.PerPage = 100
 	}
 
 	if options.Ref != nil {
@@ -65,7 +65,7 @@ func (c *Client) GetProjectMergeRequestsPipelines(projectID int, fetchLimit int)
 	options := &goGitlab.ListProjectPipelinesOptions{
 		ListOptions: goGitlab.ListOptions{
 			Page:    1,
-			PerPage: 20,
+			PerPage: 100,
 		},
 	}
 

@@ -29,7 +29,7 @@ func TestListProjectRefPipelineJobs(t *testing.T) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
 				"page":     []string{"1"},
-				"per_page": []string{"20"},
+				"per_page": []string{"100"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
@@ -62,7 +62,7 @@ func TestListProjectRefMostRecentJobs(t *testing.T) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
 				"page":     []string{"1"},
-				"per_page": []string{"20"},
+				"per_page": []string{"100"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
 			fmt.Fprint(w, `[{"id":3,"name":"foo","ref":"yay"},{"id":4,"name":"bar","ref":"yay"}]`)

@@ -13,7 +13,7 @@ func (c *Client) GetProjectTags(projectID int, refsRegexp string) ([]string, err
 	options := &goGitlab.ListTagsOptions{
 		ListOptions: goGitlab.ListOptions{
 			Page:    1,
-			PerPage: 20,
+			PerPage: 100,
 		},
 	}
 

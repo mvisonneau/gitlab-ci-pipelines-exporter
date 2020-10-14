@@ -13,7 +13,7 @@ func (c *Client) GetProjectBranches(projectID int, refsRegexp string) ([]string,
 	options := &goGitlab.ListBranchesOptions{
 		ListOptions: goGitlab.ListOptions{
 			Page:    1,
-			PerPage: 20,
+			PerPage: 100,
 		},
 	}
 

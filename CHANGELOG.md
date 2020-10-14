@@ -23,6 +23,7 @@ By default, on regular basis, the exporter will now attempt to remove unconfigur
 - Changed the way we handle project ref pipelines not being found, log in debug factory instead of erroring in a crashloop
 - Bumped goreleaser to v0.144.1
 - Improved logging
+- Increased amount of items fetched per API call to 100 (maximum value)
 
 ## [0.4.0] - 2020-10-09
 

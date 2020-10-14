@@ -33,7 +33,7 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 
 	var projects []schemas.Project
 	listOptions := gitlab.ListOptions{
-		PerPage: 20,
+		PerPage: 100,
 		Page:    1,
 	}
 
