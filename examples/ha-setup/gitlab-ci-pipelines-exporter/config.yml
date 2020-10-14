@@ -2,6 +2,9 @@ gitlab:
   url: https://gitlab.com
   token: <your_token>
 
+redis:
+  url: redis://redis:6379
+
 # Example public projects to monitor
 projects:
   - name: gitlab-org/gitlab-runner
