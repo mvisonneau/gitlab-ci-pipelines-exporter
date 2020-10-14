@@ -120,8 +120,10 @@ func UpdateProjectDefaults(d ProjectParameters) {
 
 // Project holds information about a GitLab project
 type Project struct {
+	// ProjectParameters holds parameters specific to this project
 	ProjectParameters `yaml:",inline"`
 
+	// Name is actually what is commonly referred as path_with_namespace on GitLab
 	Name string `yaml:"name"`
 }
 
