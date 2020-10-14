@@ -65,7 +65,9 @@ func ConfigureRedisClient(c *redis.Client) error {
 // ConfigurePullingQueue ..
 func configurePullingQueue() {
 	pullingQueueOptions := &taskq.QueueOptions{
-		Name: "pull",
+		Name:                 "pull",
+		PauseErrorsThreshold: 0,
+
 		// Disable system resources checks
 		MinSystemResources: taskq.SystemResources{
 			Load1PerCPU:          -1,

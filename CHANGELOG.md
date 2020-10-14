@@ -12,6 +12,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Disabled taskq consumers system resources checks which may leave the exporter in a hanging state
 - Fixed a bug preventing the redis URL to be read from the config
 - Embeded taskq logs into logrus
+- Prevent taskq consumer from being paused on errors
 - Changed the way we handle project ref pipelines not being found, log in debug factory instead of erroring in a crashloop
 - Bumped goreleaser to v0.144.1
 
