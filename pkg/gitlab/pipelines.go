@@ -111,9 +111,9 @@ func (c *Client) GetProjectRefPipelineVariablesAsConcatenatedString(pr schemas.P
 
 	log.WithFields(
 		log.Fields{
-			"project-path-with-namespace": pr.PathWithNamespace,
-			"project-id":                  pr.ID,
-			"pipeline-id":                 pr.MostRecentPipeline.ID,
+			"project-name": pr.PathWithNamespace,
+			"project-id":   pr.ID,
+			"pipeline-id":  pr.MostRecentPipeline.ID,
 		},
 	).Debug("fetching pipeline variables")
 
@@ -177,10 +177,10 @@ func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Pro
 				if _, ok := projectRefs[pipeline.Ref]; !ok {
 					log.WithFields(
 						log.Fields{
-							"project-id":                  gp.ID,
-							"project-path-with-namespace": gp.PathWithNamespace,
-							"project-ref":                 pipeline.Ref,
-							"project-ref-kind":            kind,
+							"project-id":       gp.ID,
+							"project-name":     gp.PathWithNamespace,
+							"project-ref":      pipeline.Ref,
+							"project-ref-kind": kind,
 						},
 					).Info("found project ref")
 					projectRefs[pipeline.Ref] = schemas.NewProjectRef(p, gp, pipeline.Ref, kind)

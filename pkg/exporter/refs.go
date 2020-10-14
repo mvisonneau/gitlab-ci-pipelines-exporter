@@ -73,10 +73,10 @@ func pullProjectRefsFromProject(p schemas.Project) error {
 
 		if !projectRefExists {
 			log.WithFields(log.Fields{
-				"project-id":                  gp.ID,
-				"project-path-with-namespace": gp.PathWithNamespace,
-				"project-ref":                 ref,
-				"project-ref-kind":            kind,
+				"project-id":       gp.ID,
+				"project-name":     gp.PathWithNamespace,
+				"project-ref":      ref,
+				"project-ref-kind": kind,
 			}).Info("discovered new project ref")
 
 			if err = store.SetProjectRef(pr); err != nil {
@@ -114,10 +114,10 @@ func pullProjectRefsFromPipelines(p schemas.Project) error {
 
 		if !projectRefExists {
 			log.WithFields(log.Fields{
-				"project-id":                  gp.ID,
-				"project-path-with-namespace": gp.PathWithNamespace,
-				"project-ref":                 pr.Ref,
-				"project-ref-kind":            pr.Kind,
+				"project-id":       gp.ID,
+				"project-name":     gp.PathWithNamespace,
+				"project-ref":      pr.Ref,
+				"project-ref-kind": pr.Kind,
 			}).Info("discovered new project ref from pipelines")
 
 			if err = store.SetProjectRef(pr); err != nil {

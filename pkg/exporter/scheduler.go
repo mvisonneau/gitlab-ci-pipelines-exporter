@@ -17,22 +17,44 @@ var (
 			return pullProjectsFromWildcard(w)
 		},
 	})
-	pullProjectRefsFromPipelinesTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "getProjectRefsFromPipelinesTask",
-		Handler: func(p schemas.Project) error {
-			return pullProjectRefsFromPipelines(p)
-		},
-	})
 	pullProjectRefsFromProjectTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "pullProjectRefsFromProjectTask",
-		Handler: func(p schemas.Project) error {
-			return pullProjectRefsFromProject(p)
+		Handler: func(p schemas.Project) (err error) {
+			// On errors, we do not want to retry these tasks
+			if err := pullProjectRefsFromProject(p); err != nil {
+				log.WithFields(log.Fields{
+					"project-name": p.Name,
+					"error":        err.Error(),
+				}).Warn("pulling projects refs from project")
+			}
+			return
+		},
+	})
+	pullProjectRefsFromPipelinesTask = taskq.RegisterTask(&taskq.TaskOptions{
+		Name: "getProjectRefsFromPipelinesTask",
+		Handler: func(p schemas.Project) (err error) {
+			// On errors, we do not want to retry these tasks
+			if err := pullProjectRefsFromPipelines(p); err != nil {
+				log.WithFields(log.Fields{
+					"project-name": p.Name,
+					"error":        err.Error(),
+				}).Warn("pulling projects refs from pipelines")
+			}
+			return
 		},
 	})
 	pullProjectRefMetricsTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "pullProjectRefMetricsTask",
-		Handler: func(pr schemas.ProjectRef) error {
-			return pullProjectRefMetrics(pr)
+		Handler: func(pr schemas.ProjectRef) (err error) {
+			// On errors, we do not want to retry these tasks
+			if err := pullProjectRefMetrics(pr); err != nil {
+				log.WithFields(log.Fields{
+					"project-name": pr.PathWithNamespace,
+					"project-ref":  pr.Ref,
+					"error":        err.Error(),
+				}).Warn("pulling projects refs metrics")
+			}
+			return
 		},
 	})
 	garbageCollectProjectsTask = taskq.RegisterTask(&taskq.TaskOptions{

@@ -12,10 +12,10 @@ import (
 
 func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 	logFields := log.Fields{
-		"project-path-with-namespace": pr.PathWithNamespace,
-		"project-id":                  pr.ID,
-		"project-ref":                 pr.Ref,
-		"project-ref-kind":            pr.Kind,
+		"project-name":     pr.PathWithNamespace,
+		"project-id":       pr.ID,
+		"project-ref":      pr.Ref,
+		"project-ref-kind": pr.Kind,
 	}
 
 	// TODO: Figure out if we want to have a similar approach for ProjectRefKindTag with

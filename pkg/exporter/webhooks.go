@@ -51,8 +51,9 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 func triggerProjectRefMetricsPull(pr schemas.ProjectRef) {
 	logFields := log.Fields{
-		"project-id":  pr.ID,
-		"project-ref": pr.Ref,
+		"project-id":   pr.ID,
+		"project-name": pr.PathWithNamespace,
+		"project-ref":  pr.Ref,
 	}
 
 	exists, err := store.ProjectRefExists(pr.Key())
@@ -90,7 +91,8 @@ schedulePull:
 
 func processPipelineEvent(e goGitlab.PipelineEvent) {
 	triggerProjectRefMetricsPull(schemas.ProjectRef{
-		ID:  e.Project.ID,
-		Ref: e.ObjectAttributes.Ref,
+		ID:                e.Project.ID,
+		PathWithNamespace: e.Project.PathWithNamespace,
+		Ref:               e.ObjectAttributes.Ref,
 	})
 }
