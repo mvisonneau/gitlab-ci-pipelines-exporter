@@ -23,4 +23,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
 
-replace github.com/vmihailenco/taskq/v3 v3.1.1 => github.com/mvisonneau/taskq/v3 v3.1.2-0.20201013102056-088a60ace5df
+replace github.com/vmihailenco/taskq/v3 v3.1.1 => github.com/mvisonneau/taskq/v3 v3.1.2-0.20201014105413-e98ea9d96590

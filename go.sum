@@ -148,8 +148,8 @@ github.com/mvisonneau/go-helpers v0.0.0-20201013090209-a168084e879f h1:RraPqw2PB
 github.com/mvisonneau/go-helpers v0.0.0-20201013090209-a168084e879f/go.mod h1:N4t40A+JStVnKjazlJ/RUSYmzysn4HXvFXhoWFbAJeM=
 github.com/mvisonneau/go-helpers v0.0.0-20201013090751-e69b7251ab02 h1:4siAIBriC66m5SuVIXG5rEdhjzaXS6/alVCpO/uxDHA=
 github.com/mvisonneau/go-helpers v0.0.0-20201013090751-e69b7251ab02/go.mod h1:N4t40A+JStVnKjazlJ/RUSYmzysn4HXvFXhoWFbAJeM=
-github.com/mvisonneau/taskq/v3 v3.1.2-0.20201013102056-088a60ace5df h1:NL647Df95ICdUVCpVJsGE7s8eQ+wW8zbv1K+pyzpUYw=
-github.com/mvisonneau/taskq/v3 v3.1.2-0.20201013102056-088a60ace5df/go.mod h1:1HZpIbVEH3GtNiynYd9hEXzO1kfBVFSxAHJwKIqW2OI=
+github.com/mvisonneau/taskq/v3 v3.1.2-0.20201014105413-e98ea9d96590 h1:qHDwdqLIJI6q7CzcrKWHWVXl0bdzadi1ZKl1rQZyh98=
+github.com/mvisonneau/taskq/v3 v3.1.2-0.20201014105413-e98ea9d96590/go.mod h1:1HZpIbVEH3GtNiynYd9hEXzO1kfBVFSxAHJwKIqW2OI=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=

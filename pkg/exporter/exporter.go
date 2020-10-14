@@ -71,8 +71,8 @@ func configurePullingQueue() {
 		// Disable system resources checks
 		MinSystemResources: taskq.SystemResources{
 			Load1PerCPU:          -1,
-			MemoryFreeMB:         -1,
-			MemoryFreePercentage: -1,
+			MemoryFreeMB:         0,
+			MemoryFreePercentage: 0,
 		},
 	}
 
