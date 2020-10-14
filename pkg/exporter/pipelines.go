@@ -43,7 +43,8 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 	}
 
 	if len(pipelines) == 0 {
-		return fmt.Errorf("could not find any pipeline for project %s with ref %s", pr.PathWithNamespace, pr.Ref)
+		log.WithFields(logFields).Debug("could not find any pipeline for the project ref")
+		return nil
 	}
 
 	pipeline, err := gitlabClient.GetProjectRefPipeline(pr, pipelines[0].ID)
