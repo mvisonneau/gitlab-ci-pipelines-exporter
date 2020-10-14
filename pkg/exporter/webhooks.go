@@ -23,6 +23,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	log.WithFields(logFields).Debug("webhook request")
 
 	if r.Header.Get("X-Gitlab-Token") != config.Server.Webhook.SecretToken {
+		log.WithFields(logFields).Debug("invalid token provided for a webhook request")
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprint(w, "{\"error\": \"invalid token\"")
 		return
@@ -30,13 +31,13 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.WithFields(logFields).WithField("error", err.Error()).Warnf("unable to read body of a received webhook")
+		log.WithFields(logFields).WithField("error", err.Error()).Warn("unable to read body of a received webhook")
 		return
 	}
 
 	event, err := goGitlab.ParseHook(goGitlab.HookEventType(r), payload)
 	if err != nil {
-		log.WithFields(logFields).WithFields(logFields).WithField("error", err.Error()).Warnf("unable to parse body of a received webhook")
+		log.WithFields(logFields).WithFields(logFields).WithField("error", err.Error()).Warn("unable to parse body of a received webhook")
 		return
 	}
 
@@ -44,7 +45,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	case *gitlab.PipelineEvent:
 		processPipelineEvent(*event)
 	default:
-		log.WithFields(logFields).WithField("event-type", reflect.TypeOf(event).String()).Debug("received a non supported event type as a webhook")
+		log.WithFields(logFields).WithField("event-type", reflect.TypeOf(event).String()).Warn("received a non supported event type as a webhook")
 	}
 }
 
@@ -81,6 +82,7 @@ func triggerProjectRefMetricsPull(pr schemas.ProjectRef) {
 	}
 
 schedulePull:
+	log.WithFields(logFields).Info("received a pipeline webhook from GitLab for a project ref, triggering metrics pull")
 	// TODO: When all the metrics will be sent over the webhook, we might be able to avoid redoing a pull
 	// eg: 'coverage' is not in the pipeline payload yet, neither is 'artifacts' in the job one
 	go schedulePullProjectRefMetrics(context.Background(), pr)

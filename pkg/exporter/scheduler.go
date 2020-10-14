@@ -90,7 +90,7 @@ func schedule(ctx context.Context) {
 func schedulePullProjectsFromWildcards(ctx context.Context) {
 	log.WithFields(
 		log.Fields{
-			"total": len(config.Wildcards),
+			"wildcards-count": len(config.Wildcards),
 		},
 	).Info("scheduling projects from wildcards pull")
 
@@ -107,7 +107,7 @@ func schedulePullProjectRefsFromProjects(ctx context.Context) {
 
 	log.WithFields(
 		log.Fields{
-			"total": projectsCount,
+			"projects-count": projectsCount,
 		},
 	).Info("scheduling projects refs from projects pull")
 
@@ -129,7 +129,7 @@ func schedulePullProjectRefsMetrics(ctx context.Context) {
 
 	log.WithFields(
 		log.Fields{
-			"total": projectsRefsCount,
+			"project-refs-count": projectsRefsCount,
 		},
 	).Info("scheduling metrics pull")
 
