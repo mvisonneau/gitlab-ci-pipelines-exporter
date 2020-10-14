@@ -32,7 +32,6 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 	log.WithFields(logFields).Debug("listing all projects from wildcard")
 
 	var projects []schemas.Project
-	trueVal := true
 	listOptions := gitlab.ListOptions{
 		PerPage: 20,
 		Page:    1,
@@ -52,7 +51,6 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 					Archived:    &w.Archived,
 					ListOptions: listOptions,
 					Search:      &w.Search,
-					Simple:      &trueVal,
 				},
 			)
 		case "group":
@@ -63,7 +61,6 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 					IncludeSubgroups: &w.Owner.IncludeSubgroups,
 					ListOptions:      listOptions,
 					Search:           &w.Search,
-					Simple:           &trueVal,
 				},
 			)
 		default:
@@ -71,7 +68,6 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 				&gitlab.ListProjectsOptions{
 					ListOptions: listOptions,
 					Archived:    &w.Archived,
-					Simple:      &trueVal,
 					Search:      &w.Search,
 				},
 			)
