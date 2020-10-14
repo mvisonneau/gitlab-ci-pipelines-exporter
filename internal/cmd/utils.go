@@ -31,7 +31,7 @@ func configure(ctx *cli.Context) (err error) {
 	}
 
 	// This hack is to embed taskq logs with logrus
-	taskq.SetLogger(stdlibLog.New(log.StandardLogger().Writer(), "taskq", 0))
+	taskq.SetLogger(stdlibLog.New(log.StandardLogger().WriterLevel(log.WarnLevel), "taskq", 0))
 
 	// Initialize config
 	cfg := schemas.Config{}
@@ -58,7 +58,7 @@ func configure(ctx *cli.Context) (err error) {
 	}
 
 	if len(cfg.Redis.URL) > 0 {
-		log.Debug("redis url configured, initializing connection..")
+		log.Info("redis url configured, initializing connection..")
 		var opt *redis.Options
 		if opt, err = redis.ParseURL(cfg.Redis.URL); err != nil {
 			return errors.Wrap(err, "parsing redis-url")
