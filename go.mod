@@ -19,7 +19,9 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1
 	github.com/vmihailenco/taskq/v3 v3.1.1
 	github.com/xanzy/go-gitlab v0.38.1
+	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/ratelimit v0.1.0
+	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
 
