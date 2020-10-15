@@ -52,7 +52,6 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 		return err
 	}
 
-	defaultLabelValues := pr.DefaultLabelsValues()
 	if pr.MostRecentPipeline == nil || !reflect.DeepEqual(pipeline, pr.MostRecentPipeline) {
 		pr.MostRecentPipeline = pipeline
 
@@ -62,9 +61,6 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 			if err != nil {
 				return err
 			}
-		} else {
-			// Ensure we flush the value if there was some variables defined on the previous pipeline
-			pr.MostRecentPipelineVariables = ""
 		}
 
 		if pipeline.Status == "running" {
@@ -81,13 +77,13 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 			parsedCoverage, err := strconv.ParseFloat(pipeline.Coverage, 64)
 			if err != nil {
 				log.WithFields(logFields).WithField("error", err.Error()).Warnf("could not parse coverage string returned from GitLab API '%s' into Float64", pipeline.Coverage)
+			} else {
+				storeSetMetric(schemas.Metric{
+					Kind:   schemas.MetricKindCoverage,
+					Labels: pr.DefaultLabelsValues(),
+					Value:  parsedCoverage,
+				})
 			}
-
-			storeSetMetric(schemas.Metric{
-				Kind:   schemas.MetricKindCoverage,
-				Labels: pr.DefaultLabelsValues(),
-				Value:  parsedCoverage,
-			})
 		}
 
 		storeSetMetric(schemas.Metric{
@@ -98,7 +94,7 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 
 		emitStatusMetric(
 			schemas.MetricKindStatus,
-			defaultLabelValues,
+			pr.DefaultLabelsValues(),
 			statusesList[:],
 			pipeline.Status,
 			pr.OutputSparseStatusMetrics(),

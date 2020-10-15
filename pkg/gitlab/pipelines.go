@@ -21,7 +21,7 @@ func (c *Client) GetProjectRefPipeline(pr schemas.ProjectRef, pipelineID int) (p
 	c.rateLimit()
 	pipeline, _, err = c.Pipelines.GetPipeline(pr.ID, pipelineID)
 	if err != nil || pipeline == nil {
-		return nil, fmt.Errorf("could not read content of pipeline %s:%s", pr.PathWithNamespace, pr.Ref)
+		return nil, fmt.Errorf("could not read content of pipeline %s - %s | %s", pr.PathWithNamespace, pr.Ref, err.Error())
 	}
 	return
 }

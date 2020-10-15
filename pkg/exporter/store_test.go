@@ -5,9 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/storage"
 	"github.com/openlyinc/pointy"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -15,6 +13,8 @@ import (
 )
 
 func TestGarbageCollectProjects(t *testing.T) {
+	resetGlobalValues()
+
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
 
@@ -28,7 +28,6 @@ func TestGarbageCollectProjects(t *testing.T) {
 	p3 := schemas.Project{Name: "wc/p3"}
 	p4 := schemas.Project{Name: "wc/p4"}
 
-	store = storage.NewLocalStorage()
 	store.SetProject(p1)
 	store.SetProject(p2)
 	store.SetProject(p3)
@@ -58,6 +57,8 @@ func TestGarbageCollectProjects(t *testing.T) {
 }
 
 func TestGarbageCollectProjectsRefs(t *testing.T) {
+	resetGlobalValues()
+
 	pr1dev := schemas.ProjectRef{PathWithNamespace: "p1", Ref: "dev"}
 	pr1main := schemas.ProjectRef{PathWithNamespace: "p1", Ref: "main"}
 
@@ -75,7 +76,6 @@ func TestGarbageCollectProjectsRefs(t *testing.T) {
 	pr2dev := schemas.ProjectRef{Project: p2old, PathWithNamespace: "p2", Ref: "dev"}
 	pr2main := schemas.ProjectRef{Project: p2old, PathWithNamespace: "p2", Ref: "main"}
 
-	store = storage.NewLocalStorage()
 	store.SetProject(p2)
 	store.SetProjectRef(pr1dev)
 	store.SetProjectRef(pr1main)
@@ -94,6 +94,8 @@ func TestGarbageCollectProjectsRefs(t *testing.T) {
 }
 
 func TestGarbageCollectProjectsRefsMetrics(t *testing.T) {
+	resetGlobalValues()
+
 	pr1 := schemas.ProjectRef{
 		Project: schemas.Project{
 			ProjectParameters: schemas.ProjectParameters{
@@ -119,7 +121,6 @@ func TestGarbageCollectProjectsRefsMetrics(t *testing.T) {
 	pr3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo"}}
 	pr4m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"ref": "bar"}}
 
-	store = storage.NewLocalStorage()
 	store.SetProjectRef(pr1)
 	store.SetMetric(pr1m1)
 	store.SetMetric(pr1m2)
@@ -152,20 +153,10 @@ func TestMetricLogFields(t *testing.T) {
 	assert.Equal(t, expected, metricLogFields(m))
 }
 
-func TestStoreGetMetric(_ *testing.T) {
-	_ = ConfigureRedisClient(redis.NewClient(&redis.Options{}))
-	configureStore()
+func TestStoreGetSetDelMetric(_ *testing.T) {
+	resetGlobalValues()
+
 	storeGetMetric(&schemas.Metric{})
-}
-
-func TestStoreSetMetric(_ *testing.T) {
-	_ = ConfigureRedisClient(redis.NewClient(&redis.Options{}))
-	configureStore()
 	storeSetMetric(schemas.Metric{})
-}
-
-func TestStoreDelMetric(_ *testing.T) {
-	_ = ConfigureRedisClient(redis.NewClient(&redis.Options{}))
-	configureStore()
 	storeDelMetric(schemas.Metric{})
 }

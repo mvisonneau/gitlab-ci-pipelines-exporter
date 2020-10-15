@@ -40,6 +40,7 @@ func getProjectRefs(
 		for _, ref := range refs {
 			if _, ok := foundRefs[ref]; ok {
 				log.Warn("found duplicate ref for project")
+				continue
 			}
 			foundRefs[ref] = kind
 		}

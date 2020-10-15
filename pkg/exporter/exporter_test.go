@@ -16,7 +16,12 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func Init() {
+func resetGlobalValues() {
+	config = schemas.Config{}
+	gitlabClient = nil
+	redisClient = nil
+	taskFactory = nil
+	pullingQueue = nil
 	store = storage.NewLocalStorage()
 }
 
@@ -40,6 +45,8 @@ func configureMockedGitlabClient() (*http.ServeMux, *httptest.Server) {
 }
 
 func TestConfigure(t *testing.T) {
+	resetGlobalValues()
+
 	cfg := schemas.Config{
 		Gitlab: schemas.GitlabConfig{
 			URL: "http://foo.bar",
@@ -48,18 +55,22 @@ func TestConfigure(t *testing.T) {
 			MaximumGitLabAPIRequestsPerSecond: 1,
 		},
 	}
+
 	assert.NoError(t, Configure(cfg, ""))
 	assert.Equal(t, cfg, config)
 }
 
 func TestConfigureGitlabClient(t *testing.T) {
+	resetGlobalValues()
+
 	config.Pull.MaximumGitLabAPIRequestsPerSecond = 1
-	redisClient = nil
 	configureGitlabClient("yolo")
 	assert.NotNil(t, gitlabClient)
 }
 
 func TestConfigureRedisClient(t *testing.T) {
+	resetGlobalValues()
+
 	s, err := miniredis.Run()
 	if err != nil {
 		panic(err)
@@ -75,13 +86,16 @@ func TestConfigureRedisClient(t *testing.T) {
 }
 
 func TestConfigurePullingQueue(t *testing.T) {
+	resetGlobalValues()
+
 	// TODO: Test with redis client, miniredis does not seem to support it yet
-	redisClient = nil
 	configurePullingQueue()
 	assert.Equal(t, "pull", pullingQueue.Options().Name)
 }
 
 func TestConfigureStore(t *testing.T) {
+	resetGlobalValues()
+
 	config = schemas.Config{
 		Projects: []schemas.Project{
 			{
@@ -91,7 +105,6 @@ func TestConfigureStore(t *testing.T) {
 	}
 
 	// Test with local storage
-	redisClient = nil
 	configureStore()
 	assert.NotNil(t, store)
 
@@ -122,7 +135,8 @@ func TestConfigureStore(t *testing.T) {
 }
 
 func TestProcessPullingQueue(_ *testing.T) {
+	resetGlobalValues()
+
 	// TODO: Test with redis client, miniredis does not seem to support it yet
-	redisClient = nil
 	processPullingQueue(context.TODO())
 }

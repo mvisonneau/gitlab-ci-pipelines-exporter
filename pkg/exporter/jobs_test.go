@@ -13,6 +13,8 @@ import (
 )
 
 func TestPullProjectRefPipelineJobsMetrics(t *testing.T) {
+	resetGlobalValues()
+
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
 	configureStore()
@@ -37,6 +39,8 @@ func TestPullProjectRefPipelineJobsMetrics(t *testing.T) {
 }
 
 func TestPullProjectRefMostRecentJobsMetrics(t *testing.T) {
+	resetGlobalValues()
+
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
 	configureStore()
@@ -67,6 +71,9 @@ func TestPullProjectRefMostRecentJobsMetrics(t *testing.T) {
 }
 
 func TestProcessJobMetrics(t *testing.T) {
+	resetGlobalValues()
+	configureStore()
+
 	now := time.Now()
 	oneDayAgo := now.Add(-24 * time.Hour)
 	oldJob := goGitlab.Job{
@@ -117,7 +124,6 @@ func TestProcessJobMetrics(t *testing.T) {
 		},
 	}
 
-	configureStore()
 	store.SetProjectRef(pr)
 
 	// If we run it against the same job, nothing should change in the store

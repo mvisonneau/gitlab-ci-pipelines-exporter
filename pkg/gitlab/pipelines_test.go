@@ -17,7 +17,7 @@ func TestGetProjectRefPipeline(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines/1"),
+	mux.HandleFunc("/api/v4/projects/1/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `{"id":1}`)

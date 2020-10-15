@@ -1,3 +1,5 @@
+// +build !race
+
 package exporter
 
 import (
@@ -56,6 +58,9 @@ func TestWebhookHandler(t *testing.T) {
 }
 
 func TestTriggerProjectRefMetricsPull(_ *testing.T) {
+	resetGlobalValues()
+	configureStore()
+
 	pr1 := schemas.ProjectRef{
 		ID:                1,
 		PathWithNamespace: "group/foo",

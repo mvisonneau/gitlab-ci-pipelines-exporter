@@ -1,52 +1,121 @@
+// +build !race
+
 package exporter
 
-// TODO: Reimplement these tests
-// Here an example of concurrent execution of projects pulling
-// func TestProjectPulling(t *testing.T) {
-// 	projects := []schemas.Project{{Name: "test1"}, {Name: "test2"}, {Name: "test3"}, {Name: "test4"}}
-// 	until := make(chan struct{})
-// 	defer close(until)
-// 	_, _, c := getMockedClient()
-// 	// provided we are able to intercept an error from from pullProject method
-// 	// we can iterate over a channel of Project and collect its results
-// 	assert.Equal(t, len(projects), pullingResult(until, readProjects(until, projects...), c, t))
-// }
+import (
+	"fmt"
+	"net/http"
+	"testing"
 
-// func pullingResult(until <-chan struct{}, projects <-chan schemas.Project, client *Client, t *testing.T) (numErrs int) {
-// 	for i := range projects {
-// 		select {
-// 		case <-until:
-// 			return numErrs
-// 		default:
-// 			if assert.Error(t, client.pullProject(i)) {
-// 				numErrs++
-// 			}
-// 		}
-// 	}
-// 	return numErrs
-// }
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/stretchr/testify/assert"
+	goGitlab "github.com/xanzy/go-gitlab"
+)
 
-// func TestPullProjectsRefs(t *testing.T) {
-// 	message := "some error"
-// 	doing := func() func(*ProjectRef) error {
-// 		return func(*ProjectRef) error {
-// 			// set the already pulled refs, simulate the pullProject(p Project) set of Client.hasPulledOnInit
-// 			// return an error to count them afterwards
-// 			return fmt.Errorf(message)
-// 		}
-// 	}
-// 	testProjects := ProjectsRefs{}
-// 	testProjects[1] = map[string]*ProjectRef{"master": &ProjectRef{}}
-// 	testProjects[2] = map[string]*ProjectRef{"master": &ProjectRef{}}
+func TestGetProjectRefs(t *testing.T) {
+	resetGlobalValues()
 
-// 	until := make(chan struct{})
-// 	errCh := pullProjectsRefs(2, doing(), until, testProjects)
-// 	var errCount int
-// 	for err := range errCh {
-// 		if assert.Error(t, err) {
-// 			assert.Equal(t, err.Error(), message)
-// 			errCount++
-// 		}
-// 	}
-// 	assert.Equal(t, len(testProjects), errCount)
-// }
+	mux, server := configureMockedGitlabClient()
+	defer server.Close()
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/branches"),
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"name":"keep/dev"},{"name":"keep/main"}]`)
+		})
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/tags"),
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"name":"keep/dev"},{"name":"keep/0.0.2"}]`)
+		})
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"}]`)
+		})
+
+	foundRefs, err := getProjectRefs(1, "^keep", true, 10)
+	assert.NoError(t, err)
+
+	expectedRefs := map[string]schemas.ProjectRefKind{
+		"keep/0.0.2":              "tag",
+		"keep/dev":                "branch",
+		"keep/main":               "branch",
+		"refs/merge-requests/foo": "merge-request",
+	}
+	assert.Equal(t, expectedRefs, foundRefs)
+}
+
+func TestPullProjectRefsFromProject(t *testing.T) {
+	resetGlobalValues()
+
+	mux, server := configureMockedGitlabClient()
+	defer server.Close()
+	configureStore()
+	configurePullingQueue()
+
+	mux.HandleFunc("/api/v4/projects/foo/bar",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `{"id":1}`)
+		})
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/branches"),
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"name":"main"},{"name":"nope"}]`)
+		})
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/tags"),
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[]`)
+		})
+
+	assert.NoError(t, pullProjectRefsFromProject(schemas.Project{Name: "foo/bar"}))
+
+	projectsRefs, _ := store.ProjectsRefs()
+	expectedProjectsRefs := schemas.ProjectsRefs{
+		"3207122276": schemas.ProjectRef{
+			Project: schemas.Project{
+				Name: "foo/bar",
+			},
+			Kind: schemas.ProjectRefKindBranch,
+			ID:   1,
+			Ref:  "main",
+			Jobs: make(map[string]goGitlab.Job),
+		},
+	}
+	assert.Equal(t, expectedProjectsRefs, projectsRefs)
+}
+
+func TestPullProjectRefsFromPipelines(t *testing.T) {
+	resetGlobalValues()
+
+	mux, server := configureMockedGitlabClient()
+	defer server.Close()
+	configureStore()
+	configurePullingQueue()
+
+	mux.HandleFunc("/api/v4/projects/foo/bar",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `{"id":1}`)
+		})
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"id":1,"ref":"main"}]`)
+		})
+
+	assert.NoError(t, pullProjectRefsFromPipelines(schemas.Project{Name: "foo/bar"}))
+
+	projectsRefs, _ := store.ProjectsRefs()
+	expectedProjectsRefs := schemas.ProjectsRefs{
+		"3207122276": schemas.ProjectRef{
+			Project: schemas.Project{
+				Name: "foo/bar",
+			},
+			Kind: schemas.ProjectRefKindBranch,
+			ID:   1,
+			Ref:  "main",
+			Jobs: make(map[string]goGitlab.Job),
+		},
+	}
+	assert.Equal(t, expectedProjectsRefs, projectsRefs)
+}
