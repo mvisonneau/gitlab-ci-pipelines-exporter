@@ -85,7 +85,7 @@ func TestConfigureRedisClient(t *testing.T) {
 	assert.Error(t, ConfigureRedisClient(c))
 }
 
-// TOOD: Sort out why this creates loads of race issues across
+// TODO: Sort out why this creates loads of race issues across
 func TestConfigurePullingQueue(t *testing.T) {
 	resetGlobalValues()
 
