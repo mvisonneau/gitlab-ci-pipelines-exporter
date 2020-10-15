@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	stdlibLog "log"
-	"os"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -42,13 +41,18 @@ func configure(ctx *cli.Context) (err error) {
 	if len(ctx.String("gitlab-token")) > 0 {
 		cfg.Gitlab.Token = ctx.String("gitlab-token")
 	}
-	assertStringVariableDefined(ctx, "gitlab-token", cfg.Gitlab.Token)
+
+	if len(cfg.Gitlab.Token) == 0 {
+		return fmt.Errorf("--gitlab-token' must be defined")
+	}
 
 	if cfg.Server.Webhook.Enabled {
 		if len(ctx.String("webhook-secret-token")) > 0 {
 			cfg.Server.Webhook.SecretToken = ctx.String("webhook-secret-token")
 		}
-		assertStringVariableDefined(ctx, "webhook-secret-token", cfg.Server.Webhook.SecretToken)
+		if len(cfg.Server.Webhook.SecretToken) == 0 {
+			return fmt.Errorf("--webhook-secret-token' must be defined")
+		}
 	}
 
 	schemas.UpdateProjectDefaults(cfg.ProjectDefaults)
@@ -104,13 +108,5 @@ func exit(exitCode int, err error) cli.ExitCoder {
 func ExecWrapper(f func(ctx *cli.Context) (int, error)) cli.ActionFunc {
 	return func(ctx *cli.Context) error {
 		return exit(f(ctx))
-	}
-}
-
-func assertStringVariableDefined(ctx *cli.Context, k, v string) {
-	if len(v) == 0 {
-		_ = cli.ShowAppHelp(ctx)
-		log.Errorf("'--%s' must be set!", k)
-		os.Exit(2)
 	}
 }
