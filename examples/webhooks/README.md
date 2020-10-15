@@ -4,15 +4,12 @@ This is a more advanced setup for users looking to reduce the amount of requests
 
 ## Requirements
 
-They include the ones from the [quickstart example](../quickstart/README.md):
-
 - A personal access token on [gitlab.com](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) (or your own instance) with `read_repository` scope
 - [git](https://git-scm.com/) & [docker-compose](https://docs.docker.com/compose/)
-
-For the specific usecase of webhooks, you will also need:
-  
 - GitLab [webhook configuration](https://docs.gitlab.com/ee/user/project/integrations/webhooks.html) privileges/capabilities on group(s) or project(s) you want to monitor.
-- Connectivity from GitLab rails processes towards the exporter's http endpoint. If you don't because you want to try it from your laptop no worries, I cover this out in [this paragraph](#Obtain-network-connectivity-between-GitLab-and-the-exporter)
+- For this use case, we will need network connectivity from the GitLab rails processes towards the exporter's http endpoint. I assume that you will want to try this out for your laptop but don't worry, it should still be able to work effortlessly thanks to [Hashicorp Waypoint](https://www.waypointproject.io/)!
+
+/!\ This implementation is for test/example only as it is not recommended to leverage **waypoint.run** endpoints for production purposes.
 
 ## 🚀
 
@@ -33,74 +30,55 @@ For the specific usecase of webhooks, you will also need:
 # Configure a project on which you are authorized to configure webhooks
 ~$ sed -i 's;<your_project_path_with_namespace>;my_group/my_project' gitlab-ci-pipelines-exporter/config.yml
 
-# Start gitlab-ci-pipelines-exporter container
-~$ docker-compose up -d
-Creating network "webhooks_default" with driver "bridge"
-Creating webhooks_gitlab-ci-pipelines-exporter-1 ... done
+# Start gitlab-ci-pipelines-exporter container through Hashicorp Waypoint
+~$ docker pull hashicorp/waypoint:latest
+[..]
+~$ waypoint install --platform=docker -accept-tos
+[..]
+~$ waypoint init
+[..]
+~$ waypoint up
+» Building...
+✓ Initializing Docker client...
+✓ Building image...
+ │ Successfully built 4b5948a15ca3
+ │ Successfully tagged waypoint.local/exporter:latest
+✓ Injecting Waypoint Entrypoint...
+
+» Deploying...
+✓ Setting up waypoint network
+✓ Starting container
+✓ App deployed as container: exporter-01EMQ4Q1SYZ4PV8CRD4D35QAKW
+
+» Releasing...
+
+The deploy was successful! A Waypoint deployment URL is shown below. This
+can be used internally to check your deployment and is not meant for external
+traffic. You can manage this hostname using "waypoint hostname."
+
+           URL: https://instantly-worthy-shrew.alpha.waypoint.run
+Deployment URL: https://instantly-worthy-shrew--v1.waypoint.run
 ```
 
-### Obtain network connectivity between GitLab and the exporter
+## Attempt to reach your exporter http endpoint from the public address
 
-You now need to configure the project (or the group it belongs to) to post webhooks to the exporter.
-
-But first, you need connectivity from GitLab to the exporter endpoint.
-
-In a **self-hosted scenario** is it likely that you will get native connectivity on your internal network loop.
-
-If you are **using gitlab.com**, you will need to securely expose the exporter endpoint over the internet 🌍
-
-As this example is presumably going to be attempted from a laptop onto gitlab.com, I will showcase how to easily get a non-secure access between the two leveraging the very great [inlets](https://github.com/inlets/inlets) solution from [Alex Ellis](https://twitter.com/alexellisuk) 💚. Of course, if you already have connectivity, you can skip this step.
-
-### Inlets configuration
-
-You will need a working account with any of these cloud providers:
-
-- `AWS`
-- `Azure`
-- `Civo.com`
-- `DigitalOcean`
-- `GCP`
-- `Hetzner`
-- `Linode`
-- `Packet`
-- `Scaleway`
-- `Vultr`
-
-You will also need both [inlets](https://github.com/inlets/inlets#get-inlets) and [inletsctl](https://github.com/inlets/inletsctl#install-inletsctl) binaries
-
-Once you are all set, create your "exit" endpoint:
+After a few seconds, you should be able to query the URL you got from `waypoint up`
 
 ```bash
-# Example using DigitalOcean
-~$ inletsctl create -p digitalocean -a <digital_ocean_token>
-[..]
-inlets OSS (2.7.4) exit-server summary:
-  IP: 62.220.30.130
-  Auth-token: yOujNvJ75vbZW3wmWfB2EkCobHlCI3wo4RZVRfkY5PaxVrKMSi1bUtm9rUwTTW6t
-
-Command:
-  export UPSTREAM=http://127.0.0.1:8000
-  inlets client --remote "ws://62.220.30.130:8080" \
-	--token "yOujNvJ75vbZW3wmWfB2EkCobHlCI3wo4RZVRfkY5PaxVrKMSi1bUtm9rUwTTW6t" \
-	--upstream $UPSTREAM
-
-## Wait a few seconds for the instance to boot and then copy-paste the command
-~$ export UPSTREAM=http://127.0.0.1:8000
-~$ inlets client --remote "ws://62.220.30.130:8080" \
---token "yOujNvJ75vbZW3wmWfB2EkCobHlCI3wo4RZVRfkY5PaxVrKMSi1bUtm9rUwTTW6t" \
---upstream $UPSTREAM
-
-## Attempt to reach your exporter http endpoint from the public address
-~$ curl -i http://62.220.30.130/health/ready
+~$ curl -i https://instantly-worthy-shrew.alpha.waypoint.run/health/ready
 HTTP/1.1 200 OK
-Content-Length: 3
+Date: Thu, 15 Oct 2020 22:18:27 GMT
 Content-Type: application/json; charset=utf-8
-Date: Fri, 09 Oct 2020 13:57:23 GMT
+Content-Length: 3
+Connection: keep-alive
+Server-Timing: resolve;dur=0.210207,lookup;dur=0.776248,request;dur=0.118955,response-header;dur=668.705608,connect-local;dur=0.576448
+X-Horizon-Endpoint: 01EMMNFHRH0EJ76PAQEQD567SE
+X-Horizon-Latency: 670.412114ms
 
 {}
 ```
 
-gitlab.com should be able to reach http://62.220.30.130/webhook now! 🎉
+gitlab.com should also be able to reach https://instantly-worthy-shrew.alpha.waypoint.run/webhook now! 🎉
 
 ### Configure GitLab group(s) or project(s)
 
@@ -114,7 +92,7 @@ UYqDp5DvHLrtCnkfHA8aBPEkyKfgHjTGAWZRUD4olZU=
 
 Go onto the project's configuration page and configure a new webhook using:
 
-- **URL**: `http://62.220.30.130/webhook`
+- **URL**: `https://instantly-worthy-shrew.alpha.waypoint.run/webhook`
 - **Secret Token**: `UYqDp5DvHLrtCnkfHA8aBPEkyKfgHjTGAWZRUD4olZU=`
 - Untick `Push events` and tick `Pipeline events`
 - Hit the `Add webhook` button
@@ -128,7 +106,7 @@ You can then trigger a manual test:
 If the last pipeline which ran on your project is on a ref that is configured to be exported, you will see the following logs:
 
 ```bash
-~$ docker-compose logs -f
+~$ waypoint logs
 [..]
 DEBU[2020-10-09T15:03:49+01:00] webhook request         ip-address="127.0.0.1:62838" user-agent=
 [..]
@@ -137,8 +115,5 @@ DEBU[2020-10-09T15:03:49+01:00] webhook request         ip-address="127.0.0.1:62
 ## Cleanup
 
 ```bash
-# Delete the container
-~$ docker-compose down
-# Delete the inlets exit node
-~$ docker-compose down
+~$ waypoint destroy
 ```
