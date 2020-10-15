@@ -20,6 +20,7 @@ func TestListProjectRefPipelineJobs(t *testing.T) {
 		Ref: "yay",
 	}
 
+	// Test with no most recent pipeline defined
 	jobs, err := c.ListProjectRefPipelineJobs(pr)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 0)
@@ -35,6 +36,11 @@ func TestListProjectRefPipelineJobs(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/0/pipelines/1/jobs"),
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNotFound)
+		})
+
 	pr.MostRecentPipeline = &goGitlab.Pipeline{
 		ID: 1,
 	}
@@ -42,6 +48,11 @@ func TestListProjectRefPipelineJobs(t *testing.T) {
 	jobs, err = c.ListProjectRefPipelineJobs(pr)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 2)
+
+	// Test invalid project id
+	pr.ID = 0
+	_, err = c.ListProjectRefPipelineJobs(pr)
+	assert.Error(t, err)
 }
 
 func TestListProjectRefMostRecentJobs(t *testing.T) {
@@ -66,6 +77,11 @@ func TestListProjectRefMostRecentJobs(t *testing.T) {
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
 			fmt.Fprint(w, `[{"id":3,"name":"foo","ref":"yay"},{"id":4,"name":"bar","ref":"yay"}]`)
+		})
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/0/jobs"),
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNotFound)
 		})
 
 	pr.Jobs = map[string]goGitlab.Job{
@@ -95,4 +111,9 @@ func TestListProjectRefMostRecentJobs(t *testing.T) {
 	assert.Len(t, jobs, 2)
 	assert.Equal(t, 3, jobs[0].ID)
 	assert.Equal(t, 4, jobs[1].ID)
+
+	// Test invalid project id
+	pr.ID = 0
+	_, err = c.ListProjectRefMostRecentJobs(pr)
+	assert.Error(t, err)
 }

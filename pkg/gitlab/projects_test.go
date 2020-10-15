@@ -105,12 +105,13 @@ func TestListProjects(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":1,"jobs_enabled":true},{"id":2,"jobs_enabled":true}]`)
+			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo","jobs_enabled":false},{"id":2,"path_with_namespace":"bar","jobs_enabled":true}]`)
 		})
 
 	projects, err := c.ListProjects(w)
 	assert.NoError(t, err)
-	assert.Len(t, projects, 2)
+	assert.Len(t, projects, 1)
+	assert.Equal(t, "bar", projects[0].Name)
 }
 
 func TestListProjectsAPIError(t *testing.T) {

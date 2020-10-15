@@ -8,25 +8,31 @@ import (
 
 // Local ..
 type Local struct {
-	mutex        sync.Mutex
-	projects     schemas.Projects
-	projectsRefs schemas.ProjectsRefs
+	projects      schemas.Projects
+	projectsMutex sync.Mutex
+
+	projectsRefs      schemas.ProjectsRefs
+	projectsRefsMutex sync.Mutex
+
 	metrics      schemas.Metrics
+	metricsMutex sync.Mutex
 }
 
 // SetProject ..
 func (l *Local) SetProject(p schemas.Project) error {
-	l.mutex.Lock()
+	l.projectsMutex.Lock()
+	defer l.projectsMutex.Unlock()
+
 	l.projects[p.Key()] = p
-	l.mutex.Unlock()
 	return nil
 }
 
 // DelProject ..
 func (l *Local) DelProject(k schemas.ProjectKey) error {
-	l.mutex.Lock()
+	l.projectsMutex.Lock()
+	defer l.projectsMutex.Unlock()
+
 	delete(l.projects, k)
-	l.mutex.Unlock()
 	return nil
 }
 
@@ -66,17 +72,19 @@ func (l *Local) ProjectsCount() (int64, error) {
 
 // SetProjectRef ..
 func (l *Local) SetProjectRef(pr schemas.ProjectRef) error {
-	l.mutex.Lock()
+	l.projectsRefsMutex.Lock()
+	defer l.projectsRefsMutex.Unlock()
+
 	l.projectsRefs[pr.Key()] = pr
-	l.mutex.Unlock()
 	return nil
 }
 
 // DelProjectRef ..
 func (l *Local) DelProjectRef(k schemas.ProjectRefKey) error {
-	l.mutex.Lock()
+	l.projectsRefsMutex.Lock()
+	defer l.projectsRefsMutex.Unlock()
+
 	delete(l.projectsRefs, k)
-	l.mutex.Unlock()
 	return nil
 }
 
@@ -116,17 +124,19 @@ func (l *Local) ProjectsRefsCount() (int64, error) {
 
 // SetMetric ..
 func (l *Local) SetMetric(m schemas.Metric) error {
-	l.mutex.Lock()
+	l.metricsMutex.Lock()
+	defer l.metricsMutex.Unlock()
+
 	l.metrics[m.Key()] = m
-	l.mutex.Unlock()
 	return nil
 }
 
 // DelMetric ..
 func (l *Local) DelMetric(k schemas.MetricKey) error {
-	l.mutex.Lock()
+	l.metricsMutex.Lock()
+	defer l.metricsMutex.Unlock()
+
 	delete(l.metrics, k)
-	l.mutex.Unlock()
 	return nil
 }
 

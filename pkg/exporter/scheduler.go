@@ -63,7 +63,6 @@ var (
 			return garbageCollectProjects()
 		},
 	})
-
 	garbageCollectProjectsRefsTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "garbageCollectProjectsRefsTask",
 		Handler: func() error {

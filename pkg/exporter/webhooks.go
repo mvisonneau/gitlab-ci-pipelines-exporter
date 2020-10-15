@@ -24,28 +24,37 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("X-Gitlab-Token") != config.Server.Webhook.SecretToken {
 		log.WithFields(logFields).Debug("invalid token provided for a webhook request")
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprint(w, "{\"error\": \"invalid token\"")
+		return
+	}
+
+	if r.Body == http.NoBody {
+		log.WithFields(logFields).WithField("error", "nil body").Warn("unable to read body of a received webhook")
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.WithFields(logFields).WithField("error", err.Error()).Warn("unable to read body of a received webhook")
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	event, err := goGitlab.ParseHook(goGitlab.HookEventType(r), payload)
 	if err != nil {
 		log.WithFields(logFields).WithFields(logFields).WithField("error", err.Error()).Warn("unable to parse body of a received webhook")
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	switch event := event.(type) {
 	case *gitlab.PipelineEvent:
-		processPipelineEvent(*event)
+		go processPipelineEvent(*event)
 	default:
 		log.WithFields(logFields).WithField("event-type", reflect.TypeOf(event).String()).Warn("received a non supported event type as a webhook")
+		w.WriteHeader(http.StatusUnprocessableEntity)
 	}
 }
 

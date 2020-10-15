@@ -11,9 +11,14 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/storage"
 	"github.com/stretchr/testify/assert"
 	goGitlab "github.com/xanzy/go-gitlab"
 )
+
+func Init() {
+	store = storage.NewLocalStorage()
+}
 
 func configureMockedGitlabClient() (*http.ServeMux, *httptest.Server) {
 	mux := http.NewServeMux()
