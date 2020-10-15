@@ -40,6 +40,10 @@ func TestGetProjectRefs(t *testing.T) {
 		"refs/merge-requests/foo": "merge-request",
 	}
 	assert.Equal(t, expectedRefs, foundRefs)
+	assert.Equal(t, foundRefs["keep/0.0.2"], schemas.ProjectRefKindTag)
+	assert.Equal(t, foundRefs["keep/main"], schemas.ProjectRefKindBranch)
+	assert.Equal(t, foundRefs["refs/merge-requests/foo"], schemas.ProjectRefKindMergeRequest)
+	assert.Contains(t, []schemas.ProjectRefKind{schemas.ProjectRefKindTag, schemas.ProjectRefKindBranch}, foundRefs["keep/dev"])
 }
 
 func TestPullProjectRefsFromProject(t *testing.T) {
