@@ -14,10 +14,8 @@ import (
 
 func TestPullProjectRefPipelineJobsMetrics(t *testing.T) {
 	resetGlobalValues()
-
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	configureStore()
 
 	mux.HandleFunc("/api/v4/projects/1/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -40,10 +38,8 @@ func TestPullProjectRefPipelineJobsMetrics(t *testing.T) {
 
 func TestPullProjectRefMostRecentJobsMetrics(t *testing.T) {
 	resetGlobalValues()
-
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	configureStore()
 
 	mux.HandleFunc("/api/v4/projects/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +68,6 @@ func TestPullProjectRefMostRecentJobsMetrics(t *testing.T) {
 
 func TestProcessJobMetrics(t *testing.T) {
 	resetGlobalValues()
-	configureStore()
 
 	now := time.Now()
 	oneDayAgo := now.Add(-24 * time.Hour)

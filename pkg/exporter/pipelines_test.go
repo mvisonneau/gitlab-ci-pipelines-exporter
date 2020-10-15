@@ -15,7 +15,6 @@ func TestPullProjectRefMetricsSucceed(t *testing.T) {
 	resetGlobalValues()
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	configureStore()
 
 	mux.HandleFunc("/api/v4/projects/1/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {

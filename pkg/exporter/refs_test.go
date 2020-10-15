@@ -1,5 +1,3 @@
-// +build !race
-
 package exporter
 
 import (
@@ -14,7 +12,6 @@ import (
 
 func TestGetProjectRefs(t *testing.T) {
 	resetGlobalValues()
-
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
 
@@ -47,11 +44,8 @@ func TestGetProjectRefs(t *testing.T) {
 
 func TestPullProjectRefsFromProject(t *testing.T) {
 	resetGlobalValues()
-
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	configureStore()
-	configurePullingQueue()
 
 	mux.HandleFunc("/api/v4/projects/foo/bar",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -87,11 +81,8 @@ func TestPullProjectRefsFromProject(t *testing.T) {
 
 func TestPullProjectRefsFromPipelines(t *testing.T) {
 	resetGlobalValues()
-
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	configureStore()
-	configurePullingQueue()
 
 	mux.HandleFunc("/api/v4/projects/foo/bar",
 		func(w http.ResponseWriter, r *http.Request) {

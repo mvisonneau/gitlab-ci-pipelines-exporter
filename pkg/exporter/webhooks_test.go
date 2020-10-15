@@ -1,5 +1,3 @@
-// +build !race
-
 package exporter
 
 import (
@@ -14,6 +12,8 @@ import (
 )
 
 func TestWebhookHandler(t *testing.T) {
+	resetGlobalValues()
+
 	config.Server.Webhook.SecretToken = "secret"
 	req := httptest.NewRequest("POST", "/webhook", nil)
 
@@ -59,7 +59,6 @@ func TestWebhookHandler(t *testing.T) {
 
 func TestTriggerProjectRefMetricsPull(_ *testing.T) {
 	resetGlobalValues()
-	configureStore()
 
 	pr1 := schemas.ProjectRef{
 		ID:                1,

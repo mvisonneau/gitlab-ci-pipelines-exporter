@@ -50,7 +50,7 @@ gosec: setup ## Test code for security vulnerabilities
 
 .PHONY: test
 test: ## Run the tests against the codebase
-	go test -v -race ./...
+	go test -v -count=1 ./...
 
 .PHONY: install
 install: ## Build and install locally the binary (dev purpose)
@@ -86,7 +86,7 @@ coverage: ## Generates coverage report
 	go test -v ./... -coverpkg=./... -coverprofile=coverage.out
 
 .PHONY: coverage-html
-coverage-html: coverage ## Generates coverage report and displays it in the browser
+coverage-html: ## Generates coverage report and displays it in the browser
 	go tool cover -html=coverage.out
 
 .PHONY: dev-env

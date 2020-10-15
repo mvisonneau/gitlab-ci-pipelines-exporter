@@ -1,5 +1,3 @@
-// +build !race
-
 package exporter
 
 import (
@@ -13,11 +11,8 @@ import (
 
 func TestPullProjectsFromWildcard(t *testing.T) {
 	resetGlobalValues()
-
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
-	configureStore()
-	configurePullingQueue()
 
 	mux.HandleFunc("/api/v4/projects",
 		func(w http.ResponseWriter, r *http.Request) {

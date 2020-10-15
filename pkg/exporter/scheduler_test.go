@@ -1,5 +1,3 @@
-// +build !race
-
 package exporter
 
 import (

@@ -19,7 +19,6 @@ func TestNewRegistry(t *testing.T) {
 // introduce a test to check the /metrics endpoint body
 func TestMetricsHandler(t *testing.T) {
 	resetGlobalValues()
-	configureStore()
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -36,7 +35,6 @@ func TestRegistryGetCollector(t *testing.T) {
 
 func TestExportMetrics(t *testing.T) {
 	resetGlobalValues()
-	configureStore()
 
 	r := NewRegistry()
 

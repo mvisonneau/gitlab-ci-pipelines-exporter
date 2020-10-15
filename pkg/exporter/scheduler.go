@@ -221,6 +221,11 @@ func schedulePullProjectRefsMetrics(ctx context.Context) {
 }
 
 func schedulePullProjectsFromWildcardTask(ctx context.Context, w schemas.Wildcard) {
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
 	if err := pullingQueue.Add(pullProjectsFromWildcardTask.WithArgs(ctx, w)); err != nil {
 		log.WithFields(log.Fields{
 			"wildcard-owner-kind": w.Owner.Kind,
@@ -231,6 +236,11 @@ func schedulePullProjectsFromWildcardTask(ctx context.Context, w schemas.Wildcar
 }
 
 func schedulePullProjectRefsFromPipeline(ctx context.Context, p schemas.Project) {
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
 	if err := pullingQueue.Add(pullProjectRefsFromPipelinesTask.WithArgs(ctx, p)); err != nil {
 		log.WithFields(log.Fields{
 			"project-name": p.Name,
@@ -240,6 +250,11 @@ func schedulePullProjectRefsFromPipeline(ctx context.Context, p schemas.Project)
 }
 
 func schedulePullProjectRefsFromProject(ctx context.Context, p schemas.Project) {
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
 	if err := pullingQueue.Add(pullProjectRefsFromProjectTask.WithArgs(ctx, p)); err != nil {
 		log.WithFields(log.Fields{
 			"project-name": p.Name,
@@ -249,6 +264,11 @@ func schedulePullProjectRefsFromProject(ctx context.Context, p schemas.Project) 
 }
 
 func schedulePullProjectRefMetrics(ctx context.Context, pr schemas.ProjectRef) {
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
 	if err := pullingQueue.Add(pullProjectRefMetricsTask.WithArgs(ctx, pr)); err != nil {
 		log.WithFields(log.Fields{
 			"project-name": pr.Name,
@@ -258,6 +278,11 @@ func schedulePullProjectRefMetrics(ctx context.Context, pr schemas.ProjectRef) {
 }
 
 func scheduleGarbageCollectProjects(ctx context.Context) {
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
 	if err := pullingQueue.Add(garbageCollectProjectsTask.WithArgs(ctx)); err != nil {
 		log.WithFields(log.Fields{
 			"error": err.Error(),
@@ -266,6 +291,11 @@ func scheduleGarbageCollectProjects(ctx context.Context) {
 }
 
 func scheduleGarbageCollectProjectsRefs(ctx context.Context) {
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
 	if err := pullingQueue.Add(garbageCollectProjectsRefsTask.WithArgs(ctx)); err != nil {
 		log.WithFields(log.Fields{
 			"error": err.Error(),
@@ -274,6 +304,11 @@ func scheduleGarbageCollectProjectsRefs(ctx context.Context) {
 }
 
 func scheduleGarbageCollectProjectsRefsMetrics(ctx context.Context) {
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
 	if err := pullingQueue.Add(garbageCollectProjectsRefsMetricsTask.WithArgs(ctx)); err != nil {
 		log.WithFields(log.Fields{
 			"error": err.Error(),
