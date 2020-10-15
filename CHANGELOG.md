@@ -7,6 +7,15 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- More unit tests!
+
+### Changed
+
+- Bumped goreleaser to `v0.145.0`
+- pkg/storage/local: added per variables mutexes
+
 ## [0.4.1] - 2020-10-14
 
 ### Added
@@ -23,7 +32,7 @@ By default, on regular basis, the exporter will now attempt to remove unconfigur
 - Embeded taskq logs into logrus
 - Prevent taskq consumer from being paused on errors
 - Changed the way we handle project ref pipelines not being found, log in debug factory instead of erroring in a crashloop
-- Bumped goreleaser to v0.144.1
+- Bumped goreleaser to `v0.144.1`
 - Improved logging
 - Increased amount of items fetched per API call to 100 (maximum value)
 
