@@ -140,12 +140,12 @@ func TestGetProjectRefsFromPipelines(t *testing.T) {
 			assert.Equal(t, []string{"1"}, urlValues["page"])
 			assert.Equal(t, []string{"33"}, urlValues["per_page"])
 
-			if scope, ok := r.URL.Query()["scope"]; ok && len(scope) == 1 && scope[0] == "branches" {
+			if scope, ok := urlValues["scope"]; ok && len(scope) == 1 && scope[0] == "branches" {
 				fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"}]`)
 				return
 			}
 
-			if scope, ok := r.URL.Query()["scope"]; ok && len(scope) == 1 && scope[0] == "tags" {
+			if scope, ok := urlValues["scope"]; ok && len(scope) == 1 && scope[0] == "tags" {
 				fmt.Fprint(w, `[{"id":3,"ref":"donotkeep_0.0.1"},{"id":4,"ref":"keep_0.0.2"}]`)
 				return
 			}
@@ -183,5 +183,33 @@ func TestGetProjectRefsFromPipelines(t *testing.T) {
 	p.Pull.Refs.RegexpValue = pointy.String("^keep.*")
 	prs, err = c.GetProjectRefsFromPipelines(p, gp)
 	assert.NoError(t, err)
-	assert.Len(t, prs, 3)
+
+	expectedProjectsRefs := schemas.ProjectsRefs{
+		"1309204293": schemas.ProjectRef{
+			Project:           p,
+			PathWithNamespace: "foo/bar",
+			Kind:              schemas.ProjectRefKindBranch,
+			ID:                1,
+			Ref:               "keep_dev",
+			Jobs:              make(map[string]goGitlab.Job),
+		},
+		"3383490522": schemas.ProjectRef{
+			Project:           p,
+			PathWithNamespace: "foo/bar",
+			Kind:              schemas.ProjectRefKindBranch,
+			ID:                1,
+			Ref:               "keep_main",
+			Jobs:              make(map[string]goGitlab.Job),
+		},
+		"3975821083": schemas.ProjectRef{
+			Project:           p,
+			PathWithNamespace: "foo/bar",
+			Kind:              schemas.ProjectRefKindTag,
+			ID:                1,
+			Ref:               "keep_0.0.2",
+			Jobs:              make(map[string]goGitlab.Job),
+		},
+	}
+
+	assert.Equal(t, expectedProjectsRefs, prs)
 }

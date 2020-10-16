@@ -141,7 +141,7 @@ func (c *Client) GetProjectRefPipelineVariablesAsConcatenatedString(pr schemas.P
 }
 
 // GetProjectRefsFromPipelines ..
-func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Project) (map[string]schemas.ProjectRef, error) {
+func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Project) (schemas.ProjectsRefs, error) {
 	re, err := regexp.Compile(p.Pull.Refs.Regexp())
 	if err != nil {
 		return nil, err
@@ -167,14 +167,15 @@ func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Pro
 		return nil, err
 	}
 
-	projectRefs := map[string]schemas.ProjectRef{}
+	projectRefs := make(schemas.ProjectsRefs)
 	for kind, pipelines := range map[schemas.ProjectRefKind][]*gitlab.PipelineInfo{
 		schemas.ProjectRefKindBranch: branchPipelines,
 		schemas.ProjectRefKindTag:    tagsPipelines,
 	} {
 		for _, pipeline := range pipelines {
 			if re.MatchString(pipeline.Ref) {
-				if _, ok := projectRefs[pipeline.Ref]; !ok {
+				pr := schemas.NewProjectRef(p, gp, pipeline.Ref, kind)
+				if _, ok := projectRefs[pr.Key()]; !ok {
 					log.WithFields(
 						log.Fields{
 							"project-id":       gp.ID,
@@ -183,7 +184,7 @@ func (c *Client) GetProjectRefsFromPipelines(p schemas.Project, gp *goGitlab.Pro
 							"project-ref-kind": kind,
 						},
 					).Info("found project ref")
-					projectRefs[pipeline.Ref] = schemas.NewProjectRef(p, gp, pipeline.Ref, kind)
+					projectRefs[pr.Key()] = pr
 				}
 			}
 		}

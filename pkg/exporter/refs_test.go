@@ -95,7 +95,15 @@ func TestPullProjectRefsFromPipelines(t *testing.T) {
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1,"ref":"main"}]`)
+			if scope, ok := r.URL.Query()["scope"]; ok && len(scope) == 1 && scope[0] == "branches" {
+				fmt.Fprint(w, `[{"id":1,"ref":"main"}]`)
+				return
+			}
+
+			if scope, ok := r.URL.Query()["scope"]; ok && len(scope) == 1 && scope[0] == "tags" {
+				fmt.Fprint(w, `[{"id":2,"ref":"master"}]`)
+				return
+			}
 		})
 
 	assert.NoError(t, pullProjectRefsFromPipelines(schemas.Project{Name: "foo/bar"}))
@@ -109,6 +117,15 @@ func TestPullProjectRefsFromPipelines(t *testing.T) {
 			Kind: schemas.ProjectRefKindBranch,
 			ID:   1,
 			Ref:  "main",
+			Jobs: make(map[string]goGitlab.Job),
+		},
+		"755606486": schemas.ProjectRef{
+			Project: schemas.Project{
+				Name: "foo/bar",
+			},
+			Kind: schemas.ProjectRefKindTag,
+			ID:   1,
+			Ref:  "master",
 			Jobs: make(map[string]goGitlab.Job),
 		},
 	}
