@@ -25,7 +25,7 @@ COPY --from=builder /build/dist/gitlab-ci-pipelines-exporter_linux_amd64/gitlab-
 # Run as nobody user
 USER 65534
 
-EXPOSE 8080 8081
+EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/gitlab-ci-pipelines-exporter"]
 CMD [""]
