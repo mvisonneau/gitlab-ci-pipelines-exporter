@@ -254,6 +254,12 @@ gitlab_ci_pipeline_last_job_run_status{job="test",project="bar/project",ref="mai
 
 It supports running multiple instances of the exporter in an HA fashion leveraging redis as storage middleware. You simply need to set a redis URL in the `config.yml` or using the `--redis-url` flag or `$GCPE_REDIS_URL` env variable. A quick example using docker-compose is also available here: [examples/ha-setup](examples/ha-setup/README.md)
 
+### How it works
+
+- Pulling of all of the GitLab resources (projects, refs, pipelines, jobs, etc..) is spread evenly across all the running instances
+- Rate limit is global across the workers. eg: 3 workers at a 10 rps limit will result in a ~3.3rps limit/worker
+- Exported metrics are fetched from the shared storage layer on each call to ensure data integrity/consistency of the requests across the instances
+
 ## Push based implementation (leveraging GitLab webhooks)
 
 The exporter supports receiving project pipeline events through GitLab webhooks on the `/webhook` path. This feature is not enabled by default and requires the following parameters to be set in the `config.yml`:
@@ -266,12 +272,6 @@ server:
 ```
 
 A complete example is available here: [examples/webhooks](examples/webhooks/README.md). You can also refer to the [configuration syntax](docs/configuration_syntax.md) for me information.
-
-### How it works
-
-- Pulling of all of the GitLab resources (projects, refs, pipelines, jobs, etc..) is spread evenly across all the running instances
-- Rate limit is global across the workers. eg: 3 workers at a 10 rps limit will result in a ~3.3rps limit/worker
-- Exported metrics are fetched from the shared storage layer on each call to ensure data integrity/consistency of the requests across the instances
 
 ## Usage
 
