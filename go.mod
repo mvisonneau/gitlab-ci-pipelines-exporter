@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/alicebob/miniredis/v2 v2.13.3
-	github.com/go-redis/redis/v8 v8.3.1
+	github.com/go-redis/redis/v8 v8.3.2
 	github.com/go-redis/redis_rate/v9 v9.0.2
 	github.com/gomodule/redigo v1.8.2 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
