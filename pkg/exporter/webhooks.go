@@ -99,8 +99,18 @@ schedulePull:
 }
 
 func processPipelineEvent(e goGitlab.PipelineEvent) {
+	var k schemas.ProjectRefKind
+	if e.MergeRequest.IID != 0 {
+		k = schemas.ProjectRefKindMergeRequest
+	} else if e.ObjectAttributes.Tag {
+		k = schemas.ProjectRefKindTag
+	} else {
+		k = schemas.ProjectRefKindBranch
+	}
+
 	triggerProjectRefMetricsPull(schemas.ProjectRef{
 		ID:                e.Project.ID,
+		Kind:              k,
 		PathWithNamespace: e.Project.PathWithNamespace,
 		Ref:               e.ObjectAttributes.Ref,
 	})

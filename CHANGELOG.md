@@ -13,6 +13,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Changed
 
+- Fixed a bug preventing the webhooks implementation to correctly update the pertinent metrics (also creating pseudo duplicates)
 - Bumped go-redis/redis/v8 to v8.3.2
 - Bumped goreleaser to `v0.145.0`
 - Bumped prometheus/client_golang to v1.8.0
