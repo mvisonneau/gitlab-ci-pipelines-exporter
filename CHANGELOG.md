@@ -13,9 +13,12 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Changed
 
+- Bumped go-redis/redis/v8 to v8.3.2
 - Bumped goreleaser to `v0.145.0`
-- pkg/storage/local: added per variables mutexes
+- Bumped prometheus/client_golang to v1.8.0
+- Bumped xanzy/go-gitlab to v0.38.2
 - Moved helm chart definition to `github.com/mvisonneau/helm-charts`
+- pkg/storage/local: added per variables mutexes
 
 ## [0.4.1] - 2020-10-14
 
