@@ -69,14 +69,13 @@ Have a look onto the [latest release page](https://github.com/mvisonneau/gitlab-
 
 ### HELM
 
-If you want to make it run on [kubernetes](https://kubernetes.io/), there is a [helm chart](https://docs.helm.sh/) available for this purpose.
+If you want to make it run on [kubernetes](https://kubernetes.io/), there is a [helm chart](https://github.com/mvisonneau/helm-charts/tree/main/charts/gitlab-ci-pipelines-exporter) available for this purpose.
 
-You can check [deployments/helm/values.yml](deployments/helm/values.yml) for configuration options.
-
+You can check the chart's [values.yml](https://github.com/mvisonneau/helm-charts/blob/main/charts/gitlab-ci-pipelines-exporter/values.yaml) for complete configuration options.
 
 ```bash
-# Clone the repository locally
-~$ git clone git@github.com:mvisonneau/gitlab-ci-pipelines-exporter.git
+# Add the helm repository to your local client
+~$ helm repo add mvisonneau https://charts.visonneau.fr
 
 # Configure a minimal configuration for the exporter
 ~$ cat <<EOF > values.yml
@@ -91,8 +90,7 @@ config:
 EOF
 
 # Release the chart on your Kubernetes cluster
-~% helm dependency build ./deployments/helm
-~$ helm upgrade -i gitlab-ci-pipelines-exporter ./deployments/helm -f values.yml
+~$ helm upgrade -i gitlab-ci-pipelines-exporter mvisonneau/gitlab-ci-pipelines-exporter -f values.yml
 ```
 
 ## Configuration syntax

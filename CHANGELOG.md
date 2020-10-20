@@ -15,6 +15,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - Bumped goreleaser to `v0.145.0`
 - pkg/storage/local: added per variables mutexes
+- Moved helm chart definition to `github.com/mvisonneau/helm-charts`
 
 ## [0.4.1] - 2020-10-14
 
