@@ -16,7 +16,8 @@
   "editable": true,
   "gnetId": 10620,
   "graphTooltip": 0,
-  "iteration": 1602076063881,
+  "id": 1,
+  "iteration": 1603216411949,
   "links": [],
   "panels": [
     {
@@ -308,7 +309,7 @@
         "defaultClickThrough": "",
         "defaultClickThroughNewTab": false,
         "defaultClickThroughSanitize": false,
-        "displayLimit": 100,
+        "displayLimit": "",
         "fontAutoColor": true,
         "fontAutoScale": true,
         "fontSize": 4,
@@ -327,8 +328,8 @@
         "polygonGlobalFillColor": "#0a50a1",
         "radius": "",
         "radiusAutoSize": true,
-        "rowAutoSize": true,
-        "rows": "",
+        "rowAutoSize": false,
+        "rows": 4,
         "shape": "hexagon_pointed_top",
         "tooltipDisplayMode": "all",
         "tooltipDisplayTextTriggeredEmpty": "OK",
@@ -434,12 +435,11 @@
       "scroll": true,
       "showHeader": true,
       "sort": {
-        "col": 3,
+        "col": 4,
         "desc": false
       },
       "styles": [
         {
-          "$$hashKey": "object:1373",
           "alias": "Time",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -447,7 +447,6 @@
           "type": "hidden"
         },
         {
-          "$$hashKey": "object:1374",
           "alias": "Status",
           "align": "auto",
           "colorMode": "cell",
@@ -469,14 +468,12 @@
           "unit": "short",
           "valueMaps": [
             {
-              "$$hashKey": "object:1416",
               "text": "FAILED",
               "value": "1"
             }
           ]
         },
         {
-          "$$hashKey": "object:1375",
           "alias": "Last run",
           "align": "auto",
           "colorMode": "cell",
@@ -497,7 +494,6 @@
           "unit": "s"
         },
         {
-          "$$hashKey": "object:3308",
           "alias": "Duration",
           "align": "auto",
           "colorMode": "cell",
@@ -518,7 +514,6 @@
           "unit": "s"
         },
         {
-          "$$hashKey": "object:1377",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -536,7 +531,7 @@
       ],
       "targets": [
         {
-          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) unless (max(gitlab_ci_pipeline_status{status!~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) > 0)",
+          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -546,7 +541,7 @@
           "refId": "B"
         },
         {
-          "expr": "(max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) unless (max(gitlab_ci_pipeline_status{status!~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref)) > 0)",
+          "expr": "(max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind)) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -556,7 +551,7 @@
           "refId": "C"
         },
         {
-          "expr": "min(gitlab_ci_pipeline_status{status=~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) > 0",
+          "expr": "min(gitlab_ci_pipeline_status{status=~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -594,12 +589,11 @@
       "scroll": true,
       "showHeader": true,
       "sort": {
-        "col": 3,
+        "col": 4,
         "desc": false
       },
       "styles": [
         {
-          "$$hashKey": "object:1116",
           "alias": "Time",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -607,7 +601,6 @@
           "type": "hidden"
         },
         {
-          "$$hashKey": "object:1117",
           "alias": "Status",
           "align": "auto",
           "colorMode": "cell",
@@ -630,19 +623,16 @@
           "unit": "short",
           "valueMaps": [
             {
-              "$$hashKey": "object:1159",
               "text": "OK",
               "value": "1"
             },
             {
-              "$$hashKey": "object:1160",
               "text": "RUNNING",
               "value": "2"
             }
           ]
         },
         {
-          "$$hashKey": "object:1118",
           "alias": "Last run",
           "align": "auto",
           "colorMode": "cell",
@@ -663,7 +653,6 @@
           "unit": "s"
         },
         {
-          "$$hashKey": "object:1119",
           "alias": "Duration",
           "align": "auto",
           "colorMode": "cell",
@@ -684,7 +673,6 @@
           "unit": "dtdurations"
         },
         {
-          "$$hashKey": "object:1120",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -702,7 +690,7 @@
       ],
       "targets": [
         {
-          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) unless max(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) > 0",
+          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -712,7 +700,7 @@
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) unless (max(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref) > 0)",
+          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -722,9 +710,9 @@
           "refId": "C"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"success\"} * 1) by (project, ref) > 0 or max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"running\"} * 2) by (project, ref) > 0",
+          "expr": "max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"success\"} * 1) by (project, ref, kind) > 0 or max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"running\"} * 2) by (project, ref, kind) > 0",
           "format": "table",
-          "hide": true,
+          "hide": false,
           "instant": true,
           "interval": "",
           "intervalFactor": 1,
