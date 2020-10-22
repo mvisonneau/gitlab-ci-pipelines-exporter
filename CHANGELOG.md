@@ -7,6 +7,12 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [0.4.2] - 2020-10-22
+
+**BREAKING CHANGES**
+
+- Moved helm chart definition to https://github.com/mvisonneau/helm-charts/tree/main/charts/gitlab-ci-pipelines-exporter
+
 ### Added
 
 - More unit tests!
@@ -15,13 +21,12 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - Fixed a bug preventing the webhooks implementation to correctly update the pertinent metrics (also creating pseudo duplicates)
 - Fixed some missing columns and not ideal default sorting on the example grafana dashboard
-- Bumped go-redis/redis/v8 to v8.3.2
+- pkg/storage/local: added rw mutexes to prevent some read/write race condition issues from happening
+- Bumped go-redis/redis/v8 to `v8.3.2`
 - Bumped goreleaser to `v0.145.0`
-- Bumped prometheus/client_golang to v1.8.0
-- Bumped xanzy/go-gitlab to v0.38.2
-- Moved helm chart definition to `github.com/mvisonneau/helm-charts`
+- Bumped prometheus/client_golang to `v1.8.0`
+- Bumped xanzy/go-gitlab to `v0.38.2`
 - pkg/storage/local: added per variables mutexes
-- pkg/storage/local: added rw mutexes
 
 ## [0.4.1] - 2020-10-14
 
