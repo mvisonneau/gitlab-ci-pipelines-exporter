@@ -21,6 +21,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Bumped xanzy/go-gitlab to v0.38.2
 - Moved helm chart definition to `github.com/mvisonneau/helm-charts`
 - pkg/storage/local: added per variables mutexes
+- pkg/storage/local: added rw mutexes
 
 ## [0.4.1] - 2020-10-14
 

@@ -9,13 +9,13 @@ import (
 // Local ..
 type Local struct {
 	projects      schemas.Projects
-	projectsMutex sync.Mutex
+	projectsMutex sync.RWMutex
 
 	projectsRefs      schemas.ProjectsRefs
-	projectsRefsMutex sync.Mutex
+	projectsRefsMutex sync.RWMutex
 
 	metrics      schemas.Metrics
-	metricsMutex sync.Mutex
+	metricsMutex sync.RWMutex
 }
 
 // SetProject ..
@@ -44,7 +44,9 @@ func (l *Local) GetProject(p *schemas.Project) error {
 	}
 
 	if exists {
+		l.projectsMutex.RLock()
 		*p = l.projects[p.Key()]
+		l.projectsMutex.RUnlock()
 	}
 
 	return nil
@@ -52,6 +54,9 @@ func (l *Local) GetProject(p *schemas.Project) error {
 
 // ProjectExists ..
 func (l *Local) ProjectExists(k schemas.ProjectKey) (bool, error) {
+	l.projectsMutex.RLock()
+	defer l.projectsMutex.RUnlock()
+
 	_, ok := l.projects[k]
 	return ok, nil
 }
@@ -59,6 +64,9 @@ func (l *Local) ProjectExists(k schemas.ProjectKey) (bool, error) {
 // Projects ..
 func (l *Local) Projects() (projects schemas.Projects, err error) {
 	projects = make(schemas.Projects)
+	l.projectsMutex.RLock()
+	defer l.projectsMutex.RUnlock()
+
 	for k, v := range l.projects {
 		projects[k] = v
 	}
@@ -67,6 +75,9 @@ func (l *Local) Projects() (projects schemas.Projects, err error) {
 
 // ProjectsCount ..
 func (l *Local) ProjectsCount() (int64, error) {
+	l.projectsMutex.RLock()
+	defer l.projectsMutex.RUnlock()
+
 	return int64(len(l.projects)), nil
 }
 
@@ -96,7 +107,9 @@ func (l *Local) GetProjectRef(pr *schemas.ProjectRef) error {
 	}
 
 	if exists {
+		l.projectsRefsMutex.RLock()
 		*pr = l.projectsRefs[pr.Key()]
+		l.projectsRefsMutex.RUnlock()
 	}
 
 	return nil
@@ -104,6 +117,9 @@ func (l *Local) GetProjectRef(pr *schemas.ProjectRef) error {
 
 // ProjectRefExists ..
 func (l *Local) ProjectRefExists(k schemas.ProjectRefKey) (bool, error) {
+	l.projectsRefsMutex.RLock()
+	defer l.projectsRefsMutex.RUnlock()
+
 	_, ok := l.projectsRefs[k]
 	return ok, nil
 }
@@ -111,6 +127,9 @@ func (l *Local) ProjectRefExists(k schemas.ProjectRefKey) (bool, error) {
 // ProjectsRefs ..
 func (l *Local) ProjectsRefs() (projectsRefs schemas.ProjectsRefs, err error) {
 	projectsRefs = make(schemas.ProjectsRefs)
+	l.projectsRefsMutex.RLock()
+	defer l.projectsRefsMutex.RUnlock()
+
 	for k, v := range l.projectsRefs {
 		projectsRefs[k] = v
 	}
@@ -119,6 +138,9 @@ func (l *Local) ProjectsRefs() (projectsRefs schemas.ProjectsRefs, err error) {
 
 // ProjectsRefsCount ..
 func (l *Local) ProjectsRefsCount() (int64, error) {
+	l.projectsRefsMutex.RLock()
+	defer l.projectsRefsMutex.RUnlock()
+
 	return int64(len(l.projectsRefs)), nil
 }
 
@@ -148,7 +170,9 @@ func (l *Local) GetMetric(m *schemas.Metric) error {
 	}
 
 	if exists {
+		l.metricsMutex.RLock()
 		*m = l.metrics[m.Key()]
+		l.metricsMutex.RUnlock()
 	}
 
 	return nil
@@ -156,6 +180,9 @@ func (l *Local) GetMetric(m *schemas.Metric) error {
 
 // MetricExists ..
 func (l *Local) MetricExists(k schemas.MetricKey) (bool, error) {
+	l.metricsMutex.RLock()
+	defer l.metricsMutex.RUnlock()
+
 	_, ok := l.metrics[k]
 	return ok, nil
 }
@@ -163,6 +190,9 @@ func (l *Local) MetricExists(k schemas.MetricKey) (bool, error) {
 // Metrics ..
 func (l *Local) Metrics() (metrics schemas.Metrics, err error) {
 	metrics = make(schemas.Metrics)
+	l.metricsMutex.RLock()
+	defer l.metricsMutex.RUnlock()
+
 	for k, v := range l.metrics {
 		metrics[k] = v
 	}
@@ -171,5 +201,8 @@ func (l *Local) Metrics() (metrics schemas.Metrics, err error) {
 
 // MetricsCount ..
 func (l *Local) MetricsCount() (int64, error) {
+	l.metricsMutex.RLock()
+	defer l.metricsMutex.RUnlock()
+
 	return int64(len(l.metrics)), nil
 }
