@@ -16,7 +16,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1
 	github.com/urfave/cli/v2 v2.2.0
-	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.1
+	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.8
 	github.com/vmihailenco/taskq/v3 v3.1.1
 	github.com/xanzy/go-gitlab v0.38.2
 	go.uber.org/atomic v1.7.0 // indirect
