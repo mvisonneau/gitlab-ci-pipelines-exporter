@@ -14,7 +14,7 @@
 ~$ cd gitlab-ci-pipelines-exporter/examples/quickstart
 
 # Provide your personal GitLab API access token (needs read_api permissions)
-~$ sed -i 's/<your_token>/xXF_xxjV_xxyzxzz' gitlab-ci-pipelines-exporter/config.yml
+~$ sed -i 's/<your_token>/xXF_xxjV_xxyzxzz/' gitlab-ci-pipelines-exporter/config.yml
 
 # Start gitlab-ci-pipelines-exporter, prometheus and grafana containers !
 ~$ docker-compose up -d
