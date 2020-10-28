@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- Releases of **.deb** and **.rpm** packages
+
 ### Changed
 
 - Bumped all dependencies

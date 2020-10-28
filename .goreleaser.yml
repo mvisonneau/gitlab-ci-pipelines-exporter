@@ -25,9 +25,19 @@ archives:
       - goos: windows
         format: zip
 
-brews:
-  - description: &description GitLab CI pipelines exporter (prometheus/open-metrics)
+nfpms:
+  - maintainer: &author Maxime VISONNEAU <maxime.visonneau@gmail.com>
+    description: &description GitLab CI pipelines exporter (prometheus/open-metrics)
+    license: &license Apache 2.0
     homepage: &homepage https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
+    vendor: *author
+    formats:
+      - deb
+      - rpm
+
+brews:
+  - description: *description
+    homepage: *homepage
     folder: Formula
     tap:
       owner: mvisonneau
@@ -36,7 +46,7 @@ brews:
 scoop:
   description: *description
   homepage: *homepage
-  license: Apache 2.0
+  license: *license
   bucket:
     owner: mvisonneau
     name: scoops
