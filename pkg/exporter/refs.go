@@ -13,6 +13,9 @@ func getProjectRefs(
 	fetchMergeRequestsPipelinesRefs bool,
 	fetchMergeRequestsPipelinesRefsInitLimit int) (map[string]schemas.ProjectRefKind, error) {
 
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	branches, err := gitlabClient.GetProjectBranches(projectID, refsRegexp)
 	if err != nil {
 		return nil, err
@@ -49,6 +52,9 @@ func getProjectRefs(
 }
 
 func pullProjectRefsFromProject(p schemas.Project) error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	gp, err := gitlabClient.GetProject(p.Name)
 	if err != nil {
 		return err
@@ -91,6 +97,9 @@ func pullProjectRefsFromProject(p schemas.Project) error {
 }
 
 func pullProjectRefsFromPipelines(p schemas.Project) error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	log.WithFields(log.Fields{
 		"init-operation": true,
 		"project-name":   p.Name,

@@ -7,6 +7,9 @@ import (
 )
 
 func pullProjectRefPipelineJobsMetrics(pr schemas.ProjectRef) error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	jobs, err := gitlabClient.ListProjectRefPipelineJobs(pr)
 	if err != nil {
 		return err
@@ -24,6 +27,9 @@ func pullProjectRefMostRecentJobsMetrics(pr schemas.ProjectRef) error {
 		return nil
 	}
 
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	jobs, err := gitlabClient.ListProjectRefMostRecentJobs(pr)
 	if err != nil {
 		return err
@@ -37,6 +43,11 @@ func pullProjectRefMostRecentJobsMetrics(pr schemas.ProjectRef) error {
 }
 
 func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
+	// We could potentially have a race condition attempting to
+	// update the same pr at the same time
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	labels := pr.DefaultLabelsValues()
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name

@@ -29,6 +29,8 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 		}
 	}
 
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
 	pipelines, err := gitlabClient.GetProjectPipelines(pr.ID, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{

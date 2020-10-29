@@ -79,6 +79,9 @@ func (r *Registry) GetCollector(kind schemas.MetricKind) prometheus.Collector {
 
 // ExportMetrics ..
 func (r *Registry) ExportMetrics() error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	metrics, err := store.Metrics()
 	if err != nil {
 		return err

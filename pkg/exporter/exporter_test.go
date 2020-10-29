@@ -17,6 +17,9 @@ import (
 )
 
 func resetGlobalValues() {
+	cfgUpdateLock.Lock()
+	defer cfgUpdateLock.Unlock()
+
 	config = schemas.Config{}
 	gitlabClient = nil
 	redisClient = nil
@@ -26,6 +29,9 @@ func resetGlobalValues() {
 }
 
 func configureMockedGitlabClient() (*http.ServeMux, *httptest.Server) {
+	cfgUpdateLock.Lock()
+	defer cfgUpdateLock.Unlock()
+
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 

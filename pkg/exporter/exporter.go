@@ -6,6 +6,7 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -24,17 +25,21 @@ import (
 )
 
 var (
-	config       schemas.Config
-	gitlabClient *gitlab.Client
-	redisClient  *redis.Client
-	taskFactory  taskq.Factory
-	pullingQueue taskq.Queue
-	store        storage.Storage
+	config        schemas.Config
+	gitlabClient  *gitlab.Client
+	redisClient   *redis.Client
+	taskFactory   taskq.Factory
+	pullingQueue  taskq.Queue
+	store         storage.Storage
+	cfgUpdateLock sync.RWMutex
 )
 
 // Configure ..
 func Configure(cfg schemas.Config, userAgentVersion string) error {
+	cfgUpdateLock.Lock()
 	config = cfg
+	cfgUpdateLock.Unlock()
+
 	configurePullingQueue()
 	configureStore()
 	return configureGitlabClient(userAgentVersion)
@@ -42,6 +47,9 @@ func Configure(cfg schemas.Config, userAgentVersion string) error {
 
 // ConfigureGitlabClient ..
 func configureGitlabClient(userAgentVersion string) (err error) {
+	cfgUpdateLock.Lock()
+	defer cfgUpdateLock.Unlock()
+
 	gitlabClient, err = gitlab.NewClient(gitlab.ClientConfig{
 		URL:              config.Gitlab.URL,
 		Token:            config.Gitlab.Token,
@@ -55,6 +63,9 @@ func configureGitlabClient(userAgentVersion string) (err error) {
 
 // ConfigureRedisClient ..
 func ConfigureRedisClient(c *redis.Client) error {
+	cfgUpdateLock.Lock()
+	defer cfgUpdateLock.Unlock()
+
 	redisClient = c
 	if _, err := redisClient.Ping(context.Background()).Result(); err != nil {
 		return errors.Wrap(err, "connecting to redis")
@@ -64,6 +75,9 @@ func ConfigureRedisClient(c *redis.Client) error {
 
 // ConfigurePullingQueue ..
 func configurePullingQueue() {
+	cfgUpdateLock.Lock()
+	defer cfgUpdateLock.Unlock()
+
 	pullingQueueOptions := &taskq.QueueOptions{
 		Name:                 "pull",
 		PauseErrorsThreshold: 0,
@@ -94,6 +108,9 @@ func configurePullingQueue() {
 
 // ConfigureStore ..
 func configureStore() {
+	cfgUpdateLock.Lock()
+	defer cfgUpdateLock.Unlock()
+
 	if redisClient != nil {
 		store = storage.NewRedisStorage(redisClient)
 	} else {

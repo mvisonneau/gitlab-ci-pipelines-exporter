@@ -59,6 +59,9 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func triggerProjectRefMetricsPull(pr schemas.ProjectRef) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	logFields := log.Fields{
 		"project-id":   pr.ID,
 		"project-name": pr.PathWithNamespace,

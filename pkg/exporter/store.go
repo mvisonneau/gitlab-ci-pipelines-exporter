@@ -8,6 +8,9 @@ import (
 )
 
 func garbageCollectProjects() error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	storedProjects, err := store.Projects()
 	if err != nil {
 		return err
@@ -48,6 +51,9 @@ func garbageCollectProjects() error {
 }
 
 func garbageCollectProjectsRefs() error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	storedProjects, err := store.Projects()
 	if err != nil {
 		return err
@@ -110,6 +116,9 @@ func garbageCollectProjectsRefs() error {
 }
 
 func garbageCollectProjectsRefsMetrics() error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	storedProjectsRefs, err := store.ProjectsRefs()
 	if err != nil {
 		return err
@@ -217,6 +226,9 @@ func metricLogFields(m schemas.Metric) log.Fields {
 }
 
 func storeGetMetric(m *schemas.Metric) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if err := store.GetMetric(m); err != nil {
 		log.WithFields(
 			metricLogFields(*m),
@@ -227,6 +239,9 @@ func storeGetMetric(m *schemas.Metric) {
 }
 
 func storeSetMetric(m schemas.Metric) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if err := store.SetMetric(m); err != nil {
 		log.WithFields(
 			metricLogFields(m),
@@ -237,6 +252,9 @@ func storeSetMetric(m schemas.Metric) {
 }
 
 func storeDelMetric(m schemas.Metric) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if err := store.DelMetric(m.Key()); err != nil {
 		log.WithFields(
 			metricLogFields(m),

@@ -83,6 +83,9 @@ func schedule(ctx context.Context) {
 	schedulerInit(ctx)
 
 	go func(ctx context.Context) {
+		cfgUpdateLock.RLock()
+		defer cfgUpdateLock.RUnlock()
+
 		pullProjectsFromWildcardsTicker := time.NewTicker(time.Duration(config.Pull.ProjectsFromWildcards.IntervalSeconds) * time.Second)
 		pullProjectRefsFromProjectsTicker := time.NewTicker(time.Duration(config.Pull.ProjectRefsFromProjects.IntervalSeconds) * time.Second)
 		pullProjectRefsMetricsTicker := time.NewTicker(time.Duration(config.Pull.ProjectRefsMetrics.IntervalSeconds) * time.Second)
@@ -139,6 +142,9 @@ func schedule(ctx context.Context) {
 }
 
 func schedulerInit(ctx context.Context) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if config.Pull.ProjectsFromWildcards.OnInit {
 		schedulePullProjectsFromWildcards(ctx)
 	}
@@ -177,6 +183,9 @@ func schedulePullProjectsFromWildcards(ctx context.Context) {
 }
 
 func schedulePullProjectRefsFromProjects(ctx context.Context) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	projectsCount, err := store.ProjectsCount()
 	if err != nil {
 		log.Error(err.Error())
@@ -199,6 +208,9 @@ func schedulePullProjectRefsFromProjects(ctx context.Context) {
 }
 
 func schedulePullProjectRefsMetrics(ctx context.Context) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	projectsRefsCount, err := store.ProjectsRefsCount()
 	if err != nil {
 		log.Error(err)
@@ -226,6 +238,9 @@ func schedulePullProjectsFromWildcardTask(ctx context.Context, w schemas.Wildcar
 		return
 	}
 
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if err := pullingQueue.Add(pullProjectsFromWildcardTask.WithArgs(ctx, w)); err != nil {
 		log.WithFields(log.Fields{
 			"wildcard-owner-kind": w.Owner.Kind,
@@ -236,6 +251,9 @@ func schedulePullProjectsFromWildcardTask(ctx context.Context, w schemas.Wildcar
 }
 
 func schedulePullProjectRefsFromPipeline(ctx context.Context, p schemas.Project) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if pullingQueue == nil {
 		log.Warn("uninitialized pulling queue, cannot schedule")
 		return
@@ -250,6 +268,9 @@ func schedulePullProjectRefsFromPipeline(ctx context.Context, p schemas.Project)
 }
 
 func schedulePullProjectRefsFromProject(ctx context.Context, p schemas.Project) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if pullingQueue == nil {
 		log.Warn("uninitialized pulling queue, cannot schedule")
 		return
@@ -264,6 +285,9 @@ func schedulePullProjectRefsFromProject(ctx context.Context, p schemas.Project) 
 }
 
 func schedulePullProjectRefMetrics(ctx context.Context, pr schemas.ProjectRef) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if pullingQueue == nil {
 		log.Warn("uninitialized pulling queue, cannot schedule")
 		return
@@ -278,6 +302,9 @@ func schedulePullProjectRefMetrics(ctx context.Context, pr schemas.ProjectRef) {
 }
 
 func scheduleGarbageCollectProjects(ctx context.Context) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if pullingQueue == nil {
 		log.Warn("uninitialized pulling queue, cannot schedule")
 		return
@@ -291,6 +318,9 @@ func scheduleGarbageCollectProjects(ctx context.Context) {
 }
 
 func scheduleGarbageCollectProjectsRefs(ctx context.Context) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if pullingQueue == nil {
 		log.Warn("uninitialized pulling queue, cannot schedule")
 		return
@@ -304,6 +334,9 @@ func scheduleGarbageCollectProjectsRefs(ctx context.Context) {
 }
 
 func scheduleGarbageCollectProjectsRefsMetrics(ctx context.Context) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	if pullingQueue == nil {
 		log.Warn("uninitialized pulling queue, cannot schedule")
 		return

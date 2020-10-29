@@ -8,6 +8,9 @@ import (
 )
 
 func pullProjectsFromWildcard(w schemas.Wildcard) error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
 	foundProjects, err := gitlabClient.ListProjects(w)
 	if err != nil {
 		return err

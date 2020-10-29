@@ -14,6 +14,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Changed
 
 - Bumped all dependencies
+- Fixed race conditions during tests
 
 ## [0.4.2] - 2020-10-22
 
