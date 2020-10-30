@@ -7,6 +7,8 @@ import (
 
 var (
 	defaultProjectOutputSparseStatusMetrics        = true
+	defaultProjectPullEnvironmentsEnabled          = true
+	defaultProjectPullEnvironmentsRegexp           = `^prod`
 	defaultProjectPullRefsRegexp                   = `^(main|master)$`
 	defaultProjectPullRefsFromPipelinesEnabled     = false
 	defaultProjectPullRefsFromPipelinesDepth       = 100
@@ -28,8 +30,18 @@ type ProjectParameters struct {
 
 // ProjectPull ..
 type ProjectPull struct {
-	Refs     ProjectPullRefs     `yaml:"refs"`
-	Pipeline ProjectPullPipeline `yaml:"pipeline"`
+	Environments ProjectPullEnvironments `yaml:"environments"`
+	Refs         ProjectPullRefs         `yaml:"refs"`
+	Pipeline     ProjectPullPipeline     `yaml:"pipeline"`
+}
+
+// ProjectPullEnvironments ..
+type ProjectPullEnvironments struct {
+	// Whether to pull environments/deployments or not for this project
+	EnabledValue *bool `yaml:"enabled"`
+
+	// Regular expression to filter project refs to fetch (defaults to '.*')
+	RegexpValue *string `yaml:"regexp"`
 }
 
 // ProjectPullRefs ..
@@ -85,6 +97,14 @@ type ProjectPullPipelineVariables struct {
 
 // UpdateProjectDefaults ..
 func UpdateProjectDefaults(d ProjectParameters) {
+	if d.Pull.Environments.EnabledValue != nil {
+		defaultProjectPullEnvironmentsEnabled = *d.Pull.Environments.EnabledValue
+	}
+
+	if d.Pull.Environments.RegexpValue != nil {
+		defaultProjectPullEnvironmentsRegexp = *d.Pull.Environments.RegexpValue
+	}
+
 	if d.Pull.Refs.RegexpValue != nil {
 		defaultProjectPullRefsRegexp = *d.Pull.Refs.RegexpValue
 	}
@@ -145,6 +165,24 @@ func (p *ProjectParameters) OutputSparseStatusMetrics() bool {
 	}
 
 	return defaultProjectOutputSparseStatusMetrics
+}
+
+// Enabled ...
+func (p *ProjectPullEnvironments) Enabled() bool {
+	if p.EnabledValue != nil {
+		return *p.EnabledValue
+	}
+
+	return defaultProjectPullEnvironmentsEnabled
+}
+
+// Regexp ...
+func (p *ProjectPullEnvironments) Regexp() string {
+	if p.RegexpValue != nil {
+		return *p.RegexpValue
+	}
+
+	return defaultProjectPullEnvironmentsRegexp
 }
 
 // Regexp ...

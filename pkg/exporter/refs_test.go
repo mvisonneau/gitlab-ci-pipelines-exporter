@@ -10,7 +10,7 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func TestGetProjectRefs(t *testing.T) {
+func TestGetRefs(t *testing.T) {
 	resetGlobalValues()
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
@@ -30,16 +30,16 @@ func TestGetProjectRefs(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"}]`)
 		})
 
-	foundRefs, err := getProjectRefs(1, "^keep", true, 10)
+	foundRefs, err := getRefs(1, "^keep", true, 10)
 	assert.NoError(t, err)
 
-	assert.Equal(t, foundRefs["keep/0.0.2"], schemas.ProjectRefKindTag)
-	assert.Equal(t, foundRefs["keep/main"], schemas.ProjectRefKindBranch)
-	assert.Equal(t, foundRefs["refs/merge-requests/foo"], schemas.ProjectRefKindMergeRequest)
-	assert.Contains(t, []schemas.ProjectRefKind{schemas.ProjectRefKindTag, schemas.ProjectRefKindBranch}, foundRefs["keep/dev"])
+	assert.Equal(t, foundRefs["keep/0.0.2"], schemas.RefKindTag)
+	assert.Equal(t, foundRefs["keep/main"], schemas.RefKindBranch)
+	assert.Equal(t, foundRefs["refs/merge-requests/foo"], schemas.RefKindMergeRequest)
+	assert.Contains(t, []schemas.RefKind{schemas.RefKindTag, schemas.RefKindBranch}, foundRefs["keep/dev"])
 }
 
-func TestPullProjectRefsFromProject(t *testing.T) {
+func TestPullRefsFromProject(t *testing.T) {
 	resetGlobalValues()
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
@@ -59,24 +59,24 @@ func TestPullProjectRefsFromProject(t *testing.T) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	assert.NoError(t, pullProjectRefsFromProject(schemas.Project{Name: "foo/bar"}))
+	assert.NoError(t, pullRefsFromProject(schemas.Project{Name: "foo/bar"}))
 
-	projectsRefs, _ := store.ProjectsRefs()
-	expectedProjectsRefs := schemas.ProjectsRefs{
-		"3207122276": schemas.ProjectRef{
+	projectsRefs, _ := store.Refs()
+	expectedRefs := schemas.Refs{
+		"3207122276": schemas.Ref{
 			Project: schemas.Project{
 				Name: "foo/bar",
 			},
-			Kind: schemas.ProjectRefKindBranch,
+			Kind: schemas.RefKindBranch,
 			ID:   1,
 			Ref:  "main",
 			Jobs: make(map[string]goGitlab.Job),
 		},
 	}
-	assert.Equal(t, expectedProjectsRefs, projectsRefs)
+	assert.Equal(t, expectedRefs, projectsRefs)
 }
 
-func TestPullProjectRefsFromPipelines(t *testing.T) {
+func TestPullRefsFromPipelines(t *testing.T) {
 	resetGlobalValues()
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
@@ -99,28 +99,28 @@ func TestPullProjectRefsFromPipelines(t *testing.T) {
 			}
 		})
 
-	assert.NoError(t, pullProjectRefsFromPipelines(schemas.Project{Name: "foo/bar"}))
+	assert.NoError(t, pullRefsFromPipelines(schemas.Project{Name: "foo/bar"}))
 
-	projectsRefs, _ := store.ProjectsRefs()
-	expectedProjectsRefs := schemas.ProjectsRefs{
-		"3207122276": schemas.ProjectRef{
+	projectsRefs, _ := store.Refs()
+	expectedRefs := schemas.Refs{
+		"3207122276": schemas.Ref{
 			Project: schemas.Project{
 				Name: "foo/bar",
 			},
-			Kind: schemas.ProjectRefKindBranch,
+			Kind: schemas.RefKindBranch,
 			ID:   1,
 			Ref:  "main",
 			Jobs: make(map[string]goGitlab.Job),
 		},
-		"755606486": schemas.ProjectRef{
+		"755606486": schemas.Ref{
 			Project: schemas.Project{
 				Name: "foo/bar",
 			},
-			Kind: schemas.ProjectRefKindTag,
+			Kind: schemas.RefKindTag,
 			ID:   1,
 			Ref:  "master",
 			Jobs: make(map[string]goGitlab.Job),
 		},
 	}
-	assert.Equal(t, expectedProjectsRefs, projectsRefs)
+	assert.Equal(t, expectedRefs, projectsRefs)
 }

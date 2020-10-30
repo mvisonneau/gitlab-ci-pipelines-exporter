@@ -56,11 +56,11 @@ func TestGarbageCollectProjects(t *testing.T) {
 	assert.Equal(t, expectedProjects, storedProjects)
 }
 
-func TestGarbageCollectProjectsRefs(t *testing.T) {
+func TestGarbageCollectRefs(t *testing.T) {
 	resetGlobalValues()
 
-	pr1dev := schemas.ProjectRef{PathWithNamespace: "p1", Ref: "dev"}
-	pr1main := schemas.ProjectRef{PathWithNamespace: "p1", Ref: "main"}
+	pr1dev := schemas.Ref{PathWithNamespace: "p1", Ref: "dev"}
+	pr1main := schemas.Ref{PathWithNamespace: "p1", Ref: "main"}
 
 	p2old := schemas.Project{Name: "p2"}
 	p2 := schemas.Project{
@@ -73,30 +73,30 @@ func TestGarbageCollectProjectsRefs(t *testing.T) {
 			},
 		},
 	}
-	pr2dev := schemas.ProjectRef{Project: p2old, PathWithNamespace: "p2", Ref: "dev"}
-	pr2main := schemas.ProjectRef{Project: p2old, PathWithNamespace: "p2", Ref: "main"}
+	pr2dev := schemas.Ref{Project: p2old, PathWithNamespace: "p2", Ref: "dev"}
+	pr2main := schemas.Ref{Project: p2old, PathWithNamespace: "p2", Ref: "main"}
 
 	store.SetProject(p2)
-	store.SetProjectRef(pr1dev)
-	store.SetProjectRef(pr1main)
-	store.SetProjectRef(pr2dev)
-	store.SetProjectRef(pr2main)
+	store.SetRef(pr1dev)
+	store.SetRef(pr1main)
+	store.SetRef(pr2dev)
+	store.SetRef(pr2main)
 
-	assert.NoError(t, garbageCollectProjectsRefs())
-	storedProjectsRefs, err := store.ProjectsRefs()
+	assert.NoError(t, garbageCollectRefs())
+	storedRefs, err := store.Refs()
 	assert.NoError(t, err)
 
-	newPR2main := schemas.ProjectRef{Project: p2, PathWithNamespace: "p2", Ref: "main"}
-	expectedProjectsRefs := schemas.ProjectsRefs{
+	newPR2main := schemas.Ref{Project: p2, PathWithNamespace: "p2", Ref: "main"}
+	expectedRefs := schemas.Refs{
 		newPR2main.Key(): newPR2main,
 	}
-	assert.Equal(t, expectedProjectsRefs, storedProjectsRefs)
+	assert.Equal(t, expectedRefs, storedRefs)
 }
 
-func TestGarbageCollectProjectsRefsMetrics(t *testing.T) {
+func TestGarbageCollectMetrics(t *testing.T) {
 	resetGlobalValues()
 
-	pr1 := schemas.ProjectRef{
+	pr1 := schemas.Ref{
 		Project: schemas.Project{
 			ProjectParameters: schemas.ProjectParameters{
 				OutputSparseStatusMetricsValue: pointy.Bool(true),
@@ -121,7 +121,7 @@ func TestGarbageCollectProjectsRefsMetrics(t *testing.T) {
 	pr3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo"}}
 	pr4m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"ref": "bar"}}
 
-	store.SetProjectRef(pr1)
+	store.SetRef(pr1)
 	store.SetMetric(pr1m1)
 	store.SetMetric(pr1m2)
 	store.SetMetric(pr1m3)
@@ -129,7 +129,7 @@ func TestGarbageCollectProjectsRefsMetrics(t *testing.T) {
 	store.SetMetric(pr3m1)
 	store.SetMetric(pr4m1)
 
-	assert.NoError(t, garbageCollectProjectsRefsMetrics())
+	assert.NoError(t, garbageCollectMetrics())
 	storedMetrics, err := store.Metrics()
 	assert.NoError(t, err)
 

@@ -50,7 +50,7 @@ func garbageCollectProjects() error {
 	return nil
 }
 
-func garbageCollectProjectsRefs() error {
+func garbageCollectRefs() error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -59,23 +59,23 @@ func garbageCollectProjectsRefs() error {
 		return err
 	}
 
-	storedProjectsRefs, err := store.ProjectsRefs()
+	storedRefs, err := store.Refs()
 	if err != nil {
 		return err
 	}
 
-	for k, pr := range storedProjectsRefs {
-		p, projectExists := storedProjects[pr.Project.Key()]
+	for k, ref := range storedRefs {
+		p, projectExists := storedProjects[ref.Project.Key()]
 
 		// If the project does not exist anymore, delete the project ref
 		if !projectExists {
-			if err = store.DelProjectRef(k); err != nil {
+			if err = store.DelRef(k); err != nil {
 				return err
 			}
 
 			log.WithFields(log.Fields{
-				"project-name": pr.PathWithNamespace,
-				"project-ref":  pr.Ref,
+				"project-name": ref.PathWithNamespace,
+				"project-ref":  ref.Ref,
 				"reason":       "non-existent-project",
 			}).Info("deleted project ref from the store")
 			continue
@@ -83,30 +83,30 @@ func garbageCollectProjectsRefs() error {
 
 		// If the ref is not configured to be pulled anymore, delete the project ref
 		re := regexp.MustCompile(p.ProjectParameters.Pull.Refs.Regexp())
-		if !re.MatchString(pr.Ref) {
-			if err = store.DelProjectRef(k); err != nil {
+		if !re.MatchString(ref.Ref) {
+			if err = store.DelRef(k); err != nil {
 				return err
 			}
 
 			log.WithFields(log.Fields{
-				"project-name": pr.PathWithNamespace,
-				"project-ref":  pr.Ref,
+				"project-name": ref.PathWithNamespace,
+				"project-ref":  ref.Ref,
 				"reason":       "ref-not-in-regexp",
 			}).Info("deleted project ref from the store")
 			continue
 		}
 
 		// Check if the latest configuration of the project in store matches the
-		// projectRef one
-		// TODO: Remove the storage of the project within the projectRef
-		if pr.Project != p {
-			pr.Project = p
-			if err = store.SetProjectRef(pr); err != nil {
+		// ref one
+		// TODO: Remove the storage of the project within the ref
+		if ref.Project != p {
+			ref.Project = p
+			if err = store.SetRef(ref); err != nil {
 				return err
 			}
 			log.WithFields(log.Fields{
-				"project-name": pr.PathWithNamespace,
-				"project-ref":  pr.Ref,
+				"project-name": ref.PathWithNamespace,
+				"project-ref":  ref.Ref,
 				"reason":       "ref-not-in-regexp",
 			}).Info("updated project ref, project definition was not in sync")
 		}
@@ -115,11 +115,11 @@ func garbageCollectProjectsRefs() error {
 	return nil
 }
 
-func garbageCollectProjectsRefsMetrics() error {
+func garbageCollectMetrics() error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	storedProjectsRefs, err := store.ProjectsRefs()
+	storedRefs, err := store.Refs()
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func garbageCollectProjectsRefsMetrics() error {
 
 	for k, m := range storedMetrics {
 		// In order to save some memory space we chose to have to recompose
-		// the ProjectRef the metric belongs to
+		// the Ref the metric belongs to
 		metricLabelProject, metricLabelProjectExists := m.Labels["project"]
 		metricLabelRef, metricLabelRefExists := m.Labels["ref"]
 
@@ -147,15 +147,15 @@ func garbageCollectProjectsRefsMetrics() error {
 			}).Info("deleted metric from the store")
 		}
 
-		pr := schemas.ProjectRef{
+		ref := schemas.Ref{
 			PathWithNamespace: metricLabelProject,
 			Ref:               metricLabelRef,
 		}
 
-		pr, projectRefExists := storedProjectsRefs[pr.Key()]
+		ref, refExists := storedRefs[ref.Key()]
 
 		// If the project ref does not exist anymore, delete the metric
-		if !projectRefExists {
+		if !refExists {
 			if err = store.DelMetric(k); err != nil {
 				return err
 			}
@@ -177,7 +177,7 @@ func garbageCollectProjectsRefsMetrics() error {
 			schemas.MetricKindJobStatus,
 			schemas.MetricKindJobTimestamp:
 
-			if !pr.Pull.Pipeline.Jobs.Enabled() {
+			if !ref.Pull.Pipeline.Jobs.Enabled() {
 				if err = store.DelMetric(k); err != nil {
 					return err
 				}
@@ -198,7 +198,7 @@ func garbageCollectProjectsRefsMetrics() error {
 		case schemas.MetricKindJobStatus,
 			schemas.MetricKindStatus:
 
-			if pr.OutputSparseStatusMetrics() && m.Value != 1 {
+			if ref.OutputSparseStatusMetrics() && m.Value != 1 {
 				if err = store.DelMetric(k); err != nil {
 					return err
 				}

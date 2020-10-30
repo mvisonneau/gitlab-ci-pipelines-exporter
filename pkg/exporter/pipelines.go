@@ -10,38 +10,38 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func pullProjectRefMetrics(pr schemas.ProjectRef) error {
+func pullRefMetrics(ref schemas.Ref) error {
 	logFields := log.Fields{
-		"project-name":     pr.PathWithNamespace,
-		"project-id":       pr.ID,
-		"project-ref":      pr.Ref,
-		"project-ref-kind": pr.Kind,
+		"project-name":     ref.PathWithNamespace,
+		"project-id":       ref.ID,
+		"project-ref":      ref.Ref,
+		"project-ref-kind": ref.Kind,
 	}
 
-	// TODO: Figure out if we want to have a similar approach for ProjectRefKindTag with
+	// TODO: Figure out if we want to have a similar approach for RefKindTag with
 	// an additional configuration parameeter perhaps
-	if pr.Kind == schemas.ProjectRefKindMergeRequest && pr.MostRecentPipeline != nil {
-		switch pr.MostRecentPipeline.Status {
+	if ref.Kind == schemas.RefKindMergeRequest && ref.MostRecentPipeline != nil {
+		switch ref.MostRecentPipeline.Status {
 		case "success", "failed", "canceled", "skipped":
 			// The pipeline will not evolve, lets not bother querying the API
-			log.WithFields(logFields).WithField("most-recent-pipeline-id", pr.MostRecentPipeline.ID).Debug("skipping finished merge-request pipeline")
+			log.WithFields(logFields).WithField("most-recent-pipeline-id", ref.MostRecentPipeline.ID).Debug("skipping finished merge-request pipeline")
 			return nil
 		}
 	}
 
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
-	pipelines, err := gitlabClient.GetProjectPipelines(pr.ID, &goGitlab.ListProjectPipelinesOptions{
+	pipelines, err := gitlabClient.GetProjectPipelines(ref.ID, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
 			PerPage: 1,
 			Page:    1,
 		},
-		Ref: goGitlab.String(pr.Ref),
+		Ref: goGitlab.String(ref.Ref),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error fetching project pipelines for %s: %v", pr.PathWithNamespace, err)
+		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.PathWithNamespace, err)
 	}
 
 	if len(pipelines) == 0 {
@@ -49,17 +49,17 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 		return nil
 	}
 
-	pipeline, err := gitlabClient.GetProjectRefPipeline(pr, pipelines[0].ID)
+	pipeline, err := gitlabClient.GetRefPipeline(ref, pipelines[0].ID)
 	if err != nil {
 		return err
 	}
 
-	if pr.MostRecentPipeline == nil || !reflect.DeepEqual(pipeline, pr.MostRecentPipeline) {
-		pr.MostRecentPipeline = pipeline
+	if ref.MostRecentPipeline == nil || !reflect.DeepEqual(pipeline, ref.MostRecentPipeline) {
+		ref.MostRecentPipeline = pipeline
 
 		// fetch pipeline variables
-		if pr.Pull.Pipeline.Variables.Enabled() {
-			pr.MostRecentPipelineVariables, err = gitlabClient.GetProjectRefPipelineVariablesAsConcatenatedString(pr)
+		if ref.Pull.Pipeline.Variables.Enabled() {
+			ref.MostRecentPipelineVariables, err = gitlabClient.GetRefPipelineVariablesAsConcatenatedString(ref)
 			if err != nil {
 				return err
 			}
@@ -68,7 +68,7 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 		if pipeline.Status == "running" {
 			runCount := schemas.Metric{
 				Kind:   schemas.MetricKindRunCount,
-				Labels: pr.DefaultLabelsValues(),
+				Labels: ref.DefaultLabelsValues(),
 			}
 			storeGetMetric(&runCount)
 			runCount.Value++
@@ -82,7 +82,7 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 			} else {
 				storeSetMetric(schemas.Metric{
 					Kind:   schemas.MetricKindCoverage,
-					Labels: pr.DefaultLabelsValues(),
+					Labels: ref.DefaultLabelsValues(),
 					Value:  parsedCoverage,
 				})
 			}
@@ -90,39 +90,39 @@ func pullProjectRefMetrics(pr schemas.ProjectRef) error {
 
 		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindID,
-			Labels: pr.DefaultLabelsValues(),
+			Labels: ref.DefaultLabelsValues(),
 			Value:  float64(pipeline.ID),
 		})
 
 		emitStatusMetric(
 			schemas.MetricKindStatus,
-			pr.DefaultLabelsValues(),
+			ref.DefaultLabelsValues(),
 			statusesList[:],
 			pipeline.Status,
-			pr.OutputSparseStatusMetrics(),
+			ref.OutputSparseStatusMetrics(),
 		)
 
 		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindDurationSeconds,
-			Labels: pr.DefaultLabelsValues(),
+			Labels: ref.DefaultLabelsValues(),
 			Value:  float64(pipeline.Duration),
 		})
 
 		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindTimestamp,
-			Labels: pr.DefaultLabelsValues(),
+			Labels: ref.DefaultLabelsValues(),
 			Value:  float64(pipeline.UpdatedAt.Unix()),
 		})
 
-		if pr.Pull.Pipeline.Jobs.Enabled() {
-			if err = pullProjectRefPipelineJobsMetrics(pr); err != nil {
+		if ref.Pull.Pipeline.Jobs.Enabled() {
+			if err = pullRefPipelineJobsMetrics(ref); err != nil {
 				return err
 			}
 		}
 	}
 
-	if pr.Pull.Pipeline.Jobs.Enabled() {
-		if err := pullProjectRefMostRecentJobsMetrics(pr); err != nil {
+	if ref.Pull.Pipeline.Jobs.Enabled() {
+		if err := pullRefMostRecentJobsMetrics(ref); err != nil {
 			return err
 		}
 	}

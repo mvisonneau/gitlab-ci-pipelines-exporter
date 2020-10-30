@@ -7,28 +7,28 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func TestProjectRefKey(t *testing.T) {
-	pr := ProjectRef{
+func TestRefKey(t *testing.T) {
+	ref := Ref{
 		PathWithNamespace: "foo/bar",
 		Ref:               "baz",
 	}
 
-	assert.Equal(t, ProjectRefKey("732621927"), pr.Key())
+	assert.Equal(t, RefKey("732621927"), ref.Key())
 }
 
-func TestProjectRefsCount(t *testing.T) {
-	assert.Equal(t, 2, ProjectsRefs{
-		ProjectRefKey("foo"): ProjectRef{},
-		ProjectRefKey("bar"): ProjectRef{},
+func TestRefsCount(t *testing.T) {
+	assert.Equal(t, 2, Refs{
+		RefKey("foo"): Ref{},
+		RefKey("bar"): Ref{},
 	}.Count())
 }
 
-func TestProjectRefDefaultLabelsValues(t *testing.T) {
-	pr := ProjectRef{
+func TestRefDefaultLabelsValues(t *testing.T) {
+	ref := Ref{
 		PathWithNamespace:           "foo/bar",
 		Topics:                      "amazing",
 		Ref:                         "feature",
-		Kind:                        ProjectRefKindBranch,
+		Kind:                        RefKindBranch,
 		MostRecentPipelineVariables: "blah",
 	}
 
@@ -40,10 +40,10 @@ func TestProjectRefDefaultLabelsValues(t *testing.T) {
 		"variables": "blah",
 	}
 
-	assert.Equal(t, expectedValue, pr.DefaultLabelsValues())
+	assert.Equal(t, expectedValue, ref.DefaultLabelsValues())
 }
 
-func TestNewProjectRef(t *testing.T) {
+func TestNewRef(t *testing.T) {
 	p := Project{
 		Name: "foo/bar",
 	}
@@ -54,17 +54,17 @@ func TestNewProjectRef(t *testing.T) {
 		TagList:           []string{"baz", "yolo"},
 	}
 
-	expectedValue := ProjectRef{
+	expectedValue := Ref{
 		Project: Project{
 			Name: "foo/bar",
 		},
 		PathWithNamespace: "foo/bar",
-		Kind:              ProjectRefKindTag,
+		Kind:              RefKindTag,
 		ID:                1,
 		Topics:            "baz,yolo",
 		Ref:               "v0.0.7",
 		Jobs:              make(map[string]goGitlab.Job),
 	}
 
-	assert.Equal(t, expectedValue, NewProjectRef(p, gp, "v0.0.7", ProjectRefKindTag))
+	assert.Equal(t, expectedValue, NewRef(p, gp, "v0.0.7", RefKindTag))
 }

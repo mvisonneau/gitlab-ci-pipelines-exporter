@@ -11,7 +11,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-func TestPullProjectRefMetricsSucceed(t *testing.T) {
+func TestPullRefMetricsSucceed(t *testing.T) {
 	resetGlobalValues()
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
@@ -32,16 +32,16 @@ func TestPullProjectRefMetricsSucceed(t *testing.T) {
 			fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
 		})
 
-	pr := schemas.ProjectRef{
-		Kind:              schemas.ProjectRefKindBranch,
+	ref := schemas.Ref{
+		Kind:              schemas.RefKindBranch,
 		ID:                1,
 		PathWithNamespace: "foo/bar",
 		Ref:               "baz",
 	}
-	pr.Pull.Pipeline.Variables.EnabledValue = pointy.Bool(true)
+	ref.Pull.Pipeline.Variables.EnabledValue = pointy.Bool(true)
 
 	// Metrics pull shall succeed
-	assert.NoError(t, pullProjectRefMetrics(pr))
+	assert.NoError(t, pullRefMetrics(ref))
 
 	// Check if all the metrics exist
 	metrics, _ := store.Metrics()
@@ -49,7 +49,7 @@ func TestPullProjectRefMetricsSucceed(t *testing.T) {
 		"project":   "foo/bar",
 		"topics":    "",
 		"ref":       "baz",
-		"kind":      string(schemas.ProjectRefKindBranch),
+		"kind":      string(schemas.RefKindBranch),
 		"variables": "foo:bar",
 	}
 
@@ -83,13 +83,13 @@ func TestPullProjectRefMetricsSucceed(t *testing.T) {
 	assert.Equal(t, status, metrics[status.Key()])
 }
 
-func TestPullProjectRefMetricsMergeRequestPipeline(t *testing.T) {
-	pr := schemas.ProjectRef{
-		Kind: schemas.ProjectRefKindMergeRequest,
+func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
+	ref := schemas.Ref{
+		Kind: schemas.RefKindMergeRequest,
 		MostRecentPipeline: &gitlab.Pipeline{
 			Status: "success",
 		},
 	}
 
-	assert.NoError(t, pullProjectRefMetrics(pr))
+	assert.NoError(t, pullRefMetrics(ref))
 }

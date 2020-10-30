@@ -79,11 +79,12 @@ func configure(ctx *cli.Context) (err error) {
 
 	log.WithFields(
 		log.Fields{
-			"gitlab-endpoint":                           cfg.Gitlab.URL,
-			"pull-projects-from-wildcards-interval":     fmt.Sprintf("%ds", cfg.Pull.ProjectsFromWildcards.IntervalSeconds),
-			"pull-projects-refs-from-projects-interval": fmt.Sprintf("%ds", cfg.Pull.ProjectRefsFromProjects.IntervalSeconds),
-			"pull-projects-refs-metrics-interval":       fmt.Sprintf("%ds", cfg.Pull.ProjectRefsMetrics.IntervalSeconds),
-			"pull-rate-limit":                           fmt.Sprintf("%drps", cfg.Pull.MaximumGitLabAPIRequestsPerSecond),
+			"gitlab-endpoint":                          cfg.Gitlab.URL,
+			"pull-projects-from-wildcards-interval":    fmt.Sprintf("%ds", cfg.Pull.ProjectsFromWildcards.IntervalSeconds),
+			"pull-environments-from-projects-interval": fmt.Sprintf("%ds", cfg.Pull.EnvironmentsFromProjects.IntervalSeconds),
+			"pull-refs-from-projects-interval":         fmt.Sprintf("%ds", cfg.Pull.RefsFromProjects.IntervalSeconds),
+			"pull-metrics-interval":                    fmt.Sprintf("%ds", cfg.Pull.Metrics.IntervalSeconds),
+			"pull-rate-limit":                          fmt.Sprintf("%drps", cfg.Pull.MaximumGitLabAPIRequestsPerSecond),
 		},
 	).Info("exporter configured")
 

@@ -6,59 +6,57 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func pullProjectRefPipelineJobsMetrics(pr schemas.ProjectRef) error {
+func pullRefPipelineJobsMetrics(ref schemas.Ref) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	jobs, err := gitlabClient.ListProjectRefPipelineJobs(pr)
+	jobs, err := gitlabClient.ListRefPipelineJobs(ref)
 	if err != nil {
 		return err
 	}
 
 	for _, job := range jobs {
-		processJobMetrics(pr, job)
+		processJobMetrics(ref, job)
 	}
 
 	return nil
 }
 
-func pullProjectRefMostRecentJobsMetrics(pr schemas.ProjectRef) error {
-	if !pr.Pull.Pipeline.Jobs.Enabled() {
+func pullRefMostRecentJobsMetrics(ref schemas.Ref) error {
+	if !ref.Pull.Pipeline.Jobs.Enabled() {
 		return nil
 	}
 
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	jobs, err := gitlabClient.ListProjectRefMostRecentJobs(pr)
+	jobs, err := gitlabClient.ListRefMostRecentJobs(ref)
 	if err != nil {
 		return err
 	}
 
 	for _, job := range jobs {
-		processJobMetrics(pr, job)
+		processJobMetrics(ref, job)
 	}
 
 	return nil
 }
 
-func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
-	// We could potentially have a race condition attempting to
-	// update the same pr at the same time
+func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	labels := pr.DefaultLabelsValues()
+	labels := ref.DefaultLabelsValues()
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
 
 	projectRefLogFields := log.Fields{
-		"project-id": pr.ID,
+		"project-id": ref.ID,
 		"job-name":   job.Name,
 		"job-id":     job.ID,
 	}
 
-	if err := store.GetProjectRef(&pr); err != nil {
+	if err := store.GetRef(&ref); err != nil {
 		log.WithFields(
 			projectRefLogFields,
 		).WithField("error", err.Error()).Error("getting project ref from the store")
@@ -67,15 +65,15 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 
 	// In case a job gets restarted, it will have an ID greated than the previous one(s)
 	// jobs in new pipelines should get greated IDs too
-	if lastJob, ok := pr.Jobs[job.Name]; ok {
+	if lastJob, ok := ref.Jobs[job.Name]; ok {
 		if lastJob.ID > job.ID {
 			return
 		}
 	}
 
 	// Update the project ref in the store
-	pr.Jobs[job.Name] = job
-	if err := store.SetProjectRef(pr); err != nil {
+	ref.Jobs[job.Name] = job
+	if err := store.SetRef(ref); err != nil {
 		log.WithFields(
 			projectRefLogFields,
 		).WithField("error", err.Error()).Error("writing project ref in the store")
@@ -126,6 +124,6 @@ func processJobMetrics(pr schemas.ProjectRef, job goGitlab.Job) {
 		labels,
 		statusesList[:],
 		job.Status,
-		pr.OutputSparseStatusMetrics(),
+		ref.OutputSparseStatusMetrics(),
 	)
 }

@@ -11,17 +11,17 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func TestListProjectRefPipelineJobs(t *testing.T) {
+func TestListRefPipelineJobs(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	pr := schemas.ProjectRef{
+	ref := schemas.Ref{
 		ID:  1,
 		Ref: "yay",
 	}
 
 	// Test with no most recent pipeline defined
-	jobs, err := c.ListProjectRefPipelineJobs(pr)
+	jobs, err := c.ListRefPipelineJobs(ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 0)
 
@@ -41,30 +41,30 @@ func TestListProjectRefPipelineJobs(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	pr.MostRecentPipeline = &goGitlab.Pipeline{
+	ref.MostRecentPipeline = &goGitlab.Pipeline{
 		ID: 1,
 	}
 
-	jobs, err = c.ListProjectRefPipelineJobs(pr)
+	jobs, err = c.ListRefPipelineJobs(ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 2)
 
 	// Test invalid project id
-	pr.ID = 0
-	_, err = c.ListProjectRefPipelineJobs(pr)
+	ref.ID = 0
+	_, err = c.ListRefPipelineJobs(ref)
 	assert.Error(t, err)
 }
 
-func TestListProjectRefMostRecentJobs(t *testing.T) {
+func TestListRefMostRecentJobs(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	pr := schemas.ProjectRef{
+	ref := schemas.Ref{
 		ID:  1,
 		Ref: "yay",
 	}
 
-	jobs, err := c.ListProjectRefMostRecentJobs(pr)
+	jobs, err := c.ListRefMostRecentJobs(ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 0)
 
@@ -84,7 +84,7 @@ func TestListProjectRefMostRecentJobs(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	pr.Jobs = map[string]goGitlab.Job{
+	ref.Jobs = map[string]goGitlab.Job{
 		"foo": {
 			ID:   1,
 			Name: "foo",
@@ -95,25 +95,25 @@ func TestListProjectRefMostRecentJobs(t *testing.T) {
 		},
 	}
 
-	jobs, err = c.ListProjectRefMostRecentJobs(pr)
+	jobs, err = c.ListRefMostRecentJobs(ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 2)
 	assert.Equal(t, 3, jobs[0].ID)
 	assert.Equal(t, 4, jobs[1].ID)
 
-	pr.Jobs["baz"] = goGitlab.Job{
+	ref.Jobs["baz"] = goGitlab.Job{
 		ID:   5,
 		Name: "baz",
 	}
 
-	jobs, err = c.ListProjectRefMostRecentJobs(pr)
+	jobs, err = c.ListRefMostRecentJobs(ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 2)
 	assert.Equal(t, 3, jobs[0].ID)
 	assert.Equal(t, 4, jobs[1].ID)
 
 	// Test invalid project id
-	pr.ID = 0
-	_, err = c.ListProjectRefMostRecentJobs(pr)
+	ref.ID = 0
+	_, err = c.ListRefMostRecentJobs(ref)
 	assert.Error(t, err)
 }

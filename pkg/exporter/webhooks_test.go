@@ -57,27 +57,27 @@ func TestWebhookHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
 }
 
-func TestTriggerProjectRefMetricsPull(_ *testing.T) {
+func TestTriggerRefMetricsPull(_ *testing.T) {
 	resetGlobalValues()
 
-	pr1 := schemas.ProjectRef{
+	pr1 := schemas.Ref{
 		ID:                1,
 		PathWithNamespace: "group/foo",
 		Ref:               "main",
 	}
 
 	p2 := schemas.Project{Name: "group/bar"}
-	pr2 := schemas.ProjectRef{
+	pr2 := schemas.Ref{
 		Project:           p2,
 		ID:                2,
 		PathWithNamespace: "group/bar",
 		Ref:               "main",
 	}
 
-	store.SetProjectRef(pr1)
+	store.SetRef(pr1)
 	store.SetProject(p2)
 
 	// TODO: Assert results somehow
-	triggerProjectRefMetricsPull(pr1)
-	triggerProjectRefMetricsPull(pr2)
+	triggerRefMetricsPull(pr1)
+	triggerRefMetricsPull(pr2)
 }

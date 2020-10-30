@@ -7,11 +7,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func getProjectRefs(
+func getRefs(
 	projectID int,
 	refsRegexp string,
 	fetchMergeRequestsPipelinesRefs bool,
-	fetchMergeRequestsPipelinesRefsInitLimit int) (map[string]schemas.ProjectRefKind, error) {
+	fetchMergeRequestsPipelinesRefsInitLimit int) (map[string]schemas.RefKind, error) {
 
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
@@ -34,11 +34,11 @@ func getProjectRefs(
 		}
 	}
 
-	foundRefs := map[string]schemas.ProjectRefKind{}
-	for kind, refs := range map[schemas.ProjectRefKind][]string{
-		schemas.ProjectRefKindBranch:       branches,
-		schemas.ProjectRefKindTag:          tags,
-		schemas.ProjectRefKindMergeRequest: mergeRequests,
+	foundRefs := map[string]schemas.RefKind{}
+	for kind, refs := range map[schemas.RefKind][]string{
+		schemas.RefKindBranch:       branches,
+		schemas.RefKindTag:          tags,
+		schemas.RefKindMergeRequest: mergeRequests,
 	} {
 		for _, ref := range refs {
 			if _, ok := foundRefs[ref]; ok {
@@ -51,7 +51,7 @@ func getProjectRefs(
 	return foundRefs, nil
 }
 
-func pullProjectRefsFromProject(p schemas.Project) error {
+func pullRefsFromProject(p schemas.Project) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -60,7 +60,7 @@ func pullProjectRefsFromProject(p schemas.Project) error {
 		return err
 	}
 
-	refs, err := getProjectRefs(
+	refs, err := getRefs(
 		gp.ID,
 		p.Pull.Refs.Regexp(),
 		p.Pull.Refs.From.MergeRequests.Enabled(),
@@ -72,8 +72,8 @@ func pullProjectRefsFromProject(p schemas.Project) error {
 	}
 
 	for ref, kind := range refs {
-		pr := schemas.NewProjectRef(p, gp, ref, kind)
-		projectRefExists, err := store.ProjectRefExists(pr.Key())
+		ref := schemas.NewRef(p, gp, ref, kind)
+		projectRefExists, err := store.RefExists(ref.Key())
 		if err != nil {
 			return err
 		}
@@ -86,17 +86,17 @@ func pullProjectRefsFromProject(p schemas.Project) error {
 				"project-ref-kind": kind,
 			}).Info("discovered new project ref")
 
-			if err = store.SetProjectRef(pr); err != nil {
+			if err = store.SetRef(ref); err != nil {
 				return err
 			}
 
-			go schedulePullProjectRefMetrics(context.Background(), pr)
+			go schedulePullRefMetrics(context.Background(), ref)
 		}
 	}
 	return nil
 }
 
-func pullProjectRefsFromPipelines(p schemas.Project) error {
+func pullRefsFromPipelines(p schemas.Project) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -110,31 +110,31 @@ func pullProjectRefsFromPipelines(p schemas.Project) error {
 		return err
 	}
 
-	projectRefs, err := gitlabClient.GetProjectRefsFromPipelines(p, gp)
+	refs, err := gitlabClient.GetRefsFromPipelines(p, gp)
 	if err != nil {
 		return err
 	}
 
 	// Immediately trigger a pull of the ref
-	for _, pr := range projectRefs {
-		projectRefExists, err := store.ProjectRefExists(pr.Key())
+	for _, ref := range refs {
+		refExists, err := store.RefExists(ref.Key())
 		if err != nil {
 			return err
 		}
 
-		if !projectRefExists {
+		if !refExists {
 			log.WithFields(log.Fields{
 				"project-id":       gp.ID,
 				"project-name":     gp.PathWithNamespace,
-				"project-ref":      pr.Ref,
-				"project-ref-kind": pr.Kind,
+				"project-ref":      ref.Ref,
+				"project-ref-kind": ref.Kind,
 			}).Info("discovered new project ref from pipelines")
 
-			if err = store.SetProjectRef(pr); err != nil {
+			if err = store.SetRef(ref); err != nil {
 				return err
 			}
 
-			go schedulePullProjectRefMetrics(context.Background(), pr)
+			go schedulePullRefMetrics(context.Background(), ref)
 		}
 	}
 	return nil

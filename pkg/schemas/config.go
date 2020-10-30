@@ -10,34 +10,40 @@ import (
 
 // Default values
 const (
-	defaultServerConfigEnablePprof                                = false
-	defaultServerConfigListenAddress                              = ":8080"
-	defaultServerConfigMetricsEnabled                             = true
-	defaultServerConfigMetricsEnableOpenmetricsEncoding           = false
-	defaultServerConfigWebhookEnabled                             = false
-	defaultGitlabConfigURL                                        = "https://gitlab.com"
-	defaultGitlabConfigHealthURL                                  = "https://gitlab.com/explore"
-	defaultGitlabConfigEnableHealthCheck                          = true
-	defaultGitlabConfigEnableTLSVerify                            = true
-	defaultPullConfigMaximumGitLabAPIRequestsPerSecond            = 10
-	defaultPullConfigProjectsFromWildcardsOnInit                  = true
-	defaultPullConfigProjectsFromWildcardsScheduled               = true
-	defaultPullConfigProjectsFromWildcardsIntervalSeconds         = 1800
-	defaultPullConfigProjectRefsFromProjectsOnInit                = true
-	defaultPullConfigProjectRefsFromProjectsScheduled             = true
-	defaultPullConfigProjectRefsFromProjectsIntervalSeconds       = 300
-	defaultPullConfigProjectRefsMetricsOnInit                     = true
-	defaultPullConfigProjectRefsMetricsScheduled                  = true
-	defaultPullConfigProjectRefsMetricsIntervalSeconds            = 30
-	defaultGarbageCollectConfigProjectsOnInit                     = false
-	defaultGarbageCollectConfigProjectsScheduled                  = true
-	defaultGarbageCollectConfigProjectsIntervalSeconds            = 14400
-	defaultGarbageCollectConfigProjectsRefsOnInit                 = false
-	defaultGarbageCollectConfigProjectsRefsScheduled              = true
-	defaultGarbageCollectConfigProjectsRefsIntervalSeconds        = 1800
-	defaultGarbageCollectConfigProjectsRefsMetricsOnInit          = false
-	defaultGarbageCollectConfigProjectsRefsMetricsScheduled       = true
-	defaultGarbageCollectConfigProjectsRefsMetricsIntervalSeconds = 300
+	defaultServerConfigEnablePprof                                 = false
+	defaultServerConfigListenAddress                               = ":8080"
+	defaultServerConfigMetricsEnabled                              = true
+	defaultServerConfigMetricsEnableOpenmetricsEncoding            = false
+	defaultServerConfigWebhookEnabled                              = false
+	defaultGitlabConfigURL                                         = "https://gitlab.com"
+	defaultGitlabConfigHealthURL                                   = "https://gitlab.com/explore"
+	defaultGitlabConfigEnableHealthCheck                           = true
+	defaultGitlabConfigEnableTLSVerify                             = true
+	defaultPullConfigMaximumGitLabAPIRequestsPerSecond             = 10
+	defaultPullConfigProjectsFromWildcardsOnInit                   = true
+	defaultPullConfigProjectsFromWildcardsScheduled                = true
+	defaultPullConfigProjectsFromWildcardsIntervalSeconds          = 1800
+	defaultPullConfigEnvironmentsFromProjectsOnInit                = true
+	defaultPullConfigEnvironmentsFromProjectsScheduled             = true
+	defaultPullConfigEnvironmentsFromProjectsIntervalSeconds       = 1800
+	defaultPullConfigRefsFromProjectsOnInit                        = true
+	defaultPullConfigRefsFromProjectsScheduled                     = true
+	defaultPullConfigRefsFromProjectsIntervalSeconds               = 300
+	defaultPullConfigMetricsOnInit                                 = true
+	defaultPullConfigMetricsScheduled                              = true
+	defaultPullConfigMetricsIntervalSeconds                        = 30
+	defaultGarbageCollectConfigProjectsOnInit                      = false
+	defaultGarbageCollectConfigProjectsScheduled                   = true
+	defaultGarbageCollectConfigProjectsIntervalSeconds             = 14400
+	defaultGarbageCollectConfigProjectsEnvironmentsOnInit          = false
+	defaultGarbageCollectConfigProjectsEnvironmentsScheduled       = true
+	defaultGarbageCollectConfigProjectsEnvironmentsIntervalSeconds = 14400
+	defaultGarbageCollectConfigProjectsRefsOnInit                  = false
+	defaultGarbageCollectConfigProjectsRefsScheduled               = true
+	defaultGarbageCollectConfigProjectsRefsIntervalSeconds         = 1800
+	defaultGarbageCollectConfigProjectsRefsMetricsOnInit           = false
+	defaultGarbageCollectConfigProjectsRefsMetricsScheduled        = true
+	defaultGarbageCollectConfigProjectsRefsMetricsIntervalSeconds  = 300
 )
 
 // Config represents what can be defined as a yaml config file
@@ -137,11 +143,14 @@ type PullConfig struct {
 	// ProjectsFromWildcards configuration
 	ProjectsFromWildcards SchedulerConfig `yaml:"projects_from_wildcards"`
 
-	// ProjectRefsFromProjects configuration
-	ProjectRefsFromProjects SchedulerConfig `yaml:"refs_from_projects"`
+	// EnvironmentsFromProjects configuration
+	EnvironmentsFromProjects SchedulerConfig `yaml:"environments_from_projects"`
 
-	// PullMetrics configuration
-	ProjectRefsMetrics SchedulerConfig `yaml:"metrics"`
+	// RefsFromProjects configuration
+	RefsFromProjects SchedulerConfig `yaml:"refs_from_projects"`
+
+	// Metrics configuration
+	Metrics SchedulerConfig `yaml:"metrics"`
 }
 
 // GarbageCollectConfig ..
@@ -149,11 +158,14 @@ type GarbageCollectConfig struct {
 	// Projects configuration
 	Projects SchedulerConfig `yaml:"projects"`
 
-	// ProjectsRefs configuration
-	ProjectsRefs SchedulerConfig `yaml:"refs"`
+	// Environments configuration
+	Environments SchedulerConfig `yaml:"environments"`
 
-	// ProjectsRefsMetrics configuration
-	ProjectsRefsMetrics SchedulerConfig `yaml:"metrics"`
+	// Refs configuration
+	Refs SchedulerConfig `yaml:"refs"`
+
+	// Metrics configuration
+	Metrics SchedulerConfig `yaml:"metrics"`
 }
 
 // NewConfig returns a Config with default parameters values
@@ -183,15 +195,20 @@ func NewConfig() Config {
 				Scheduled:       defaultPullConfigProjectsFromWildcardsScheduled,
 				IntervalSeconds: defaultPullConfigProjectsFromWildcardsIntervalSeconds,
 			},
-			ProjectRefsFromProjects: SchedulerConfig{
-				OnInit:          defaultPullConfigProjectRefsFromProjectsOnInit,
-				Scheduled:       defaultPullConfigProjectRefsFromProjectsScheduled,
-				IntervalSeconds: defaultPullConfigProjectRefsFromProjectsIntervalSeconds,
+			EnvironmentsFromProjects: SchedulerConfig{
+				OnInit:          defaultPullConfigEnvironmentsFromProjectsOnInit,
+				Scheduled:       defaultPullConfigEnvironmentsFromProjectsScheduled,
+				IntervalSeconds: defaultPullConfigEnvironmentsFromProjectsIntervalSeconds,
 			},
-			ProjectRefsMetrics: SchedulerConfig{
-				OnInit:          defaultPullConfigProjectRefsMetricsOnInit,
-				Scheduled:       defaultPullConfigProjectRefsMetricsScheduled,
-				IntervalSeconds: defaultPullConfigProjectRefsMetricsIntervalSeconds,
+			RefsFromProjects: SchedulerConfig{
+				OnInit:          defaultPullConfigRefsFromProjectsOnInit,
+				Scheduled:       defaultPullConfigRefsFromProjectsScheduled,
+				IntervalSeconds: defaultPullConfigRefsFromProjectsIntervalSeconds,
+			},
+			Metrics: SchedulerConfig{
+				OnInit:          defaultPullConfigMetricsOnInit,
+				Scheduled:       defaultPullConfigMetricsScheduled,
+				IntervalSeconds: defaultPullConfigMetricsIntervalSeconds,
 			},
 		},
 		GarbageCollect: GarbageCollectConfig{
@@ -200,12 +217,17 @@ func NewConfig() Config {
 				Scheduled:       defaultGarbageCollectConfigProjectsScheduled,
 				IntervalSeconds: defaultGarbageCollectConfigProjectsIntervalSeconds,
 			},
-			ProjectsRefs: SchedulerConfig{
+			Environments: SchedulerConfig{
+				OnInit:          defaultGarbageCollectConfigProjectsEnvironmentsOnInit,
+				Scheduled:       defaultGarbageCollectConfigProjectsEnvironmentsScheduled,
+				IntervalSeconds: defaultGarbageCollectConfigProjectsEnvironmentsIntervalSeconds,
+			},
+			Refs: SchedulerConfig{
 				OnInit:          defaultGarbageCollectConfigProjectsRefsOnInit,
 				Scheduled:       defaultGarbageCollectConfigProjectsRefsScheduled,
 				IntervalSeconds: defaultGarbageCollectConfigProjectsRefsIntervalSeconds,
 			},
-			ProjectsRefsMetrics: SchedulerConfig{
+			Metrics: SchedulerConfig{
 				OnInit:          defaultGarbageCollectConfigProjectsRefsMetricsOnInit,
 				Scheduled:       defaultGarbageCollectConfigProjectsRefsMetricsScheduled,
 				IntervalSeconds: defaultGarbageCollectConfigProjectsRefsMetricsIntervalSeconds,
