@@ -86,6 +86,19 @@ pull:
     # from wildcards (optional, default: 1800)
     interval_seconds: 1800
 
+  environments_from_projects:
+    # Whether to trigger a discovery of project environments when
+    # exporter starts (optional, default: true)
+    on_init: true
+
+    # Whether to attempt retrieving project environments
+    # on a regular basis (optional, default: true)
+    scheduled: true
+
+    # Interval in seconds to discover project environments
+    # (optional, default: 1800)
+    interval_seconds: 1800
+
   refs_from_projects:
     # Whether to trigger a discovery of project refs from
     # branches, tags and merge requests when the
@@ -129,6 +142,19 @@ garbage_collect:
     # (optional, default: 14400)
     interval_seconds: 14400
 
+  environments:
+    # Whether or not to trigger a garbage collection of the
+    # environments when the exporter starts (optional, default: false)
+    on_init: false
+
+    # Whether or not to attempt garbage collecting the environments
+    # on a regular basis (optional, default: true)
+    scheduled: true
+
+    # Interval in seconds to garbage collect environments
+    # (optional, default: 14400)
+    interval_seconds: 14400
+
   refs:
     # Whether or not to trigger a garbage collection of the
     # projects refs when the exporter starts (optional, default: false)
@@ -164,6 +190,15 @@ project_defaults:
   output_sparse_status_metrics: true
 
   pull:
+    environments:
+      # Whether or not to monitor project environments & their deployments
+      # (optional, default: true)
+      enabled: true
+
+      # Filter environments to include
+      # (optional, default: "^prod")
+      regexp: "^prod"
+
     refs:
       # Filter refs (branches/tags only) to include
       # (optional, default: "^main|master$" -- main or master branch)
@@ -213,6 +248,15 @@ projects:
 
     # Here are all the project parameters which can be overriden (optional)
     pull:
+      environments:
+        # Whether or not to monitor project environments & their deployments
+        # (optional, default: true)
+        enabled: true
+
+        # Filter environments to include
+        # (optional, default: "^prod")
+        regexp: "^prod"
+  
       refs:
         # Filter refs (branches/tags only) to include
         # (optional, default: "^main|master$" -- main or master branch)
@@ -278,6 +322,15 @@ wildcards:
 
     # Here are all the project parameters which can be overriden (optional)
     pull:
+      environments:
+        # Whether or not to monitor project environments & their deployments
+        # (optional, default: true)
+        enabled: true
+
+        # Filter environments to include
+        # (optional, default: "^prod")
+        regexp: "^prod"
+
       refs:
         # Filter refs (branches/tags only) to include
         # (optional, default: "^main|master$" -- main or master branch)

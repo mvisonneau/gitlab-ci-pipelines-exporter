@@ -16,12 +16,12 @@ type Storage interface {
 	Projects() (schemas.Projects, error)
 	ProjectsCount() (int64, error)
 
-	SetProjectRef(schemas.ProjectRef) error
-	DelProjectRef(schemas.ProjectRefKey) error
-	GetProjectRef(*schemas.ProjectRef) error
-	ProjectRefExists(schemas.ProjectRefKey) (bool, error)
-	ProjectsRefs() (schemas.ProjectsRefs, error)
-	ProjectsRefsCount() (int64, error)
+	SetRef(schemas.Ref) error
+	DelRef(schemas.RefKey) error
+	GetRef(*schemas.Ref) error
+	RefExists(schemas.RefKey) (bool, error)
+	Refs() (schemas.Refs, error)
+	RefsCount() (int64, error)
 
 	SetMetric(schemas.Metric) error
 	DelMetric(schemas.MetricKey) error
@@ -34,9 +34,9 @@ type Storage interface {
 // NewLocalStorage ..
 func NewLocalStorage() Storage {
 	return &Local{
-		projects:     make(schemas.Projects),
-		projectsRefs: make(schemas.ProjectsRefs),
-		metrics:      make(schemas.Metrics),
+		projects: make(schemas.Projects),
+		refs:     make(schemas.Refs),
+		metrics:  make(schemas.Metrics),
 	}
 }
 

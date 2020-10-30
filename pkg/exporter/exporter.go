@@ -136,7 +136,7 @@ func configureStore() {
 			}
 
 			if p.Pull.Refs.From.Pipelines.Enabled() {
-				go schedulePullProjectRefsFromPipeline(context.Background(), p)
+				go schedulePullRefsFromPipeline(context.Background(), p)
 			}
 		}
 	}

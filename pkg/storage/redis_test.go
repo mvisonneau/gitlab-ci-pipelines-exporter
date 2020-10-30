@@ -69,7 +69,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	assert.NotEqual(t, p, newProject)
 }
 
-func TestRedisProjectRefFunctions(t *testing.T) {
+func TestRedisRefFunctions(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		panic(err)
@@ -78,7 +78,7 @@ func TestRedisProjectRefFunctions(t *testing.T) {
 
 	r := NewRedisStorage(redis.NewClient(&redis.Options{Addr: s.Addr()}))
 
-	pr := schemas.ProjectRef{
+	ref := schemas.Ref{
 		Project: schemas.Project{
 			Name: "foo/bar",
 		},
@@ -87,51 +87,51 @@ func TestRedisProjectRefFunctions(t *testing.T) {
 	}
 
 	// Set project
-	r.SetProjectRef(pr)
-	projectsRefs, err := r.ProjectsRefs()
+	r.SetRef(ref)
+	projectsRefs, err := r.Refs()
 	assert.NoError(t, err)
-	assert.Contains(t, projectsRefs, pr.Key())
-	assert.Equal(t, pr, projectsRefs[pr.Key()])
+	assert.Contains(t, projectsRefs, ref.Key())
+	assert.Equal(t, ref, projectsRefs[ref.Key()])
 
-	// ProjectRef exists
-	exists, err := r.ProjectRefExists(pr.Key())
+	// Ref exists
+	exists, err := r.RefExists(ref.Key())
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
-	// GetProjectRef should succeed
-	newProjectRef := schemas.ProjectRef{
+	// GetRef should succeed
+	newRef := schemas.Ref{
 		Project: schemas.Project{
 			Name: "foo/bar",
 		},
 		Ref: "sweet",
 	}
-	assert.NoError(t, r.GetProjectRef(&newProjectRef))
-	assert.Equal(t, pr, newProjectRef)
+	assert.NoError(t, r.GetRef(&newRef))
+	assert.Equal(t, ref, newRef)
 
 	// Count
-	count, err := r.ProjectsRefsCount()
+	count, err := r.RefsCount()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), count)
 
-	// Delete ProjectRef
-	r.DelProjectRef(pr.Key())
-	projectsRefs, err = r.ProjectsRefs()
+	// Delete Ref
+	r.DelRef(ref.Key())
+	projectsRefs, err = r.Refs()
 	assert.NoError(t, err)
-	assert.NotContains(t, projectsRefs, pr.Key())
+	assert.NotContains(t, projectsRefs, ref.Key())
 
-	exists, err = r.ProjectRefExists(pr.Key())
+	exists, err = r.RefExists(ref.Key())
 	assert.NoError(t, err)
 	assert.False(t, exists)
 
-	// GetProjectRef should not update the var this time
-	newProjectRef = schemas.ProjectRef{
+	// GetRef should not update the var this time
+	newRef = schemas.Ref{
 		Project: schemas.Project{
 			Name: "foo/bar",
 		},
 		Ref: "sweet",
 	}
-	assert.NoError(t, r.GetProjectRef(&newProjectRef))
-	assert.NotEqual(t, pr, newProjectRef)
+	assert.NoError(t, r.GetRef(&newRef))
+	assert.NotEqual(t, ref, newRef)
 }
 
 func TestRedisMetricFunctions(t *testing.T) {

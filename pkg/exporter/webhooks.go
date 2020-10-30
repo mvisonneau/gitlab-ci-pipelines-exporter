@@ -58,17 +58,17 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func triggerProjectRefMetricsPull(pr schemas.ProjectRef) {
+func triggerRefMetricsPull(ref schemas.Ref) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
 	logFields := log.Fields{
-		"project-id":   pr.ID,
-		"project-name": pr.PathWithNamespace,
-		"project-ref":  pr.Ref,
+		"project-id":   ref.ID,
+		"project-name": ref.PathWithNamespace,
+		"project-ref":  ref.Ref,
 	}
 
-	exists, err := store.ProjectRefExists(pr.Key())
+	exists, err := store.RefExists(ref.Key())
 	if err != nil {
 		log.WithFields(logFields).WithField("error", err.Error()).Error("reading project ref from the store")
 	}
@@ -80,9 +80,9 @@ func triggerProjectRefMetricsPull(pr schemas.ProjectRef) {
 		}
 
 		for _, p := range projects {
-			if p.Name == pr.PathWithNamespace {
-				if regexp.MustCompile(p.Pull.Refs.Regexp()).MatchString(pr.Ref) {
-					if err = store.SetProjectRef(pr); err != nil {
+			if p.Name == ref.PathWithNamespace {
+				if regexp.MustCompile(p.Pull.Refs.Regexp()).MatchString(ref.Ref) {
+					if err = store.SetRef(ref); err != nil {
 						log.WithFields(logFields).WithField("error", err.Error()).Error("writing project ref in the store")
 					}
 					goto schedulePull
@@ -98,20 +98,20 @@ schedulePull:
 	log.WithFields(logFields).Info("received a pipeline webhook from GitLab for a project ref, triggering metrics pull")
 	// TODO: When all the metrics will be sent over the webhook, we might be able to avoid redoing a pull
 	// eg: 'coverage' is not in the pipeline payload yet, neither is 'artifacts' in the job one
-	go schedulePullProjectRefMetrics(context.Background(), pr)
+	go schedulePullRefMetrics(context.Background(), ref)
 }
 
 func processPipelineEvent(e goGitlab.PipelineEvent) {
-	var k schemas.ProjectRefKind
+	var k schemas.RefKind
 	if e.MergeRequest.IID != 0 {
-		k = schemas.ProjectRefKindMergeRequest
+		k = schemas.RefKindMergeRequest
 	} else if e.ObjectAttributes.Tag {
-		k = schemas.ProjectRefKindTag
+		k = schemas.RefKindTag
 	} else {
-		k = schemas.ProjectRefKindBranch
+		k = schemas.RefKindBranch
 	}
 
-	triggerProjectRefMetricsPull(schemas.ProjectRef{
+	triggerRefMetricsPull(schemas.Ref{
 		ID:                e.Project.ID,
 		Kind:              k,
 		PathWithNamespace: e.Project.PathWithNamespace,

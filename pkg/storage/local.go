@@ -11,8 +11,8 @@ type Local struct {
 	projects      schemas.Projects
 	projectsMutex sync.RWMutex
 
-	projectsRefs      schemas.ProjectsRefs
-	projectsRefsMutex sync.RWMutex
+	refs      schemas.Refs
+	refsMutex sync.RWMutex
 
 	metrics      schemas.Metrics
 	metricsMutex sync.RWMutex
@@ -81,67 +81,67 @@ func (l *Local) ProjectsCount() (int64, error) {
 	return int64(len(l.projects)), nil
 }
 
-// SetProjectRef ..
-func (l *Local) SetProjectRef(pr schemas.ProjectRef) error {
-	l.projectsRefsMutex.Lock()
-	defer l.projectsRefsMutex.Unlock()
+// SetRef ..
+func (l *Local) SetRef(ref schemas.Ref) error {
+	l.refsMutex.Lock()
+	defer l.refsMutex.Unlock()
 
-	l.projectsRefs[pr.Key()] = pr
+	l.refs[ref.Key()] = ref
 	return nil
 }
 
-// DelProjectRef ..
-func (l *Local) DelProjectRef(k schemas.ProjectRefKey) error {
-	l.projectsRefsMutex.Lock()
-	defer l.projectsRefsMutex.Unlock()
+// DelRef ..
+func (l *Local) DelRef(k schemas.RefKey) error {
+	l.refsMutex.Lock()
+	defer l.refsMutex.Unlock()
 
-	delete(l.projectsRefs, k)
+	delete(l.refs, k)
 	return nil
 }
 
-// GetProjectRef ..
-func (l *Local) GetProjectRef(pr *schemas.ProjectRef) error {
-	exists, err := l.ProjectRefExists(pr.Key())
+// GetRef ..
+func (l *Local) GetRef(ref *schemas.Ref) error {
+	exists, err := l.RefExists(ref.Key())
 	if err != nil {
 		return err
 	}
 
 	if exists {
-		l.projectsRefsMutex.RLock()
-		*pr = l.projectsRefs[pr.Key()]
-		l.projectsRefsMutex.RUnlock()
+		l.refsMutex.RLock()
+		*ref = l.refs[ref.Key()]
+		l.refsMutex.RUnlock()
 	}
 
 	return nil
 }
 
-// ProjectRefExists ..
-func (l *Local) ProjectRefExists(k schemas.ProjectRefKey) (bool, error) {
-	l.projectsRefsMutex.RLock()
-	defer l.projectsRefsMutex.RUnlock()
+// RefExists ..
+func (l *Local) RefExists(k schemas.RefKey) (bool, error) {
+	l.refsMutex.RLock()
+	defer l.refsMutex.RUnlock()
 
-	_, ok := l.projectsRefs[k]
+	_, ok := l.refs[k]
 	return ok, nil
 }
 
-// ProjectsRefs ..
-func (l *Local) ProjectsRefs() (projectsRefs schemas.ProjectsRefs, err error) {
-	projectsRefs = make(schemas.ProjectsRefs)
-	l.projectsRefsMutex.RLock()
-	defer l.projectsRefsMutex.RUnlock()
+// Refs ..
+func (l *Local) Refs() (refs schemas.Refs, err error) {
+	refs = make(schemas.Refs)
+	l.refsMutex.RLock()
+	defer l.refsMutex.RUnlock()
 
-	for k, v := range l.projectsRefs {
-		projectsRefs[k] = v
+	for k, v := range l.refs {
+		refs[k] = v
 	}
 	return
 }
 
-// ProjectsRefsCount ..
-func (l *Local) ProjectsRefsCount() (int64, error) {
-	l.projectsRefsMutex.RLock()
-	defer l.projectsRefsMutex.RUnlock()
+// RefsCount ..
+func (l *Local) RefsCount() (int64, error) {
+	l.refsMutex.RLock()
+	defer l.refsMutex.RUnlock()
 
-	return int64(len(l.projectsRefs)), nil
+	return int64(len(l.refs)), nil
 }
 
 // SetMetric ..

@@ -61,8 +61,8 @@ func TestLocalProjectFunctions(t *testing.T) {
 	assert.NotEqual(t, p, newProject)
 }
 
-func TestLocalProjectRefFunctions(t *testing.T) {
-	pr := schemas.ProjectRef{
+func TestLocalRefFunctions(t *testing.T) {
+	ref := schemas.Ref{
 		Project: schemas.Project{
 			Name: "foo/bar",
 		},
@@ -71,53 +71,53 @@ func TestLocalProjectRefFunctions(t *testing.T) {
 	}
 
 	l := NewLocalStorage()
-	l.SetProjectRef(pr)
+	l.SetRef(ref)
 
 	// Set project
-	projectsRefs, err := l.ProjectsRefs()
+	refs, err := l.Refs()
 	assert.NoError(t, err)
-	assert.Contains(t, projectsRefs, pr.Key())
-	assert.Equal(t, pr, projectsRefs[pr.Key()])
+	assert.Contains(t, refs, ref.Key())
+	assert.Equal(t, ref, refs[ref.Key()])
 
-	// ProjectRef exists
-	exists, err := l.ProjectRefExists(pr.Key())
+	// Ref exists
+	exists, err := l.RefExists(ref.Key())
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
-	// GetProjectRef should succeed
-	newProjectRef := schemas.ProjectRef{
+	// GetRef should succeed
+	newRef := schemas.Ref{
 		Project: schemas.Project{
 			Name: "foo/bar",
 		},
 		Ref: "sweet",
 	}
-	assert.NoError(t, l.GetProjectRef(&newProjectRef))
-	assert.Equal(t, pr, newProjectRef)
+	assert.NoError(t, l.GetRef(&newRef))
+	assert.Equal(t, ref, newRef)
 
 	// Count
-	count, err := l.ProjectsRefsCount()
+	count, err := l.RefsCount()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), count)
 
-	// Delete ProjectRef
-	l.DelProjectRef(pr.Key())
-	projectsRefs, err = l.ProjectsRefs()
+	// Delete Ref
+	l.DelRef(ref.Key())
+	refs, err = l.Refs()
 	assert.NoError(t, err)
-	assert.NotContains(t, projectsRefs, pr.Key())
+	assert.NotContains(t, refs, ref.Key())
 
-	exists, err = l.ProjectRefExists(pr.Key())
+	exists, err = l.RefExists(ref.Key())
 	assert.NoError(t, err)
 	assert.False(t, exists)
 
-	// GetProjectRef should not update the var this time
-	newProjectRef = schemas.ProjectRef{
+	// GetRef should not update the var this time
+	newRef = schemas.Ref{
 		Project: schemas.Project{
 			Name: "foo/bar",
 		},
 		Ref: "sweet",
 	}
-	assert.NoError(t, l.GetProjectRef(&newProjectRef))
-	assert.NotEqual(t, pr, newProjectRef)
+	assert.NoError(t, l.GetRef(&newRef))
+	assert.NotEqual(t, ref, newRef)
 }
 
 func TestLocalMetricFunctions(t *testing.T) {

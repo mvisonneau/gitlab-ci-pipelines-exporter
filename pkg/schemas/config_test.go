@@ -63,33 +63,44 @@ pull:
   projects_from_wildcards:
     on_init: false
     scheduled: false
-    interval_seconds: 1
-  refs_from_projects:
+		interval_seconds: 1
+	environments_from_projects:
     on_init: false
     scheduled: false
     interval_seconds: 2
-  metrics:
+  refs_from_projects:
     on_init: false
     scheduled: false
     interval_seconds: 3
+  metrics:
+    on_init: false
+    scheduled: false
+    interval_seconds: 4
 
 garbage_collect:
   projects:
     on_init: true
     scheduled: false
-    interval_seconds: 1
-  refs:
+		interval_seconds: 1
+	environments:
     on_init: true
     scheduled: false
     interval_seconds: 2
-  metrics:
+  refs:
     on_init: true
     scheduled: false
     interval_seconds: 3
+  metrics:
+    on_init: true
+    scheduled: false
+    interval_seconds: 4
 
 project_defaults:
   output_sparse_status_metrics: false
-  pull:
+	pull:
+		environments:
+			enabled: false
+			regexp: "^baz$"
     refs:
       regexp: "^baz$"
       from:
@@ -109,11 +120,17 @@ project_defaults:
 projects:
   - name: foo/project
   - name: bar/project
-    pull:
+		pull:
+			environments:
+				enabled: true
+				regexp: "^foo$"
       refs:
         regexp: "^foo$"
   - name: new/project
-    pull:
+		pull:
+			environments:
+				enabled: true
+				regexp: "^bar$"
       refs:
         regexp: "^bar$"
 
@@ -161,15 +178,20 @@ wildcards:
 				Scheduled:       false,
 				IntervalSeconds: 1,
 			},
-			ProjectRefsFromProjects: SchedulerConfig{
+			EnvironmentsFromProjects: SchedulerConfig{
 				OnInit:          false,
 				Scheduled:       false,
 				IntervalSeconds: 2,
 			},
-			ProjectRefsMetrics: SchedulerConfig{
+			RefsFromProjects: SchedulerConfig{
 				OnInit:          false,
 				Scheduled:       false,
 				IntervalSeconds: 3,
+			},
+			Metrics: SchedulerConfig{
+				OnInit:          false,
+				Scheduled:       false,
+				IntervalSeconds: 4,
 			},
 		},
 		GarbageCollect: GarbageCollectConfig{
@@ -178,15 +200,20 @@ wildcards:
 				Scheduled:       false,
 				IntervalSeconds: 1,
 			},
-			ProjectsRefs: SchedulerConfig{
+			Environments: SchedulerConfig{
 				OnInit:          true,
 				Scheduled:       false,
 				IntervalSeconds: 2,
 			},
-			ProjectsRefsMetrics: SchedulerConfig{
+			Refs: SchedulerConfig{
 				OnInit:          true,
 				Scheduled:       false,
 				IntervalSeconds: 3,
+			},
+			Metrics: SchedulerConfig{
+				OnInit:          true,
+				Scheduled:       false,
+				IntervalSeconds: 4,
 			},
 		},
 		ProjectDefaults: ProjectParameters{

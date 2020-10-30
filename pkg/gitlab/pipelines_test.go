@@ -13,7 +13,7 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func TestGetProjectRefPipeline(t *testing.T) {
+func TestGetRefPipeline(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
@@ -23,13 +23,13 @@ func TestGetProjectRefPipeline(t *testing.T) {
 			fmt.Fprint(w, `{"id":1}`)
 		})
 
-	pr := schemas.ProjectRef{
+	ref := schemas.Ref{
 		ID:                1,
 		PathWithNamespace: "foo/bar",
 		Ref:               "yay",
 	}
 
-	pipeline, err := c.GetProjectRefPipeline(pr, 1)
+	pipeline, err := c.GetRefPipeline(ref, 1)
 	assert.NoError(t, err)
 	assert.NotNil(t, pipeline)
 	assert.Equal(t, 1, pipeline.ID)
@@ -81,7 +81,7 @@ func TestGetProjectMergeRequestsPipelines(t *testing.T) {
 	assert.Len(t, pipelines, 2)
 }
 
-func TestGetProjectRefPipelineVariablesAsConcatenatedString(t *testing.T) {
+func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
@@ -91,7 +91,7 @@ func TestGetProjectRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 			fmt.Fprint(w, `[{"key":"foo","value":"bar"},{"key":"bar","value":"baz"}]`)
 		})
 
-	pr := schemas.ProjectRef{
+	ref := schemas.Ref{
 		ID:  1,
 		Ref: "yay",
 		Project: schemas.Project{
@@ -108,28 +108,28 @@ func TestGetProjectRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	}
 
 	// Should return right away as MostRecentPipeline is not defined
-	variables, err := c.GetProjectRefPipelineVariablesAsConcatenatedString(pr)
+	variables, err := c.GetRefPipelineVariablesAsConcatenatedString(ref)
 	assert.NoError(t, err)
 	assert.Equal(t, "", variables)
 
-	pr.MostRecentPipeline = &goGitlab.Pipeline{
+	ref.MostRecentPipeline = &goGitlab.Pipeline{
 		ID: 1,
 	}
 
 	// Should fail as we have an invalid regexp pattern
-	variables, err = c.GetProjectRefPipelineVariablesAsConcatenatedString(pr)
+	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ref)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "the provided filter regex for pipeline variables is invalid")
 	assert.Equal(t, "", variables)
 
 	// Should work
-	pr.Pull.Pipeline.Variables.RegexpValue = pointy.String(".*")
-	variables, err = c.GetProjectRefPipelineVariablesAsConcatenatedString(pr)
+	ref.Pull.Pipeline.Variables.RegexpValue = pointy.String(".*")
+	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ref)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo:bar,bar:baz", variables)
 }
 
-func TestGetProjectRefsFromPipelines(t *testing.T) {
+func TestGetRefsFromPipelines(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
@@ -175,41 +175,41 @@ func TestGetProjectRefsFromPipelines(t *testing.T) {
 		PathWithNamespace: "foo/bar",
 	}
 
-	prs, err := c.GetProjectRefsFromPipelines(p, gp)
+	prs, err := c.GetRefsFromPipelines(p, gp)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
 	assert.Len(t, prs, 0)
 
 	p.Pull.Refs.RegexpValue = pointy.String("^keep.*")
-	prs, err = c.GetProjectRefsFromPipelines(p, gp)
+	prs, err = c.GetRefsFromPipelines(p, gp)
 	assert.NoError(t, err)
 
-	expectedProjectsRefs := schemas.ProjectsRefs{
-		"1309204293": schemas.ProjectRef{
+	expectedRefs := schemas.Refs{
+		"1309204293": schemas.Ref{
 			Project:           p,
 			PathWithNamespace: "foo/bar",
-			Kind:              schemas.ProjectRefKindBranch,
+			Kind:              schemas.RefKindBranch,
 			ID:                1,
 			Ref:               "keep_dev",
 			Jobs:              make(map[string]goGitlab.Job),
 		},
-		"3383490522": schemas.ProjectRef{
+		"3383490522": schemas.Ref{
 			Project:           p,
 			PathWithNamespace: "foo/bar",
-			Kind:              schemas.ProjectRefKindBranch,
+			Kind:              schemas.RefKindBranch,
 			ID:                1,
 			Ref:               "keep_main",
 			Jobs:              make(map[string]goGitlab.Job),
 		},
-		"3975821083": schemas.ProjectRef{
+		"3975821083": schemas.Ref{
 			Project:           p,
 			PathWithNamespace: "foo/bar",
-			Kind:              schemas.ProjectRefKindTag,
+			Kind:              schemas.RefKindTag,
 			ID:                1,
 			Ref:               "keep_0.0.2",
 			Jobs:              make(map[string]goGitlab.Job),
 		},
 	}
 
-	assert.Equal(t, expectedProjectsRefs, prs)
+	assert.Equal(t, expectedRefs, prs)
 }

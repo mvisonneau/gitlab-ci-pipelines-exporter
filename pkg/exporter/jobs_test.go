@@ -12,7 +12,7 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func TestPullProjectRefPipelineJobsMetrics(t *testing.T) {
+func TestPullRefPipelineJobsMetrics(t *testing.T) {
 	resetGlobalValues()
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
@@ -22,7 +22,7 @@ func TestPullProjectRefPipelineJobsMetrics(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"created_at":"2016-08-11T11:28:34.085Z"},{"id":2,"created_at":"2016-08-11T11:28:34.085Z"}]`)
 		})
 
-	pr := schemas.ProjectRef{
+	ref := schemas.Ref{
 		ID:  1,
 		Ref: "foo",
 		MostRecentPipeline: &goGitlab.Pipeline{
@@ -31,12 +31,12 @@ func TestPullProjectRefPipelineJobsMetrics(t *testing.T) {
 		Jobs: make(map[string]goGitlab.Job),
 	}
 
-	assert.NoError(t, pullProjectRefPipelineJobsMetrics(pr))
+	assert.NoError(t, pullRefPipelineJobsMetrics(ref))
 	server.Close()
-	assert.Error(t, pullProjectRefPipelineJobsMetrics(pr))
+	assert.Error(t, pullRefPipelineJobsMetrics(ref))
 }
 
-func TestPullProjectRefMostRecentJobsMetrics(t *testing.T) {
+func TestPullRefMostRecentJobsMetrics(t *testing.T) {
 	resetGlobalValues()
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
@@ -46,7 +46,7 @@ func TestPullProjectRefMostRecentJobsMetrics(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"created_at":"2016-08-11T11:28:34.085Z"},{"id":2,"created_at":"2016-08-11T11:28:34.085Z"}]`)
 		})
 
-	pr := schemas.ProjectRef{
+	ref := schemas.Ref{
 		ID:  1,
 		Ref: "foo",
 		Jobs: map[string]goGitlab.Job{
@@ -57,13 +57,13 @@ func TestPullProjectRefMostRecentJobsMetrics(t *testing.T) {
 	}
 
 	// Test with FetchPipelineJobMetrics disabled
-	assert.NoError(t, pullProjectRefMostRecentJobsMetrics(pr))
+	assert.NoError(t, pullRefMostRecentJobsMetrics(ref))
 
 	// Enable FetchPipelineJobMetrics
-	pr.Pull.Pipeline.Jobs.EnabledValue = pointy.Bool(true)
-	assert.NoError(t, pullProjectRefMostRecentJobsMetrics(pr))
+	ref.Pull.Pipeline.Jobs.EnabledValue = pointy.Bool(true)
+	assert.NoError(t, pullRefMostRecentJobsMetrics(ref))
 	server.Close()
-	assert.Error(t, pullProjectRefMostRecentJobsMetrics(pr))
+	assert.Error(t, pullRefMostRecentJobsMetrics(ref))
 }
 
 func TestProcessJobMetrics(t *testing.T) {
@@ -99,11 +99,11 @@ func TestProcessJobMetrics(t *testing.T) {
 		},
 	}
 
-	pr := schemas.ProjectRef{
+	ref := schemas.Ref{
 		ID:                1,
 		PathWithNamespace: "foo/bar",
 		Topics:            "first,second",
-		Kind:              schemas.ProjectRefKindBranch,
+		Kind:              schemas.RefKindBranch,
 		Ref:               "foo",
 		Jobs: map[string]goGitlab.Job{
 			"foo": oldJob,
@@ -119,30 +119,30 @@ func TestProcessJobMetrics(t *testing.T) {
 		},
 	}
 
-	store.SetProjectRef(pr)
+	store.SetRef(ref)
 
 	// If we run it against the same job, nothing should change in the store
-	processJobMetrics(pr, oldJob)
-	prs, _ := store.ProjectsRefs()
+	processJobMetrics(ref, oldJob)
+	refs, _ := store.Refs()
 	assert.Equal(t, map[string]goGitlab.Job{
 		"foo": oldJob,
-	}, prs[pr.Key()].Jobs)
+	}, refs[ref.Key()].Jobs)
 
 	// Update the project ref
-	processJobMetrics(pr, newJob)
-	prs, _ = store.ProjectsRefs()
+	processJobMetrics(ref, newJob)
+	refs, _ = store.Refs()
 	assert.Equal(t, map[string]goGitlab.Job{
 		"foo": newJob,
-	}, prs[pr.Key()].Jobs)
+	}, refs[ref.Key()].Jobs)
 
 	// Check if all the metrics exist
 	metrics, _ := store.Metrics()
 	labels := map[string]string{
-		"project":   pr.PathWithNamespace,
-		"topics":    pr.Topics,
-		"ref":       pr.Ref,
-		"kind":      string(pr.Kind),
-		"variables": pr.MostRecentPipelineVariables,
+		"project":   ref.PathWithNamespace,
+		"topics":    ref.Topics,
+		"ref":       ref.Ref,
+		"kind":      string(ref.Kind),
+		"variables": ref.MostRecentPipelineVariables,
 		"stage":     newJob.Stage,
 		"job_name":  newJob.Name,
 	}
