@@ -36,7 +36,6 @@ func (envs Environments) Count() int {
 // DefaultLabelsValues ..
 func (e Environment) DefaultLabelsValues() map[string]string {
 	return map[string]string{
-		// TODO: Replace with the pathwithnamespace..
 		"project":     e.ProjectName,
 		"environment": e.Name,
 	}

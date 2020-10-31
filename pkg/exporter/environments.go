@@ -51,30 +51,24 @@ func pullEnvironmentsFromProject(p schemas.Project) error {
 	return nil
 }
 
-func pullEnvironmentMetrics(env schemas.Environment) error {
+func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	// logFields := log.Fields{
-	// 	"project-id":       env.ProjectID,
-	// 	"environment-id":   env.ID,
-	// 	"environment-name": env.Name,
-	// }
-
-	pulledEnv, err := gitlabClient.GetEnvironment(env.ProjectName, env.ID)
+	env, err = gitlabClient.GetEnvironment(env.ProjectName, env.ID)
 	if err != nil {
-		return err
+		return
 	}
 
-	if err = store.SetEnvironment(pulledEnv); err != nil {
-		return err
+	if err = store.SetEnvironment(env); err != nil {
+		return
 	}
 
 	infoLabels := env.InformationLabelsValues()
 	var commitDate time.Time
-	if pulledEnv.LatestDeployment.RefKind == schemas.RefKindBranch {
+	if env.LatestDeployment.RefKind == schemas.RefKindBranch {
 		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetBranchLatestCommit(env.ProjectName, env.LatestDeployment.RefName)
-	} else if pulledEnv.LatestDeployment.RefKind == schemas.RefKindTag {
+	} else if env.LatestDeployment.RefKind == schemas.RefKindTag {
 		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetProjectMostRecentTagCommit(env.ProjectName, env.TagsRegexp)
 	}
 
@@ -109,8 +103,8 @@ func pullEnvironmentMetrics(env schemas.Environment) error {
 		}
 	}
 
-	if commitDate.Sub(pulledEnv.LatestDeployment.CreatedAt).Seconds() > 0 {
-		envBehindDurationSeconds = commitDate.Sub(pulledEnv.LatestDeployment.CreatedAt).Seconds()
+	if commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds() > 0 {
+		envBehindDurationSeconds = commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds()
 	}
 
 	storeSetMetric(schemas.Metric{
@@ -128,7 +122,7 @@ func pullEnvironmentMetrics(env schemas.Environment) error {
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentDeploymentDurationSeconds,
 		Labels: env.DefaultLabelsValues(),
-		Value:  pulledEnv.LatestDeployment.Duration.Seconds(),
+		Value:  env.LatestDeployment.Duration.Seconds(),
 	})
 
 	emitStatusMetric(
@@ -143,7 +137,7 @@ func pullEnvironmentMetrics(env schemas.Environment) error {
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentDeploymentTimestamp,
 		Labels: env.DefaultLabelsValues(),
-		Value:  float64(pulledEnv.LatestDeployment.CreatedAt.Unix()),
+		Value:  float64(env.LatestDeployment.CreatedAt.Unix()),
 	})
 
 	storeSetMetric(schemas.Metric{
