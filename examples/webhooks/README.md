@@ -95,6 +95,7 @@ Go onto the project's configuration page and configure a new webhook using:
 - **URL**: `https://instantly-worthy-shrew.alpha.waypoint.run/webhook`
 - **Secret Token**: `UYqDp5DvHLrtCnkfHA8aBPEkyKfgHjTGAWZRUD4olZU=`
 - Untick `Push events` and tick `Pipeline events`
+- If you are running on GitLab >= 13.5 and want to export environments/deployments metrics, you can also tick `Deployment events`
 - Hit the `Add webhook` button
 
 ![webhook_configuration](../../docs/images/webhook_configuration.png)

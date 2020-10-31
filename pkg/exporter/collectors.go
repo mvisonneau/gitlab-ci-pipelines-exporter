@@ -3,10 +3,12 @@ package exporter
 import "github.com/prometheus/client_golang/prometheus"
 
 var (
-	defaultLabels = []string{"project", "topics", "ref", "kind", "variables"}
-	jobLabels     = []string{"stage", "job_name"}
-	statusLabels  = []string{"status"}
-	statusesList  = [...]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
+	defaultLabels                = []string{"project", "topics", "kind", "ref", "variables"}
+	jobLabels                    = []string{"stage", "job_name"}
+	statusLabels                 = []string{"status"}
+	statusesList                 = [...]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
+	environmentLabels            = []string{"project", "environment"}
+	environmentInformationLabels = []string{"external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "author_email"}
 )
 
 // NewCollectorCoverage returns a new collector for the gitlab_ci_pipeline_coverage metric
@@ -28,6 +30,72 @@ func NewCollectorDurationSeconds() prometheus.Collector {
 			Help: "Duration in seconds of the most recent pipeline",
 		},
 		defaultLabels,
+	)
+}
+
+// NewCollectorEnvironmentBehindCommitsCount returns a new collector for the gitlab_ci_pipeline_environment_behind_commits_count metric
+func NewCollectorEnvironmentBehindCommitsCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_environment_behind_commits_count",
+			Help: "Number of commits the environment is behind given its last deployment",
+		},
+		environmentLabels,
+	)
+}
+
+// NewCollectorEnvironmentBehindDurationSeconds returns a new collector for the gitlab_ci_pipeline_environment_behind_duration_seconds metric
+func NewCollectorEnvironmentBehindDurationSeconds() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_environment_behind_duration_seconds",
+			Help: "Duration in seconds the environment is behind the most recent commit given its last deployment",
+		},
+		environmentLabels,
+	)
+}
+
+// NewCollectorEnvironmentDeploymentDurationSeconds returns a new collector for the gitlab_ci_pipeline_environment_deployment_duration_seconds metric
+func NewCollectorEnvironmentDeploymentDurationSeconds() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_environment_deployment_duration_seconds",
+			Help: "Duration in seconds of the most recent deployment of the environment",
+		},
+		environmentLabels,
+	)
+}
+
+// NewCollectorEnvironmentDeploymentStatus returns a new collector for the gitlab_ci_pipeline_environment_deployment_status metric
+func NewCollectorEnvironmentDeploymentStatus() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_environment_deployment_status",
+			Help: "Status of the most recent deployment of the environment",
+		},
+		append(environmentLabels, "status"),
+	)
+}
+
+// NewCollectorEnvironmentDeploymentTimestamp returns a new collector for the gitlab_ci_pipeline_environment_deployment_timestamp metric
+func NewCollectorEnvironmentDeploymentTimestamp() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_environment_deployment_timestamp",
+			Help: "Creation date of the most recent deployment of the environment",
+		},
+		environmentLabels,
+	)
+}
+
+// NewCollectorEnvironmentInformation returns a new collector for the gitlab_ci_pipeline_environment_information metric
+func NewCollectorEnvironmentInformation() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_environment_information",
+			Help: "Information about the environment",
+		},
+		append(environmentLabels, environmentInformationLabels...),
 	)
 }
 

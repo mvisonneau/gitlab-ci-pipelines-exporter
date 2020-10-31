@@ -82,7 +82,7 @@ func pullRefsFromProject(p schemas.Project) error {
 			log.WithFields(log.Fields{
 				"project-id":       gp.ID,
 				"project-name":     gp.PathWithNamespace,
-				"project-ref":      ref,
+				"project-ref":      ref.Ref,
 				"project-ref-kind": kind,
 			}).Info("discovered new project ref")
 

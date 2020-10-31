@@ -292,6 +292,8 @@ github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJ
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
+github.com/mvisonneau/go-gitlab v0.20.2-0.20201031120209-a4b33b12e52f h1:rq/5HbVlkgYMFkjIsfLv5QjntX0aBU+4rKUGenLAOYI=
+github.com/mvisonneau/go-gitlab v0.20.2-0.20201031120209-a4b33b12e52f/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
 github.com/mvisonneau/go-helpers v0.0.0-20201013090751-e69b7251ab02 h1:4siAIBriC66m5SuVIXG5rEdhjzaXS6/alVCpO/uxDHA=
 github.com/mvisonneau/go-helpers v0.0.0-20201013090751-e69b7251ab02/go.mod h1:N4t40A+JStVnKjazlJ/RUSYmzysn4HXvFXhoWFbAJeM=
 github.com/mvisonneau/taskq/v3 v3.1.2-0.20201014105413-e98ea9d96590 h1:qHDwdqLIJI6q7CzcrKWHWVXl0bdzadi1ZKl1rQZyh98=

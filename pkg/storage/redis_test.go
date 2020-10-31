@@ -69,6 +69,66 @@ func TestRedisProjectFunctions(t *testing.T) {
 	assert.NotEqual(t, p, newProject)
 }
 
+func TestRedisEnvironmentFunctions(t *testing.T) {
+	s, err := miniredis.Run()
+	if err != nil {
+		panic(err)
+	}
+	defer s.Close()
+
+	r := NewRedisStorage(redis.NewClient(&redis.Options{Addr: s.Addr()}))
+
+	environment := schemas.Environment{
+		ProjectName: "foo",
+		ID:          1,
+		ExternalURL: "bar",
+	}
+
+	// Set project
+	r.SetEnvironment(environment)
+	environments, err := r.Environments()
+	assert.NoError(t, err)
+	assert.Contains(t, environments, environment.Key())
+	assert.Equal(t, environment.ProjectName, environments[environment.Key()].ProjectName)
+	assert.Equal(t, environment.ID, environments[environment.Key()].ID)
+
+	// Environment exists
+	exists, err := r.EnvironmentExists(environment.Key())
+	assert.NoError(t, err)
+	assert.True(t, exists)
+
+	// GetEnvironment should succeed
+	newEnvironment := schemas.Environment{
+		ProjectName: "foo",
+		ID:          1,
+	}
+	assert.NoError(t, r.GetEnvironment(&newEnvironment))
+	assert.Equal(t, environment.ExternalURL, newEnvironment.ExternalURL)
+
+	// Count
+	count, err := r.EnvironmentsCount()
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), count)
+
+	// Delete Environment
+	r.DelEnvironment(environment.Key())
+	environments, err = r.Environments()
+	assert.NoError(t, err)
+	assert.NotContains(t, environments, environment.Key())
+
+	exists, err = r.EnvironmentExists(environment.Key())
+	assert.NoError(t, err)
+	assert.False(t, exists)
+
+	// GetEnvironment should not update the var this time
+	newEnvironment = schemas.Environment{
+		ProjectName: "foo",
+		ID:          1,
+	}
+	assert.NoError(t, r.GetEnvironment(&newEnvironment))
+	assert.NotEqual(t, environment, newEnvironment)
+}
+
 func TestRedisRefFunctions(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {

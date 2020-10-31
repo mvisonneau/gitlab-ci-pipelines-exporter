@@ -4,11 +4,11 @@ import "time"
 
 // Deployment ..
 type Deployment struct {
-	RefKind   RefKind
-	RefName   string
-	Author    string
-	Time      time.Time
-	Duration  time.Duration
-	CommitSHA string
-	Status    string
+	RefKind       RefKind
+	RefName       string
+	AuthorEmail   string
+	CreatedAt     time.Time
+	Duration      time.Duration
+	CommitShortID string
+	Status        string
 }

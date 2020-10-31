@@ -52,53 +52,12 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	switch event := event.(type) {
 	case *gitlab.PipelineEvent:
 		go processPipelineEvent(*event)
+	case *gitlab.DeploymentEvent:
+		go processDeploymentEvent(*event)
 	default:
 		log.WithFields(logFields).WithField("event-type", reflect.TypeOf(event).String()).Warn("received a non supported event type as a webhook")
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}
-}
-
-func triggerRefMetricsPull(ref schemas.Ref) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	logFields := log.Fields{
-		"project-id":   ref.ID,
-		"project-name": ref.PathWithNamespace,
-		"project-ref":  ref.Ref,
-	}
-
-	exists, err := store.RefExists(ref.Key())
-	if err != nil {
-		log.WithFields(logFields).WithField("error", err.Error()).Error("reading project ref from the store")
-	}
-
-	if !exists {
-		projects, err := store.Projects()
-		if err != nil {
-			log.WithFields(logFields).WithField("error", err.Error()).Error("reading projects from the store")
-		}
-
-		for _, p := range projects {
-			if p.Name == ref.PathWithNamespace {
-				if regexp.MustCompile(p.Pull.Refs.Regexp()).MatchString(ref.Ref) {
-					if err = store.SetRef(ref); err != nil {
-						log.WithFields(logFields).WithField("error", err.Error()).Error("writing project ref in the store")
-					}
-					goto schedulePull
-				}
-			}
-		}
-
-		log.WithFields(logFields).Info("project ref not configured in the exporter, ignoring pipeline hook")
-		return
-	}
-
-schedulePull:
-	log.WithFields(logFields).Info("received a pipeline webhook from GitLab for a project ref, triggering metrics pull")
-	// TODO: When all the metrics will be sent over the webhook, we might be able to avoid redoing a pull
-	// eg: 'coverage' is not in the pipeline payload yet, neither is 'artifacts' in the job one
-	go schedulePullRefMetrics(context.Background(), ref)
 }
 
 func processPipelineEvent(e goGitlab.PipelineEvent) {
@@ -117,4 +76,106 @@ func processPipelineEvent(e goGitlab.PipelineEvent) {
 		PathWithNamespace: e.Project.PathWithNamespace,
 		Ref:               e.ObjectAttributes.Ref,
 	})
+}
+
+func triggerRefMetricsPull(ref schemas.Ref) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	logFields := log.Fields{
+		"project-id":   ref.ID,
+		"project-name": ref.PathWithNamespace,
+		"project-ref":  ref.Ref,
+	}
+
+	exists, err := store.RefExists(ref.Key())
+	if err != nil {
+		log.WithFields(logFields).WithField("error", err.Error()).Error("reading project ref from the store")
+	}
+
+	if !exists {
+		p := schemas.Project{
+			Name: ref.PathWithNamespace,
+		}
+
+		exists, err = store.ProjectExists(p.Key())
+		if err != nil {
+			log.WithFields(logFields).WithField("error", err.Error()).Error("reading project from the store")
+		}
+
+		if exists {
+			if err := store.GetProject(&p); err != nil {
+				log.WithFields(logFields).WithField("error", err.Error()).Error("reading project from the store")
+			}
+
+			if regexp.MustCompile(p.Pull.Refs.Regexp()).MatchString(ref.Ref) {
+				if err = store.SetRef(ref); err != nil {
+					log.WithFields(logFields).WithField("error", err.Error()).Error("writing ref in the store")
+				}
+				goto schedulePull
+			}
+		}
+
+		log.WithFields(logFields).Info("project ref not configured in the exporter, ignoring pipeline hook")
+		return
+	}
+
+schedulePull:
+	log.WithFields(logFields).Info("received a pipeline webhook from GitLab for a project ref, triggering metrics pull")
+	// TODO: When all the metrics will be sent over the webhook, we might be able to avoid redoing a pull
+	// eg: 'coverage' is not in the pipeline payload yet, neither is 'artifacts' in the job one
+	go schedulePullRefMetrics(context.Background(), ref)
+}
+
+func processDeploymentEvent(e goGitlab.DeploymentEvent) {
+	triggerEnvironmentMetricsPull(schemas.Environment{
+		ProjectName: e.Project.Name,
+		Name:        e.Environment,
+	})
+}
+
+func triggerEnvironmentMetricsPull(env schemas.Environment) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	logFields := log.Fields{
+		"project-name":     env.ProjectName,
+		"environment-name": env.Name,
+	}
+
+	exists, err := store.EnvironmentExists(env.Key())
+	if err != nil {
+		log.WithFields(logFields).WithField("error", err.Error()).Error("reading environment from the store")
+	}
+
+	if !exists {
+		p := schemas.Project{
+			Name: env.ProjectName,
+		}
+
+		exists, err = store.ProjectExists(p.Key())
+		if err != nil {
+			log.WithFields(logFields).WithField("error", err.Error()).Error("reading project from the store")
+		}
+
+		if exists {
+			if err := store.GetProject(&p); err != nil {
+				log.WithFields(logFields).WithField("error", err.Error()).Error("reading project from the store")
+			}
+
+			if regexp.MustCompile(p.Pull.Environments.NameRegexp()).MatchString(env.Name) {
+				if err = store.SetEnvironment(env); err != nil {
+					log.WithFields(logFields).WithField("error", err.Error()).Error("writing environment in the store")
+				}
+				goto schedulePull
+			}
+		}
+
+		log.WithFields(logFields).Info("environment not configured in the exporter, ignoring pipeline hook")
+		return
+	}
+
+schedulePull:
+	log.WithFields(logFields).Info("received a deployment webhook from GitLab for an environment, triggering metrics pull")
+	go schedulePullEnvironmentMetrics(context.Background(), env)
 }
