@@ -51,6 +51,58 @@ func garbageCollectProjects() error {
 }
 
 func garbageCollectEnvironments() error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	storedEnvironments, err := store.Environments()
+	if err != nil {
+		return err
+	}
+
+	for k, env := range storedEnvironments {
+		p := schemas.Project{
+			Name: env.ProjectName,
+		}
+
+		projectExists, err := store.ProjectExists(p.Key())
+		if err != nil {
+			return err
+		}
+
+		// If the project does not exist anymore, delete the environment
+		if !projectExists {
+			if err = store.DelEnvironment(k); err != nil {
+				return err
+			}
+
+			log.WithFields(log.Fields{
+				"project-name":     env.ProjectName,
+				"environment-name": env.Name,
+				"reason":           "non-existent-project",
+			}).Info("deleted environment from the store")
+			continue
+		}
+
+		if err = store.GetProject(&p); err != nil {
+			return err
+		}
+
+		// If the environment is not configured to be pulled anymore, delete the project ref
+		re := regexp.MustCompile(p.Pull.Environments.NameRegexp())
+		if !re.MatchString(env.Name) {
+			if err = store.DelEnvironment(k); err != nil {
+				return err
+			}
+
+			log.WithFields(log.Fields{
+				"project-name":     env.ProjectName,
+				"environment-name": env.Name,
+				"reason":           "environment-not-in-regexp",
+			}).Info("deleted environment from the store")
+			continue
+		}
+	}
+
 	return nil
 }
 
@@ -58,19 +110,16 @@ func garbageCollectRefs() error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	storedProjects, err := store.Projects()
-	if err != nil {
-		return err
-	}
-
 	storedRefs, err := store.Refs()
 	if err != nil {
 		return err
 	}
 
 	for k, ref := range storedRefs {
-		p, projectExists := storedProjects[ref.Project.Key()]
-
+		projectExists, err := store.ProjectExists(ref.Project.Key())
+		if err != nil {
+			return err
+		}
 		// If the project does not exist anymore, delete the project ref
 		if !projectExists {
 			if err = store.DelRef(k); err != nil {
@@ -85,8 +134,13 @@ func garbageCollectRefs() error {
 			continue
 		}
 
+		p := ref.Project
+		if err = store.GetProject(&p); err != nil {
+			return err
+		}
+
 		// If the ref is not configured to be pulled anymore, delete the project ref
-		re := regexp.MustCompile(p.ProjectParameters.Pull.Refs.Regexp())
+		re := regexp.MustCompile(p.Pull.Refs.Regexp())
 		if !re.MatchString(ref.Ref) {
 			if err = store.DelRef(k); err != nil {
 				return err
@@ -111,7 +165,6 @@ func garbageCollectRefs() error {
 			log.WithFields(log.Fields{
 				"project-name": ref.PathWithNamespace,
 				"project-ref":  ref.Ref,
-				"reason":       "ref-not-in-regexp",
 			}).Info("updated project ref, project definition was not in sync")
 		}
 	}
