@@ -8,8 +8,8 @@ import (
 
 func TestEnvironmentKey(t *testing.T) {
 	e := Environment{
-		ProjectPathWithNamespace: "foo/bar",
-		ID:                       1,
+		ProjectName: "foo/bar",
+		ID:          1,
 	}
 
 	assert.Equal(t, EnvironmentKey("545704658"), e.Key())

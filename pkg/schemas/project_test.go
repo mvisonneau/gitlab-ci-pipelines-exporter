@@ -37,6 +37,42 @@ func TestOutputSparseStatusMetrics(t *testing.T) {
 	assert.Equal(t, defaultProjectOutputSparseStatusMetrics, project.OutputSparseStatusMetrics())
 }
 
+func TestPullEnvironmentsFromProjectsEnabled(t *testing.T) {
+	cfg, project := NewTestProjectVariables()
+	assert.Equal(t, defaultProjectPullEnvironmentsEnabled, project.Pull.Environments.Enabled())
+
+	cfg.ProjectDefaults.Pull.Environments.EnabledValue = pointy.Bool(!defaultProjectPullEnvironmentsEnabled)
+	UpdateProjectDefaults(cfg.ProjectDefaults)
+	assert.Equal(t, defaultProjectPullEnvironmentsEnabled, project.Pull.Environments.Enabled())
+
+	project.Pull.Environments.EnabledValue = pointy.Bool(defaultProjectPullEnvironmentsEnabled)
+	assert.Equal(t, defaultProjectPullEnvironmentsEnabled, project.Pull.Environments.Enabled())
+}
+
+func TestPullEnvironmentsFromProjectsNameRegexp(t *testing.T) {
+	cfg, project := NewTestProjectVariables()
+	assert.Equal(t, defaultProjectPullEnvironmentsNameRegexp, project.Pull.Environments.NameRegexp())
+
+	cfg.ProjectDefaults.Pull.Environments.NameRegexpValue = pointy.String("foo")
+	UpdateProjectDefaults(cfg.ProjectDefaults)
+	assert.Equal(t, "foo", project.Pull.Environments.NameRegexp())
+
+	project.Pull.Environments.NameRegexpValue = pointy.String("bar")
+	assert.Equal(t, "bar", project.Pull.Environments.NameRegexp())
+}
+
+func TestPullEnvironmentsFromProjectsTagsRegexp(t *testing.T) {
+	cfg, project := NewTestProjectVariables()
+	assert.Equal(t, defaultProjectPullEnvironmentsTagsRegexp, project.Pull.Environments.TagsRegexp())
+
+	cfg.ProjectDefaults.Pull.Environments.TagsRegexpValue = pointy.String("foo")
+	UpdateProjectDefaults(cfg.ProjectDefaults)
+	assert.Equal(t, "foo", project.Pull.Environments.TagsRegexp())
+
+	project.Pull.Environments.TagsRegexpValue = pointy.String("bar")
+	assert.Equal(t, "bar", project.Pull.Environments.TagsRegexp())
+}
+
 func TestPullRefsRegexp(t *testing.T) {
 	cfg, project := NewTestProjectVariables()
 	assert.Equal(t, defaultProjectPullRefsRegexp, project.Pull.Refs.Regexp())

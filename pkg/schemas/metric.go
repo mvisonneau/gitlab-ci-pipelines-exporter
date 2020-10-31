@@ -15,6 +15,24 @@ const (
 	// MetricKindDurationSeconds ..
 	MetricKindDurationSeconds
 
+	// MetricKindEnvironmentBehindCommitsCount ..
+	MetricKindEnvironmentBehindCommitsCount
+
+	// MetricKindEnvironmentBehindDurationSeconds ..
+	MetricKindEnvironmentBehindDurationSeconds
+
+	// MetricKindEnvironmentDeploymentDurationSeconds ..
+	MetricKindEnvironmentDeploymentDurationSeconds
+
+	// MetricKindEnvironmentDeploymentStatus ..
+	MetricKindEnvironmentDeploymentStatus
+
+	// MetricKindEnvironmentDeploymentTimestamp ..
+	MetricKindEnvironmentDeploymentTimestamp
+
+	// MetricKindEnvironmentInformation ..
+	MetricKindEnvironmentInformation
+
 	// MetricKindID ..
 	MetricKindID
 
@@ -64,5 +82,12 @@ type Metrics map[MetricKey]Metric
 
 // Key ..
 func (m Metric) Key() MetricKey {
-	return MetricKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(strconv.Itoa(int(m.Kind)) + fmt.Sprintf("%v", m.Labels))))))
+	key := strconv.Itoa(int(m.Kind))
+	if m.Kind == MetricKindEnvironmentInformation {
+		key += fmt.Sprintf("%v", []string{m.Labels["project"], m.Labels["environment"]})
+	} else {
+		key += fmt.Sprintf("%v", m.Labels)
+	}
+
+	return MetricKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(key)))))
 }

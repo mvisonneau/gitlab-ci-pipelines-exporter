@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	redisProjectsKey string = `projects`
-	redisRefsKey     string = `refs`
-	redisMetricsKey  string = `metrics`
+	redisProjectsKey     string = `projects`
+	redisEnvironmentsKey string = `environments`
+	redisRefsKey         string = `refs`
+	redisMetricsKey      string = `metrics`
 )
 
 // Redis ..
@@ -91,6 +92,78 @@ func (r *Redis) Projects() (schemas.Projects, error) {
 // ProjectsCount ..
 func (r *Redis) ProjectsCount() (int64, error) {
 	return r.HLen(r.ctx, redisProjectsKey).Result()
+}
+
+// SetEnvironment ..
+func (r *Redis) SetEnvironment(environment schemas.Environment) error {
+	marshalledEnvironment, err := msgpack.Marshal(environment)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.HSet(r.ctx, redisEnvironmentsKey, string(environment.Key()), marshalledEnvironment).Result()
+	return err
+}
+
+// DelEnvironment ..
+func (r *Redis) DelEnvironment(k schemas.EnvironmentKey) error {
+	_, err := r.HDel(r.ctx, redisEnvironmentsKey, string(k)).Result()
+	return err
+}
+
+// GetEnvironment ..
+func (r *Redis) GetEnvironment(environment *schemas.Environment) error {
+	exists, err := r.EnvironmentExists(environment.Key())
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		k := environment.Key()
+		marshalledEnvironment, err := r.HGet(r.ctx, redisEnvironmentsKey, string(k)).Result()
+		if err != nil {
+			return err
+		}
+
+		storedEnvironment := schemas.Environment{}
+		if err = msgpack.Unmarshal([]byte(marshalledEnvironment), &storedEnvironment); err != nil {
+			return err
+		}
+
+		*environment = storedEnvironment
+	}
+
+	return nil
+}
+
+// EnvironmentExists ..
+func (r *Redis) EnvironmentExists(k schemas.EnvironmentKey) (bool, error) {
+	return r.HExists(r.ctx, redisEnvironmentsKey, string(k)).Result()
+}
+
+// Environments ..
+func (r *Redis) Environments() (schemas.Environments, error) {
+	environments := schemas.Environments{}
+	marshalledProjects, err := r.HGetAll(r.ctx, redisEnvironmentsKey).Result()
+	if err != nil {
+		return environments, err
+	}
+
+	for stringEnvironmentKey, marshalledEnvironment := range marshalledProjects {
+		p := schemas.Environment{}
+
+		if err = msgpack.Unmarshal([]byte(marshalledEnvironment), &p); err != nil {
+			return environments, err
+		}
+		environments[schemas.EnvironmentKey(stringEnvironmentKey)] = p
+	}
+
+	return environments, nil
+}
+
+// EnvironmentsCount ..
+func (r *Redis) EnvironmentsCount() (int64, error) {
+	return r.HLen(r.ctx, redisEnvironmentsKey).Result()
 }
 
 // SetRef ..

@@ -96,8 +96,8 @@ pull:
     scheduled: true
 
     # Interval in seconds to discover project environments
-    # (optional, default: 1800)
-    interval_seconds: 1800
+    # (optional, default: 300)
+    interval_seconds: 300
 
   refs_from_projects:
     # Whether to trigger a discovery of project refs from
@@ -191,13 +191,18 @@ project_defaults:
 
   pull:
     environments:
-      # Whether or not to monitor project environments & their deployments
-      # (optional, default: true)
-      enabled: true
+      # Whether or not to pull project environments & their deployments
+      # (optional, default: false)
+      enabled: false
 
-      # Filter environments to include
+      # Filter out by name environments to include
       # (optional, default: "^prod")
-      regexp: "^prod"
+      name_regexp: "^prod"
+
+      # When deployments are based upon tags, you can
+      # choose to filter out the ones which you are
+      # using to deploy your environment (optional, default: ".*")
+      tags_regexp: ".*"
 
     refs:
       # Filter refs (branches/tags only) to include
@@ -249,13 +254,18 @@ projects:
     # Here are all the project parameters which can be overriden (optional)
     pull:
       environments:
-        # Whether or not to monitor project environments & their deployments
-        # (optional, default: true)
-        enabled: true
+        # Whether or not to pull project environments & their deployments
+        # (optional, default: false)
+        enabled: false
 
-        # Filter environments to include
+        # Filter out by name environments to include
         # (optional, default: "^prod")
-        regexp: "^prod"
+        name_regexp: "^prod"
+
+        # When deployments are based upon tags, you can
+        # choose to filter out the ones which you are
+        # using to deploy your environment (optional, default: ".*")
+        tags_regexp: ".*"
   
       refs:
         # Filter refs (branches/tags only) to include
@@ -323,13 +333,18 @@ wildcards:
     # Here are all the project parameters which can be overriden (optional)
     pull:
       environments:
-        # Whether or not to monitor project environments & their deployments
-        # (optional, default: true)
-        enabled: true
+        # Whether or not to pull project environments & their deployments
+        # (optional, default: false)
+        enabled: false
 
-        # Filter environments to include
+        # Filter out by name environments to include
         # (optional, default: "^prod")
-        regexp: "^prod"
+        name_regexp: "^prod"
+
+        # When deployments are based upon tags, you can
+        # choose to filter out the ones which you are
+        # using to deploy your environment (optional, default: ".*")
+        tags_regexp: ".*"
 
       refs:
         # Filter refs (branches/tags only) to include

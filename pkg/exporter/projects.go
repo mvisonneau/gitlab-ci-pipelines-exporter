@@ -37,9 +37,8 @@ func pullProjectsFromWildcard(w schemas.Wildcard) error {
 			}
 
 			go schedulePullRefsFromProject(context.Background(), p)
-			if p.Pull.Refs.From.Pipelines.Enabled() {
-				go schedulePullRefsFromPipeline(context.Background(), p)
-			}
+			go schedulePullRefsFromPipeline(context.Background(), p)
+			go schedulePullEnvironmentsFromProject(context.Background(), p)
 		}
 	}
 	return nil

@@ -63,8 +63,8 @@ pull:
   projects_from_wildcards:
     on_init: false
     scheduled: false
-		interval_seconds: 1
-	environments_from_projects:
+    interval_seconds: 1
+  environments_from_projects:
     on_init: false
     scheduled: false
     interval_seconds: 2
@@ -81,8 +81,8 @@ garbage_collect:
   projects:
     on_init: true
     scheduled: false
-		interval_seconds: 1
-	environments:
+    interval_seconds: 1
+  environments:
     on_init: true
     scheduled: false
     interval_seconds: 2
@@ -97,10 +97,11 @@ garbage_collect:
 
 project_defaults:
   output_sparse_status_metrics: false
-	pull:
-		environments:
-			enabled: false
-			regexp: "^baz$"
+  pull:
+    environments:
+      enabled: true
+      name_regexp: "^baz$"
+      tags_regexp: "^blah$"
     refs:
       regexp: "^baz$"
       from:
@@ -120,17 +121,19 @@ project_defaults:
 projects:
   - name: foo/project
   - name: bar/project
-		pull:
-			environments:
-				enabled: true
-				regexp: "^foo$"
+    pull:
+      environments:
+        enabled: false
+        name_regexp: "^foo$"
+        tags_regexp: "^foo$"
       refs:
         regexp: "^foo$"
   - name: new/project
-		pull:
-			environments:
-				enabled: true
-				regexp: "^bar$"
+    pull:
+      environments:
+        enabled: false
+        name_regexp: "^foo$"
+        tags_regexp: "^foo$"
       refs:
         regexp: "^bar$"
 
@@ -141,6 +144,10 @@ wildcards:
     search: 'bar'
     archived: true
     pull:
+      environments:
+        enabled: false
+        name_regexp: "^foo$"
+        tags_regexp: "^foo$"
       refs:
         regexp: "^yolo$"
 `)
@@ -219,6 +226,11 @@ wildcards:
 		ProjectDefaults: ProjectParameters{
 			OutputSparseStatusMetricsValue: pointy.Bool(false),
 			Pull: ProjectPull{
+				Environments: ProjectPullEnvironments{
+					EnabledValue:    pointy.Bool(true),
+					NameRegexpValue: pointy.String("^baz$"),
+					TagsRegexpValue: pointy.String("^blah$"),
+				},
 				Refs: ProjectPullRefs{
 					RegexpValue: pointy.String("^baz$"),
 					From: ProjectPullRefsFrom{
@@ -251,6 +263,11 @@ wildcards:
 				Name: "bar/project",
 				ProjectParameters: ProjectParameters{
 					Pull: ProjectPull{
+						Environments: ProjectPullEnvironments{
+							EnabledValue:    pointy.Bool(false),
+							NameRegexpValue: pointy.String("^foo$"),
+							TagsRegexpValue: pointy.String("^foo$"),
+						},
 						Refs: ProjectPullRefs{
 							RegexpValue: pointy.String("^foo$"),
 						},
@@ -261,6 +278,11 @@ wildcards:
 				Name: "new/project",
 				ProjectParameters: ProjectParameters{
 					Pull: ProjectPull{
+						Environments: ProjectPullEnvironments{
+							EnabledValue:    pointy.Bool(false),
+							NameRegexpValue: pointy.String("^foo$"),
+							TagsRegexpValue: pointy.String("^foo$"),
+						},
 						Refs: ProjectPullRefs{
 							RegexpValue: pointy.String("^bar$"),
 						},
@@ -281,6 +303,11 @@ wildcards:
 				},
 				ProjectParameters: ProjectParameters{
 					Pull: ProjectPull{
+						Environments: ProjectPullEnvironments{
+							EnabledValue:    pointy.Bool(false),
+							NameRegexpValue: pointy.String("^foo$"),
+							TagsRegexpValue: pointy.String("^foo$"),
+						},
 						Refs: ProjectPullRefs{
 							RegexpValue: pointy.String("^yolo$"),
 						},
@@ -314,6 +341,11 @@ func TestParseConfigDefaultsValues(t *testing.T) {
 
 	// Validate project default values
 	assert.Equal(t, defaultProjectOutputSparseStatusMetrics, cfg.ProjectDefaults.OutputSparseStatusMetrics())
+
+	assert.Equal(t, defaultProjectPullEnvironmentsEnabled, cfg.ProjectDefaults.Pull.Environments.Enabled())
+	assert.Equal(t, defaultProjectPullEnvironmentsNameRegexp, cfg.ProjectDefaults.Pull.Environments.NameRegexp())
+	assert.Equal(t, defaultProjectPullEnvironmentsTagsRegexp, cfg.ProjectDefaults.Pull.Environments.TagsRegexp())
+
 	assert.Equal(t, defaultProjectPullRefsRegexp, cfg.ProjectDefaults.Pull.Refs.Regexp())
 	assert.Equal(t, defaultProjectPullRefsFromPipelinesEnabled, cfg.ProjectDefaults.Pull.Refs.From.Pipelines.Enabled())
 	assert.Equal(t, defaultProjectPullRefsFromPipelinesDepth, cfg.ProjectDefaults.Pull.Refs.From.Pipelines.Depth())

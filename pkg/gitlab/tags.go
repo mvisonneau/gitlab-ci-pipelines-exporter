@@ -2,12 +2,13 @@ package gitlab
 
 import (
 	"regexp"
+	"time"
 
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 // GetProjectTags ..
-func (c *Client) GetProjectTags(projectID int, refsRegexp string) ([]string, error) {
+func (c *Client) GetProjectTags(projectID int, filterRegexp string) ([]string, error) {
 	var names []string
 
 	options := &goGitlab.ListTagsOptions{
@@ -17,7 +18,7 @@ func (c *Client) GetProjectTags(projectID int, refsRegexp string) ([]string, err
 		},
 	}
 
-	re, err := regexp.Compile(refsRegexp)
+	re, err := regexp.Compile(filterRegexp)
 	if err != nil {
 		return nil, err
 	}
@@ -42,4 +43,40 @@ func (c *Client) GetProjectTags(projectID int, refsRegexp string) ([]string, err
 	}
 
 	return names, nil
+}
+
+// GetProjectMostRecentTagCommit ..
+func (c *Client) GetProjectMostRecentTagCommit(project, filterRegexp string) (string, time.Time, error) {
+	options := &goGitlab.ListTagsOptions{
+		ListOptions: goGitlab.ListOptions{
+			Page:    1,
+			PerPage: 100,
+		},
+	}
+
+	re, err := regexp.Compile(filterRegexp)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	for {
+		c.rateLimit()
+		tags, resp, err := c.Tags.ListTags(project, options)
+		if err != nil {
+			return "", time.Time{}, err
+		}
+
+		for _, tag := range tags {
+			if re.MatchString(tag.Name) {
+				return tag.Commit.ShortID, *tag.Commit.CommittedDate, nil
+			}
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			break
+		}
+		options.Page = resp.NextPage
+	}
+
+	return "", time.Time{}, nil
 }

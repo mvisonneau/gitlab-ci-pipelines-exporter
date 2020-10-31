@@ -17,6 +17,33 @@ var (
 			return pullProjectsFromWildcard(w)
 		},
 	})
+	pullEnvironmentsFromProjectTask = taskq.RegisterTask(&taskq.TaskOptions{
+		Name: "pullEnvironmentsFromProjectTask",
+		Handler: func(p schemas.Project) (err error) {
+			// On errors, we do not want to retry these tasks
+			if err := pullEnvironmentsFromProject(p); err != nil {
+				log.WithFields(log.Fields{
+					"project-name": p.Name,
+					"error":        err.Error(),
+				}).Warn("pulling environments from project")
+			}
+			return
+		},
+	})
+	pullEnvironmentMetricsTask = taskq.RegisterTask(&taskq.TaskOptions{
+		Name: "pullEnvironmentMetricsTask",
+		Handler: func(env schemas.Environment) (err error) {
+			// On errors, we do not want to retry these tasks
+			if err := pullEnvironmentMetrics(env); err != nil {
+				log.WithFields(log.Fields{
+					"project-name":   env.ProjectName,
+					"environment-id": env.ID,
+					"error":          err.Error(),
+				}).Warn("pulling environment metrics")
+			}
+			return
+		},
+	})
 	pullRefsFromProjectTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "pullRefsFromProjectTask",
 		Handler: func(p schemas.Project) (err error) {
@@ -25,7 +52,7 @@ var (
 				log.WithFields(log.Fields{
 					"project-name": p.Name,
 					"error":        err.Error(),
-				}).Warn("pulling projects refs from project")
+				}).Warn("pulling refs from project")
 			}
 			return
 		},
@@ -52,7 +79,7 @@ var (
 					"project-name": ref.PathWithNamespace,
 					"project-ref":  ref.Ref,
 					"error":        err.Error(),
-				}).Warn("pulling projects refs metrics")
+				}).Warn("pulling ref metrics")
 			}
 			return
 		},
@@ -61,6 +88,12 @@ var (
 		Name: "garbageCollectProjectsTask",
 		Handler: func() error {
 			return garbageCollectProjects()
+		},
+	})
+	garbageCollectEnvironmentsTask = taskq.RegisterTask(&taskq.TaskOptions{
+		Name: "garbageCollectEnvironmentsTask",
+		Handler: func() error {
+			return garbageCollectEnvironments()
 		},
 	})
 	garbageCollectRefsTask = taskq.RegisterTask(&taskq.TaskOptions{
@@ -87,15 +120,21 @@ func schedule(ctx context.Context) {
 		defer cfgUpdateLock.RUnlock()
 
 		pullProjectsFromWildcardsTicker := time.NewTicker(time.Duration(config.Pull.ProjectsFromWildcards.IntervalSeconds) * time.Second)
+		pullEnvironmentsFromProjectsTicker := time.NewTicker(time.Duration(config.Pull.EnvironmentsFromProjects.IntervalSeconds) * time.Second)
 		pullRefsFromProjectsTicker := time.NewTicker(time.Duration(config.Pull.RefsFromProjects.IntervalSeconds) * time.Second)
 		pullMetricsTicker := time.NewTicker(time.Duration(config.Pull.Metrics.IntervalSeconds) * time.Second)
 		garbageCollectProjectsTicker := time.NewTicker(time.Duration(config.GarbageCollect.Projects.IntervalSeconds) * time.Second)
+		garbageCollectEnvironmentsTicker := time.NewTicker(time.Duration(config.GarbageCollect.Environments.IntervalSeconds) * time.Second)
 		garbageCollectRefsTicker := time.NewTicker(time.Duration(config.GarbageCollect.Refs.IntervalSeconds) * time.Second)
 		garbageCollectMetricsTicker := time.NewTicker(time.Duration(config.GarbageCollect.Metrics.IntervalSeconds) * time.Second)
 
 		// Ticker configuration
 		if !config.Pull.ProjectsFromWildcards.Scheduled {
 			pullProjectsFromWildcardsTicker.Stop()
+		}
+
+		if !config.Pull.EnvironmentsFromProjects.Scheduled {
+			pullEnvironmentsFromProjectsTicker.Stop()
 		}
 
 		if !config.Pull.RefsFromProjects.Scheduled {
@@ -108,6 +147,10 @@ func schedule(ctx context.Context) {
 
 		if !config.GarbageCollect.Projects.Scheduled {
 			garbageCollectProjectsTicker.Stop()
+		}
+
+		if !config.GarbageCollect.Environments.Scheduled {
+			garbageCollectEnvironmentsTicker.Stop()
 		}
 
 		if !config.GarbageCollect.Refs.Scheduled {
@@ -126,12 +169,16 @@ func schedule(ctx context.Context) {
 				return
 			case <-pullProjectsFromWildcardsTicker.C:
 				schedulePullProjectsFromWildcards(ctx)
+			case <-pullEnvironmentsFromProjectsTicker.C:
+				schedulePullEnvironmentsFromProjects(ctx)
 			case <-pullRefsFromProjectsTicker.C:
 				schedulePullRefsFromProjects(ctx)
 			case <-pullMetricsTicker.C:
 				schedulePullMetrics(ctx)
 			case <-garbageCollectProjectsTicker.C:
-				schedulePullMetrics(ctx)
+				scheduleGarbageCollectProjects(ctx)
+			case <-garbageCollectEnvironmentsTicker.C:
+				scheduleGarbageCollectEnvironments(ctx)
 			case <-garbageCollectRefsTicker.C:
 				scheduleGarbageCollectRefs(ctx)
 			case <-garbageCollectMetricsTicker.C:
@@ -149,6 +196,10 @@ func schedulerInit(ctx context.Context) {
 		schedulePullProjectsFromWildcards(ctx)
 	}
 
+	if config.Pull.EnvironmentsFromProjects.OnInit {
+		schedulePullEnvironmentsFromProjects(ctx)
+	}
+
 	if config.Pull.RefsFromProjects.OnInit {
 		schedulePullRefsFromProjects(ctx)
 	}
@@ -159,6 +210,10 @@ func schedulerInit(ctx context.Context) {
 
 	if config.GarbageCollect.Projects.OnInit {
 		scheduleGarbageCollectProjects(ctx)
+	}
+
+	if config.GarbageCollect.Environments.OnInit {
+		scheduleGarbageCollectEnvironments(ctx)
 	}
 
 	if config.GarbageCollect.Refs.OnInit {
@@ -182,6 +237,31 @@ func schedulePullProjectsFromWildcards(ctx context.Context) {
 	}
 }
 
+func schedulePullEnvironmentsFromProjects(ctx context.Context) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	projectsCount, err := store.ProjectsCount()
+	if err != nil {
+		log.Error(err.Error())
+	}
+
+	log.WithFields(
+		log.Fields{
+			"projects-count": projectsCount,
+		},
+	).Info("scheduling environments from projects pull")
+
+	projects, err := store.Projects()
+	if err != nil {
+		log.Error(err)
+	}
+
+	for _, p := range projects {
+		go schedulePullEnvironmentsFromProject(ctx, p)
+	}
+}
+
 func schedulePullRefsFromProjects(ctx context.Context) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
@@ -195,7 +275,7 @@ func schedulePullRefsFromProjects(ctx context.Context) {
 		log.Fields{
 			"projects-count": projectsCount,
 		},
-	).Info("scheduling projects refs from projects pull")
+	).Info("scheduling refs from projects pull")
 
 	projects, err := store.Projects()
 	if err != nil {
@@ -222,6 +302,17 @@ func schedulePullMetrics(ctx context.Context) {
 		},
 	).Info("scheduling metrics pull")
 
+	// ENVIRONMENTS
+	envs, err := store.Environments()
+	if err != nil {
+		log.Error(err)
+	}
+
+	for _, env := range envs {
+		go schedulePullEnvironmentMetrics(ctx, env)
+	}
+
+	// REFS
 	refs, err := store.Refs()
 	if err != nil {
 		log.Error(err)
@@ -251,6 +342,13 @@ func schedulePullProjectsFromWildcardTask(ctx context.Context, w schemas.Wildcar
 }
 
 func schedulePullRefsFromPipeline(ctx context.Context, p schemas.Project) {
+	if !p.Pull.Refs.From.Pipelines.Enabled() {
+		log.WithFields(log.Fields{
+			"project-name": p.Name,
+		}).Debug("pull refs from pipelines disabled, not scheduling")
+		return
+	}
+
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -267,6 +365,49 @@ func schedulePullRefsFromPipeline(ctx context.Context, p schemas.Project) {
 	}
 }
 
+func schedulePullEnvironmentsFromProject(ctx context.Context, p schemas.Project) {
+	if !p.Pull.Environments.Enabled() {
+		log.WithFields(log.Fields{
+			"project-name": p.Name,
+		}).Debug("pull environments from project disabled, not scheduling")
+		return
+	}
+
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
+	if err := pullingQueue.Add(pullEnvironmentsFromProjectTask.WithArgs(ctx, p)); err != nil {
+		log.WithFields(log.Fields{
+			"project-name": p.Name,
+			"error":        err.Error(),
+		}).Error("scheduling 'environments from project' pull")
+	}
+}
+
+func schedulePullEnvironmentMetrics(ctx context.Context, env schemas.Environment) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
+	if err := pullingQueue.Add(pullEnvironmentMetricsTask.WithArgs(ctx, env)); err != nil {
+		log.WithFields(log.Fields{
+			"project-name":     env.ProjectName,
+			"environment-id":   env.ID,
+			"environment-name": env.Name,
+			"error":            err.Error(),
+		}).Error("scheduling 'project ref most recent pipeline metrics' pull")
+	}
+}
+
 func schedulePullRefsFromProject(ctx context.Context, p schemas.Project) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
@@ -280,7 +421,7 @@ func schedulePullRefsFromProject(ctx context.Context, p schemas.Project) {
 		log.WithFields(log.Fields{
 			"project-name": p.Name,
 			"error":        err.Error(),
-		}).Error("scheduling 'project refs from project' pull")
+		}).Error("scheduling 'refs from project' pull")
 	}
 }
 
@@ -295,7 +436,8 @@ func schedulePullRefMetrics(ctx context.Context, ref schemas.Ref) {
 
 	if err := pullingQueue.Add(pullRefMetricsTask.WithArgs(ctx, ref)); err != nil {
 		log.WithFields(log.Fields{
-			"project-name": ref.Name,
+			"project-name": ref.PathWithNamespace,
+			"ref-name":     ref.Name,
 			"error":        err.Error(),
 		}).Error("scheduling 'project ref most recent pipeline metrics' pull")
 	}
@@ -317,6 +459,22 @@ func scheduleGarbageCollectProjects(ctx context.Context) {
 	}
 }
 
+func scheduleGarbageCollectEnvironments(ctx context.Context) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	if pullingQueue == nil {
+		log.Warn("uninitialized pulling queue, cannot schedule")
+		return
+	}
+
+	if err := pullingQueue.Add(garbageCollectEnvironmentsTask.WithArgs(ctx)); err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("scheduling 'environments garbage collection' task")
+	}
+}
+
 func scheduleGarbageCollectRefs(ctx context.Context) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
@@ -329,7 +487,7 @@ func scheduleGarbageCollectRefs(ctx context.Context) {
 	if err := pullingQueue.Add(garbageCollectRefsTask.WithArgs(ctx)); err != nil {
 		log.WithFields(log.Fields{
 			"error": err.Error(),
-		}).Error("scheduling 'projects refs garbage collection' task")
+		}).Error("scheduling 'refs garbage collection' task")
 	}
 }
 

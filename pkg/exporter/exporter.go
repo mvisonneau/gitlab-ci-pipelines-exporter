@@ -135,8 +135,13 @@ func configureStore() {
 				}).Error("writing project in the store")
 			}
 
-			if p.Pull.Refs.From.Pipelines.Enabled() {
+			if config.Pull.RefsFromProjects.OnInit {
+				go schedulePullRefsFromProject(context.Background(), p)
 				go schedulePullRefsFromPipeline(context.Background(), p)
+			}
+
+			if config.Pull.EnvironmentsFromProjects.OnInit {
+				go schedulePullEnvironmentsFromProject(context.Background(), p)
 			}
 		}
 	}

@@ -11,5 +11,5 @@ func TestWildcardKey(t *testing.T) {
 		Search: "foo",
 	}
 
-	assert.Equal(t, WildcardKey("3554764926"), w.Key())
+	assert.Equal(t, WildcardKey("1330869223"), w.Key())
 }

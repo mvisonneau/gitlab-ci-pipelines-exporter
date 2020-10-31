@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -49,4 +50,27 @@ func TestGetProjectBranches(t *testing.T) {
 	// Test invalid regexp
 	_, err = c.GetProjectBranches(0, "[")
 	assert.Error(t, err)
+}
+
+func TestGetBranchLatestCommit(t *testing.T) {
+	mux, server, c := getMockedClient()
+	defer server.Close()
+
+	mux.HandleFunc("/api/v4/projects/1/repository/branches/main",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, r.Method, "GET")
+			fmt.Fprint(w, `
+{
+	"commit": {
+		"short_id": "7b5c3cc",
+		"committed_date": "2019-03-25T18:55:13.252Z"
+	}
+}`)
+		})
+
+	expectedCreatedAt, _ := time.Parse(time.RFC3339, "2019-03-25T18:55:13.252Z")
+	commitShortID, commitCreatedAt, err := c.GetBranchLatestCommit("1", "main")
+	assert.NoError(t, err)
+	assert.Equal(t, "7b5c3cc", commitShortID)
+	assert.Equal(t, expectedCreatedAt, commitCreatedAt)
 }

@@ -9,12 +9,17 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Added
 
-- Releases of **.deb** and **.rpm** packages
+- Export `environments/deployments` related metrics
+- Documented the list of exported metrics
+- Released **.deb** and **.rpm** packages
 
 ### Changed
 
 - Bumped all dependencies
 - Fixed race conditions during tests
+- Always return coverage metric
+- Enhanced the scheduling of the pull functions on init
+- Improved webhook parsing functions performance
 
 ## [0.4.2] - 2020-10-22
 

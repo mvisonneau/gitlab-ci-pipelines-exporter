@@ -75,18 +75,19 @@ func pullRefMetrics(ref schemas.Ref) error {
 			storeSetMetric(runCount)
 		}
 
+		var coverage float64
 		if pipeline.Coverage != "" {
-			parsedCoverage, err := strconv.ParseFloat(pipeline.Coverage, 64)
+			coverage, err = strconv.ParseFloat(pipeline.Coverage, 64)
 			if err != nil {
 				log.WithFields(logFields).WithField("error", err.Error()).Warnf("could not parse coverage string returned from GitLab API '%s' into Float64", pipeline.Coverage)
-			} else {
-				storeSetMetric(schemas.Metric{
-					Kind:   schemas.MetricKindCoverage,
-					Labels: ref.DefaultLabelsValues(),
-					Value:  parsedCoverage,
-				})
 			}
 		}
+
+		storeSetMetric(schemas.Metric{
+			Kind:   schemas.MetricKindCoverage,
+			Labels: ref.DefaultLabelsValues(),
+			Value:  coverage,
+		})
 
 		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindID,

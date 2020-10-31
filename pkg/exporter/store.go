@@ -50,6 +50,10 @@ func garbageCollectProjects() error {
 	return nil
 }
 
+func garbageCollectEnvironments() error {
+	return nil
+}
+
 func garbageCollectRefs() error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()

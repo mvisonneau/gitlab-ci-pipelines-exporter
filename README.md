@@ -95,7 +95,11 @@ EOF
 
 ## Configuration syntax
 
-The **complete configuration syntax** [is maintained here](docs/configuration_syntax.md).
+The **configuration syntax** [is maintained here](docs/configuration_syntax.md).
+
+## Exported metrics
+
+The **list of exported metrics** [is maintained here](docs/metrics.md).
 
 ## Quickstart
 

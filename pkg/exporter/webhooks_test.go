@@ -47,11 +47,20 @@ func TestWebhookHandler(t *testing.T) {
 	WebhookHandler(w, req)
 	assert.Equal(t, http.StatusUnprocessableEntity, w.Result().StatusCode)
 
-	// Provide an valid event type
+	// Provide an valid event type: pipeline
 	req.Body = ioutil.NopCloser(strings.NewReader(`{"object_kind": "pipeline"}`))
 	req.Header.Set("X-Gitlab-Event", "Pipeline Hook")
 
-	// Test with invalid event type, should return a 200
+	// Test with pipeline event type, should return a 200
+	w = httptest.NewRecorder()
+	WebhookHandler(w, req)
+	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+
+	// Provide an valid event type: deployment
+	req.Body = ioutil.NopCloser(strings.NewReader(`{"object_kind": "deployment"}`))
+	req.Header.Set("X-Gitlab-Event", "Deployment Hook")
+
+	// Test with deployment event type, should return a 200
 	w = httptest.NewRecorder()
 	WebhookHandler(w, req)
 	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
@@ -60,24 +69,47 @@ func TestWebhookHandler(t *testing.T) {
 func TestTriggerRefMetricsPull(_ *testing.T) {
 	resetGlobalValues()
 
-	pr1 := schemas.Ref{
+	ref1 := schemas.Ref{
 		ID:                1,
 		PathWithNamespace: "group/foo",
 		Ref:               "main",
 	}
 
 	p2 := schemas.Project{Name: "group/bar"}
-	pr2 := schemas.Ref{
+	ref2 := schemas.Ref{
 		Project:           p2,
 		ID:                2,
 		PathWithNamespace: "group/bar",
 		Ref:               "main",
 	}
 
-	store.SetRef(pr1)
+	store.SetRef(ref1)
 	store.SetProject(p2)
 
 	// TODO: Assert results somehow
-	triggerRefMetricsPull(pr1)
-	triggerRefMetricsPull(pr2)
+	triggerRefMetricsPull(ref1)
+	triggerRefMetricsPull(ref2)
+}
+
+func TestTriggerEnvironmentMetricsPull(_ *testing.T) {
+	resetGlobalValues()
+
+	p1 := schemas.Project{Name: "foo/bar"}
+	env1 := schemas.Environment{
+		ProjectName: "foo/bar",
+		Name:        "dev",
+	}
+
+	env2 := schemas.Environment{
+		ProjectName: "foo/baz",
+		Name:        "prod",
+	}
+
+	store.SetProject(p1)
+	store.SetEnvironment(env1)
+	store.SetEnvironment(env2)
+
+	// TODO: Assert results somehow
+	triggerEnvironmentMetricsPull(env1)
+	triggerEnvironmentMetricsPull(env2)
 }

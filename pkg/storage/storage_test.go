@@ -12,7 +12,8 @@ import (
 func TestNewLocalStorage(t *testing.T) {
 	expectedValue := &Local{
 		projects:     make(schemas.Projects),
-		projectsRefs: make(schemas.ProjectsRefs),
+		environments: make(schemas.Environments),
+		refs:         make(schemas.Refs),
 		metrics:      make(schemas.Metrics),
 	}
 	assert.Equal(t, expectedValue, NewLocalStorage())

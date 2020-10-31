@@ -11,6 +11,9 @@ type Local struct {
 	projects      schemas.Projects
 	projectsMutex sync.RWMutex
 
+	environments      schemas.Environments
+	environmentsMutex sync.RWMutex
+
 	refs      schemas.Refs
 	refsMutex sync.RWMutex
 
@@ -79,6 +82,69 @@ func (l *Local) ProjectsCount() (int64, error) {
 	defer l.projectsMutex.RUnlock()
 
 	return int64(len(l.projects)), nil
+}
+
+// SetEnvironment ..
+func (l *Local) SetEnvironment(environment schemas.Environment) error {
+	l.environmentsMutex.Lock()
+	defer l.environmentsMutex.Unlock()
+
+	l.environments[environment.Key()] = environment
+	return nil
+}
+
+// DelEnvironment ..
+func (l *Local) DelEnvironment(k schemas.EnvironmentKey) error {
+	l.environmentsMutex.Lock()
+	defer l.environmentsMutex.Unlock()
+
+	delete(l.environments, k)
+	return nil
+}
+
+// GetEnvironment ..
+func (l *Local) GetEnvironment(environment *schemas.Environment) error {
+	exists, err := l.EnvironmentExists(environment.Key())
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		l.environmentsMutex.RLock()
+		*environment = l.environments[environment.Key()]
+		l.environmentsMutex.RUnlock()
+	}
+
+	return nil
+}
+
+// EnvironmentExists ..
+func (l *Local) EnvironmentExists(k schemas.EnvironmentKey) (bool, error) {
+	l.environmentsMutex.RLock()
+	defer l.environmentsMutex.RUnlock()
+
+	_, ok := l.environments[k]
+	return ok, nil
+}
+
+// Environments ..
+func (l *Local) Environments() (environments schemas.Environments, err error) {
+	environments = make(schemas.Environments)
+	l.environmentsMutex.RLock()
+	defer l.environmentsMutex.RUnlock()
+
+	for k, v := range l.environments {
+		environments[k] = v
+	}
+	return
+}
+
+// EnvironmentsCount ..
+func (l *Local) EnvironmentsCount() (int64, error) {
+	l.environmentsMutex.RLock()
+	defer l.environmentsMutex.RUnlock()
+
+	return int64(len(l.environments)), nil
 }
 
 // SetRef ..
