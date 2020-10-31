@@ -56,6 +56,38 @@ func TestGarbageCollectProjects(t *testing.T) {
 	assert.Equal(t, expectedProjects, storedProjects)
 }
 
+func TestGarbageCollectEnvironments(t *testing.T) {
+	resetGlobalValues()
+
+	p2 := schemas.Project{
+		Name: "p2",
+		ProjectParameters: schemas.ProjectParameters{
+			Pull: schemas.ProjectPull{
+				Environments: schemas.ProjectPullEnvironments{
+					NameRegexpValue: pointy.String("^main$"),
+				},
+			},
+		},
+	}
+	envp1main := schemas.Environment{ProjectName: "p1", Name: "main"}
+	envp2dev := schemas.Environment{ProjectName: "p2", Name: "dev"}
+	envp2main := schemas.Environment{ProjectName: "p2", Name: "main"}
+
+	store.SetProject(p2)
+	store.SetEnvironment(envp1main)
+	store.SetEnvironment(envp2dev)
+	store.SetEnvironment(envp2main)
+
+	assert.NoError(t, garbageCollectEnvironments())
+	storedEnvironments, err := store.Environments()
+	assert.NoError(t, err)
+
+	expectedEnvironments := schemas.Environments{
+		envp2main.Key(): envp2main,
+	}
+	assert.Equal(t, expectedEnvironments, storedEnvironments)
+}
+
 func TestGarbageCollectRefs(t *testing.T) {
 	resetGlobalValues()
 
