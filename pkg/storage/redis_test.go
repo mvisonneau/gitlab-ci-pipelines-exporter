@@ -139,11 +139,10 @@ func TestRedisRefFunctions(t *testing.T) {
 	r := NewRedisStorage(redis.NewClient(&redis.Options{Addr: s.Addr()}))
 
 	ref := schemas.Ref{
-		Project: schemas.Project{
-			Name: "foo/bar",
-		},
-		Ref:    "sweet",
-		Topics: "salty",
+		Kind:        schemas.RefKindBranch,
+		ProjectName: "foo/bar",
+		Name:        "sweet",
+		Topics:      "salty",
 	}
 
 	// Set project
@@ -160,10 +159,9 @@ func TestRedisRefFunctions(t *testing.T) {
 
 	// GetRef should succeed
 	newRef := schemas.Ref{
-		Project: schemas.Project{
-			Name: "foo/bar",
-		},
-		Ref: "sweet",
+		Kind:        schemas.RefKindBranch,
+		ProjectName: "foo/bar",
+		Name:        "sweet",
 	}
 	assert.NoError(t, r.GetRef(&newRef))
 	assert.Equal(t, ref, newRef)
@@ -185,10 +183,9 @@ func TestRedisRefFunctions(t *testing.T) {
 
 	// GetRef should not update the var this time
 	newRef = schemas.Ref{
-		Project: schemas.Project{
-			Name: "foo/bar",
-		},
-		Ref: "sweet",
+		Kind:        schemas.RefKindBranch,
+		ProjectName: "foo/bar",
+		Name:        "sweet",
 	}
 	assert.NoError(t, r.GetRef(&newRef))
 	assert.NotEqual(t, ref, newRef)

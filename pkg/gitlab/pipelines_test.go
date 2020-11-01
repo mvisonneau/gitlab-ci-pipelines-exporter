@@ -17,16 +17,15 @@ func TestGetRefPipeline(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/1/pipelines/1",
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `{"id":1}`)
 		})
 
 	ref := schemas.Ref{
-		ID:                1,
-		PathWithNamespace: "foo/bar",
-		Ref:               "yay",
+		ProjectName: "foo",
+		Name:        "yay",
 	}
 
 	pipeline, err := c.GetRefPipeline(ref, 1)
@@ -39,7 +38,7 @@ func TestGetProjectPipelines(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/pipelines"),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
@@ -52,7 +51,7 @@ func TestGetProjectPipelines(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
-	pipelines, err := c.GetProjectPipelines(1, &gitlab.ListProjectPipelinesOptions{
+	pipelines, err := c.GetProjectPipelines("foo", &gitlab.ListProjectPipelinesOptions{
 		Ref:   pointy.String("foo"),
 		Scope: pointy.String("bar"),
 	})
@@ -65,7 +64,7 @@ func TestGetProjectMergeRequestsPipelines(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
@@ -76,7 +75,7 @@ func TestGetProjectMergeRequestsPipelines(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"},{"id":2,"ref":"refs/merge-requests/bar"},{"id":3,"ref":"yolo"}]`)
 		})
 
-	pipelines, err := c.GetProjectMergeRequestsPipelines(1, 10)
+	pipelines, err := c.GetProjectMergeRequestsPipelines("foo", 10)
 	assert.NoError(t, err)
 	assert.Len(t, pipelines, 2)
 }
@@ -85,26 +84,17 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines/1/variables"),
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `[{"key":"foo","value":"bar"},{"key":"bar","value":"baz"}]`)
 		})
 
 	ref := schemas.Ref{
-		ID:  1,
-		Ref: "yay",
-		Project: schemas.Project{
-			ProjectParameters: schemas.ProjectParameters{
-				Pull: schemas.ProjectPull{
-					Pipeline: schemas.ProjectPullPipeline{
-						Variables: schemas.ProjectPullPipelineVariables{
-							RegexpValue: pointy.String("["), // invalid regexp pattern
-						},
-					},
-				},
-			},
-		},
+		ProjectName:                  "foo",
+		Name:                         "yay",
+		PullPipelineVariablesEnabled: true,
+		PullPipelineVariablesRegexp:  "[",
 	}
 
 	// Should return right away as MostRecentPipeline is not defined
@@ -123,7 +113,7 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	assert.Equal(t, "", variables)
 
 	// Should work
-	ref.Pull.Pipeline.Variables.RegexpValue = pointy.String(".*")
+	ref.PullPipelineVariablesRegexp = ".*"
 	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ref)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo:bar,bar:baz", variables)
@@ -133,7 +123,7 @@ func TestGetRefsFromPipelines(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			urlValues := r.URL.Query()
@@ -154,7 +144,7 @@ func TestGetRefsFromPipelines(t *testing.T) {
 		})
 
 	p := schemas.Project{
-		Name: "foo/bar",
+		Name: "foo",
 		ProjectParameters: schemas.ProjectParameters{
 			Pull: schemas.ProjectPull{
 				Refs: schemas.ProjectPullRefs{
@@ -170,46 +160,41 @@ func TestGetRefsFromPipelines(t *testing.T) {
 		},
 	}
 
-	gp := &goGitlab.Project{
-		ID:                1,
-		PathWithNamespace: "foo/bar",
-	}
-
-	prs, err := c.GetRefsFromPipelines(p, gp)
+	refs, err := c.GetRefsFromPipelines(p, "")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
-	assert.Len(t, prs, 0)
+	assert.Len(t, refs, 0)
 
 	p.Pull.Refs.RegexpValue = pointy.String("^keep.*")
-	prs, err = c.GetRefsFromPipelines(p, gp)
+	refs, err = c.GetRefsFromPipelines(p, "")
 	assert.NoError(t, err)
 
 	expectedRefs := schemas.Refs{
-		"1309204293": schemas.Ref{
-			Project:           p,
-			PathWithNamespace: "foo/bar",
-			Kind:              schemas.RefKindBranch,
-			ID:                1,
-			Ref:               "keep_dev",
-			Jobs:              make(map[string]goGitlab.Job),
+		"2231079763": schemas.Ref{
+			Kind:                        schemas.RefKindBranch,
+			ProjectName:                 "foo",
+			Name:                        "keep_dev",
+			Jobs:                        make(map[string]goGitlab.Job),
+			OutputSparseStatusMetrics:   true,
+			PullPipelineVariablesRegexp: ".*",
 		},
-		"3383490522": schemas.Ref{
-			Project:           p,
-			PathWithNamespace: "foo/bar",
-			Kind:              schemas.RefKindBranch,
-			ID:                1,
-			Ref:               "keep_main",
-			Jobs:              make(map[string]goGitlab.Job),
+		"1035317703": schemas.Ref{
+			Kind:                        schemas.RefKindBranch,
+			ProjectName:                 "foo",
+			Name:                        "keep_main",
+			Jobs:                        make(map[string]goGitlab.Job),
+			OutputSparseStatusMetrics:   true,
+			PullPipelineVariablesRegexp: ".*",
 		},
-		"3975821083": schemas.Ref{
-			Project:           p,
-			PathWithNamespace: "foo/bar",
-			Kind:              schemas.RefKindTag,
-			ID:                1,
-			Ref:               "keep_0.0.2",
-			Jobs:              make(map[string]goGitlab.Job),
+		"1929034016": schemas.Ref{
+			Kind:                        schemas.RefKindTag,
+			ProjectName:                 "foo",
+			Name:                        "keep_0.0.2",
+			Jobs:                        make(map[string]goGitlab.Job),
+			OutputSparseStatusMetrics:   true,
+			PullPipelineVariablesRegexp: ".*",
 		},
 	}
 
-	assert.Equal(t, expectedRefs, prs)
+	assert.Equal(t, expectedRefs, refs)
 }

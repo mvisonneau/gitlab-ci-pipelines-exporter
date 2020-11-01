@@ -8,7 +8,7 @@ import (
 )
 
 // GetProjectTags ..
-func (c *Client) GetProjectTags(projectID int, filterRegexp string) ([]string, error) {
+func (c *Client) GetProjectTags(projectName string, filterRegexp string) ([]string, error) {
 	var names []string
 
 	options := &goGitlab.ListTagsOptions{
@@ -25,7 +25,7 @@ func (c *Client) GetProjectTags(projectID int, filterRegexp string) ([]string, e
 
 	for {
 		c.rateLimit()
-		tags, resp, err := c.Tags.ListTags(projectID, options)
+		tags, resp, err := c.Tags.ListTags(projectName, options)
 		if err != nil {
 			return names, err
 		}

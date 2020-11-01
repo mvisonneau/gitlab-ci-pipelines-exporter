@@ -71,10 +71,9 @@ func processPipelineEvent(e goGitlab.PipelineEvent) {
 	}
 
 	triggerRefMetricsPull(schemas.Ref{
-		ID:                e.Project.ID,
-		Kind:              k,
-		PathWithNamespace: e.Project.PathWithNamespace,
-		Ref:               e.ObjectAttributes.Ref,
+		Kind:        k,
+		ProjectName: e.Project.PathWithNamespace,
+		Name:        e.ObjectAttributes.Ref,
 	})
 }
 
@@ -83,9 +82,9 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 	defer cfgUpdateLock.RUnlock()
 
 	logFields := log.Fields{
-		"project-id":   ref.ID,
-		"project-name": ref.PathWithNamespace,
-		"project-ref":  ref.Ref,
+		"project-name":     ref.ProjectName,
+		"project-ref":      ref.Name,
+		"project-ref-kind": ref.Kind,
 	}
 
 	exists, err := store.RefExists(ref.Key())
@@ -95,7 +94,7 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 
 	if !exists {
 		p := schemas.Project{
-			Name: ref.PathWithNamespace,
+			Name: ref.ProjectName,
 		}
 
 		exists, err = store.ProjectExists(p.Key())
@@ -108,7 +107,7 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 				log.WithFields(logFields).WithField("error", err.Error()).Error("reading project from the store")
 			}
 
-			if regexp.MustCompile(p.Pull.Refs.Regexp()).MatchString(ref.Ref) {
+			if regexp.MustCompile(p.Pull.Refs.Regexp()).MatchString(ref.Name) {
 				if err = store.SetRef(ref); err != nil {
 					log.WithFields(logFields).WithField("error", err.Error()).Error("writing ref in the store")
 				}

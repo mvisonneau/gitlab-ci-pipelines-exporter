@@ -15,22 +15,22 @@ func TestGetRefs(t *testing.T) {
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/branches"),
+	mux.HandleFunc("/api/v4/projects/foo/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"name":"keep/dev"},{"name":"keep/main"}]`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/tags"),
+	mux.HandleFunc("/api/v4/projects/foo/repository/tags",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"name":"keep/dev"},{"name":"keep/0.0.2"}]`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"}]`)
 		})
 
-	foundRefs, err := getRefs(1, "^keep", true, 10)
+	foundRefs, err := getRefs("foo", "^keep", true, 10)
 	assert.NoError(t, err)
 
 	assert.Equal(t, foundRefs["keep/0.0.2"], schemas.RefKindTag)
@@ -44,33 +44,32 @@ func TestPullRefsFromProject(t *testing.T) {
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/bar",
+	mux.HandleFunc("/api/v4/projects/foo",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `{"id":1}`)
+			fmt.Fprint(w, `{"name":"foo"}`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/branches"),
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/branches"),
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"name":"main"},{"name":"nope"}]`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/tags"),
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/tags"),
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	assert.NoError(t, pullRefsFromProject(schemas.Project{Name: "foo/bar"}))
+	assert.NoError(t, pullRefsFromProject(schemas.Project{Name: "foo"}))
 
 	projectsRefs, _ := store.Refs()
 	expectedRefs := schemas.Refs{
-		"3207122276": schemas.Ref{
-			Project: schemas.Project{
-				Name: "foo/bar",
-			},
-			Kind: schemas.RefKindBranch,
-			ID:   1,
-			Ref:  "main",
-			Jobs: make(map[string]goGitlab.Job),
+		"99908380": schemas.Ref{
+			Kind:                        schemas.RefKindBranch,
+			ProjectName:                 "foo",
+			Name:                        "main",
+			Jobs:                        make(map[string]goGitlab.Job),
+			OutputSparseStatusMetrics:   true,
+			PullPipelineVariablesRegexp: ".*",
 		},
 	}
 	assert.Equal(t, expectedRefs, projectsRefs)
@@ -81,12 +80,12 @@ func TestPullRefsFromPipelines(t *testing.T) {
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/bar",
+	mux.HandleFunc("/api/v4/projects/foo",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `{"id":1}`)
+			fmt.Fprint(w, `{"name":"foo"}`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines"),
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
 			if scope, ok := r.URL.Query()["scope"]; ok && len(scope) == 1 && scope[0] == "branches" {
 				fmt.Fprint(w, `[{"id":1,"ref":"main"}]`)
@@ -99,27 +98,25 @@ func TestPullRefsFromPipelines(t *testing.T) {
 			}
 		})
 
-	assert.NoError(t, pullRefsFromPipelines(schemas.Project{Name: "foo/bar"}))
+	assert.NoError(t, pullRefsFromPipelines(schemas.Project{Name: "foo"}))
 
 	projectsRefs, _ := store.Refs()
 	expectedRefs := schemas.Refs{
-		"3207122276": schemas.Ref{
-			Project: schemas.Project{
-				Name: "foo/bar",
-			},
-			Kind: schemas.RefKindBranch,
-			ID:   1,
-			Ref:  "main",
-			Jobs: make(map[string]goGitlab.Job),
+		"964648533": schemas.Ref{
+			Kind:                        schemas.RefKindTag,
+			ProjectName:                 "foo",
+			Name:                        "master",
+			Jobs:                        make(map[string]goGitlab.Job),
+			OutputSparseStatusMetrics:   true,
+			PullPipelineVariablesRegexp: ".*",
 		},
-		"755606486": schemas.Ref{
-			Project: schemas.Project{
-				Name: "foo/bar",
-			},
-			Kind: schemas.RefKindTag,
-			ID:   1,
-			Ref:  "master",
-			Jobs: make(map[string]goGitlab.Job),
+		"99908380": schemas.Ref{
+			Kind:                        schemas.RefKindBranch,
+			ProjectName:                 "foo",
+			Name:                        "main",
+			Jobs:                        make(map[string]goGitlab.Job),
+			OutputSparseStatusMetrics:   true,
+			PullPipelineVariablesRegexp: ".*",
 		},
 	}
 	assert.Equal(t, expectedRefs, projectsRefs)

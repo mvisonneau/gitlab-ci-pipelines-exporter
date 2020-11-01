@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
 	"github.com/xanzy/go-gitlab"
 )
@@ -16,40 +15,37 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	mux, server := configureMockedGitlabClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/1/pipelines",
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"id":1}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/1/pipelines/1",
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `{"id":1,"updated_at":"2016-08-11T11:28:34.085Z","duration":300,"status":"running","coverage":"30.2"}`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines/1/variables"),
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/pipelines/1/variables"),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
 		})
 
-	ref := schemas.Ref{
-		Kind:              schemas.RefKindBranch,
-		ID:                1,
-		PathWithNamespace: "foo/bar",
-		Ref:               "baz",
-	}
-	ref.Pull.Pipeline.Variables.EnabledValue = pointy.Bool(true)
-
 	// Metrics pull shall succeed
-	assert.NoError(t, pullRefMetrics(ref))
+	assert.NoError(t, pullRefMetrics(schemas.Ref{
+		Kind:                         schemas.RefKindBranch,
+		ProjectName:                  "foo",
+		Name:                         "bar",
+		PullPipelineVariablesEnabled: true,
+	}))
 
 	// Check if all the metrics exist
 	metrics, _ := store.Metrics()
 	labels := map[string]string{
-		"project":   "foo/bar",
-		"topics":    "",
-		"ref":       "baz",
 		"kind":      string(schemas.RefKindBranch),
+		"project":   "foo",
+		"ref":       "bar",
+		"topics":    "",
 		"variables": "foo:bar",
 	}
 

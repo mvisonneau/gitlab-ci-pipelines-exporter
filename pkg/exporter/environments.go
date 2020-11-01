@@ -12,16 +12,19 @@ func pullEnvironmentsFromProject(p schemas.Project) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	envIDs, err := gitlabClient.GetProjectEnvironmentIDs(p.Name, p.Pull.Environments.NameRegexp())
+	envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.NameRegexp())
 	if err != nil {
 		return err
 	}
 
-	for _, envID := range envIDs {
+	for envID, envName := range envs {
 		env := schemas.Environment{
 			ProjectName: p.Name,
+			Name:        envName,
 			ID:          envID,
-			TagsRegexp:  p.Pull.Environments.TagsRegexp(),
+
+			TagsRegexp:                p.Pull.Environments.TagsRegexp(),
+			OutputSparseStatusMetrics: p.OutputSparseStatusMetrics(),
 		}
 
 		envExists, err := store.EnvironmentExists(env.Key())
@@ -81,30 +84,39 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 		envBehindCommitCount     float64
 	)
 
+	// To reduce the amount of compare requests being made, we check if the labels are unchanged since
+	// the latest emission of the information metric
 	if infoLabels["latest_commit_short_id"] != infoLabels["current_commit_short_id"] {
-		// To reduce the amount of compare requests being made, we check if the labels are unchanged since
-		// the latest emission of the information metric
-		exists, err := store.MetricExists(schemas.Metric{
+		infoMetric := schemas.Metric{
 			Kind:   schemas.MetricKindEnvironmentInformation,
 			Labels: env.DefaultLabelsValues(),
-		}.Key())
+		}
 
+		infoMetricExists, err := store.MetricExists(infoMetric.Key())
 		if err != nil {
 			return err
 		}
 
-		if !exists {
-			commitCount, err := gitlabClient.GetCommitCountBetweenRefs(env.ProjectName, infoLabels["current_commit_short_id"], infoLabels["latest_commit_short_id"])
+		var commitCount int
+		if !infoMetricExists {
+			commitCount, err = gitlabClient.GetCommitCountBetweenRefs(env.ProjectName, infoLabels["current_commit_short_id"], infoLabels["latest_commit_short_id"])
 			if err != nil {
 				return err
 			}
+		} else {
+			if err = store.GetMetric(&infoMetric); err != nil {
+				return err
+			}
 
-			envBehindCommitCount = float64(commitCount)
+			if infoMetric.Labels["latest_commit_short_id"] == infoLabels["latest_commit_short_id"] &&
+				infoMetric.Labels["current_commit_short_id"] == infoLabels["current_commit_short_id"] {
+				commitCount, err = gitlabClient.GetCommitCountBetweenRefs(env.ProjectName, infoLabels["current_commit_short_id"], infoLabels["latest_commit_short_id"])
+				if err != nil {
+					return err
+				}
+			}
 		}
-	}
-
-	if commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds() > 0 {
-		envBehindDurationSeconds = commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds()
+		envBehindCommitCount = float64(commitCount)
 	}
 
 	storeSetMetric(schemas.Metric{
@@ -112,6 +124,10 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 		Labels: env.DefaultLabelsValues(),
 		Value:  envBehindCommitCount,
 	})
+
+	if commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds() > 0 {
+		envBehindDurationSeconds = commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds()
+	}
 
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentBehindDurationSeconds,
@@ -130,8 +146,7 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 		env.DefaultLabelsValues(),
 		statusesList[:],
 		env.LatestDeployment.Status,
-		// TODO: Respect project's config
-		true,
+		env.OutputSparseStatusMetrics,
 	)
 
 	storeSetMetric(schemas.Metric{

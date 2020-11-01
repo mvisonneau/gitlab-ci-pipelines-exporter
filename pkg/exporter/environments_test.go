@@ -53,7 +53,7 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 	storedEnvironments, _ := store.Environments()
 	expectedCreateAt, _ := time.Parse(time.RFC3339, "2019-03-25T18:55:13.252Z")
 	expectedEnvironments := schemas.Environments{
-		"3047620480": schemas.Environment{
+		"1685779998": schemas.Environment{
 			ProjectName: "foo",
 			ID:          1337,
 			Name:        "foo",

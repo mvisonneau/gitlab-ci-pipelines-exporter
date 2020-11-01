@@ -23,7 +23,7 @@ func pullRefPipelineJobsMetrics(ref schemas.Ref) error {
 }
 
 func pullRefMostRecentJobsMetrics(ref schemas.Ref) error {
-	if !ref.Pull.Pipeline.Jobs.Enabled() {
+	if !ref.PullPipelineJobsEnabled {
 		return nil
 	}
 
@@ -51,9 +51,9 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 	labels["job_name"] = job.Name
 
 	projectRefLogFields := log.Fields{
-		"project-id": ref.ID,
-		"job-name":   job.Name,
-		"job-id":     job.ID,
+		"project-name": ref.ProjectName,
+		"job-name":     job.Name,
+		"job-id":       job.ID,
 	}
 
 	if err := store.GetRef(&ref); err != nil {
@@ -124,6 +124,6 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 		labels,
 		statusesList[:],
 		job.Status,
-		ref.OutputSparseStatusMetrics(),
+		ref.OutputSparseStatusMetrics,
 	)
 }

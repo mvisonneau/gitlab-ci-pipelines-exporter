@@ -9,7 +9,7 @@ import (
 )
 
 // GetProjectBranches ..
-func (c *Client) GetProjectBranches(projectID int, refsRegexp string) ([]string, error) {
+func (c *Client) GetProjectBranches(project, refsRegexp string) ([]string, error) {
 	var names []string
 
 	options := &goGitlab.ListBranchesOptions{
@@ -26,7 +26,7 @@ func (c *Client) GetProjectBranches(projectID int, refsRegexp string) ([]string,
 
 	for {
 		c.rateLimit()
-		branches, resp, err := c.Branches.ListBranches(projectID, options)
+		branches, resp, err := c.Branches.ListBranches(project, options)
 		if err != nil {
 			return names, err
 		}

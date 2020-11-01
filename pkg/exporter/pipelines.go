@@ -12,14 +12,13 @@ import (
 
 func pullRefMetrics(ref schemas.Ref) error {
 	logFields := log.Fields{
-		"project-name":     ref.PathWithNamespace,
-		"project-id":       ref.ID,
-		"project-ref":      ref.Ref,
+		"project-name":     ref.ProjectName,
+		"project-ref":      ref.Name,
 		"project-ref-kind": ref.Kind,
 	}
 
 	// TODO: Figure out if we want to have a similar approach for RefKindTag with
-	// an additional configuration parameeter perhaps
+	// an additional configuration parameter perhaps
 	if ref.Kind == schemas.RefKindMergeRequest && ref.MostRecentPipeline != nil {
 		switch ref.MostRecentPipeline.Status {
 		case "success", "failed", "canceled", "skipped":
@@ -31,17 +30,17 @@ func pullRefMetrics(ref schemas.Ref) error {
 
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
-	pipelines, err := gitlabClient.GetProjectPipelines(ref.ID, &goGitlab.ListProjectPipelinesOptions{
+	pipelines, err := gitlabClient.GetProjectPipelines(ref.ProjectName, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
 			PerPage: 1,
 			Page:    1,
 		},
-		Ref: goGitlab.String(ref.Ref),
+		Ref: goGitlab.String(ref.Name),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.PathWithNamespace, err)
+		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.ProjectName, err)
 	}
 
 	if len(pipelines) == 0 {
@@ -58,7 +57,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 		ref.MostRecentPipeline = pipeline
 
 		// fetch pipeline variables
-		if ref.Pull.Pipeline.Variables.Enabled() {
+		if ref.PullPipelineVariablesEnabled {
 			ref.MostRecentPipelineVariables, err = gitlabClient.GetRefPipelineVariablesAsConcatenatedString(ref)
 			if err != nil {
 				return err
@@ -100,7 +99,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 			ref.DefaultLabelsValues(),
 			statusesList[:],
 			pipeline.Status,
-			ref.OutputSparseStatusMetrics(),
+			ref.OutputSparseStatusMetrics,
 		)
 
 		storeSetMetric(schemas.Metric{
@@ -114,15 +113,9 @@ func pullRefMetrics(ref schemas.Ref) error {
 			Labels: ref.DefaultLabelsValues(),
 			Value:  float64(pipeline.UpdatedAt.Unix()),
 		})
-
-		if ref.Pull.Pipeline.Jobs.Enabled() {
-			if err = pullRefPipelineJobsMetrics(ref); err != nil {
-				return err
-			}
-		}
 	}
 
-	if ref.Pull.Pipeline.Jobs.Enabled() {
+	if ref.PullPipelineJobsEnabled {
 		if err := pullRefMostRecentJobsMetrics(ref); err != nil {
 			return err
 		}

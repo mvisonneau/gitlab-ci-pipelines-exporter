@@ -3,7 +3,6 @@ package schemas
 import (
 	"hash/crc32"
 	"strconv"
-	"strings"
 
 	goGitlab "github.com/xanzy/go-gitlab"
 )
@@ -25,16 +24,18 @@ type RefKind string
 // Ref is what we will use a metrics entity on which we will
 // perform regular pulling operations
 type Ref struct {
-	Project
-
 	Kind                        RefKind
-	ID                          int
-	PathWithNamespace           string
+	ProjectName                 string
+	Name                        string
 	Topics                      string
-	Ref                         string
 	MostRecentPipeline          *goGitlab.Pipeline
 	MostRecentPipelineVariables string
 	Jobs                        map[string]goGitlab.Job
+
+	OutputSparseStatusMetrics    bool
+	PullPipelineJobsEnabled      bool
+	PullPipelineVariablesEnabled bool
+	PullPipelineVariablesRegexp  string
 }
 
 // RefKey ..
@@ -42,7 +43,7 @@ type RefKey string
 
 // Key ..
 func (ref Ref) Key() RefKey {
-	return RefKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(ref.PathWithNamespace + ref.Ref)))))
+	return RefKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(string(ref.Kind) + ref.ProjectName + ref.Name)))))
 }
 
 // Refs allows us to keep track of all the Ref
@@ -57,23 +58,31 @@ func (refs Refs) Count() int {
 // DefaultLabelsValues ..
 func (ref Ref) DefaultLabelsValues() map[string]string {
 	return map[string]string{
-		"project":   ref.PathWithNamespace,
-		"topics":    ref.Topics,
-		"ref":       ref.Ref,
 		"kind":      string(ref.Kind),
+		"project":   ref.ProjectName,
+		"ref":       ref.Name,
+		"topics":    ref.Topics,
 		"variables": ref.MostRecentPipelineVariables,
 	}
 }
 
 // NewRef is an helper which returns a new Ref pointer
-func NewRef(project Project, gp *goGitlab.Project, ref string, kind RefKind) Ref {
+func NewRef(
+	kind RefKind,
+	projectName, name, topics string,
+	outputSparseStatusMetrics, pullPipelineJobsEnabled, pullPipelineVariablesEnabled bool,
+	pullPipelineVariablesRegexp string,
+) Ref {
 	return Ref{
-		Project:           project,
-		Kind:              kind,
-		ID:                gp.ID,
-		PathWithNamespace: gp.PathWithNamespace,
-		Topics:            strings.Join(gp.TagList, ","),
-		Ref:               ref,
-		Jobs:              make(map[string]goGitlab.Job),
+		Kind:        kind,
+		ProjectName: projectName,
+		Name:        name,
+		Topics:      topics,
+		Jobs:        make(map[string]goGitlab.Job),
+
+		OutputSparseStatusMetrics:    outputSparseStatusMetrics,
+		PullPipelineJobsEnabled:      pullPipelineJobsEnabled,
+		PullPipelineVariablesEnabled: pullPipelineVariablesEnabled,
+		PullPipelineVariablesRegexp:  pullPipelineVariablesRegexp,
 	}
 }

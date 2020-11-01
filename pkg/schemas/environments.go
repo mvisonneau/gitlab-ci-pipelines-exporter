@@ -14,6 +14,8 @@ type Environment struct {
 	Available        bool
 	LatestDeployment Deployment
 	TagsRegexp       string
+
+	OutputSparseStatusMetrics bool
 }
 
 // EnvironmentKey ..
@@ -21,7 +23,7 @@ type EnvironmentKey string
 
 // Key ..
 func (e Environment) Key() EnvironmentKey {
-	return EnvironmentKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(e.ProjectName + strconv.Itoa(int(e.ID)))))))
+	return EnvironmentKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(e.ProjectName + e.Name)))))
 }
 
 // Environments allows us to keep track of all the Environment
