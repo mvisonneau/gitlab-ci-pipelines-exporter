@@ -70,17 +70,14 @@ func TestTriggerRefMetricsPull(_ *testing.T) {
 	resetGlobalValues()
 
 	ref1 := schemas.Ref{
-		ID:                1,
-		PathWithNamespace: "group/foo",
-		Ref:               "main",
+		ProjectName: "group/foo",
+		Name:        "main",
 	}
 
 	p2 := schemas.Project{Name: "group/bar"}
 	ref2 := schemas.Ref{
-		Project:           p2,
-		ID:                2,
-		PathWithNamespace: "group/bar",
-		Ref:               "main",
+		ProjectName: "group/bar",
+		Name:        "main",
 	}
 
 	store.SetRef(ref1)

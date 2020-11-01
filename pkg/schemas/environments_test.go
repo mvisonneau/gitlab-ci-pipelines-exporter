@@ -8,11 +8,11 @@ import (
 
 func TestEnvironmentKey(t *testing.T) {
 	e := Environment{
-		ProjectName: "foo/bar",
-		ID:          1,
+		ProjectName: "foo",
+		Name:        "bar",
 	}
 
-	assert.Equal(t, EnvironmentKey("545704658"), e.Key())
+	assert.Equal(t, EnvironmentKey("2666930069"), e.Key())
 }
 
 func TestEnvironmentsCount(t *testing.T) {

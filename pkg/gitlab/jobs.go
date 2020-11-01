@@ -14,8 +14,8 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []goGitlab.Job, err 
 	if ref.MostRecentPipeline == nil {
 		log.WithFields(
 			log.Fields{
-				"project-id":  ref.ID,
-				"project-ref": ref.Ref,
+				"project-name": ref.ProjectName,
+				"project-ref":  ref.Name,
 			},
 		).Debug("most recent pipeline not defined, exiting..")
 		return
@@ -30,7 +30,7 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []goGitlab.Job, err 
 
 	for {
 		c.rateLimit()
-		foundJobs, resp, err = c.Jobs.ListPipelineJobs(ref.ID, ref.MostRecentPipeline.ID, options)
+		foundJobs, resp, err = c.Jobs.ListPipelineJobs(ref.ProjectName, ref.MostRecentPipeline.ID, options)
 		if err != nil {
 			return
 		}
@@ -42,10 +42,10 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []goGitlab.Job, err 
 		if resp.CurrentPage >= resp.TotalPages {
 			log.WithFields(
 				log.Fields{
-					"project-id":  ref.ID,
-					"project-ref": ref.Ref,
-					"pipeline-id": ref.MostRecentPipeline.ID,
-					"jobs-count":  resp.TotalItems,
+					"project-name": ref.ProjectName,
+					"project-ref":  ref.Name,
+					"pipeline-id":  ref.MostRecentPipeline.ID,
+					"jobs-count":   resp.TotalItems,
 				},
 			).Info("found pipeline jobs")
 			break
@@ -61,8 +61,8 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 	if ref.Jobs == nil {
 		log.WithFields(
 			log.Fields{
-				"project-id":  ref.ID,
-				"project-ref": ref.Ref,
+				"project-name": ref.ProjectName,
+				"project-ref":  ref.Name,
 			},
 		).Debug("no jobs are currently held in memory, exiting..")
 		return
@@ -86,14 +86,14 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 
 	for {
 		c.rateLimit()
-		foundJobs, resp, err = c.Jobs.ListProjectJobs(ref.ID, options)
+		foundJobs, resp, err = c.Jobs.ListProjectJobs(ref.ProjectName, options)
 		if err != nil {
 			return
 		}
 
 		for _, job := range foundJobs {
 			if _, ok := jobsToRefresh[job.Name]; ok {
-				if ref.Ref == job.Ref {
+				if ref.Name == job.Ref {
 					jobs = append(jobs, job)
 					delete(jobsToRefresh, job.Name)
 				}
@@ -102,9 +102,9 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 			if len(jobsToRefresh) == 0 {
 				log.WithFields(
 					log.Fields{
-						"project-id":  ref.ID,
-						"project-ref": ref.Ref,
-						"jobs-count":  len(ref.Jobs),
+						"project-name": ref.ProjectName,
+						"project-ref":  ref.Name,
+						"jobs-count":   len(ref.Jobs),
 					},
 				).Info("found all jobs to refresh")
 				return
@@ -114,9 +114,9 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 		if resp.CurrentPage >= resp.TotalPages {
 			log.WithFields(
 				log.Fields{
-					"project-id":  ref.ID,
-					"project-ref": ref.Ref,
-					"jobs-count":  resp.TotalItems,
+					"project-name": ref.ProjectName,
+					"project-ref":  ref.Name,
+					"jobs-count":   resp.TotalItems,
 				},
 			).Warn("found some project ref jobs but did not manage to refresh all jobs which were in memory")
 			break

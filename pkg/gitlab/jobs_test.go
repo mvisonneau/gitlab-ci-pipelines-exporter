@@ -16,8 +16,8 @@ func TestListRefPipelineJobs(t *testing.T) {
 	defer server.Close()
 
 	ref := schemas.Ref{
-		ID:  1,
-		Ref: "yay",
+		ProjectName: "foo",
+		Name:        "yay",
 	}
 
 	// Test with no most recent pipeline defined
@@ -25,7 +25,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 0)
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/pipelines/1/jobs"),
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
@@ -36,7 +36,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/0/pipelines/1/jobs"),
+	mux.HandleFunc("/api/v4/projects/bar/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 		})
@@ -50,7 +50,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 	assert.Len(t, jobs, 2)
 
 	// Test invalid project id
-	ref.ID = 0
+	ref.ProjectName = "bar"
 	_, err = c.ListRefPipelineJobs(ref)
 	assert.Error(t, err)
 }
@@ -60,15 +60,15 @@ func TestListRefMostRecentJobs(t *testing.T) {
 	defer server.Close()
 
 	ref := schemas.Ref{
-		ID:  1,
-		Ref: "yay",
+		ProjectName: "foo",
+		Name:        "yay",
 	}
 
 	jobs, err := c.ListRefMostRecentJobs(ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 0)
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/jobs"),
+	mux.HandleFunc("/api/v4/projects/foo/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
@@ -79,7 +79,7 @@ func TestListRefMostRecentJobs(t *testing.T) {
 			fmt.Fprint(w, `[{"id":3,"name":"foo","ref":"yay"},{"id":4,"name":"bar","ref":"yay"}]`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/0/jobs"),
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/bar/jobs"),
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 		})
@@ -113,7 +113,7 @@ func TestListRefMostRecentJobs(t *testing.T) {
 	assert.Equal(t, 4, jobs[1].ID)
 
 	// Test invalid project id
-	ref.ID = 0
+	ref.ProjectName = "bar"
 	_, err = c.ListRefMostRecentJobs(ref)
 	assert.Error(t, err)
 }

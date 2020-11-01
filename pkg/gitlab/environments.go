@@ -9,9 +9,9 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-// GetProjectEnvironmentIDs ..
-func (c *Client) GetProjectEnvironmentIDs(project, envRegexp string) ([]int, error) {
-	envIDs := []int{}
+// GetProjectEnvironments ..
+func (c *Client) GetProjectEnvironments(project, envRegexp string) (map[int]string, error) {
+	environments := map[int]string{}
 
 	options := &goGitlab.ListEnvironmentsOptions{
 		Page:    1,
@@ -27,12 +27,12 @@ func (c *Client) GetProjectEnvironmentIDs(project, envRegexp string) ([]int, err
 		c.rateLimit()
 		envs, resp, err := c.Environments.ListEnvironments(project, options)
 		if err != nil {
-			return envIDs, err
+			return environments, err
 		}
 
 		for _, env := range envs {
 			if re.MatchString(env.Name) {
-				envIDs = append(envIDs, env.ID)
+				environments[env.ID] = env.Name
 			}
 		}
 
@@ -42,7 +42,7 @@ func (c *Client) GetProjectEnvironmentIDs(project, envRegexp string) ([]int, err
 		options.Page = resp.NextPage
 	}
 
-	return envIDs, nil
+	return environments, nil
 }
 
 // GetEnvironment ..

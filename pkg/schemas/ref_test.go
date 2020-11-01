@@ -9,11 +9,12 @@ import (
 
 func TestRefKey(t *testing.T) {
 	ref := Ref{
-		PathWithNamespace: "foo/bar",
-		Ref:               "baz",
+		Kind:        RefKindBranch,
+		ProjectName: "foo/bar",
+		Name:        "baz",
 	}
 
-	assert.Equal(t, RefKey("732621927"), ref.Key())
+	assert.Equal(t, RefKey("1690074537"), ref.Key())
 }
 
 func TestRefsCount(t *testing.T) {
@@ -25,18 +26,18 @@ func TestRefsCount(t *testing.T) {
 
 func TestRefDefaultLabelsValues(t *testing.T) {
 	ref := Ref{
-		PathWithNamespace:           "foo/bar",
-		Topics:                      "amazing",
-		Ref:                         "feature",
 		Kind:                        RefKindBranch,
+		ProjectName:                 "foo/bar",
+		Name:                        "feature",
+		Topics:                      "amazing,project",
 		MostRecentPipelineVariables: "blah",
 	}
 
 	expectedValue := map[string]string{
-		"project":   "foo/bar",
-		"topics":    "amazing",
-		"ref":       "feature",
 		"kind":      "branch",
+		"project":   "foo/bar",
+		"ref":       "feature",
+		"topics":    "amazing,project",
 		"variables": "blah",
 	}
 
@@ -44,27 +45,26 @@ func TestRefDefaultLabelsValues(t *testing.T) {
 }
 
 func TestNewRef(t *testing.T) {
-	p := Project{
-		Name: "foo/bar",
-	}
-
-	gp := &goGitlab.Project{
-		ID:                1,
-		PathWithNamespace: "foo/bar",
-		TagList:           []string{"baz", "yolo"},
-	}
-
 	expectedValue := Ref{
-		Project: Project{
-			Name: "foo/bar",
-		},
-		PathWithNamespace: "foo/bar",
-		Kind:              RefKindTag,
-		ID:                1,
-		Topics:            "baz,yolo",
-		Ref:               "v0.0.7",
-		Jobs:              make(map[string]goGitlab.Job),
+		Kind:                         RefKindTag,
+		ProjectName:                  "foo/bar",
+		Name:                         "v0.0.7",
+		Topics:                       "bar,baz",
+		Jobs:                         make(map[string]goGitlab.Job),
+		OutputSparseStatusMetrics:    true,
+		PullPipelineJobsEnabled:      true,
+		PullPipelineVariablesEnabled: true,
+		PullPipelineVariablesRegexp:  ".*",
 	}
 
-	assert.Equal(t, expectedValue, NewRef(p, gp, "v0.0.7", RefKindTag))
+	assert.Equal(t, expectedValue, NewRef(
+		RefKindTag,
+		"foo/bar",
+		"v0.0.7",
+		"bar,baz",
+		true,
+		true,
+		true,
+		".*",
+	))
 }

@@ -83,7 +83,12 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedEnvironments := schemas.Environments{
-		envp2main.Key(): envp2main,
+		envp2main.Key(): schemas.Environment{
+			ProjectName:               "p2",
+			Name:                      "main",
+			TagsRegexp:                ".*",
+			OutputSparseStatusMetrics: true,
+		},
 	}
 	assert.Equal(t, expectedEnvironments, storedEnvironments)
 }
@@ -91,10 +96,9 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 func TestGarbageCollectRefs(t *testing.T) {
 	resetGlobalValues()
 
-	pr1dev := schemas.Ref{PathWithNamespace: "p1", Ref: "dev"}
-	pr1main := schemas.Ref{PathWithNamespace: "p1", Ref: "main"}
+	pr1dev := schemas.Ref{ProjectName: "p1", Name: "dev"}
+	pr1main := schemas.Ref{ProjectName: "p1", Name: "main"}
 
-	p2old := schemas.Project{Name: "p2"}
 	p2 := schemas.Project{
 		Name: "p2",
 		ProjectParameters: schemas.ProjectParameters{
@@ -105,8 +109,8 @@ func TestGarbageCollectRefs(t *testing.T) {
 			},
 		},
 	}
-	pr2dev := schemas.Ref{Project: p2old, PathWithNamespace: "p2", Ref: "dev"}
-	pr2main := schemas.Ref{Project: p2old, PathWithNamespace: "p2", Ref: "main"}
+	pr2dev := schemas.Ref{ProjectName: "p2", Name: "dev"}
+	pr2main := schemas.Ref{ProjectName: "p2", Name: "main"}
 
 	store.SetProject(p2)
 	store.SetRef(pr1dev)
@@ -118,9 +122,14 @@ func TestGarbageCollectRefs(t *testing.T) {
 	storedRefs, err := store.Refs()
 	assert.NoError(t, err)
 
-	newPR2main := schemas.Ref{Project: p2, PathWithNamespace: "p2", Ref: "main"}
+	newPR2main := schemas.Ref{ProjectName: "p2", Name: "main"}
 	expectedRefs := schemas.Refs{
-		newPR2main.Key(): newPR2main,
+		newPR2main.Key(): schemas.Ref{
+			ProjectName:                 "p2",
+			Name:                        "main",
+			OutputSparseStatusMetrics:   true,
+			PullPipelineVariablesRegexp: ".*",
+		},
 	}
 	assert.Equal(t, expectedRefs, storedRefs)
 }
@@ -128,45 +137,36 @@ func TestGarbageCollectRefs(t *testing.T) {
 func TestGarbageCollectMetrics(t *testing.T) {
 	resetGlobalValues()
 
-	pr1 := schemas.Ref{
-		Project: schemas.Project{
-			ProjectParameters: schemas.ProjectParameters{
-				OutputSparseStatusMetricsValue: pointy.Bool(true),
-				Pull: schemas.ProjectPull{
-					Pipeline: schemas.ProjectPullPipeline{
-						Jobs: schemas.ProjectPullPipelineJobs{
-							EnabledValue: pointy.Bool(false),
-						},
-					},
-				},
-			},
-		},
-		PathWithNamespace: "p1",
-		Ref:               "foo",
+	ref1 := schemas.Ref{
+		ProjectName:               "p1",
+		Name:                      "foo",
+		OutputSparseStatusMetrics: true,
+		PullPipelineJobsEnabled:   true,
 	}
 
-	pr1m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p1", "ref": "foo"}}
-	pr1m2 := schemas.Metric{Kind: schemas.MetricKindStatus, Labels: prometheus.Labels{"project": "p1", "ref": "foo"}, Value: float64(0)}
-	pr1m3 := schemas.Metric{Kind: schemas.MetricKindJobDurationSeconds, Labels: prometheus.Labels{"project": "p1", "ref": "foo"}}
+	ref1m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p1", "ref": "foo"}}
+	ref1m2 := schemas.Metric{Kind: schemas.MetricKindStatus, Labels: prometheus.Labels{"project": "p1", "ref": "foo"}}
+	ref1m3 := schemas.Metric{Kind: schemas.MetricKindJobDurationSeconds, Labels: prometheus.Labels{"project": "p1", "ref": "foo"}}
 
-	pr2m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p2", "ref": "bar"}}
-	pr3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo"}}
-	pr4m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"ref": "bar"}}
+	ref2m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p2", "ref": "bar"}}
+	ref3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo"}}
+	ref4m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"ref": "bar"}}
 
-	store.SetRef(pr1)
-	store.SetMetric(pr1m1)
-	store.SetMetric(pr1m2)
-	store.SetMetric(pr1m3)
-	store.SetMetric(pr2m1)
-	store.SetMetric(pr3m1)
-	store.SetMetric(pr4m1)
+	store.SetRef(ref1)
+	store.SetMetric(ref1m1)
+	store.SetMetric(ref1m2)
+	store.SetMetric(ref1m3)
+	store.SetMetric(ref2m1)
+	store.SetMetric(ref3m1)
+	store.SetMetric(ref4m1)
 
 	assert.NoError(t, garbageCollectMetrics())
 	storedMetrics, err := store.Metrics()
 	assert.NoError(t, err)
 
 	expectedMetrics := schemas.Metrics{
-		pr1m1.Key(): pr1m1,
+		ref1m1.Key(): ref1m1,
+		ref1m3.Key(): ref1m3,
 	}
 	assert.Equal(t, expectedMetrics, storedMetrics)
 }

@@ -38,17 +38,17 @@ func TestGetProjectBranches(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	branches, err := c.GetProjectBranches(1, "^(main)$")
+	branches, err := c.GetProjectBranches("1", "^(main)$")
 	assert.NoError(t, err)
 	assert.Len(t, branches, 1)
 	assert.Equal(t, "main", branches[0])
 
 	// Test invalid project id
-	_, err = c.GetProjectBranches(0, "")
+	_, err = c.GetProjectBranches("0", "")
 	assert.Error(t, err)
 
 	// Test invalid regexp
-	_, err = c.GetProjectBranches(0, "[")
+	_, err = c.GetProjectBranches("0", "[")
 	assert.Error(t, err)
 }
 

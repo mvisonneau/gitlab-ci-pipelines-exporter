@@ -39,16 +39,16 @@ func TestGetProjectEnvironments(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	envs, err := c.GetProjectEnvironmentIDs("foo", "^dev")
+	envs, err := c.GetProjectEnvironments("foo", "^dev")
 	assert.NoError(t, err)
-	assert.Equal(t, []int{1337}, envs)
+	assert.Equal(t, map[int]string{1337: "dev"}, envs)
 
-	// Test invalid project id
-	_, err = c.GetProjectBranches(0, "")
+	// Test invalid project
+	_, err = c.GetProjectEnvironments("0", "")
 	assert.Error(t, err)
 
 	// Test invalid regexp
-	_, err = c.GetProjectBranches(0, "[")
+	_, err = c.GetProjectEnvironments("1", "[")
 	assert.Error(t, err)
 }
 

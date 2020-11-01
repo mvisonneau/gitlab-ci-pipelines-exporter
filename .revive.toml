@@ -8,7 +8,7 @@ warningCode = 1
 [rule.context-as-argument]
 [rule.context-keys-type]
 [rule.cyclomatic]
-  arguments = [19]
+  arguments = [24]
 [rule.dot-imports]
 [rule.error-return]
 [rule.error-strings]

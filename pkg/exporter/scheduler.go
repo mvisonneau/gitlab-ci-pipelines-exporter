@@ -76,8 +76,8 @@ var (
 			// On errors, we do not want to retry these tasks
 			if err := pullRefMetrics(ref); err != nil {
 				log.WithFields(log.Fields{
-					"project-name": ref.PathWithNamespace,
-					"project-ref":  ref.Ref,
+					"project-name": ref.ProjectName,
+					"project-ref":  ref.Name,
 					"error":        err.Error(),
 				}).Warn("pulling ref metrics")
 			}
@@ -436,7 +436,7 @@ func schedulePullRefMetrics(ctx context.Context, ref schemas.Ref) {
 
 	if err := pullingQueue.Add(pullRefMetricsTask.WithArgs(ctx, ref)); err != nil {
 		log.WithFields(log.Fields{
-			"project-name": ref.PathWithNamespace,
+			"project-name": ref.ProjectName,
 			"ref-name":     ref.Name,
 			"error":        err.Error(),
 		}).Error("scheduling 'project ref most recent pipeline metrics' pull")

@@ -14,7 +14,7 @@ func TestGetProjectTags(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/tags"),
+	mux.HandleFunc("/api/v4/projects/foo/repository/tags",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
@@ -25,12 +25,12 @@ func TestGetProjectTags(t *testing.T) {
 			fmt.Fprint(w, `[{"name":"foo"},{"name":"bar"}]`)
 		})
 
-	tags, err := c.GetProjectTags(1, "[")
+	tags, err := c.GetProjectTags("foo", "[")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
 	assert.Len(t, tags, 0)
 
-	tags, err = c.GetProjectTags(1, "^f")
+	tags, err = c.GetProjectTags("foo", "^f")
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"foo"}, tags)
 }
