@@ -41,7 +41,7 @@ func pullEnvironmentsFromProject(p schemas.Project) error {
 				"project-name":     env.ProjectName,
 				"environment-id":   env.ID,
 				"environment-name": env.Name,
-			}).Info("discovered new project environment")
+			}).Info("discovered new environment")
 
 			go schedulePullEnvironmentMetrics(context.Background(), env)
 		}
@@ -74,10 +74,14 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 
 	infoLabels := env.InformationLabelsValues()
 	var commitDate time.Time
-	if env.LatestDeployment.RefKind == schemas.RefKindBranch {
+	switch env.LatestDeployment.RefKind {
+	case schemas.RefKindBranch:
 		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetBranchLatestCommit(env.ProjectName, env.LatestDeployment.RefName)
-	} else if env.LatestDeployment.RefKind == schemas.RefKindTag {
-		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetProjectMostRecentTagCommit(env.ProjectName, env.TagsRegexp)
+	case schemas.RefKindTag:
+		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetBranchLatestCommit(env.ProjectName, env.LatestDeployment.RefName)
+	default:
+		infoLabels["latest_commit_short_id"] = env.LatestDeployment.CommitShortID
+		commitDate = env.LatestDeployment.CreatedAt
 	}
 
 	if err != nil {
