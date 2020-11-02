@@ -10,8 +10,11 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Added
 
 - Export `environments/deployments` related metrics
+- New `environments/deployments` and `jobs` grafana dashboards
 - Documented the list of exported metrics
 - Released **.deb** and **.rpm** packages
+- More complete garbage collector capabilities
+- Newly supported statuses for pipelines and jobs: `created`, `waiting_for_resource`, `preparing`, `scheduled`
 
 ### Changed
 
@@ -20,6 +23,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Always return coverage metric
 - Enhanced the scheduling of the pull functions on init
 - Improved webhook parsing functions performance
+- Fixed a bug preventing the `gitlab_ci_pipeline_run_count` from being initialized correctly at startup
+- Updated the `pipelines` grafana dashboard
 
 ## [0.4.2] - 2020-10-22
 

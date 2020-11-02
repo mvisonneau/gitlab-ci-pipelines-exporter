@@ -12,11 +12,27 @@ You can find more information [on GitLab docs](https://docs.gitlab.com/ee/ci/pip
 
 ## TL:DR
 
-Here is a [Grafana dashboard](https://grafana.com/grafana/dashboards/10620) I have been able to craft, using those metrics:
+Here are some [Grafana dashboards](https://grafana.com/grafana/dashboards/10620) I have been able to craft, using those metrics:
 
-![grafana_dashboard](/docs/images/grafana_dashboard.png)
+### Pipelines
 
-If you are interested into trying it out, have a look into the [examples/quickstart](./examples/quickstart/README.md) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in **~5min** using `docker-compose`
+![grafana_dashboard_pipelines](/docs/images/grafana_dashboard_pipelines.png)
+
+_grafana.com dashboard_ [#10620](https://grafana.com/grafana/dashboards/10620)
+
+### Jobs
+
+![grafana_dashboard_jobs](/docs/images/grafana_dashboard_jobs.png)
+
+_grafana.com dashboard_ [#13328](https://grafana.com/grafana/dashboards/13328)
+
+### Environments / Deployments
+
+![grafana_dashboard_environments](/docs/images/grafana_dashboard_environments.png)
+
+_grafana.com dashboard_ [#13329](https://grafana.com/grafana/dashboards/13329)
+
+If you are interested into trying them out, have a look into the [examples/quickstart](./examples/quickstart/README.md) folder which contains documentation to provision test version of the exporter, prometheus and also grafana in **~5min** using `docker-compose`
 
 ## Install
 
