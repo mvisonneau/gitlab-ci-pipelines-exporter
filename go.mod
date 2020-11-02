@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/alicebob/miniredis v2.5.0+incompatible
-	github.com/alicebob/miniredis/v2 v2.13.3
+	github.com/alicebob/miniredis/v2 v2.14.1
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/go-redis/redis/v8 v8.3.2
 	github.com/go-redis/redis_rate/v9 v9.0.2
