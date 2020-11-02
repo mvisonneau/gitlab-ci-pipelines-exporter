@@ -89,6 +89,11 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 		envBehindCommitCount     float64
 	)
 
+	behindCommitsCountMetric := schemas.Metric{
+		Kind:   schemas.MetricKindEnvironmentBehindCommitsCount,
+		Labels: env.DefaultLabelsValues(),
+	}
+
 	// To reduce the amount of compare requests being made, we check if the labels are unchanged since
 	// the latest emission of the information metric
 	if infoLabels["latest_commit_short_id"] != infoLabels["current_commit_short_id"] {
@@ -97,31 +102,25 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 			Labels: env.DefaultLabelsValues(),
 		}
 
-		infoMetricExists, err := store.MetricExists(infoMetric.Key())
-		if err != nil {
+		var commitCount int
+		if err = store.GetMetric(&infoMetric); err != nil {
 			return err
 		}
 
-		var commitCount int
-		if !infoMetricExists {
+		if infoMetric.Labels["latest_commit_short_id"] != infoLabels["latest_commit_short_id"] ||
+			infoMetric.Labels["current_commit_short_id"] != infoLabels["current_commit_short_id"] {
 			commitCount, err = gitlabClient.GetCommitCountBetweenRefs(env.ProjectName, infoLabels["current_commit_short_id"], infoLabels["latest_commit_short_id"])
 			if err != nil {
 				return err
 			}
+			envBehindCommitCount = float64(commitCount)
 		} else {
-			if err = store.GetMetric(&infoMetric); err != nil {
+			// TODO: Find a more efficient way
+			if err = store.GetMetric(&behindCommitsCountMetric); err != nil {
 				return err
 			}
-
-			if infoMetric.Labels["latest_commit_short_id"] == infoLabels["latest_commit_short_id"] &&
-				infoMetric.Labels["current_commit_short_id"] == infoLabels["current_commit_short_id"] {
-				commitCount, err = gitlabClient.GetCommitCountBetweenRefs(env.ProjectName, infoLabels["current_commit_short_id"], infoLabels["latest_commit_short_id"])
-				if err != nil {
-					return err
-				}
-			}
+			envBehindCommitCount = behindCommitsCountMetric.Value
 		}
-		envBehindCommitCount = float64(commitCount)
 	}
 
 	storeSetMetric(schemas.Metric{

@@ -63,6 +63,7 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 			ExternalURL: "https://foo.example.com",
 			Available:   true,
 			LatestDeployment: schemas.Deployment{
+				ID:            2,
 				RefKind:       schemas.RefKindBranch,
 				RefName:       "bar",
 				AuthorEmail:   "foo@bar.com",

@@ -64,15 +64,20 @@ func pullRefMetrics(ref schemas.Ref) error {
 			}
 		}
 
-		if pipeline.Status == "running" {
-			runCount := schemas.Metric{
-				Kind:   schemas.MetricKindRunCount,
-				Labels: ref.DefaultLabelsValues(),
-			}
-			storeGetMetric(&runCount)
-			runCount.Value++
-			storeSetMetric(runCount)
+		// Update the ref in the store
+		if err = store.SetRef(ref); err != nil {
+			return err
 		}
+
+		runCount := schemas.Metric{
+			Kind:   schemas.MetricKindRunCount,
+			Labels: ref.DefaultLabelsValues(),
+		}
+		storeGetMetric(&runCount)
+		if pipeline.Status == "running" {
+			runCount.Value++
+		}
+		storeSetMetric(runCount)
 
 		var coverage float64
 		if pipeline.Coverage != "" {
@@ -113,6 +118,12 @@ func pullRefMetrics(ref schemas.Ref) error {
 			Labels: ref.DefaultLabelsValues(),
 			Value:  float64(pipeline.UpdatedAt.Unix()),
 		})
+
+		if ref.PullPipelineJobsEnabled {
+			if err := pullRefPipelineJobsMetrics(ref); err != nil {
+				return err
+			}
+		}
 	}
 
 	if ref.PullPipelineJobsEnabled {

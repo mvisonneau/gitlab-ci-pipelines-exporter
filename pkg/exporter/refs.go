@@ -84,17 +84,22 @@ func pullRefsFromProject(p schemas.Project) error {
 			p.Pull.Pipeline.Variables.Regexp(),
 		)
 
-		projectRefExists, err := store.RefExists(ref.Key())
+		refExists, err := store.RefExists(ref.Key())
 		if err != nil {
 			return err
 		}
 
-		if !projectRefExists {
+		if !refExists {
 			log.WithFields(log.Fields{
 				"project-name":     ref.ProjectName,
 				"project-ref":      ref.Name,
 				"project-ref-kind": ref.Kind,
 			}).Info("discovered new project ref")
+
+			ref.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics()
+			ref.PullPipelineJobsEnabled = p.Pull.Pipeline.Jobs.Enabled()
+			ref.PullPipelineVariablesEnabled = p.Pull.Pipeline.Variables.Enabled()
+			ref.PullPipelineVariablesRegexp = p.Pull.Pipeline.Variables.Regexp()
 
 			if err = store.SetRef(ref); err != nil {
 				return err
@@ -133,6 +138,11 @@ func pullRefsFromPipelines(p schemas.Project) error {
 		}
 
 		if !refExists {
+			ref.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics()
+			ref.PullPipelineJobsEnabled = p.Pull.Pipeline.Jobs.Enabled()
+			ref.PullPipelineVariablesEnabled = p.Pull.Pipeline.Variables.Enabled()
+			ref.PullPipelineVariablesRegexp = p.Pull.Pipeline.Variables.Regexp()
+
 			log.WithFields(log.Fields{
 				"project-name":     ref.ProjectName,
 				"project-ref":      ref.Name,

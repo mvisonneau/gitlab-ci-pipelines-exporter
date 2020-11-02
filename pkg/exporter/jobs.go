@@ -1,6 +1,8 @@
 package exporter
 
 import (
+	"reflect"
+
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -56,6 +58,7 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 		"job-id":       job.ID,
 	}
 
+	// Refresh ref state from the store
 	if err := store.GetRef(&ref); err != nil {
 		log.WithFields(
 			projectRefLogFields,
@@ -65,10 +68,8 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 
 	// In case a job gets restarted, it will have an ID greated than the previous one(s)
 	// jobs in new pipelines should get greated IDs too
-	if lastJob, ok := ref.Jobs[job.Name]; ok {
-		if lastJob.ID > job.ID {
-			return
-		}
+	if lastJob, ok := ref.Jobs[job.Name]; ok && reflect.DeepEqual(lastJob, job) {
+		return
 	}
 
 	// Update the project ref in the store
@@ -104,8 +105,23 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 		Kind:   schemas.MetricKindJobRunCount,
 		Labels: labels,
 	}
-	storeGetMetric(&jobRunCount)
-	jobRunCount.Value++
+
+	// If the metric does not exist yet, start with 0 instead of 1
+	// this could cause some false positives in prometheus
+	// when restarting the exporter otherwise
+	jobRunCountExists, err := store.MetricExists(jobRunCount.Key())
+	if err != nil {
+		log.WithFields(
+			projectRefLogFields,
+		).WithField("error", err.Error()).Error("getting metric from the store")
+		return
+	}
+
+	if jobRunCountExists {
+		storeGetMetric(&jobRunCount)
+		jobRunCount.Value++
+	}
+
 	storeSetMetric(jobRunCount)
 
 	artifactSize := 0

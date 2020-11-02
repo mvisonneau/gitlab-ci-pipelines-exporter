@@ -165,7 +165,7 @@ func TestProcessJobMetrics(t *testing.T) {
 	jobRunCount := schemas.Metric{
 		Kind:   schemas.MetricKindJobRunCount,
 		Labels: labels,
-		Value:  float64(1),
+		Value:  0,
 	}
 	assert.Equal(t, jobRunCount, metrics[jobRunCount.Key()])
 
