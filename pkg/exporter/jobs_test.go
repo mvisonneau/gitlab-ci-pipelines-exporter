@@ -122,7 +122,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		"foo": oldJob,
 	}, refs[ref.Key()].Jobs)
 
-	// Update the project ref
+	// Update the ref
 	processJobMetrics(ref, newJob)
 	refs, _ = store.Refs()
 	assert.Equal(t, map[string]goGitlab.Job{

@@ -89,7 +89,7 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 
 	exists, err := store.RefExists(ref.Key())
 	if err != nil {
-		log.WithFields(logFields).WithField("error", err.Error()).Error("reading project ref from the store")
+		log.WithFields(logFields).WithField("error", err.Error()).Error("reading ref from the store")
 	}
 
 	if !exists {
@@ -115,12 +115,12 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 			}
 		}
 
-		log.WithFields(logFields).Info("project ref not configured in the exporter, ignoring pipeline hook")
+		log.WithFields(logFields).Info("ref not configured in the exporter, ignoring pipeline webhook")
 		return
 	}
 
 schedulePull:
-	log.WithFields(logFields).Info("received a pipeline webhook from GitLab for a project ref, triggering metrics pull")
+	log.WithFields(logFields).Info("received a pipeline webhook from GitLab for a ref, triggering metrics pull")
 	// TODO: When all the metrics will be sent over the webhook, we might be able to avoid redoing a pull
 	// eg: 'coverage' is not in the pipeline payload yet, neither is 'artifacts' in the job one
 	go schedulePullRefMetrics(context.Background(), ref)
@@ -128,7 +128,7 @@ schedulePull:
 
 func processDeploymentEvent(e goGitlab.DeploymentEvent) {
 	triggerEnvironmentMetricsPull(schemas.Environment{
-		ProjectName: e.Project.Name,
+		ProjectName: e.Project.PathWithNamespace,
 		Name:        e.Environment,
 	})
 }
@@ -162,7 +162,20 @@ func triggerEnvironmentMetricsPull(env schemas.Environment) {
 				log.WithFields(logFields).WithField("error", err.Error()).Error("reading project from the store")
 			}
 
-			if regexp.MustCompile(p.Pull.Environments.NameRegexp()).MatchString(env.Name) {
+			// As we do not get the environment ID within the deployment event, we need to query it back..
+			envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.NameRegexp())
+			if err != nil {
+				log.WithFields(logFields).WithField("error", err.Error()).Error("listing project envs from GitLab API")
+			}
+
+			for envID, envName := range envs {
+				if envName == env.Name {
+					env.ID = envID
+					break
+				}
+			}
+
+			if env.ID != 0 {
 				if err = store.SetEnvironment(env); err != nil {
 					log.WithFields(logFields).WithField("error", err.Error()).Error("writing environment in the store")
 				}
@@ -170,8 +183,15 @@ func triggerEnvironmentMetricsPull(env schemas.Environment) {
 			}
 		}
 
-		log.WithFields(logFields).Info("environment not configured in the exporter, ignoring pipeline hook")
+		log.WithFields(logFields).Info("environment not configured in the exporter, ignoring deployment webhook")
 		return
+	}
+
+	// Need to refresh the env from the store in order to get at least it's ID
+	if env.ID == 0 {
+		if err = store.GetEnvironment(&env); err != nil {
+			log.WithFields(logFields).WithField("error", err.Error()).Error("reading environment from the store")
+		}
 	}
 
 schedulePull:

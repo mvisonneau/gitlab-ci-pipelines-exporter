@@ -12,7 +12,7 @@ func (c *Client) GetCommitCountBetweenRefs(project, from, to string) (int, error
 		"project-name": project,
 		"from-ref":     from,
 		"to-ref":       to,
-	}).Debug("comparing project refs")
+	}).Debug("comparing refs")
 
 	c.rateLimit()
 	cmp, _, err := c.Repositories.Compare(project, &goGitlab.CompareOptions{

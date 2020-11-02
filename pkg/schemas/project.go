@@ -50,7 +50,7 @@ type ProjectPullEnvironments struct {
 
 // ProjectPullRefs ..
 type ProjectPullRefs struct {
-	// Regular expression to filter project refs to fetch (defaults to '.*')
+	// Regular expression to filter refs to fetch (defaults to '.*')
 	RegexpValue *string `yaml:"regexp"`
 
 	// From handles ProjectPullRefsFromParameters configuration

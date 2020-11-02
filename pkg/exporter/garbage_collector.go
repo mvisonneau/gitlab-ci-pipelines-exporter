@@ -124,7 +124,7 @@ func garbageCollectEnvironments() error {
 			log.WithFields(log.Fields{
 				"project-name":     env.ProjectName,
 				"environment-name": env.Name,
-			}).Info("updated project ref, associated project configuration was not in sync")
+			}).Info("updated ref, associated project configuration was not in sync")
 		}
 	}
 
@@ -185,7 +185,7 @@ func garbageCollectRefs() error {
 			return err
 		}
 
-		// If the project does not exist anymore, delete the project ref
+		// If the project does not exist anymore, delete the ref
 		if !projectExists {
 			if err = store.DelRef(k); err != nil {
 				return err
@@ -195,7 +195,7 @@ func garbageCollectRefs() error {
 				"project-name": ref.ProjectName,
 				"ref":          ref.Name,
 				"reason":       "non-existent-project",
-			}).Info("deleted project ref from the store")
+			}).Info("deleted ref from the store")
 			continue
 		}
 
@@ -203,11 +203,11 @@ func garbageCollectRefs() error {
 			return err
 		}
 
-		// Store the project information to be able to refresh all project refs
+		// Store the project information to be able to refresh all refs
 		// from the API later on
 		refProjects[p.Name] = p.Pull.Refs.Regexp()
 
-		// If the ref is not configured to be pulled anymore, delete the project ref
+		// If the ref is not configured to be pulled anymore, delete the ref
 		re := regexp.MustCompile(p.Pull.Refs.Regexp())
 		if !re.MatchString(ref.Name) {
 			if err = store.DelRef(k); err != nil {
@@ -218,7 +218,7 @@ func garbageCollectRefs() error {
 				"project-name": ref.ProjectName,
 				"ref":          ref.Name,
 				"reason":       "ref-not-in-regexp",
-			}).Info("deleted project ref from the store")
+			}).Info("deleted ref from the store")
 			continue
 		}
 
@@ -237,7 +237,7 @@ func garbageCollectRefs() error {
 			log.WithFields(log.Fields{
 				"project-name": ref.ProjectName,
 				"ref":          ref.Name,
-			}).Info("updated project ref, associated project configuration was not in sync")
+			}).Info("updated ref, associated project configuration was not in sync")
 		}
 	}
 
@@ -411,7 +411,7 @@ func garbageCollectMetrics() error {
 
 			env, envExists := storedEnvironments[envKey]
 
-			// If the project ref does not exist anymore, delete the metric
+			// If the ref does not exist anymore, delete the metric
 			if !envExists {
 				if err = store.DelMetric(k); err != nil {
 					return err

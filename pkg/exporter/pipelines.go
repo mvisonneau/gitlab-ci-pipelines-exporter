@@ -44,7 +44,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 	}
 
 	if len(pipelines) == 0 {
-		log.WithFields(logFields).Debug("could not find any pipeline for the project ref")
+		log.WithFields(logFields).Debug("could not find any pipeline for the ref")
 		return nil
 	}
 

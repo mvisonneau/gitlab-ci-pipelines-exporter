@@ -192,7 +192,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 							"ref":          pipeline.Ref,
 							"ref-kind":     kind,
 						},
-					).Info("found project ref")
+					).Info("found ref")
 					refs[ref.Key()] = ref
 				}
 			}

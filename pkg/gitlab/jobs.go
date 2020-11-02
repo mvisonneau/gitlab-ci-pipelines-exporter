@@ -118,7 +118,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 					"ref":          ref.Name,
 					"jobs-count":   resp.TotalItems,
 				},
-			).Warn("found some project ref jobs but did not manage to refresh all jobs which were in memory")
+			).Warn("found some ref jobs but did not manage to refresh all jobs which were in memory")
 			break
 		}
 

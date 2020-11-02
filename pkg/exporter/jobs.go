@@ -62,7 +62,7 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 	if err := store.GetRef(&ref); err != nil {
 		log.WithFields(
 			projectRefLogFields,
-		).WithField("error", err.Error()).Error("getting project ref from the store")
+		).WithField("error", err.Error()).Error("getting ref from the store")
 		return
 	}
 
@@ -72,12 +72,15 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 		return
 	}
 
-	// Update the project ref in the store
+	// Update the ref in the store
+	if ref.Jobs == nil {
+		ref.Jobs = make(map[string]goGitlab.Job)
+	}
 	ref.Jobs[job.Name] = job
 	if err := store.SetRef(ref); err != nil {
 		log.WithFields(
 			projectRefLogFields,
-		).WithField("error", err.Error()).Error("writing project ref in the store")
+		).WithField("error", err.Error()).Error("writing ref in the store")
 		return
 	}
 
@@ -113,7 +116,7 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 	if err != nil {
 		log.WithFields(
 			projectRefLogFields,
-		).WithField("error", err.Error()).Error("getting metric from the store")
+		).WithField("error", err.Error()).Error("checking if metric exists in the store")
 		return
 	}
 

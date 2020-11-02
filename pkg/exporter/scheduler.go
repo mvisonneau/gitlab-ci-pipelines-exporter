@@ -368,7 +368,7 @@ func schedulePullRefsFromPipeline(ctx context.Context, p schemas.Project) {
 		log.WithFields(log.Fields{
 			"project-name": p.Name,
 			"error":        err.Error(),
-		}).Error("scheduling 'project refs from pipeline' pull")
+		}).Error("scheduling 'refs from pipeline' pull")
 	}
 }
 
@@ -411,7 +411,7 @@ func schedulePullEnvironmentMetrics(ctx context.Context, env schemas.Environment
 			"environment-id":   env.ID,
 			"environment-name": env.Name,
 			"error":            err.Error(),
-		}).Error("scheduling 'project ref most recent pipeline metrics' pull")
+		}).Error("scheduling 'ref most recent pipeline metrics' pull")
 	}
 }
 
@@ -446,7 +446,7 @@ func schedulePullRefMetrics(ctx context.Context, ref schemas.Ref) {
 			"project-name": ref.ProjectName,
 			"ref-name":     ref.Name,
 			"error":        err.Error(),
-		}).Error("scheduling 'project ref most recent pipeline metrics' pull")
+		}).Error("scheduling 'ref most recent pipeline metrics' pull")
 	}
 }
 
