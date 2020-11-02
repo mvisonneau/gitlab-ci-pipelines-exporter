@@ -34,6 +34,7 @@ func TestNewCollectorFunctions(t *testing.T) {
 	for _, f := range [](func() prometheus.Collector){
 		NewCollectorJobRunCount,
 		NewCollectorRunCount,
+		NewCollectorEnvironmentDeploymentCount,
 	} {
 		c := f()
 		assert.NotNil(t, c)

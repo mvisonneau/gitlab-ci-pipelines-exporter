@@ -8,6 +8,7 @@
 | `gitlab_ci_pipeline_duration_seconds` | Duration in seconds of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_environment_behind_commits_count` | Number of commits the environment is behind given its last deployment | [project], [environment] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_pipeline_environment_behind_duration_seconds` | Duration in seconds the environment is behind the most recent commit given its last deployment | [project], [environment] | `project_defaults.pull.environments.enabled` |
+| `gitlab_ci_pipeline_environment_deployment_count` |Number of deployments for an environment | [project], [environment] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_pipeline_environment_deployment_duration_seconds` | Duration in seconds of the most recent deployment of the environment | [project], [environment] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_pipeline_environment_deployment_status` | Status of the most recent deployment of the environment | [project], [environment], [status] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_pipeline_environment_deployment_timestamp` | Creation date of the most recent deployment of the environment | [project], [environment] | `project_defaults.pull.environments.enabled` |

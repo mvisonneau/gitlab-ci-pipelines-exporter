@@ -36,9 +36,10 @@ var (
 			// On errors, we do not want to retry these tasks
 			if err := pullEnvironmentMetrics(env); err != nil {
 				log.WithFields(log.Fields{
-					"project-name":   env.ProjectName,
-					"environment-id": env.ID,
-					"error":          err.Error(),
+					"project-name":     env.ProjectName,
+					"environment-name": env.Name,
+					"environment-id":   env.ID,
+					"error":            err.Error(),
 				}).Warn("pulling environment metrics")
 			}
 			return

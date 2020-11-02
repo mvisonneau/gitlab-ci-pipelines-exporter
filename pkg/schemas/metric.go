@@ -21,6 +21,9 @@ const (
 	// MetricKindEnvironmentBehindDurationSeconds ..
 	MetricKindEnvironmentBehindDurationSeconds
 
+	// MetricKindEnvironmentDeploymentCount ..
+	MetricKindEnvironmentDeploymentCount
+
 	// MetricKindEnvironmentDeploymentDurationSeconds ..
 	MetricKindEnvironmentDeploymentDurationSeconds
 

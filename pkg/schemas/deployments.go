@@ -4,6 +4,7 @@ import "time"
 
 // Deployment ..
 type Deployment struct {
+	ID            int
 	RefKind       RefKind
 	RefName       string
 	AuthorEmail   string

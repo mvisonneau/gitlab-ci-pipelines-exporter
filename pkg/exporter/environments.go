@@ -33,8 +33,7 @@ func pullEnvironmentsFromProject(p schemas.Project) error {
 		}
 
 		if !envExists {
-			env, err = gitlabClient.GetEnvironment(env.ProjectName, env.ID)
-			if err != nil {
+			if err = updateEnvironment(&env); err != nil {
 				return err
 			}
 
@@ -44,26 +43,32 @@ func pullEnvironmentsFromProject(p schemas.Project) error {
 				"environment-name": env.Name,
 			}).Info("discovered new project environment")
 
-			if err = store.SetEnvironment(env); err != nil {
-				return err
-			}
-
 			go schedulePullEnvironmentMetrics(context.Background(), env)
 		}
 	}
 	return nil
 }
 
+func updateEnvironment(env *schemas.Environment) error {
+	pulledEnv, err := gitlabClient.GetEnvironment(env.ProjectName, env.ID)
+	if err != nil {
+		return err
+	}
+
+	env.Available = pulledEnv.Available
+	env.ExternalURL = pulledEnv.ExternalURL
+	env.LatestDeployment = pulledEnv.LatestDeployment
+
+	return store.SetEnvironment(*env)
+}
+
 func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	env, err = gitlabClient.GetEnvironment(env.ProjectName, env.ID)
-	if err != nil {
-		return
-	}
-
-	if err = store.SetEnvironment(env); err != nil {
+	// Save the existing deployment ID before we updated environment from the API
+	deploymentID := env.LatestDeployment.ID
+	if err = updateEnvironment(&env); err != nil {
 		return
 	}
 
@@ -128,6 +133,17 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	if commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds() > 0 {
 		envBehindDurationSeconds = commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds()
 	}
+
+	envDeploymentCount := schemas.Metric{
+		Kind:   schemas.MetricKindEnvironmentDeploymentCount,
+		Labels: env.DefaultLabelsValues(),
+	}
+
+	storeGetMetric(&envDeploymentCount)
+	if env.LatestDeployment.ID > deploymentID {
+		envDeploymentCount.Value++
+	}
+	storeSetMetric(envDeploymentCount)
 
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentBehindDurationSeconds,
