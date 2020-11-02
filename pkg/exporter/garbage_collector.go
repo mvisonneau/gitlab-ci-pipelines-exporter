@@ -59,6 +59,7 @@ func garbageCollectEnvironments() error {
 		return err
 	}
 
+	envProjects := make(map[string]string)
 	for k, env := range storedEnvironments {
 		p := schemas.Project{
 			Name: env.ProjectName,
@@ -86,6 +87,10 @@ func garbageCollectEnvironments() error {
 		if err = store.GetProject(&p); err != nil {
 			return err
 		}
+
+		// Store the project information to be able to refresh its environments
+		// from the API later on
+		envProjects[p.Name] = p.Pull.Environments.NameRegexp()
 
 		// If the environment is not configured to be pulled anymore, delete it
 		re := regexp.MustCompile(p.Pull.Environments.NameRegexp())
@@ -119,6 +124,41 @@ func garbageCollectEnvironments() error {
 		}
 	}
 
+	// Refresh the environments from the API
+	existingEnvs := make(map[schemas.EnvironmentKey]struct{})
+	for projectName, envRegexp := range envProjects {
+		envs, err := gitlabClient.GetProjectEnvironments(projectName, envRegexp)
+		if err != nil {
+			return err
+		}
+
+		for _, envName := range envs {
+			existingEnvs[schemas.Environment{
+				ProjectName: projectName,
+				Name:        envName,
+			}.Key()] = struct{}{}
+		}
+	}
+
+	storedEnvironments, err = store.Environments()
+	if err != nil {
+		return err
+	}
+
+	for k, env := range storedEnvironments {
+		if _, exists := existingEnvs[k]; !exists {
+			if err = store.DelEnvironment(k); err != nil {
+				return err
+			}
+
+			log.WithFields(log.Fields{
+				"project-name":     env.ProjectName,
+				"environment-name": env.Name,
+				"reason":           "non-existent-environment",
+			}).Info("deleted environment from the store")
+		}
+	}
+
 	return nil
 }
 
@@ -131,6 +171,7 @@ func garbageCollectRefs() error {
 		return err
 	}
 
+	refProjects := make(map[string]string)
 	for k, ref := range storedRefs {
 		p := schemas.Project{Name: ref.ProjectName}
 		projectExists, err := store.ProjectExists(p.Key())
@@ -155,6 +196,10 @@ func garbageCollectRefs() error {
 		if err = store.GetProject(&p); err != nil {
 			return err
 		}
+
+		// Store the project information to be able to refresh all project refs
+		// from the API later on
+		refProjects[p.Name] = p.Pull.Refs.Regexp()
 
 		// If the ref is not configured to be pulled anymore, delete the project ref
 		re := regexp.MustCompile(p.Pull.Refs.Regexp())
@@ -187,6 +232,55 @@ func garbageCollectRefs() error {
 				"project-name": ref.ProjectName,
 				"project-ref":  ref.Name,
 			}).Info("updated project ref, associated project configuration was not in sync")
+		}
+	}
+
+	// Refresh the environments from the API
+	existingRefs := make(map[schemas.RefKey]struct{})
+	for projectName, refsRegexp := range refProjects {
+		branches, err := gitlabClient.GetProjectBranches(projectName, refsRegexp)
+		if err != nil {
+			return err
+		}
+
+		for _, branch := range branches {
+			existingRefs[schemas.Ref{
+				Kind:        schemas.RefKindBranch,
+				ProjectName: projectName,
+				Name:        branch,
+			}.Key()] = struct{}{}
+		}
+
+		tags, err := gitlabClient.GetProjectTags(projectName, refsRegexp)
+		if err != nil {
+			return err
+		}
+
+		for _, tag := range tags {
+			existingRefs[schemas.Ref{
+				Kind:        schemas.RefKindTag,
+				ProjectName: projectName,
+				Name:        tag,
+			}.Key()] = struct{}{}
+		}
+	}
+
+	storedRefs, err = store.Refs()
+	if err != nil {
+		return err
+	}
+
+	for k, ref := range storedRefs {
+		if _, exists := existingRefs[k]; !exists && ref.Kind != schemas.RefKindMergeRequest {
+			if err = store.DelRef(k); err != nil {
+				return err
+			}
+
+			log.WithFields(log.Fields{
+				"project-name":     ref.ProjectName,
+				"project-ref-name": ref.Name,
+				"reason":           "non-existent-project-ref",
+			}).Info("deleted ref from the store")
 		}
 	}
 
