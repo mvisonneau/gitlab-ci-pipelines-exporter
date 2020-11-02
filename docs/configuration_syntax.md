@@ -196,8 +196,8 @@ project_defaults:
       enabled: false
 
       # Filter out by name environments to include
-      # (optional, default: "^(?!review).*")
-      name_regexp: "^(?!review).*"
+      # (optional, default: ".*")
+      name_regexp: ".*"
 
       # When deployments are based upon tags, you can
       # choose to filter out the ones which you are
@@ -259,8 +259,8 @@ projects:
         enabled: false
 
         # Filter out by name environments to include
-        # (optional, default: "^(?!review).*")
-        name_regexp: "^(?!review).*"
+        # (optional, default: ".*")
+        name_regexp: ".*"
 
         # When deployments are based upon tags, you can
         # choose to filter out the ones which you are
@@ -338,8 +338,8 @@ wildcards:
         enabled: false
 
         # Filter out by name environments to include
-        # (optional, default: "^(?!review).*")
-        name_regexp: "^(?!review).*"
+        # (optional, default: ".*")
+        name_regexp: ".*"
 
         # When deployments are based upon tags, you can
         # choose to filter out the ones which you are

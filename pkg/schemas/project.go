@@ -8,7 +8,7 @@ import (
 var (
 	defaultProjectOutputSparseStatusMetrics        = true
 	defaultProjectPullEnvironmentsEnabled          = false
-	defaultProjectPullEnvironmentsNameRegexp       = `^(?!review).*`
+	defaultProjectPullEnvironmentsNameRegexp       = `.*`
 	defaultProjectPullEnvironmentsTagsRegexp       = `.*`
 	defaultProjectPullRefsRegexp                   = `^(main|master)$`
 	defaultProjectPullRefsFromPipelinesEnabled     = false

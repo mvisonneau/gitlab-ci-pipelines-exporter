@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +26,7 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 			fmt.Fprint(w, `
 {
 	"id": 1,
-	"name": "foo",
+	"name": "prod",
 	"external_url": "https://foo.example.com",
 	"state": "available",
 	"last_deployment": {
@@ -48,15 +49,17 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 }`)
 		})
 
-	assert.NoError(t, pullEnvironmentsFromProject(schemas.Project{Name: "foo"}))
+	p := schemas.Project{Name: "foo"}
+	p.Pull.Environments.NameRegexpValue = pointy.String("^prod")
+	assert.NoError(t, pullEnvironmentsFromProject(p))
 
 	storedEnvironments, _ := store.Environments()
 	expectedCreateAt, _ := time.Parse(time.RFC3339, "2019-03-25T18:55:13.252Z")
 	expectedEnvironments := schemas.Environments{
-		"1685779998": schemas.Environment{
+		"54146361": schemas.Environment{
 			ProjectName: "foo",
 			ID:          1337,
-			Name:        "foo",
+			Name:        "prod",
 			ExternalURL: "https://foo.example.com",
 			Available:   true,
 			LatestDeployment: schemas.Deployment{
@@ -68,6 +71,8 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 				CommitShortID: "416d8ea1",
 				Status:        "success",
 			},
+			TagsRegexp:                ".*",
+			OutputSparseStatusMetrics: true,
 		},
 	}
 	assert.Equal(t, expectedEnvironments, storedEnvironments)
