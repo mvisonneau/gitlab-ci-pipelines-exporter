@@ -1,21 +1,22 @@
 version: '3.7'
 services:
   gitlab-ci-pipelines-exporter:
-    image: mvisonneau/gitlab-ci-pipelines-exporter:0.4.2
+    #image: mvisonneau/gitlab-ci-pipelines-exporter:0.4.2
     # You can comment out the image name and use the following statement
     # to build the image against the current version of the repository
-    #build: ../..
+    build: ../..
     ports:
       - 8080:8080
     environment:
       GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter/config.yml
+      GCPE_LOG_LEVEL: debug
     volumes:
       - type: bind
         source: ./gitlab-ci-pipelines-exporter
         target: /etc/gitlab-ci-pipelines-exporter
 
   prometheus:
-    image: prom/prometheus:v2.21.0
+    image: prom/prometheus:v2.22.0
     ports:
       - 9090:9090
     links:
@@ -24,7 +25,7 @@ services:
       - ./prometheus/config.yml:/etc/prometheus/prometheus.yml
 
   grafana:
-    image: grafana/grafana:7.2.0
+    image: grafana/grafana:7.3.1
     ports:
       - 3000:3000
     environment:
@@ -35,7 +36,7 @@ services:
     volumes:
       - ./grafana/dashboards.yml:/etc/grafana/provisioning/dashboards/default.yml
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/default.yml
-      - ./grafana/dashboard.json:/var/lib/grafana/dashboards/dashboard.json
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
 
 networks:
   default:

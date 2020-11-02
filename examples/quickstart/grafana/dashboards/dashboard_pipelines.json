@@ -16,10 +16,115 @@
   "editable": true,
   "gnetId": 10620,
   "graphTooltip": 0,
-  "id": 1,
-  "iteration": 1603216411949,
+  "id": 3,
+  "iteration": 1604336999882,
   "links": [],
   "panels": [
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 2,
+        "x": 0,
+        "y": 0
+      },
+      "id": 116,
+      "options": {
+        "content": "<p style=\"text-align:center;\"><img src=\"https://www.cloudfoundry.org/wp-content/uploads/2017/10/icon_gitlab_cf@2x.png\" width=80px/></p>",
+        "mode": "html"
+      },
+      "pluginVersion": "7.3.1",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "mappings": [
+            {
+              "id": 0,
+              "op": "=",
+              "text": "N/A",
+              "type": 1,
+              "value": "null"
+            }
+          ],
+          "nullValueMode": "connected",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-blue",
+                "value": null
+              },
+              {
+                "color": "#d44a3a"
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 2,
+        "x": 2,
+        "y": 0
+      },
+      "id": 107,
+      "interval": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "background",
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.1",
+      "targets": [
+        {
+          "expr": "count(gitlab_ci_pipeline_run_count{project=~\"$OWNER.*\", ref=~\"$REF\"})",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "PIPELINES #",
+      "type": "stat"
+    },
     {
       "cacheTimeout": null,
       "datasource": null,
@@ -60,10 +165,10 @@
       "gridPos": {
         "h": 3,
         "w": 2,
-        "x": 0,
+        "x": 4,
         "y": 0
       },
-      "id": 107,
+      "id": 117,
       "interval": null,
       "links": [],
       "maxDataPoints": 100,
@@ -86,7 +191,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.2.0",
+      "pluginVersion": "7.3.1",
       "targets": [
         {
           "expr": "count(gitlab_ci_pipeline_status{status=\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"} > 0) or vector(0)",
@@ -100,7 +205,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "FAILED",
+      "title": "FAILED PIPELINES #",
       "type": "stat"
     },
     {
@@ -124,113 +229,25 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "semi-dark-blue",
                 "value": null
               },
               {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 5184000
-              },
-              {
-                "color": "#C4162A",
-                "value": 15552000
+                "color": "#d44a3a"
               }
             ]
           },
-          "unit": "dtdurations"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 3,
-        "w": 5,
-        "x": 2,
+        "w": 3,
+        "x": 6,
         "y": 0
       },
-      "id": 108,
-      "interval": null,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "background",
-        "fieldOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        },
-        "graphMode": "area",
-        "justifyMode": "center",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^Value$/",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "7.2.0",
-      "targets": [
-        {
-          "expr": "avg(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"})",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Average Pipeline Run Frequency",
-      "type": "stat"
-    },
-    {
-      "cacheTimeout": null,
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "decimals": 0,
-          "mappings": [
-            {
-              "id": 0,
-              "op": "=",
-              "text": "N/A",
-              "type": 1,
-              "value": "null"
-            }
-          ],
-          "nullValueMode": "connected",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#299c46",
-                "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 600
-              },
-              {
-                "color": "#d44a3a",
-                "value": 900
-              }
-            ]
-          },
-          "unit": "dtdurations"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 5,
-        "x": 7,
-        "y": 0
-      },
-      "id": 106,
+      "id": 118,
       "interval": null,
       "links": [],
       "maxDataPoints": 100,
@@ -246,18 +263,19 @@
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
-            "lastNotNull"
+            "last"
           ],
           "fields": "",
           "values": false
         },
         "textMode": "auto"
       },
-      "pluginVersion": "7.2.0",
+      "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"})",
+          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"$OWNER.*\", ref=~\"$REF\"}[1h]))",
           "format": "time_series",
+          "instant": false,
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -266,7 +284,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Average Pipeline Duration",
+      "title": "RUNS # (in the last hour)",
       "type": "stat"
     },
     {
@@ -284,9 +302,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
+        "h": 6,
+        "w": 15,
+        "x": 9,
         "y": 0
       },
       "id": 110,
@@ -390,7 +408,7 @@
       ],
       "targets": [
         {
-          "expr": "(gitlab_ci_pipeline_status{status=\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status=\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 3 > 0)",
+          "expr": "(gitlab_ci_pipeline_status{status=\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 3 > 0)",
           "format": "time_series",
           "hide": false,
           "instant": true,
@@ -414,147 +432,77 @@
       ]
     },
     {
-      "columns": [],
+      "cacheTimeout": null,
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "decimals": 0,
+          "mappings": [
+            {
+              "id": 0,
+              "op": "=",
+              "text": "N/A",
+              "type": 1,
+              "value": "null"
+            }
+          ],
+          "nullValueMode": "connected",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 5184000
+              },
+              {
+                "color": "#C4162A",
+                "value": 15552000
+              }
+            ]
+          },
+          "unit": "dtdurations"
         },
         "overrides": []
       },
-      "fontSize": "100%",
       "gridPos": {
-        "h": 22,
-        "w": 12,
+        "h": 3,
+        "w": 5,
         "x": 0,
         "y": 3
       },
-      "id": 104,
+      "id": 108,
+      "interval": null,
       "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 4,
-        "desc": false
-      },
-      "styles": [
-        {
-          "alias": "Time",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "hidden"
-        },
-        {
-          "alias": "Status",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "#1F60C4",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #A",
-          "preserveFormat": false,
-          "sanitize": false,
-          "thresholds": [
-            "2"
-          ],
-          "type": "string",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "text": "FAILED",
-              "value": "1"
-            }
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "background",
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
           ]
         },
-        {
-          "alias": "Last run",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "Value #B",
-          "thresholds": [
-            "172800",
-            "432000"
-          ],
-          "type": "number",
-          "unit": "s"
+          "fields": "/^Value$/",
+          "values": false
         },
-        {
-          "alias": "Duration",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "Value #C",
-          "thresholds": [
-            "1200",
-            "2400"
-          ],
-          "type": "number",
-          "unit": "s"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "refId": "B"
-        },
-        {
-          "expr": "(max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind)) > 0)",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "refId": "C"
-        },
-        {
-          "expr": "min(gitlab_ci_pipeline_status{status=~\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
-          "format": "table",
-          "hide": false,
-          "instant": true,
+          "expr": "avg(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"})",
+          "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -563,9 +511,206 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "FAILED",
-      "transform": "table",
-      "type": "table-old"
+      "title": "Average Pipeline Run Frequency",
+      "type": "stat"
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "mappings": [
+            {
+              "id": 0,
+              "op": "=",
+              "text": "N/A",
+              "type": 1,
+              "value": "null"
+            }
+          ],
+          "nullValueMode": "connected",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#299c46",
+                "value": null
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 600
+              },
+              {
+                "color": "#d44a3a",
+                "value": 900
+              }
+            ]
+          },
+          "unit": "dtdurations"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 5,
+        "y": 3
+      },
+      "id": 106,
+      "interval": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "background",
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.1",
+      "targets": [
+        {
+          "expr": "avg(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"})",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Average Pipeline Duration",
+      "type": "stat"
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 114,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": false,
+        "hideZero": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null as zero",
+      "options": {
+        "alertThreshold": false
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.1",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "increase(gitlab_ci_pipeline_run_count{project=~\"$OWNER.*\", ref=~\"$REF\"}[1m]) / increase(gitlab_ci_pipeline_run_count{project=~\"$OWNER.*\", ref=~\"$REF\"}[1m])",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "{{ project }}:{{ ref }}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "PIPELINE RUNS",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "columns": [],
@@ -578,10 +723,10 @@
       },
       "fontSize": "100%",
       "gridPos": {
-        "h": 25,
+        "h": 26,
         "w": 12,
         "x": 12,
-        "y": 4
+        "y": 6
       },
       "id": 103,
       "links": [],
@@ -619,7 +764,7 @@
           "thresholds": [
             "2"
           ],
-          "type": "string",
+          "type": "hidden",
           "unit": "short",
           "valueMaps": [
             {
@@ -690,7 +835,7 @@
       ],
       "targets": [
         {
-          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
+          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -700,7 +845,7 @@
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -710,7 +855,7 @@
           "refId": "C"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"success\"} * 1) by (project, ref, kind) > 0 or max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"running\"} * 2) by (project, ref, kind) > 0",
+          "expr": "max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"success\"} * 1) by (project, ref, kind, status) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -722,7 +867,161 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "HEALTHY & RUNNING",
+      "title": "SUCCESSFULLY COMPLETED",
+      "transform": "table",
+      "type": "table-old"
+    },
+    {
+      "columns": [],
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 22,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 104,
+      "links": [],
+      "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 4,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "align": "auto",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "hidden"
+        },
+        {
+          "alias": "Status",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "#1F60C4",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #A",
+          "preserveFormat": false,
+          "sanitize": false,
+          "thresholds": [
+            "2"
+          ],
+          "type": "hidden",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "FAILED",
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "alias": "Last run",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #B",
+          "thresholds": [
+            "172800",
+            "432000"
+          ],
+          "type": "number",
+          "unit": "s"
+        },
+        {
+          "alias": "Duration",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #C",
+          "thresholds": [
+            "1200",
+            "2400"
+          ],
+          "type": "number",
+          "unit": "s"
+        },
+        {
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "expr": "(max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind)) > 0)",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "expr": "min(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind, status) > 0",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "RUNNING, FAILED OR NOT COMPLETED",
       "transform": "table",
       "type": "table-old"
     }
@@ -746,6 +1045,7 @@
         },
         "datasource": "prometheus",
         "definition": "label_values(gitlab_ci_pipeline_id, project)",
+        "error": null,
         "hide": 0,
         "includeAll": true,
         "label": "owner",
@@ -776,6 +1076,7 @@
         },
         "datasource": "prometheus",
         "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, ref)",
+        "error": null,
         "hide": 0,
         "includeAll": true,
         "label": "ref",
@@ -796,7 +1097,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
@@ -824,7 +1125,7 @@
     ]
   },
   "timezone": "",
-  "title": "GitLab CI Pipelines Statuses",
-  "uid": "gitlab_ci_pipeline_statuses",
+  "title": "GitLab CI pipelines",
+  "uid": "gitlab_ci_pipelines",
   "version": 1
 }
