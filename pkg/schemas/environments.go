@@ -13,8 +13,8 @@ type Environment struct {
 	ExternalURL      string
 	Available        bool
 	LatestDeployment Deployment
-	TagsRegexp       string
 
+	TagsRegexp                string
 	OutputSparseStatusMetrics bool
 }
 

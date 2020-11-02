@@ -55,6 +55,17 @@ func NewCollectorEnvironmentBehindDurationSeconds() prometheus.Collector {
 	)
 }
 
+// NewCollectorEnvironmentDeploymentCount returns a new collector for the gitlab_ci_pipeline_environment_deployment_count metric
+func NewCollectorEnvironmentDeploymentCount() prometheus.Collector {
+	return prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "gitlab_ci_pipeline_environment_deployment_count",
+			Help: "Number of deployments for an environment",
+		},
+		environmentLabels,
+	)
+}
+
 // NewCollectorEnvironmentDeploymentDurationSeconds returns a new collector for the gitlab_ci_pipeline_environment_deployment_duration_seconds metric
 func NewCollectorEnvironmentDeploymentDurationSeconds() prometheus.Collector {
 	return prometheus.NewGaugeVec(
