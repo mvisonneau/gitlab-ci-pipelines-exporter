@@ -57,6 +57,13 @@ func TestGarbageCollectProjects(t *testing.T) {
 
 func TestGarbageCollectEnvironments(t *testing.T) {
 	resetGlobalValues()
+	mux, server := configureMockedGitlabClient()
+	defer server.Close()
+
+	mux.HandleFunc("/api/v4/projects/p2/environments",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"name": "main"}]`)
+		})
 
 	p2 := schemas.Project{
 		Name: "p2",
@@ -94,9 +101,21 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 
 func TestGarbageCollectRefs(t *testing.T) {
 	resetGlobalValues()
+	mux, server := configureMockedGitlabClient()
+	defer server.Close()
 
-	pr1dev := schemas.Ref{ProjectName: "p1", Name: "dev"}
-	pr1main := schemas.Ref{ProjectName: "p1", Name: "main"}
+	mux.HandleFunc("/api/v4/projects/p2/repository/branches",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"name": "main"}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/p2/repository/tags",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"name": "main"}]`)
+		})
+
+	pr1dev := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p1", Name: "dev"}
+	pr1main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p1", Name: "main"}
 
 	p2 := schemas.Project{
 		Name: "p2",
@@ -108,8 +127,8 @@ func TestGarbageCollectRefs(t *testing.T) {
 			},
 		},
 	}
-	pr2dev := schemas.Ref{ProjectName: "p2", Name: "dev"}
-	pr2main := schemas.Ref{ProjectName: "p2", Name: "main"}
+	pr2dev := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "dev"}
+	pr2main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "main"}
 
 	store.SetProject(p2)
 	store.SetRef(pr1dev)
@@ -121,9 +140,10 @@ func TestGarbageCollectRefs(t *testing.T) {
 	storedRefs, err := store.Refs()
 	assert.NoError(t, err)
 
-	newPR2main := schemas.Ref{ProjectName: "p2", Name: "main"}
+	newPR2main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "main"}
 	expectedRefs := schemas.Refs{
 		newPR2main.Key(): schemas.Ref{
+			Kind:                        schemas.RefKindBranch,
 			ProjectName:                 "p2",
 			Name:                        "main",
 			OutputSparseStatusMetrics:   true,
