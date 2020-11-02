@@ -6,7 +6,7 @@ var (
 	defaultLabels                = []string{"project", "topics", "kind", "ref", "variables"}
 	jobLabels                    = []string{"stage", "job_name"}
 	statusLabels                 = []string{"status"}
-	statusesList                 = [...]string{"running", "pending", "success", "failed", "canceled", "skipped", "manual"}
+	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"}
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "author_email"}
 )
