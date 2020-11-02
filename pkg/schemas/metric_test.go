@@ -15,7 +15,7 @@ func TestMetricKey(t *testing.T) {
 		},
 	}.Key())
 
-	assert.Equal(t, MetricKey("441614725"), Metric{
+	assert.Equal(t, MetricKey("3948534280"), Metric{
 		Kind: MetricKindEnvironmentInformation,
 		Labels: prometheus.Labels{
 			"project":     "foo",
@@ -24,7 +24,7 @@ func TestMetricKey(t *testing.T) {
 		},
 	}.Key())
 
-	assert.Equal(t, MetricKey("441614725"), Metric{
+	assert.Equal(t, MetricKey("3948534280"), Metric{
 		Kind: MetricKindEnvironmentInformation,
 		Labels: prometheus.Labels{
 			"project":     "foo",
@@ -33,7 +33,7 @@ func TestMetricKey(t *testing.T) {
 		},
 	}.Key())
 
-	assert.Equal(t, MetricKey("2886719422"), Metric{
+	assert.Equal(t, MetricKey("4100769768"), Metric{
 		Kind: MetricKindEnvironmentInformation,
 	}.Key())
 }
