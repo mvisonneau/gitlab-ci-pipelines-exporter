@@ -2,6 +2,8 @@ package exporter
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
@@ -62,6 +64,48 @@ func updateEnvironment(env *schemas.Environment) error {
 	return store.SetEnvironment(*env)
 }
 
+// I chose to cache this method as if multiple environments are based upon the same ref, we
+// can avoid making many similar requests for the same ref
+func getEnvironmentMostRecentCommitInfo(env schemas.Environment) (string, time.Time, error) {
+	var f func(string, string) (string, time.Time, error)
+	q := CacheEnvironmentRefQuery{
+		ProjectName: env.ProjectName,
+	}
+
+	switch env.LatestDeployment.RefKind {
+	case schemas.RefKindBranch:
+		q.Search = env.LatestDeployment.RefName
+		f = gitlabClient.GetBranchLatestCommit
+	case schemas.RefKindTag:
+		q.Search = env.TagsRegexp
+		f = gitlabClient.GetProjectMostRecentTagCommit
+	default:
+		return "", time.Time{}, fmt.Errorf("unsupported ref type : %v", reflect.TypeOf(env.LatestDeployment.RefKind))
+	}
+
+	if commitInfo, exists := cacheEnvironmentRefs[q]; exists && commitInfo.ValidUntil.Sub(time.Now()) > 0 {
+		return commitInfo.ShortID, commitInfo.CreatedAt, nil
+	}
+
+	commitShortID, commitCreatedAt, err := f(q.ProjectName, q.Search)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	if cacheEnvironmentRefs == nil {
+		cacheEnvironmentRefs = CacheEnvironmentRefs{}
+	}
+
+	cacheEnvironmentRefs[q] = CacheEnvironmentCommitInfo{
+		ShortID:   commitShortID,
+		CreatedAt: commitCreatedAt,
+		// TODO: Make this configurable
+		ValidUntil: time.Now().Add(10 * time.Second),
+	}
+
+	return commitShortID, commitCreatedAt, nil
+}
+
 func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
@@ -74,14 +118,8 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 
 	infoLabels := env.InformationLabelsValues()
 	var commitDate time.Time
-	if env.LatestDeployment.RefKind == schemas.RefKindBranch {
-		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetBranchLatestCommit(env.ProjectName, env.LatestDeployment.RefName)
-	} else if env.LatestDeployment.RefKind == schemas.RefKindTag {
-		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetProjectMostRecentTagCommit(env.ProjectName, env.TagsRegexp)
-	}
-
-	if err != nil {
-		return err
+	if infoLabels["latest_commit_short_id"], commitDate, err = getEnvironmentMostRecentCommitInfo(env); err != nil {
+		return
 	}
 
 	var (
@@ -97,31 +135,21 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 			Labels: env.DefaultLabelsValues(),
 		}
 
-		infoMetricExists, err := store.MetricExists(infoMetric.Key())
-		if err != nil {
+		var commitCount int
+		if err = store.GetMetric(&infoMetric); err != nil {
 			return err
 		}
 
-		var commitCount int
-		if !infoMetricExists {
+		envBehindCommitCount = infoMetric.Value
+		if infoMetric.Labels["latest_commit_short_id"] != infoLabels["latest_commit_short_id"] ||
+			infoMetric.Labels["current_commit_short_id"] != infoLabels["current_commit_short_id"] {
 			commitCount, err = gitlabClient.GetCommitCountBetweenRefs(env.ProjectName, infoLabels["current_commit_short_id"], infoLabels["latest_commit_short_id"])
 			if err != nil {
 				return err
 			}
-		} else {
-			if err = store.GetMetric(&infoMetric); err != nil {
-				return err
-			}
 
-			if infoMetric.Labels["latest_commit_short_id"] == infoLabels["latest_commit_short_id"] &&
-				infoMetric.Labels["current_commit_short_id"] == infoLabels["current_commit_short_id"] {
-				commitCount, err = gitlabClient.GetCommitCountBetweenRefs(env.ProjectName, infoLabels["current_commit_short_id"], infoLabels["latest_commit_short_id"])
-				if err != nil {
-					return err
-				}
-			}
+			envBehindCommitCount = float64(commitCount)
 		}
-		envBehindCommitCount = float64(commitCount)
 	}
 
 	storeSetMetric(schemas.Metric{
