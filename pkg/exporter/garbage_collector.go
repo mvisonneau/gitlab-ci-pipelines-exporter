@@ -193,7 +193,7 @@ func garbageCollectRefs() error {
 
 			log.WithFields(log.Fields{
 				"project-name": ref.ProjectName,
-				"project-ref":  ref.Name,
+				"ref":          ref.Name,
 				"reason":       "non-existent-project",
 			}).Info("deleted project ref from the store")
 			continue
@@ -216,7 +216,7 @@ func garbageCollectRefs() error {
 
 			log.WithFields(log.Fields{
 				"project-name": ref.ProjectName,
-				"project-ref":  ref.Name,
+				"ref":          ref.Name,
 				"reason":       "ref-not-in-regexp",
 			}).Info("deleted project ref from the store")
 			continue
@@ -236,7 +236,7 @@ func garbageCollectRefs() error {
 			}
 			log.WithFields(log.Fields{
 				"project-name": ref.ProjectName,
-				"project-ref":  ref.Name,
+				"ref":          ref.Name,
 			}).Info("updated project ref, associated project configuration was not in sync")
 		}
 	}

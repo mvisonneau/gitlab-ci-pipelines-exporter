@@ -12,9 +12,9 @@ import (
 
 func pullRefMetrics(ref schemas.Ref) error {
 	logFields := log.Fields{
-		"project-name":     ref.ProjectName,
-		"project-ref":      ref.Name,
-		"project-ref-kind": ref.Kind,
+		"project-name": ref.ProjectName,
+		"ref":          ref.Name,
+		"ref-kind":     ref.Kind,
 	}
 
 	// TODO: Figure out if we want to have a similar approach for RefKindTag with

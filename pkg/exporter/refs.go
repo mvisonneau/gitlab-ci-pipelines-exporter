@@ -91,15 +91,10 @@ func pullRefsFromProject(p schemas.Project) error {
 
 		if !refExists {
 			log.WithFields(log.Fields{
-				"project-name":     ref.ProjectName,
-				"project-ref":      ref.Name,
-				"project-ref-kind": ref.Kind,
-			}).Info("discovered new project ref")
-
-			ref.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics()
-			ref.PullPipelineJobsEnabled = p.Pull.Pipeline.Jobs.Enabled()
-			ref.PullPipelineVariablesEnabled = p.Pull.Pipeline.Variables.Enabled()
-			ref.PullPipelineVariablesRegexp = p.Pull.Pipeline.Variables.Regexp()
+				"project-name": ref.ProjectName,
+				"ref":          ref.Name,
+				"ref-kind":     ref.Kind,
+			}).Info("discovered new ref")
 
 			if err = store.SetRef(ref); err != nil {
 				return err
@@ -138,16 +133,11 @@ func pullRefsFromPipelines(p schemas.Project) error {
 		}
 
 		if !refExists {
-			ref.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics()
-			ref.PullPipelineJobsEnabled = p.Pull.Pipeline.Jobs.Enabled()
-			ref.PullPipelineVariablesEnabled = p.Pull.Pipeline.Variables.Enabled()
-			ref.PullPipelineVariablesRegexp = p.Pull.Pipeline.Variables.Regexp()
-
 			log.WithFields(log.Fields{
-				"project-name":     ref.ProjectName,
-				"project-ref":      ref.Name,
-				"project-ref-kind": ref.Kind,
-			}).Info("discovered new project ref from pipelines")
+				"project-name": ref.ProjectName,
+				"ref":          ref.Name,
+				"ref-kind":     ref.Kind,
+			}).Info("discovered new ref from pipelines")
 
 			if err = store.SetRef(ref); err != nil {
 				return err

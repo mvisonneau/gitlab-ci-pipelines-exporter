@@ -103,7 +103,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (s
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.ProjectName,
-				"project-ref":  ref.Name,
+				"ref":          ref.Name,
 			},
 		).Debug("most recent pipeline not defined, exiting..")
 		return "", nil
@@ -112,7 +112,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (s
 	log.WithFields(
 		log.Fields{
 			"project-name": ref.ProjectName,
-			"project-ref":  ref.Name,
+			"ref":          ref.Name,
 			"pipeline-id":  ref.MostRecentPipeline.ID,
 		},
 	).Debug("fetching pipeline variables")
@@ -188,9 +188,9 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 				if _, ok := refs[ref.Key()]; !ok {
 					log.WithFields(
 						log.Fields{
-							"project-name":     p.Name,
-							"project-ref":      pipeline.Ref,
-							"project-ref-kind": kind,
+							"project-name": p.Name,
+							"ref":          pipeline.Ref,
+							"ref-kind":     kind,
 						},
 					).Info("found project ref")
 					refs[ref.Key()] = ref

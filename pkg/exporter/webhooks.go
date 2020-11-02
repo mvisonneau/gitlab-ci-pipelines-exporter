@@ -82,9 +82,9 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 	defer cfgUpdateLock.RUnlock()
 
 	logFields := log.Fields{
-		"project-name":     ref.ProjectName,
-		"project-ref":      ref.Name,
-		"project-ref-kind": ref.Kind,
+		"project-name": ref.ProjectName,
+		"ref":          ref.Name,
+		"ref-kind":     ref.Kind,
 	}
 
 	exists, err := store.RefExists(ref.Key())

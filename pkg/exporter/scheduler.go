@@ -78,7 +78,7 @@ var (
 			if err := pullRefMetrics(ref); err != nil {
 				log.WithFields(log.Fields{
 					"project-name": ref.ProjectName,
-					"project-ref":  ref.Name,
+					"ref":          ref.Name,
 					"error":        err.Error(),
 				}).Warn("pulling ref metrics")
 			}

@@ -15,7 +15,7 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []goGitlab.Job, err 
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.ProjectName,
-				"project-ref":  ref.Name,
+				"ref":          ref.Name,
 			},
 		).Debug("most recent pipeline not defined, exiting..")
 		return
@@ -43,7 +43,7 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []goGitlab.Job, err 
 			log.WithFields(
 				log.Fields{
 					"project-name": ref.ProjectName,
-					"project-ref":  ref.Name,
+					"ref":          ref.Name,
 					"pipeline-id":  ref.MostRecentPipeline.ID,
 					"jobs-count":   resp.TotalItems,
 				},
@@ -62,7 +62,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.ProjectName,
-				"project-ref":  ref.Name,
+				"ref":          ref.Name,
 			},
 		).Debug("no jobs are currently held in memory, exiting..")
 		return
@@ -103,7 +103,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 				log.WithFields(
 					log.Fields{
 						"project-name": ref.ProjectName,
-						"project-ref":  ref.Name,
+						"ref":          ref.Name,
 						"jobs-count":   len(ref.Jobs),
 					},
 				).Info("found all jobs to refresh")
@@ -115,7 +115,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 			log.WithFields(
 				log.Fields{
 					"project-name": ref.ProjectName,
-					"project-ref":  ref.Name,
+					"ref":          ref.Name,
 					"jobs-count":   resp.TotalItems,
 				},
 			).Warn("found some project ref jobs but did not manage to refresh all jobs which were in memory")
