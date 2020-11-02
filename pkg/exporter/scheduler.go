@@ -297,9 +297,15 @@ func schedulePullMetrics(ctx context.Context) {
 		log.Error(err)
 	}
 
+	envsCount, err := store.EnvironmentsCount()
+	if err != nil {
+		log.Error(err)
+	}
+
 	log.WithFields(
 		log.Fields{
-			"project-refs-count": refsCount,
+			"environments-count": envsCount,
+			"refs-count":         refsCount,
 		},
 	).Info("scheduling metrics pull")
 

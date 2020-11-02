@@ -10,6 +10,8 @@ import (
 func garbageCollectProjects() error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
+	log.Info("starting 'projects' garbage collection")
+	defer log.Info("ending 'projects' garbage collection")
 
 	storedProjects, err := store.Projects()
 	if err != nil {
@@ -35,7 +37,7 @@ func garbageCollectProjects() error {
 
 	log.WithFields(log.Fields{
 		"projects-count": len(storedProjects),
-	}).Info("found projects to garbage collect")
+	}).Debug("found projects to garbage collect")
 
 	for k, p := range storedProjects {
 		if err = store.DelProject(k); err != nil {
@@ -53,6 +55,8 @@ func garbageCollectProjects() error {
 func garbageCollectEnvironments() error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
+	log.Info("starting 'environments' garbage collection")
+	defer log.Info("ending 'environments' garbage collection")
 
 	storedEnvironments, err := store.Environments()
 	if err != nil {
@@ -165,6 +169,8 @@ func garbageCollectEnvironments() error {
 func garbageCollectRefs() error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
+	log.Info("starting 'refs' garbage collection")
+	defer log.Info("ending 'refs' garbage collection")
 
 	storedRefs, err := store.Refs()
 	if err != nil {
@@ -290,6 +296,8 @@ func garbageCollectRefs() error {
 func garbageCollectMetrics() error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
+	log.Info("starting 'metrics' garbage collection")
+	defer log.Info("ending 'metrics' garbage collection")
 
 	storedEnvironments, err := store.Environments()
 	if err != nil {
