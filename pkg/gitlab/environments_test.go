@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
@@ -89,7 +88,6 @@ func TestGetEnvironment(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, e)
 
-	expectedCreateAt, _ := time.Parse(time.RFC3339, "2019-03-25T18:55:13.252Z")
 	expectedEnv := schemas.Environment{
 		ProjectName: "foo",
 		ID:          1,
@@ -97,14 +95,14 @@ func TestGetEnvironment(t *testing.T) {
 		ExternalURL: "https://foo.example.com",
 		Available:   true,
 		LatestDeployment: schemas.Deployment{
-			ID:            2,
-			RefKind:       schemas.RefKindBranch,
-			RefName:       "bar",
-			AuthorEmail:   "foo@bar.com",
-			CreatedAt:     expectedCreateAt,
-			Duration:      21623 * time.Second,
-			CommitShortID: "416d8ea1",
-			Status:        "success",
+			ID:              2,
+			RefKind:         schemas.RefKindBranch,
+			RefName:         "bar",
+			AuthorEmail:     "foo@bar.com",
+			Timestamp:       1553540113,
+			DurationSeconds: 21623.13423,
+			CommitShortID:   "416d8ea1",
+			Status:          "success",
 		},
 	}
 	assert.Equal(t, expectedEnv, e)

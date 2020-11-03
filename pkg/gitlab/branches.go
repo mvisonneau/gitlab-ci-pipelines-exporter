@@ -2,7 +2,6 @@ package gitlab
 
 import (
 	"regexp"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -48,7 +47,7 @@ func (c *Client) GetProjectBranches(project, refsRegexp string) ([]string, error
 }
 
 // GetBranchLatestCommit ..
-func (c *Client) GetBranchLatestCommit(project, branch string) (string, time.Time, error) {
+func (c *Client) GetBranchLatestCommit(project, branch string) (string, float64, error) {
 	log.WithFields(log.Fields{
 		"project-name": project,
 		"branch":       branch,
@@ -57,8 +56,8 @@ func (c *Client) GetBranchLatestCommit(project, branch string) (string, time.Tim
 	c.rateLimit()
 	b, _, err := c.Branches.GetBranch(project, branch, nil)
 	if err != nil {
-		return "", time.Time{}, err
+		return "", 0, err
 	}
 
-	return b.Commit.ShortID, *b.Commit.CommittedDate, nil
+	return b.Commit.ShortID, float64(b.Commit.CommittedDate.Unix()), nil
 }

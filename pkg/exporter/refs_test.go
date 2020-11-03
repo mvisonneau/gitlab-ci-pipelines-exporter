@@ -7,7 +7,6 @@ import (
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
-	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 func TestGetRefs(t *testing.T) {
@@ -67,7 +66,7 @@ func TestPullRefsFromProject(t *testing.T) {
 			Kind:                        schemas.RefKindBranch,
 			ProjectName:                 "foo",
 			Name:                        "main",
-			Jobs:                        make(map[string]goGitlab.Job),
+			LatestJobs:                  make(schemas.Jobs),
 			OutputSparseStatusMetrics:   true,
 			PullPipelineVariablesRegexp: ".*",
 		},
@@ -106,7 +105,7 @@ func TestPullRefsFromPipelines(t *testing.T) {
 			Kind:                        schemas.RefKindTag,
 			ProjectName:                 "foo",
 			Name:                        "master",
-			Jobs:                        make(map[string]goGitlab.Job),
+			LatestJobs:                  make(schemas.Jobs),
 			OutputSparseStatusMetrics:   true,
 			PullPipelineVariablesRegexp: ".*",
 		},
@@ -114,7 +113,7 @@ func TestPullRefsFromPipelines(t *testing.T) {
 			Kind:                        schemas.RefKindBranch,
 			ProjectName:                 "foo",
 			Name:                        "main",
-			Jobs:                        make(map[string]goGitlab.Job),
+			LatestJobs:                  make(schemas.Jobs),
 			OutputSparseStatusMetrics:   true,
 			PullPipelineVariablesRegexp: ".*",
 		},

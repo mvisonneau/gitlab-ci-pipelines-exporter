@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -68,9 +67,8 @@ func TestGetBranchLatestCommit(t *testing.T) {
 }`)
 		})
 
-	expectedCreatedAt, _ := time.Parse(time.RFC3339, "2019-03-25T18:55:13.252Z")
 	commitShortID, commitCreatedAt, err := c.GetBranchLatestCommit("1", "main")
 	assert.NoError(t, err)
 	assert.Equal(t, "7b5c3cc", commitShortID)
-	assert.Equal(t, expectedCreatedAt, commitCreatedAt)
+	assert.Equal(t, float64(1553540113), commitCreatedAt)
 }

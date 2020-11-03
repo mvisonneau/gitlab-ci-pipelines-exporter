@@ -7,11 +7,11 @@ import (
 )
 
 // ListRefPipelineJobs ..
-func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []goGitlab.Job, err error) {
+func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err error) {
 	var foundJobs []*goGitlab.Job
 	var resp *goGitlab.Response
 
-	if ref.MostRecentPipeline == nil {
+	if ref.LatestPipeline == (schemas.Pipeline{}) {
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.ProjectName,
@@ -30,13 +30,13 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []goGitlab.Job, err 
 
 	for {
 		c.rateLimit()
-		foundJobs, resp, err = c.Jobs.ListPipelineJobs(ref.ProjectName, ref.MostRecentPipeline.ID, options)
+		foundJobs, resp, err = c.Jobs.ListPipelineJobs(ref.ProjectName, ref.LatestPipeline.ID, options)
 		if err != nil {
 			return
 		}
 
 		for _, job := range foundJobs {
-			jobs = append(jobs, *job)
+			jobs = append(jobs, schemas.NewJob(*job))
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
@@ -44,10 +44,10 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []goGitlab.Job, err 
 				log.Fields{
 					"project-name": ref.ProjectName,
 					"ref":          ref.Name,
-					"pipeline-id":  ref.MostRecentPipeline.ID,
+					"pipeline-id":  ref.LatestPipeline.ID,
 					"jobs-count":   resp.TotalItems,
 				},
-			).Info("found pipeline jobs")
+			).Debug("found pipeline jobs")
 			break
 		}
 
@@ -57,8 +57,8 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []goGitlab.Job, err 
 }
 
 // ListRefMostRecentJobs ..
-func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, err error) {
-	if ref.Jobs == nil {
+func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err error) {
+	if len(ref.LatestJobs) == 0 {
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.ProjectName,
@@ -69,8 +69,8 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 	}
 
 	// Deep copy of the ref.Jobs
-	jobsToRefresh := make(map[string]goGitlab.Job)
-	for k, v := range ref.Jobs {
+	jobsToRefresh := make(schemas.Jobs)
+	for k, v := range ref.LatestJobs {
 		jobsToRefresh[k] = v
 	}
 
@@ -94,7 +94,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 		for _, job := range foundJobs {
 			if _, ok := jobsToRefresh[job.Name]; ok {
 				if ref.Name == job.Ref {
-					jobs = append(jobs, job)
+					jobs = append(jobs, schemas.NewJob(job))
 					delete(jobsToRefresh, job.Name)
 				}
 			}
@@ -104,9 +104,9 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []goGitlab.Job, er
 					log.Fields{
 						"project-name": ref.ProjectName,
 						"ref":          ref.Name,
-						"jobs-count":   len(ref.Jobs),
+						"jobs-count":   len(ref.LatestJobs),
 					},
-				).Info("found all jobs to refresh")
+				).Debug("found all jobs to refresh")
 				return
 			}
 		}

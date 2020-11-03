@@ -7,7 +7,6 @@ import (
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
-	"github.com/xanzy/go-gitlab"
 )
 
 func TestPullRefMetricsSucceed(t *testing.T) {
@@ -52,7 +51,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	runCount := schemas.Metric{
 		Kind:   schemas.MetricKindRunCount,
 		Labels: labels,
-		Value:  1,
+		Value:  0,
 	}
 	assert.Equal(t, runCount, metrics[runCount.Key()])
 
@@ -80,9 +79,11 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 }
 
 func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
+	resetGlobalValues()
 	ref := schemas.Ref{
 		Kind: schemas.RefKindMergeRequest,
-		MostRecentPipeline: &gitlab.Pipeline{
+		LatestPipeline: schemas.Pipeline{
+			ID:     1,
 			Status: "success",
 		},
 	}

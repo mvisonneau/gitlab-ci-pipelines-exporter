@@ -1,15 +1,13 @@
 package schemas
 
-import "time"
-
 // Deployment ..
 type Deployment struct {
-	ID            int
-	RefKind       RefKind
-	RefName       string
-	AuthorEmail   string
-	CreatedAt     time.Time
-	Duration      time.Duration
-	CommitShortID string
-	Status        string
+	ID              int
+	RefKind         RefKind
+	RefName         string
+	AuthorEmail     string
+	Timestamp       float64
+	DurationSeconds float64
+	CommitShortID   string
+	Status          string
 }

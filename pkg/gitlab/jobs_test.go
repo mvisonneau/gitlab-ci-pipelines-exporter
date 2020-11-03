@@ -8,7 +8,6 @@ import (
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
-	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 func TestListRefPipelineJobs(t *testing.T) {
@@ -41,7 +40,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	ref.MostRecentPipeline = &goGitlab.Pipeline{
+	ref.LatestPipeline = schemas.Pipeline{
 		ID: 1,
 	}
 
@@ -84,7 +83,7 @@ func TestListRefMostRecentJobs(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	ref.Jobs = map[string]goGitlab.Job{
+	ref.LatestJobs = schemas.Jobs{
 		"foo": {
 			ID:   1,
 			Name: "foo",
@@ -101,7 +100,7 @@ func TestListRefMostRecentJobs(t *testing.T) {
 	assert.Equal(t, 3, jobs[0].ID)
 	assert.Equal(t, 4, jobs[1].ID)
 
-	ref.Jobs["baz"] = goGitlab.Job{
+	ref.LatestJobs["baz"] = schemas.Job{
 		ID:   5,
 		Name: "baz",
 	}

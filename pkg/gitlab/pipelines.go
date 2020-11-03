@@ -17,13 +17,14 @@ const (
 )
 
 // GetRefPipeline ..
-func (c *Client) GetRefPipeline(ref schemas.Ref, pipelineID int) (pipeline *goGitlab.Pipeline, err error) {
+func (c *Client) GetRefPipeline(ref schemas.Ref, pipelineID int) (p schemas.Pipeline, err error) {
 	c.rateLimit()
-	pipeline, _, err = c.Pipelines.GetPipeline(ref.ProjectName, pipelineID)
-	if err != nil || pipeline == nil {
-		return nil, fmt.Errorf("could not read content of pipeline %s - %s | %s", ref.ProjectName, ref.Name, err.Error())
+	var gp *goGitlab.Pipeline
+	gp, _, err = c.Pipelines.GetPipeline(ref.ProjectName, pipelineID)
+	if err != nil || gp == nil {
+		return schemas.Pipeline{}, fmt.Errorf("could not read content of pipeline %s - %s | %s", ref.ProjectName, ref.Name, err.Error())
 	}
-	return
+	return schemas.NewPipeline(*gp), nil
 }
 
 // GetProjectPipelines ..
@@ -99,7 +100,7 @@ func (c *Client) GetProjectMergeRequestsPipelines(projectName string, fetchLimit
 
 // GetRefPipelineVariablesAsConcatenatedString ..
 func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (string, error) {
-	if ref.MostRecentPipeline == nil {
+	if ref.LatestPipeline == (schemas.Pipeline{}) {
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.ProjectName,
@@ -113,7 +114,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (s
 		log.Fields{
 			"project-name": ref.ProjectName,
 			"ref":          ref.Name,
-			"pipeline-id":  ref.MostRecentPipeline.ID,
+			"pipeline-id":  ref.LatestPipeline.ID,
 		},
 	).Debug("fetching pipeline variables")
 
@@ -123,9 +124,9 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (s
 	}
 
 	c.rateLimit()
-	variables, _, err := c.Pipelines.GetPipelineVariables(ref.ProjectName, ref.MostRecentPipeline.ID)
+	variables, _, err := c.Pipelines.GetPipelineVariables(ref.ProjectName, ref.LatestPipeline.ID)
 	if err != nil {
-		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", ref.MostRecentPipeline.ID, err.Error())
+		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", ref.LatestPipeline.ID, err.Error())
 	}
 
 	var keptVariables []string

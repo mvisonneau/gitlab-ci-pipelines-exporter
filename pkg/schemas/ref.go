@@ -3,8 +3,6 @@ package schemas
 import (
 	"hash/crc32"
 	"strconv"
-
-	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 const (
@@ -24,13 +22,12 @@ type RefKind string
 // Ref is what we will use a metrics entity on which we will
 // perform regular pulling operations
 type Ref struct {
-	Kind                        RefKind
-	ProjectName                 string
-	Name                        string
-	Topics                      string
-	MostRecentPipeline          *goGitlab.Pipeline
-	MostRecentPipelineVariables string
-	Jobs                        map[string]goGitlab.Job
+	Kind           RefKind
+	ProjectName    string
+	Name           string
+	Topics         string
+	LatestPipeline Pipeline
+	LatestJobs     Jobs
 
 	OutputSparseStatusMetrics    bool
 	PullPipelineJobsEnabled      bool
@@ -62,7 +59,7 @@ func (ref Ref) DefaultLabelsValues() map[string]string {
 		"project":   ref.ProjectName,
 		"ref":       ref.Name,
 		"topics":    ref.Topics,
-		"variables": ref.MostRecentPipelineVariables,
+		"variables": ref.LatestPipeline.Variables,
 	}
 }
 
@@ -78,7 +75,7 @@ func NewRef(
 		ProjectName: projectName,
 		Name:        name,
 		Topics:      topics,
-		Jobs:        make(map[string]goGitlab.Job),
+		LatestJobs:  make(Jobs),
 
 		OutputSparseStatusMetrics:    outputSparseStatusMetrics,
 		PullPipelineJobsEnabled:      pullPipelineJobsEnabled,

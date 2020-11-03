@@ -24,7 +24,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Enhanced the scheduling of the pull functions on init
 - Improved webhook parsing functions performance
 - Fixed a bug preventing the `gitlab_ci_pipeline_run_count` from being initialized correctly at startup
+- Fixed the `gitlab_ci_pipeline_job_run_count` and `gitlab_ci_pipeline_run_count` metrics incrementing algorithm
 - Updated the `pipelines` grafana dashboard
+- Fixed a bug which could lead to an overwrite of the refs and environments at scale, inducing unecessary GitLab API calls and discrepancy for some metrics
+- Optimized the storage layer implementation
 
 ## [0.4.2] - 2020-10-22
 

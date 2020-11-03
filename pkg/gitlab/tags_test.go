@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -66,9 +65,8 @@ func TestGetProjectMostRecentTagCommit(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
 
-	expectedCreatedAt, _ := time.Parse(time.RFC3339, "2019-03-25T18:55:13.252Z")
 	commitShortID, commitCreatedAt, err := c.GetProjectMostRecentTagCommit("foo", "^f")
 	assert.NoError(t, err)
 	assert.Equal(t, "7b5c3cc", commitShortID)
-	assert.Equal(t, expectedCreatedAt, commitCreatedAt)
+	assert.Equal(t, float64(1553540113), commitCreatedAt)
 }

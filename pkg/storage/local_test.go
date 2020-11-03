@@ -2,7 +2,6 @@ package storage
 
 import (
 	"testing"
-	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
@@ -86,9 +85,6 @@ func TestLocalEnvironmentFunctions(t *testing.T) {
 	newEnvironment := schemas.Environment{
 		ProjectName: "foo",
 		ID:          1,
-		LatestDeployment: schemas.Deployment{
-			CreatedAt: time.Time{},
-		},
 	}
 	assert.NoError(t, l.GetEnvironment(&newEnvironment))
 	assert.Equal(t, environment, newEnvironment)

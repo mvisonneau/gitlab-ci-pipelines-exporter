@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
@@ -54,7 +53,6 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 	assert.NoError(t, pullEnvironmentsFromProject(p))
 
 	storedEnvironments, _ := store.Environments()
-	expectedCreateAt, _ := time.Parse(time.RFC3339, "2019-03-25T18:55:13.252Z")
 	expectedEnvironments := schemas.Environments{
 		"54146361": schemas.Environment{
 			ProjectName: "foo",
@@ -63,14 +61,14 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 			ExternalURL: "https://foo.example.com",
 			Available:   true,
 			LatestDeployment: schemas.Deployment{
-				ID:            2,
-				RefKind:       schemas.RefKindBranch,
-				RefName:       "bar",
-				AuthorEmail:   "foo@bar.com",
-				CreatedAt:     expectedCreateAt,
-				Duration:      21623 * time.Second,
-				CommitShortID: "416d8ea1",
-				Status:        "success",
+				ID:              2,
+				RefKind:         schemas.RefKindBranch,
+				RefName:         "bar",
+				AuthorEmail:     "foo@bar.com",
+				Timestamp:       1553540113,
+				DurationSeconds: 21623.13423,
+				CommitShortID:   "416d8ea1",
+				Status:          "success",
 			},
 			TagsRegexp:                ".*",
 			OutputSparseStatusMetrics: true,
@@ -156,7 +154,7 @@ func TestPullEnvironmentMetricsSucceed(t *testing.T) {
 	environmentDeploymentDurationSeconds := schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentDeploymentDurationSeconds,
 		Labels: labels,
-		Value:  21623,
+		Value:  21623.13423,
 	}
 	assert.Equal(t, environmentDeploymentDurationSeconds, metrics[environmentDeploymentDurationSeconds.Key()])
 

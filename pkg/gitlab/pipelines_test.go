@@ -10,7 +10,6 @@ import (
 	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
 	"github.com/xanzy/go-gitlab"
-	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 func TestGetRefPipeline(t *testing.T) {
@@ -102,7 +101,7 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "", variables)
 
-	ref.MostRecentPipeline = &goGitlab.Pipeline{
+	ref.LatestPipeline = schemas.Pipeline{
 		ID: 1,
 	}
 
@@ -174,7 +173,7 @@ func TestGetRefsFromPipelines(t *testing.T) {
 			Kind:                        schemas.RefKindBranch,
 			ProjectName:                 "foo",
 			Name:                        "keep_dev",
-			Jobs:                        make(map[string]goGitlab.Job),
+			LatestJobs:                  make(schemas.Jobs),
 			OutputSparseStatusMetrics:   true,
 			PullPipelineVariablesRegexp: ".*",
 		},
@@ -182,7 +181,7 @@ func TestGetRefsFromPipelines(t *testing.T) {
 			Kind:                        schemas.RefKindBranch,
 			ProjectName:                 "foo",
 			Name:                        "keep_main",
-			Jobs:                        make(map[string]goGitlab.Job),
+			LatestJobs:                  make(schemas.Jobs),
 			OutputSparseStatusMetrics:   true,
 			PullPipelineVariablesRegexp: ".*",
 		},
@@ -190,7 +189,7 @@ func TestGetRefsFromPipelines(t *testing.T) {
 			Kind:                        schemas.RefKindTag,
 			ProjectName:                 "foo",
 			Name:                        "keep_0.0.2",
-			Jobs:                        make(map[string]goGitlab.Job),
+			LatestJobs:                  make(schemas.Jobs),
 			OutputSparseStatusMetrics:   true,
 			PullPipelineVariablesRegexp: ".*",
 		},

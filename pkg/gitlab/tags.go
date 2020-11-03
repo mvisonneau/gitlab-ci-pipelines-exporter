@@ -2,7 +2,6 @@ package gitlab
 
 import (
 	"regexp"
-	"time"
 
 	goGitlab "github.com/xanzy/go-gitlab"
 )
@@ -46,7 +45,7 @@ func (c *Client) GetProjectTags(projectName string, filterRegexp string) ([]stri
 }
 
 // GetProjectMostRecentTagCommit ..
-func (c *Client) GetProjectMostRecentTagCommit(project, filterRegexp string) (string, time.Time, error) {
+func (c *Client) GetProjectMostRecentTagCommit(project, filterRegexp string) (string, float64, error) {
 	options := &goGitlab.ListTagsOptions{
 		ListOptions: goGitlab.ListOptions{
 			Page:    1,
@@ -56,19 +55,19 @@ func (c *Client) GetProjectMostRecentTagCommit(project, filterRegexp string) (st
 
 	re, err := regexp.Compile(filterRegexp)
 	if err != nil {
-		return "", time.Time{}, err
+		return "", 0, err
 	}
 
 	for {
 		c.rateLimit()
 		tags, resp, err := c.Tags.ListTags(project, options)
 		if err != nil {
-			return "", time.Time{}, err
+			return "", 0, err
 		}
 
 		for _, tag := range tags {
 			if re.MatchString(tag.Name) {
-				return tag.Commit.ShortID, *tag.Commit.CommittedDate, nil
+				return tag.Commit.ShortID, float64(tag.Commit.CommittedDate.Unix()), nil
 			}
 		}
 
@@ -78,5 +77,5 @@ func (c *Client) GetProjectMostRecentTagCommit(project, filterRegexp string) (st
 		options.Page = resp.NextPage
 	}
 
-	return "", time.Time{}, nil
+	return "", 0, nil
 }

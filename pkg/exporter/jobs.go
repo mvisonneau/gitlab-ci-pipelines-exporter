@@ -2,10 +2,10 @@ package exporter
 
 import (
 	"reflect"
+	"regexp"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
-	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 func pullRefPipelineJobsMetrics(ref schemas.Ref) error {
@@ -44,7 +44,7 @@ func pullRefMostRecentJobsMetrics(ref schemas.Ref) error {
 	return nil
 }
 
-func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
+func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -68,15 +68,16 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 
 	// In case a job gets restarted, it will have an ID greated than the previous one(s)
 	// jobs in new pipelines should get greated IDs too
-	if lastJob, ok := ref.Jobs[job.Name]; ok && reflect.DeepEqual(lastJob, job) {
+	lastJob, lastJobExists := ref.LatestJobs[job.Name]
+	if lastJobExists && reflect.DeepEqual(lastJob, job) {
 		return
 	}
 
 	// Update the ref in the store
-	if ref.Jobs == nil {
-		ref.Jobs = make(map[string]goGitlab.Job)
+	if ref.LatestJobs == nil {
+		ref.LatestJobs = make(schemas.Jobs)
 	}
-	ref.Jobs[job.Name] = job
+	ref.LatestJobs[job.Name] = job
 	if err := store.SetRef(ref); err != nil {
 		log.WithFields(
 			projectRefLogFields,
@@ -95,13 +96,13 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindJobTimestamp,
 		Labels: labels,
-		Value:  float64(job.CreatedAt.Unix()),
+		Value:  job.Timestamp,
 	})
 
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindJobDurationSeconds,
 		Labels: labels,
-		Value:  job.Duration,
+		Value:  job.DurationSeconds,
 	})
 
 	jobRunCount := schemas.Metric{
@@ -120,22 +121,23 @@ func processJobMetrics(ref schemas.Ref, job goGitlab.Job) {
 		return
 	}
 
-	if jobRunCountExists {
+	// We want to increment this counter only once per job ID if:
+	// - the metric is already set
+	// - the job has been triggered
+	jobTriggeredRegexp := regexp.MustCompile("^(skipped|manual|scheduled)$")
+	lastJobTriggered := !jobTriggeredRegexp.MatchString(lastJob.Status)
+	jobTriggered := !jobTriggeredRegexp.MatchString(job.Status)
+	if jobRunCountExists && ((lastJob.ID != job.ID && jobTriggered) || (lastJob.ID == job.ID && jobTriggered && !lastJobTriggered)) {
 		storeGetMetric(&jobRunCount)
 		jobRunCount.Value++
 	}
 
 	storeSetMetric(jobRunCount)
 
-	artifactSize := 0
-	for _, artifact := range job.Artifacts {
-		artifactSize += artifact.Size
-	}
-
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindJobArtifactSizeBytes,
 		Labels: labels,
-		Value:  float64(artifactSize),
+		Value:  job.ArtifactSize,
 	})
 
 	emitStatusMetric(

@@ -3,7 +3,6 @@ package exporter
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
@@ -11,6 +10,15 @@ import (
 )
 
 func pullRefMetrics(ref schemas.Ref) error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	// At scale, the scheduled ref may be behind the actual state being stored
+	// to avoid issues, we refresh it from the store before manipulating it
+	if err := store.GetRef(&ref); err != nil {
+		return err
+	}
+
 	logFields := log.Fields{
 		"project-name": ref.ProjectName,
 		"ref":          ref.Name,
@@ -19,17 +27,15 @@ func pullRefMetrics(ref schemas.Ref) error {
 
 	// TODO: Figure out if we want to have a similar approach for RefKindTag with
 	// an additional configuration parameter perhaps
-	if ref.Kind == schemas.RefKindMergeRequest && ref.MostRecentPipeline != nil {
-		switch ref.MostRecentPipeline.Status {
+	if ref.Kind == schemas.RefKindMergeRequest && ref.LatestPipeline.ID != 0 {
+		switch ref.LatestPipeline.Status {
 		case "success", "failed", "canceled", "skipped":
 			// The pipeline will not evolve, lets not bother querying the API
-			log.WithFields(logFields).WithField("most-recent-pipeline-id", ref.MostRecentPipeline.ID).Debug("skipping finished merge-request pipeline")
+			log.WithFields(logFields).WithField("most-recent-pipeline-id", ref.LatestPipeline.ID).Debug("skipping finished merge-request pipeline")
 			return nil
 		}
 	}
 
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
 	pipelines, err := gitlabClient.GetProjectPipelines(ref.ProjectName, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
@@ -53,12 +59,13 @@ func pullRefMetrics(ref schemas.Ref) error {
 		return err
 	}
 
-	if ref.MostRecentPipeline == nil || !reflect.DeepEqual(pipeline, ref.MostRecentPipeline) {
-		ref.MostRecentPipeline = pipeline
+	if ref.LatestPipeline.ID == 0 || !reflect.DeepEqual(pipeline, ref.LatestPipeline) {
+		formerPipeline := ref.LatestPipeline
+		ref.LatestPipeline = pipeline
 
 		// fetch pipeline variables
 		if ref.PullPipelineVariablesEnabled {
-			ref.MostRecentPipelineVariables, err = gitlabClient.GetRefPipelineVariablesAsConcatenatedString(ref)
+			ref.LatestPipeline.Variables, err = gitlabClient.GetRefPipelineVariablesAsConcatenatedString(ref)
 			if err != nil {
 				return err
 			}
@@ -69,28 +76,23 @@ func pullRefMetrics(ref schemas.Ref) error {
 			return err
 		}
 
+		// If the metric does not exist yet, start with 0 instead of 1
+		// this could cause some false positives in prometheus
+		// when restarting the exporter otherwise
 		runCount := schemas.Metric{
 			Kind:   schemas.MetricKindRunCount,
 			Labels: ref.DefaultLabelsValues(),
 		}
 		storeGetMetric(&runCount)
-		if pipeline.Status == "running" {
+		if formerPipeline.ID != 0 {
 			runCount.Value++
 		}
 		storeSetMetric(runCount)
 
-		var coverage float64
-		if pipeline.Coverage != "" {
-			coverage, err = strconv.ParseFloat(pipeline.Coverage, 64)
-			if err != nil {
-				log.WithFields(logFields).WithField("error", err.Error()).Warnf("could not parse coverage string returned from GitLab API '%s' into Float64", pipeline.Coverage)
-			}
-		}
-
 		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindCoverage,
 			Labels: ref.DefaultLabelsValues(),
-			Value:  coverage,
+			Value:  pipeline.Coverage,
 		})
 
 		storeSetMetric(schemas.Metric{
@@ -110,13 +112,13 @@ func pullRefMetrics(ref schemas.Ref) error {
 		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindDurationSeconds,
 			Labels: ref.DefaultLabelsValues(),
-			Value:  float64(pipeline.Duration),
+			Value:  pipeline.DurationSeconds,
 		})
 
 		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindTimestamp,
 			Labels: ref.DefaultLabelsValues(),
-			Value:  float64(pipeline.UpdatedAt.Unix()),
+			Value:  pipeline.Timestamp,
 		})
 
 		if ref.PullPipelineJobsEnabled {
@@ -124,6 +126,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 				return err
 			}
 		}
+		return nil
 	}
 
 	if ref.PullPipelineJobsEnabled {

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 func TestRefKey(t *testing.T) {
@@ -26,11 +25,14 @@ func TestRefsCount(t *testing.T) {
 
 func TestRefDefaultLabelsValues(t *testing.T) {
 	ref := Ref{
-		Kind:                        RefKindBranch,
-		ProjectName:                 "foo/bar",
-		Name:                        "feature",
-		Topics:                      "amazing,project",
-		MostRecentPipelineVariables: "blah",
+		Kind:        RefKindBranch,
+		ProjectName: "foo/bar",
+		Name:        "feature",
+		Topics:      "amazing,project",
+		LatestPipeline: Pipeline{
+			Variables: "blah",
+		},
+		LatestJobs: make(Jobs),
 	}
 
 	expectedValue := map[string]string{
@@ -46,11 +48,12 @@ func TestRefDefaultLabelsValues(t *testing.T) {
 
 func TestNewRef(t *testing.T) {
 	expectedValue := Ref{
-		Kind:                         RefKindTag,
-		ProjectName:                  "foo/bar",
-		Name:                         "v0.0.7",
-		Topics:                       "bar,baz",
-		Jobs:                         make(map[string]goGitlab.Job),
+		Kind:        RefKindTag,
+		ProjectName: "foo/bar",
+		Name:        "v0.0.7",
+		Topics:      "bar,baz",
+		LatestJobs:  make(Jobs),
+
 		OutputSparseStatusMetrics:    true,
 		PullPipelineJobsEnabled:      true,
 		PullPipelineVariablesEnabled: true,

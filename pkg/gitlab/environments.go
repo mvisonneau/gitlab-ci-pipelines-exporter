@@ -2,7 +2,6 @@ package gitlab
 
 import (
 	"regexp"
-	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
@@ -76,8 +75,8 @@ func (c *Client) GetEnvironment(project string, environmentID int) (schemas.Envi
 		environment.LatestDeployment.RefName = e.LastDeployment.Ref
 		environment.LatestDeployment.AuthorEmail = e.LastDeployment.Deployable.User.PublicEmail
 		environment.LatestDeployment.CommitShortID = e.LastDeployment.Deployable.Commit.ShortID
-		environment.LatestDeployment.CreatedAt = *e.LastDeployment.CreatedAt
-		environment.LatestDeployment.Duration = time.Duration(int(e.LastDeployment.Deployable.Duration)) * time.Second
+		environment.LatestDeployment.Timestamp = float64(e.LastDeployment.CreatedAt.Unix())
+		environment.LatestDeployment.DurationSeconds = e.LastDeployment.Deployable.Duration
 		environment.LatestDeployment.Status = e.LastDeployment.Deployable.Status
 	} else {
 		log.WithFields(log.Fields{

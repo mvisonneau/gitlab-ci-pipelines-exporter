@@ -53,12 +53,9 @@ func (r *Redis) GetProject(p *schemas.Project) error {
 			return err
 		}
 
-		storedProject := schemas.Project{}
-		if err = msgpack.Unmarshal([]byte(marshalledProject), &storedProject); err != nil {
+		if err = msgpack.Unmarshal([]byte(marshalledProject), p); err != nil {
 			return err
 		}
-
-		*p = storedProject
 	}
 
 	return nil
@@ -95,13 +92,13 @@ func (r *Redis) ProjectsCount() (int64, error) {
 }
 
 // SetEnvironment ..
-func (r *Redis) SetEnvironment(environment schemas.Environment) error {
-	marshalledEnvironment, err := msgpack.Marshal(environment)
+func (r *Redis) SetEnvironment(e schemas.Environment) error {
+	marshalledEnvironment, err := msgpack.Marshal(e)
 	if err != nil {
 		return err
 	}
 
-	_, err = r.HSet(r.ctx, redisEnvironmentsKey, string(environment.Key()), marshalledEnvironment).Result()
+	_, err = r.HSet(r.ctx, redisEnvironmentsKey, string(e.Key()), marshalledEnvironment).Result()
 	return err
 }
 
@@ -112,25 +109,22 @@ func (r *Redis) DelEnvironment(k schemas.EnvironmentKey) error {
 }
 
 // GetEnvironment ..
-func (r *Redis) GetEnvironment(environment *schemas.Environment) error {
-	exists, err := r.EnvironmentExists(environment.Key())
+func (r *Redis) GetEnvironment(e *schemas.Environment) error {
+	exists, err := r.EnvironmentExists(e.Key())
 	if err != nil {
 		return err
 	}
 
 	if exists {
-		k := environment.Key()
+		k := e.Key()
 		marshalledEnvironment, err := r.HGet(r.ctx, redisEnvironmentsKey, string(k)).Result()
 		if err != nil {
 			return err
 		}
 
-		storedEnvironment := schemas.Environment{}
-		if err = msgpack.Unmarshal([]byte(marshalledEnvironment), &storedEnvironment); err != nil {
+		if err = msgpack.Unmarshal([]byte(marshalledEnvironment), e); err != nil {
 			return err
 		}
-
-		*environment = storedEnvironment
 	}
 
 	return nil
@@ -197,12 +191,9 @@ func (r *Redis) GetRef(ref *schemas.Ref) error {
 			return err
 		}
 
-		storedRef := schemas.Ref{}
-		if err = msgpack.Unmarshal([]byte(marshalledRef), &storedRef); err != nil {
+		if err = msgpack.Unmarshal([]byte(marshalledRef), ref); err != nil {
 			return err
 		}
-
-		*ref = storedRef
 	}
 
 	return nil
@@ -274,12 +265,9 @@ func (r *Redis) GetMetric(m *schemas.Metric) error {
 			return err
 		}
 
-		storedMetric := schemas.Metric{}
-		if err = msgpack.Unmarshal([]byte(marshalledMetric), &storedMetric); err != nil {
+		if err = msgpack.Unmarshal([]byte(marshalledMetric), m); err != nil {
 			return err
 		}
-
-		*m = storedMetric
 	}
 
 	return nil

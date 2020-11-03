@@ -2,7 +2,6 @@ package exporter
 
 import (
 	"context"
-	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
@@ -66,6 +65,12 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
+	// At scale, the scheduled environment may be behind the actual state being stored
+	// to avoid issues, we refresh it from the store before manipulating it
+	if err := store.GetEnvironment(&env); err != nil {
+		return err
+	}
+
 	// Save the existing deployment ID before we updated environment from the API
 	deploymentID := env.LatestDeployment.ID
 	if err = updateEnvironment(&env); err != nil {
@@ -73,15 +78,15 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	}
 
 	infoLabels := env.InformationLabelsValues()
-	var commitDate time.Time
+	var commitDate float64
 	switch env.LatestDeployment.RefKind {
 	case schemas.RefKindBranch:
 		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetBranchLatestCommit(env.ProjectName, env.LatestDeployment.RefName)
 	case schemas.RefKindTag:
-		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetBranchLatestCommit(env.ProjectName, env.LatestDeployment.RefName)
+		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetProjectMostRecentTagCommit(env.ProjectName, env.LatestDeployment.RefName)
 	default:
 		infoLabels["latest_commit_short_id"] = env.LatestDeployment.CommitShortID
-		commitDate = env.LatestDeployment.CreatedAt
+		commitDate = env.LatestDeployment.Timestamp
 	}
 
 	if err != nil {
@@ -133,8 +138,8 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 		Value:  envBehindCommitCount,
 	})
 
-	if commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds() > 0 {
-		envBehindDurationSeconds = commitDate.Sub(env.LatestDeployment.CreatedAt).Seconds()
+	if commitDate-env.LatestDeployment.Timestamp > 0 {
+		envBehindDurationSeconds = commitDate - env.LatestDeployment.Timestamp
 	}
 
 	envDeploymentCount := schemas.Metric{
@@ -157,7 +162,7 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentDeploymentDurationSeconds,
 		Labels: env.DefaultLabelsValues(),
-		Value:  env.LatestDeployment.Duration.Seconds(),
+		Value:  env.LatestDeployment.DurationSeconds,
 	})
 
 	emitStatusMetric(
@@ -171,7 +176,7 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentDeploymentTimestamp,
 		Labels: env.DefaultLabelsValues(),
-		Value:  float64(env.LatestDeployment.CreatedAt.Unix()),
+		Value:  env.LatestDeployment.Timestamp,
 	})
 
 	storeSetMetric(schemas.Metric{
