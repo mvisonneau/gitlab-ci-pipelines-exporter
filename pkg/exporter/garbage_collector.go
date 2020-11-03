@@ -283,9 +283,9 @@ func garbageCollectRefs() error {
 			}
 
 			log.WithFields(log.Fields{
-				"project-name":     ref.ProjectName,
-				"project-ref-name": ref.Name,
-				"reason":           "non-existent-project-ref",
+				"project-name": ref.ProjectName,
+				"ref-name":     ref.Name,
+				"reason":       "non-existent-ref",
 			}).Info("deleted ref from the store")
 		}
 	}
@@ -373,7 +373,7 @@ func garbageCollectMetrics() error {
 					log.WithFields(log.Fields{
 						"metric-kind":   m.Kind,
 						"metric-labels": m.Labels,
-						"reason":        "jobs-metrics-disabled-on-project-ref",
+						"reason":        "jobs-metrics-disabled-on-ref",
 					}).Info("deleted metric from the store")
 					continue
 				}
@@ -394,7 +394,7 @@ func garbageCollectMetrics() error {
 					log.WithFields(log.Fields{
 						"metric-kind":   m.Kind,
 						"metric-labels": m.Labels,
-						"reason":        "output-sparse-metrics-enabled-on-project-ref",
+						"reason":        "output-sparse-metrics-enabled-on-ref",
 					}).Info("deleted metric from the store")
 					continue
 				}

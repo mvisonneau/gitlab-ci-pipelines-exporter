@@ -41,7 +41,7 @@ func (c *Client) GetProjectPipelines(projectName string, options *goGitlab.ListP
 	}
 
 	if options.Ref != nil {
-		fields["project-ref"] = *options.Ref
+		fields["ref"] = *options.Ref
 	}
 
 	if options.Scope != nil {
