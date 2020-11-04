@@ -65,11 +65,10 @@ func TestGetEnvironment(t *testing.T) {
 	"external_url": "https://foo.example.com",
 	"state": "available",
 	"last_deployment": {
-		"id": 2,
-		"iid": 30,
 		"ref": "bar",
 		"created_at": "2019-03-25T18:55:13.252Z",
 		"deployable": {
+			"id": 23,
 			"status": "success",
 			"tag": false,
 			"duration": 21623.13423,
@@ -95,7 +94,7 @@ func TestGetEnvironment(t *testing.T) {
 		ExternalURL: "https://foo.example.com",
 		Available:   true,
 		LatestDeployment: schemas.Deployment{
-			ID:              2,
+			JobID:           23,
 			RefKind:         schemas.RefKindBranch,
 			RefName:         "bar",
 			AuthorEmail:     "foo@bar.com",

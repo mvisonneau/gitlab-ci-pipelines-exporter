@@ -16,8 +16,7 @@
   "editable": true,
   "gnetId": 10620,
   "graphTooltip": 0,
-  "id": 3,
-  "iteration": 1604336999882,
+  "iteration": 1604494964194,
   "links": [],
   "panels": [
     {
@@ -111,7 +110,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_run_count{project=~\"$OWNER.*\", ref=~\"$REF\"})",
+          "expr": "count(gitlab_ci_pipeline_run_count{project=~\"$PROJECT\", ref=~\"$REF\"})",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -194,7 +193,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_status{status=\"failed\", project=~\"$OWNER.*\", ref=~\"$REF\"} > 0) or vector(0)",
+          "expr": "count(gitlab_ci_pipeline_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -273,7 +272,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"$OWNER.*\", ref=~\"$REF\"}[1h]))",
+          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"$PROJECT\", ref=~\"$REF\"}[1h]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -336,6 +335,32 @@
         "globalDisplayMode": "all",
         "globalDisplayTextTriggeredEmpty": "OK",
         "globalOperatorName": "current",
+        "globalThresholds": [
+          {
+            "$$hashKey": "object:618",
+            "color": "#299c46",
+            "state": 0,
+            "value": 1
+          },
+          {
+            "$$hashKey": "object:625",
+            "color": "#3274D9",
+            "state": 3,
+            "value": 2
+          },
+          {
+            "$$hashKey": "object:628",
+            "color": "#d44a3a",
+            "state": 2,
+            "value": 3
+          },
+          {
+            "$$hashKey": "object:631",
+            "color": "#959595",
+            "state": 3,
+            "value": 4
+          }
+        ],
         "globalUnitFormat": "short",
         "gradientEnabled": true,
         "hexagonSortByDirection": 1,
@@ -370,6 +395,7 @@
       "savedComposites": [],
       "savedOverrides": [
         {
+          "$$hashKey": "object:591",
           "clickThrough": "",
           "colors": [
             "#299c46",
@@ -386,35 +412,18 @@
           "sanitizeURLEnabled": true,
           "scaledDecimals": null,
           "suffix": "",
-          "thresholds": [
-            {
-              "color": "#299c46",
-              "state": 0,
-              "value": 1
-            },
-            {
-              "color": "#1F60C4",
-              "state": 3,
-              "value": 2
-            },
-            {
-              "color": "#bf1b00",
-              "state": 2,
-              "value": 3
-            }
-          ],
           "unitFormat": "short"
         }
       ],
       "targets": [
         {
-          "expr": "(gitlab_ci_pipeline_status{status=\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status!~\"success|running\", project=~\"$OWNER.*\", ref=~\"$REF\"} * 3 > 0)",
+          "expr": "(gitlab_ci_pipeline_status{status=\"success\", project=~\"$PROJECT\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", project=~\"$PROJECT\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status=~\"failed|canceled\", project=~\"$PROJECT\", ref=~\"$REF\"} * 3 > 0) or (gitlab_ci_pipeline_status{status!~\"success|running|failed|canceled\", project=~\"$PROJECT\", ref=~\"$REF\"} * 4 > 0)",
           "format": "time_series",
           "hide": false,
           "instant": true,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "{{project}}",
+          "legendFormat": "                                          {{project}} - {{ref}}",
           "refId": "A"
         }
       ],
@@ -501,7 +510,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"})",
+          "expr": "avg(time() - gitlab_ci_pipeline_timestamp{project=~\"$PROJECT\", ref=~\"$REF\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -584,7 +593,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"})",
+          "expr": "avg(gitlab_ci_pipeline_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -663,11 +672,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(gitlab_ci_pipeline_run_count{project=~\"$OWNER.*\", ref=~\"$REF\"}[1m]) / increase(gitlab_ci_pipeline_run_count{project=~\"$OWNER.*\", ref=~\"$REF\"}[1m])",
+          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"$PROJECT\", ref=~\"$REF\"}[1m])) by (project, ref) / sum(increase(gitlab_ci_pipeline_run_count{project=~\"$PROJECT\", ref=~\"$REF\"}[1m])) by (project, ref)",
           "format": "time_series",
           "instant": false,
           "interval": "",
-          "legendFormat": "{{ project }}:{{ ref }}",
+          "legendFormat": "{{ project }} - {{ ref }}",
           "refId": "A"
         }
       ],
@@ -713,129 +722,227 @@
       }
     },
     {
-      "columns": [],
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "displayMode": "auto",
+            "filterable": false
+          },
+          "links": [],
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ID"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "View pipeline #${__value.numeric}",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/pipelines/${__value.numeric}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "from": "",
+                    "id": 1,
+                    "text": "SUCCESS",
+                    "to": "",
+                    "type": 1,
+                    "value": "1"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 230
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 218
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Kind"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 98
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 122
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "light-orange",
+                      "value": 900
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 1200
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Date"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              }
+            ]
+          }
+        ]
       },
-      "fontSize": "100%",
       "gridPos": {
         "h": 26,
         "w": 12,
         "x": 12,
         "y": 6
       },
-      "id": 103,
+      "id": 122,
       "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 4,
-        "desc": false
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date"
+          }
+        ]
       },
-      "styles": [
-        {
-          "alias": "Time",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "hidden"
-        },
-        {
-          "alias": "Status",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "#1F60C4",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "link": false,
-          "mappingType": 1,
-          "pattern": "Value #A",
-          "preserveFormat": false,
-          "sanitize": false,
-          "thresholds": [
-            "2"
-          ],
-          "type": "hidden",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "text": "OK",
-              "value": "1"
-            },
-            {
-              "text": "RUNNING",
-              "value": "2"
-            }
-          ]
-        },
-        {
-          "alias": "Last run",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "Value #B",
-          "thresholds": [
-            "5184000",
-            "15552000"
-          ],
-          "type": "number",
-          "unit": "s"
-        },
-        {
-          "alias": "Duration",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 1,
-          "mappingType": 1,
-          "pattern": "Value #C",
-          "thresholds": [
-            "900",
-            "1200"
-          ],
-          "type": "number",
-          "unit": "dtdurations"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
+      "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
+          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -845,7 +952,7 @@
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -855,141 +962,399 @@
           "refId": "C"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_status{project=~\"$OWNER.*\", ref=~\"$REF\", status=~\"success\"} * 1) by (project, ref, kind, status) > 0",
+          "expr": "max(gitlab_ci_pipeline_id{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
           "format": "table",
-          "hide": false,
           "instant": true,
           "interval": "",
-          "intervalFactor": 1,
           "legendFormat": "",
-          "refId": "A"
+          "refId": "D"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
       "title": "SUCCESSFULLY COMPLETED",
-      "transform": "table",
-      "type": "table-old"
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value #A": false,
+              "job_name": false
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value #A": 9,
+              "Value #B": 6,
+              "Value #C": 7,
+              "Value #D": 1,
+              "job_name": 3,
+              "kind": 4,
+              "project": 2,
+              "ref": 5,
+              "status": 8
+            },
+            "renameByName": {
+              "Value #A": "Status",
+              "Value #B": "Date",
+              "Value #C": "Duration",
+              "Value #D": "ID",
+              "job_name": "Job",
+              "kind": "Ref Kind",
+              "project": "Project",
+              "ref": "Ref Name",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Status",
+            "mode": "reduceRow",
+            "reduce": {
+              "include": [
+                "ID"
+              ],
+              "reducer": "count"
+            }
+          }
+        }
+      ],
+      "type": "table"
     },
     {
-      "columns": [],
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "displayMode": "auto",
+            "filterable": false
+          },
+          "links": [],
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ID"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "View pipeline #${__value.numeric}",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/pipelines/${__value.numeric}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "from": "",
+                    "id": 1,
+                    "text": "RUNNING",
+                    "to": "",
+                    "type": 1,
+                    "value": "2"
+                  },
+                  {
+                    "from": "",
+                    "id": 2,
+                    "text": "FAILED",
+                    "to": "",
+                    "type": 1,
+                    "value": "3"
+                  },
+                  {
+                    "from": "",
+                    "id": 3,
+                    "text": "CANCELED",
+                    "to": "",
+                    "type": 1,
+                    "value": "4"
+                  },
+                  {
+                    "from": "",
+                    "id": 4,
+                    "text": "CREATED",
+                    "to": "",
+                    "type": 1,
+                    "value": "5"
+                  },
+                  {
+                    "from": "",
+                    "id": 5,
+                    "text": "WAITING FOR RESOURCE",
+                    "to": "",
+                    "type": 1,
+                    "value": "6"
+                  },
+                  {
+                    "from": "",
+                    "id": 6,
+                    "text": "PREPARING",
+                    "to": "",
+                    "type": 1,
+                    "value": "7"
+                  },
+                  {
+                    "from": "",
+                    "id": 7,
+                    "text": "PENDING",
+                    "to": "",
+                    "type": 1,
+                    "value": "8"
+                  },
+                  {
+                    "from": "",
+                    "id": 8,
+                    "text": "SKIPPED",
+                    "to": "",
+                    "type": 1,
+                    "value": "9"
+                  },
+                  {
+                    "from": "",
+                    "id": 9,
+                    "text": "MANUAL",
+                    "to": "",
+                    "type": 1,
+                    "value": "10"
+                  },
+                  {
+                    "from": "",
+                    "id": 10,
+                    "text": "SCHEDULED",
+                    "to": "",
+                    "type": 1,
+                    "value": "11"
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "light-blue",
+                      "value": 1
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 3
+                    },
+                    {
+                      "color": "light-orange",
+                      "value": 5
+                    },
+                    {
+                      "color": "rgb(135, 135, 134)",
+                      "value": 9
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 230
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 218
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Kind"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 98
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 122
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "light-orange",
+                      "value": 900
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 1200
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Date"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              }
+            ]
+          }
+        ]
       },
-      "fontSize": "100%",
       "gridPos": {
         "h": 22,
         "w": 12,
         "x": 0,
         "y": 10
       },
-      "id": 104,
+      "id": 120,
       "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 4,
-        "desc": false
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date"
+          }
+        ]
       },
-      "styles": [
-        {
-          "alias": "Time",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "hidden"
-        },
-        {
-          "alias": "Status",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "#1F60C4",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #A",
-          "preserveFormat": false,
-          "sanitize": false,
-          "thresholds": [
-            "2"
-          ],
-          "type": "hidden",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "text": "FAILED",
-              "value": "1"
-            }
-          ]
-        },
-        {
-          "alias": "Last run",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "Value #B",
-          "thresholds": [
-            "172800",
-            "432000"
-          ],
-          "type": "number",
-          "unit": "s"
-        },
-        {
-          "alias": "Duration",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "Value #C",
-          "thresholds": [
-            "1200",
-            "2400"
-          ],
-          "type": "number",
-          "unit": "s"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
+      "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "max(time() - gitlab_ci_pipeline_timestamp{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -999,7 +1364,7 @@
           "refId": "B"
         },
         {
-          "expr": "(max(gitlab_ci_pipeline_duration_seconds{project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind)) > 0)",
+          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1009,7 +1374,7 @@
           "refId": "C"
         },
         {
-          "expr": "min(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$OWNER.*\", ref=~\"$REF\"}) by (project, ref, kind, status) > 0",
+          "expr": "(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"running\"}) by (project, ref, kind) * 2) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"failed\"}) by (project, ref, kind) * 3) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"canceled\"}) by (project, ref, kind) * 4) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"created\"}) by (project, ref, kind) * 5) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"waiting_for_resource\"}) by (project, ref, kind) * 6) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"preparing\"}) by (project, ref, kind) * 7) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"pending\"}) by (project, ref, kind) * 8) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"skipped\"}) by (project, ref, kind) * 9) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"manual\"}) by (project, ref, kind) * 10) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"scheduled\"}) by (project, ref, kind) * 11) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1017,13 +1382,59 @@
           "intervalFactor": 1,
           "legendFormat": "",
           "refId": "A"
+        },
+        {
+          "expr": "max(gitlab_ci_pipeline_id{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind, job_name) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind, job_name) > 0)",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "D"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
       "title": "RUNNING, FAILED OR NOT COMPLETED",
-      "transform": "table",
-      "type": "table-old"
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value #A": false,
+              "job_name": false
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value #A": 9,
+              "Value #B": 6,
+              "Value #C": 7,
+              "Value #D": 1,
+              "job_name": 3,
+              "kind": 4,
+              "project": 2,
+              "ref": 5,
+              "status": 8
+            },
+            "renameByName": {
+              "Value #A": "Status",
+              "Value #B": "Date",
+              "Value #C": "Duration",
+              "Value #D": "ID",
+              "job_name": "Job",
+              "kind": "Ref Kind",
+              "project": "Project",
+              "ref": "Ref Name",
+              "status": "Status"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "refresh": "10s",
@@ -1033,7 +1444,28 @@
   "templating": {
     "list": [
       {
-        "allValue": "",
+        "current": {
+          "selected": false,
+          "text": "gitlab.com",
+          "value": "gitlab.com"
+        },
+        "error": null,
+        "hide": 2,
+        "label": null,
+        "name": "GITLAB_HOST",
+        "options": [
+          {
+            "selected": true,
+            "text": "gitlab.com",
+            "value": "gitlab.com"
+          }
+        ],
+        "query": "gitlab.com",
+        "skipUrlSync": false,
+        "type": "constant"
+      },
+      {
+        "allValue": ".*",
         "current": {
           "selected": true,
           "text": [
@@ -1064,7 +1496,7 @@
         "useTags": false
       },
       {
-        "allValue": "",
+        "allValue": ".*",
         "current": {
           "selected": true,
           "text": [
@@ -1075,7 +1507,38 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, ref)",
+        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, project)",
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "project",
+        "multi": true,
+        "name": "PROJECT",
+        "options": [],
+        "query": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, project)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "prometheus",
+        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$PROJECT\"}, ref)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1083,7 +1546,7 @@
         "multi": true,
         "name": "REF",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, ref)",
+        "query": "label_values(gitlab_ci_pipeline_id{project=~\"$PROJECT\"}, ref)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1097,7 +1560,7 @@
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {

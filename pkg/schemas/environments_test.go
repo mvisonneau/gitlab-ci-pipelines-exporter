@@ -21,3 +21,48 @@ func TestEnvironmentsCount(t *testing.T) {
 		EnvironmentKey("bar"): Environment{},
 	}.Count())
 }
+
+func TestEnvironmentDefaultLabelsValues(t *testing.T) {
+	e := Environment{
+		ProjectName: "foo",
+		Name:        "bar",
+	}
+
+	expectedValue := map[string]string{
+		"project":     "foo",
+		"environment": "bar",
+	}
+
+	assert.Equal(t, expectedValue, e.DefaultLabelsValues())
+}
+
+func TestEnvironmentInformationLabelsValues(t *testing.T) {
+	e := Environment{
+		ProjectName: "foo",
+		Name:        "bar",
+		ID:          10,
+		ExternalURL: "http://genial",
+		Available:   true,
+		LatestDeployment: Deployment{
+			RefKind:       RefKindBranch,
+			RefName:       "foo",
+			CommitShortID: "123abcde",
+			AuthorEmail:   "foo@bar.net",
+		},
+	}
+
+	expectedValue := map[string]string{
+		"project":                 "foo",
+		"environment":             "bar",
+		"environment_id":          "10",
+		"external_url":            "http://genial",
+		"kind":                    "branch",
+		"ref":                     "foo",
+		"current_commit_short_id": "123abcde",
+		"latest_commit_short_id":  "",
+		"available":               "true",
+		"author_email":            "foo@bar.net",
+	}
+
+	assert.Equal(t, expectedValue, e.InformationLabelsValues())
+}

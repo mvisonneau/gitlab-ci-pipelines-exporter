@@ -14,6 +14,7 @@ func TestNewCollectorFunctions(t *testing.T) {
 		NewCollectorEnvironmentBehindCommitsCount,
 		NewCollectorEnvironmentBehindDurationSeconds,
 		NewCollectorEnvironmentDeploymentDurationSeconds,
+		NewCollectorEnvironmentDeploymentJobID,
 		NewCollectorEnvironmentDeploymentStatus,
 		NewCollectorEnvironmentDeploymentTimestamp,
 		NewCollectorEnvironmentInformation,

@@ -16,8 +16,7 @@
   "editable": true,
   "gnetId": 10620,
   "graphTooltip": 0,
-  "id": 1,
-  "iteration": 1604337197505,
+  "iteration": 1604494963195,
   "links": [],
   "panels": [
     {
@@ -103,6 +102,7 @@
       "savedComposites": [],
       "savedOverrides": [
         {
+          "$$hashKey": "object:1596",
           "clickThrough": "",
           "colors": [
             "#299c46",
@@ -121,16 +121,19 @@
           "suffix": "",
           "thresholds": [
             {
+              "$$hashKey": "object:1610",
               "color": "#299c46",
               "state": 0,
               "value": 0
             },
             {
+              "$$hashKey": "object:1611",
               "color": "#E0B400",
               "state": 3,
               "value": 1
             },
             {
+              "$$hashKey": "object:1612",
               "color": "#C4162A",
               "state": 2,
               "value": 3
@@ -141,13 +144,13 @@
       ],
       "targets": [
         {
-          "expr": "gitlab_ci_pipeline_environment_behind_commits_count{project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT.*\"}",
+          "expr": "gitlab_ci_environment_behind_commits_count{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}",
           "format": "time_series",
           "hide": false,
           "instant": true,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "{{ project }} - {{ environment }}",
+          "legendFormat": "                                               {{ project }} - {{ environment }}",
           "refId": "A"
         }
       ],
@@ -229,7 +232,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_environment_information{available=\"true\", project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT.*\"}) or vector(0)",
+          "expr": "count(gitlab_ci_environment_information{available=\"true\", project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -312,7 +315,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_environment_behind_commits_count{project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT.*\"} > 0) or vector(0)",
+          "expr": "count(gitlab_ci_environment_behind_commits_count{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT.*\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -395,7 +398,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_environment_status{status=\"failed\", project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT.*\"} > 0) or vector(0)",
+          "expr": "count(gitlab_ci_environment_status{status=\"failed\", project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -474,7 +477,7 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 2,
+        "w": 3,
         "x": 16,
         "y": 3
       },
@@ -504,7 +507,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_environment_information{available=\"false\", project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT.*\"}) or vector(0)",
+          "expr": "count(gitlab_ci_environment_information{available=\"false\", project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -558,8 +561,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 6,
-        "x": 18,
+        "w": 5,
+        "x": 19,
         "y": 3
       },
       "id": 106,
@@ -588,7 +591,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_pipeline_environment_behind_commits_count{project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT\"})",
+          "expr": "avg(gitlab_ci_environment_behind_commits_count{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"})",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -668,11 +671,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(gitlab_ci_pipeline_environment_deployment_count[1m]) / increase(gitlab_ci_pipeline_environment_deployment_count[1m])",
+          "expr": "sum(increase(gitlab_ci_environment_deployment_count{project=~\"$PROJECT\",environment=~\"$ENVIRONMENT\"}[1m])) by (project, environment) / sum(increase(gitlab_ci_environment_deployment_count{project=~\"$PROJECT\",environment=~\"$ENVIRONMENT\"}[1m])) by (project, environment)",
           "format": "time_series",
           "instant": false,
           "interval": "",
-          "legendFormat": "{{ environment }}:{{ project }}",
+          "legendFormat": "{{ environment }} - {{ project }}",
           "refId": "A"
         }
       ],
@@ -752,7 +755,7 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 2,
+        "w": 3,
         "x": 16,
         "y": 6
       },
@@ -782,7 +785,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "sum(increase(gitlab_ci_pipeline_environment_deployment_count{project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT.*\"}[1h]))",
+          "expr": "sum(increase(gitlab_ci_environment_deployment_count{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}[1h]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -793,7 +796,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "DEPLOYMENTS #",
+      "title": "DEPLOYMENTS # (in the last hour)",
       "type": "stat"
     },
     {
@@ -836,8 +839,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 6,
-        "x": 18,
+        "w": 5,
+        "x": 19,
         "y": 6
       },
       "id": 108,
@@ -866,7 +869,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_pipeline_environment_behind_duration_seconds{project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT\"})",
+          "expr": "avg(gitlab_ci_environment_behind_duration_seconds{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -880,261 +883,450 @@
       "type": "stat"
     },
     {
-      "columns": [],
       "datasource": null,
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "displayMode": "auto",
+            "filterable": false
+          },
+          "links": [],
+          "mappings": [
+            {
+              "from": "",
+              "id": 1,
+              "text": "",
+              "to": "",
+              "type": 1
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Environment ID"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "View environment #${__value.numeric}",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/-/environments/${__value.numeric}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 122
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "from": "",
+                    "id": 1,
+                    "text": "RUNNING",
+                    "to": "",
+                    "type": 1,
+                    "value": "2"
+                  },
+                  {
+                    "from": "",
+                    "id": 2,
+                    "text": "FAILED",
+                    "to": "",
+                    "type": 1,
+                    "value": "3"
+                  },
+                  {
+                    "from": "",
+                    "id": 3,
+                    "text": "CANCELED",
+                    "to": "",
+                    "type": 1,
+                    "value": "4"
+                  },
+                  {
+                    "from": "",
+                    "id": 4,
+                    "text": "SKIPPED",
+                    "to": "",
+                    "type": 1,
+                    "value": "5"
+                  },
+                  {
+                    "from": "",
+                    "id": 5,
+                    "text": "PENDING",
+                    "to": "",
+                    "type": 1,
+                    "value": "6"
+                  },
+                  {
+                    "from": "",
+                    "id": 11,
+                    "text": "SUCCESS",
+                    "to": "",
+                    "type": 1,
+                    "value": "1"
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "light-blue",
+                      "value": 2
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 5
+                    },
+                    {
+                      "color": "rgb(135, 135, 134)",
+                      "value": 6
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 230
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 218
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Kind"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 98
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 122
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "light-orange",
+                      "value": 900
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 1200
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Date"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Environment Name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 218
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Latest deployment"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "View job #${__value.numeric}",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/-/jobs/${__value.numeric}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "# of commits behind"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 4
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time behind"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 1
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 86400
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 278
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*commit$"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "View commit ${__value.text} details",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.Project}/-/commit/${__value.text}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*behind$"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "Compare commits on GitLab",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.Project}/-/compare/${__data.fields[\"Deployed commit\"]}...${__data.fields[\"Latest commit\"]}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
-      "fontSize": "100%",
       "gridPos": {
-        "h": 24,
+        "h": 23,
         "w": 24,
         "x": 0,
         "y": 9
       },
-      "id": 103,
+      "id": 120,
       "links": [],
-      "pageSize": null,
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": 3,
-        "desc": false
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date"
+          }
+        ]
       },
-      "styles": [
-        {
-          "alias": "Time",
-          "align": "auto",
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "hidden"
-        },
-        {
-          "alias": "Last Deployment Status",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "#1F60C4",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "link": false,
-          "mappingType": 1,
-          "pattern": "Value #A",
-          "preserveFormat": false,
-          "sanitize": false,
-          "thresholds": [
-            "2"
-          ],
-          "type": "string",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "text": "OK",
-              "value": "1"
-            },
-            {
-              "text": "RUNNING",
-              "value": "2"
-            },
-            {
-              "text": "FAILED",
-              "value": "3"
-            }
-          ]
-        },
-        {
-          "alias": "Last deployment date",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "Value #B",
-          "thresholds": [
-            "5184000",
-            "15552000"
-          ],
-          "type": "number",
-          "unit": "s"
-        },
-        {
-          "alias": "Last deployment duration",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 1,
-          "mappingType": 1,
-          "pattern": "Value #C",
-          "thresholds": [
-            "900",
-            "1200"
-          ],
-          "type": "number",
-          "unit": "dtdurations"
-        },
-        {
-          "alias": "",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 2,
-          "pattern": "Value #D",
-          "thresholds": [],
-          "type": "hidden",
-          "unit": "short"
-        },
-        {
-          "alias": "Commits behind ref",
-          "align": "center",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "Value #E",
-          "thresholds": [
-            "1",
-            "3"
-          ],
-          "type": "number",
-          "unit": "short"
-        },
-        {
-          "alias": "Time behind ref",
-          "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Value #F",
-          "thresholds": [
-            "86400",
-            "604800"
-          ],
-          "type": "number",
-          "unit": "dtdurations"
-        },
-        {
-          "alias": "Last deployment ref",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "ref",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        },
-        {
-          "alias": "Deployed commit",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "current_commit_short_id",
-          "thresholds": [],
-          "type": "string",
-          "unit": "short"
-        },
-        {
-          "alias": "Most recent commit",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "latest_commit_short_id",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        },
-        {
-          "alias": "Last deployment author",
-          "align": "auto",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "author_email",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
+      "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "max(time() - gitlab_ci_pipeline_environment_deployment_timestamp{project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT.*\"}) by (project, environment)",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "refId": "B"
-        },
-        {
-          "expr": "max(gitlab_ci_pipeline_environment_deployment_duration_seconds{project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT.*\"}) by (project, environment)",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "refId": "C"
-        },
-        {
-          "expr": "max(gitlab_ci_pipeline_environment_deployment_status{project=~\"$OWNER.*\", environment=~\"$ENVIRONMENT.*\"}) by (project, environment, status) > 0",
+          "expr": "(max(gitlab_ci_environment_deployment_status{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"success\"}) by (project, environment) * 1) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"running\"}) by (project, environment) * 2) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"failed\"}) by (project, environment) * 3) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"canceled\"}) by (project, environment) * 4) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"skipped\"}) by (project, environment) * 5) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"created|waiting_for_resource|preparing|pending|manual|scheduled\"}) by (project, environment) * 6) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1144,16 +1336,35 @@
           "refId": "A"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_environment_information) by (project, environment, author_email, current_commit_short_id, ref, latest_commit_short_id)",
+          "expr": "-max(time() - gitlab_ci_environment_deployment_timestamp{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
           "format": "table",
           "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "expr": "max(gitlab_ci_environment_deployment_duration_seconds{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "expr": "max(gitlab_ci_environment_information{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (environment_id, project, environment, author_email, current_commit_short_id, ref, latest_commit_short_id)",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "D"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_environment_behind_commits_count) by (project, environment)",
+          "expr": "max(gitlab_ci_environment_behind_commits_count{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1161,19 +1372,80 @@
           "refId": "E"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_environment_behind_duration_seconds) by (project, environment)",
+          "expr": "max(gitlab_ci_environment_behind_duration_seconds{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
           "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "F"
+        },
+        {
+          "expr": "max(gitlab_ci_environment_deployment_job_id{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "G"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
       "title": "ENVIRONMENTS",
-      "transform": "table",
-      "type": "table-old"
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value #A": false,
+              "Value #D": true,
+              "job_name": false
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value #A": 15,
+              "Value #B": 7,
+              "Value #C": 8,
+              "Value #D": 5,
+              "Value #E": 12,
+              "Value #F": 13,
+              "Value #G": 4,
+              "author_email": 9,
+              "current_commit_short_id": 10,
+              "environment": 2,
+              "environment_id": 1,
+              "latest_commit_short_id": 11,
+              "project": 3,
+              "ref": 6,
+              "status": 14
+            },
+            "renameByName": {
+              "Value #A": "Status",
+              "Value #B": "Date",
+              "Value #C": "Duration",
+              "Value #D": "",
+              "Value #E": "# of commits behind",
+              "Value #F": "Time behind",
+              "Value #G": "Latest deployment",
+              "author_email": "Author",
+              "current_commit_short_id": "Deployed commit",
+              "environment": "Environment Name",
+              "environment_id": "Environment ID",
+              "job_name": "Job",
+              "kind": "Ref Kind",
+              "latest_commit_short_id": "Latest commit",
+              "project": "Project",
+              "ref": "Ref Name",
+              "status": "Status"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
   "refresh": "10s",
@@ -1182,6 +1454,27 @@
   "tags": [],
   "templating": {
     "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "gitlab.com",
+          "value": "gitlab.com"
+        },
+        "error": null,
+        "hide": 2,
+        "label": null,
+        "name": "GITLAB_HOST",
+        "options": [
+          {
+            "selected": true,
+            "text": "gitlab.com",
+            "value": "gitlab.com"
+          }
+        ],
+        "query": "gitlab.com",
+        "skipUrlSync": false,
+        "type": "constant"
+      },
       {
         "allValue": "",
         "current": {
@@ -1194,7 +1487,7 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id, project)",
+        "definition": "label_values(gitlab_ci_environment_information, project)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1202,7 +1495,7 @@
         "multi": true,
         "name": "OWNER",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id, project)",
+        "query": "label_values(gitlab_ci_environment_information, project)",
         "refresh": 2,
         "regex": "/(.*)\\/.*$/",
         "skipUrlSync": false,
@@ -1218,14 +1511,14 @@
         "current": {
           "selected": true,
           "text": [
-            "infra/k8s/nginx-ingress"
+            "All"
           ],
           "value": [
-            "infra/k8s/nginx-ingress"
+            "$__all"
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, project)",
+        "definition": "label_values(gitlab_ci_environment_information{project=~\"$OWNER.*\"}, project)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1233,7 +1526,7 @@
         "multi": true,
         "name": "PROJECT",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, project)",
+        "query": "label_values(gitlab_ci_environment_information{project=~\"$OWNER.*\"}, project)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1256,7 +1549,7 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_environment_information{project=~\"$OWNER.*\"}, environment)",
+        "definition": "label_values(gitlab_ci_environment_information{project=~\"$PROJECT\"}, environment)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1264,7 +1557,7 @@
         "multi": true,
         "name": "ENVIRONMENT",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_environment_information{project=~\"$OWNER.*\"}, environment)",
+        "query": "label_values(gitlab_ci_environment_information{project=~\"$PROJECT\"}, environment)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,

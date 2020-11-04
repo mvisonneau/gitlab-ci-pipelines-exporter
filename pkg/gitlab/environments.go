@@ -71,7 +71,7 @@ func (c *Client) GetEnvironment(project string, environmentID int) (schemas.Envi
 			environment.LatestDeployment.RefKind = schemas.RefKindBranch
 		}
 
-		environment.LatestDeployment.ID = e.LastDeployment.ID
+		environment.LatestDeployment.JobID = e.LastDeployment.Deployable.ID
 		environment.LatestDeployment.RefName = e.LastDeployment.Ref
 		environment.LatestDeployment.AuthorEmail = e.LastDeployment.Deployable.User.PublicEmail
 		environment.LatestDeployment.CommitShortID = e.LastDeployment.Deployable.Commit.ShortID

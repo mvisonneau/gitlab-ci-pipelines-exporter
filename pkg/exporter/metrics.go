@@ -32,6 +32,7 @@ func NewRegistry() *Registry {
 			schemas.MetricKindEnvironmentBehindDurationSeconds:     NewCollectorEnvironmentBehindDurationSeconds(),
 			schemas.MetricKindEnvironmentDeploymentCount:           NewCollectorEnvironmentDeploymentCount(),
 			schemas.MetricKindEnvironmentDeploymentDurationSeconds: NewCollectorEnvironmentDeploymentDurationSeconds(),
+			schemas.MetricKindEnvironmentDeploymentJobID:           NewCollectorEnvironmentDeploymentJobID(),
 			schemas.MetricKindEnvironmentDeploymentStatus:          NewCollectorEnvironmentDeploymentStatus(),
 			schemas.MetricKindEnvironmentDeploymentTimestamp:       NewCollectorEnvironmentDeploymentTimestamp(),
 			schemas.MetricKindEnvironmentInformation:               NewCollectorEnvironmentInformation(),

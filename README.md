@@ -16,19 +16,19 @@ Here are some [Grafana dashboards](https://grafana.com/grafana/dashboards/10620)
 
 ### Pipelines
 
-![grafana_dashboard_pipelines](/docs/images/grafana_dashboard_pipelines.png)
+![grafana_dashboard_pipelines](/docs/images/grafana_dashboard_pipelines.jpg)
 
 _grafana.com dashboard_ [#10620](https://grafana.com/grafana/dashboards/10620)
 
 ### Jobs
 
-![grafana_dashboard_jobs](/docs/images/grafana_dashboard_jobs.png)
+![grafana_dashboard_jobs](/docs/images/grafana_dashboard_jobs.jpg)
 
 _grafana.com dashboard_ [#13328](https://grafana.com/grafana/dashboards/13328)
 
 ### Environments / Deployments
 
-![grafana_dashboard_environments](/docs/images/grafana_dashboard_environments.png)
+![grafana_dashboard_environments](/docs/images/grafana_dashboard_environments.jpg)
 
 _grafana.com dashboard_ [#13329](https://grafana.com/grafana/dashboards/13329)
 

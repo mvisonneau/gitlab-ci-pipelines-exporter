@@ -72,7 +72,7 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	}
 
 	// Save the existing deployment ID before we updated environment from the API
-	deploymentID := env.LatestDeployment.ID
+	deploymentJobID := env.LatestDeployment.JobID
 	if err = updateEnvironment(&env); err != nil {
 		return
 	}
@@ -148,7 +148,7 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	}
 
 	storeGetMetric(&envDeploymentCount)
-	if env.LatestDeployment.ID > deploymentID {
+	if env.LatestDeployment.JobID > deploymentJobID {
 		envDeploymentCount.Value++
 	}
 	storeSetMetric(envDeploymentCount)
@@ -163,6 +163,12 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 		Kind:   schemas.MetricKindEnvironmentDeploymentDurationSeconds,
 		Labels: env.DefaultLabelsValues(),
 		Value:  env.LatestDeployment.DurationSeconds,
+	})
+
+	storeSetMetric(schemas.Metric{
+		Kind:   schemas.MetricKindEnvironmentDeploymentJobID,
+		Labels: env.DefaultLabelsValues(),
+		Value:  float64(env.LatestDeployment.JobID),
 	})
 
 	emitStatusMetric(

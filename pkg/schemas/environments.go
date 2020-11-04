@@ -46,6 +46,7 @@ func (e Environment) DefaultLabelsValues() map[string]string {
 // InformationLabelsValues ..
 func (e Environment) InformationLabelsValues() (v map[string]string) {
 	v = e.DefaultLabelsValues()
+	v["environment_id"] = strconv.Itoa(e.ID)
 	v["external_url"] = e.ExternalURL
 	v["kind"] = string(e.LatestDeployment.RefKind)
 	v["ref"] = e.LatestDeployment.RefName

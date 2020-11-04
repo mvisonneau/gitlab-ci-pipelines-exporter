@@ -27,6 +27,9 @@ const (
 	// MetricKindEnvironmentDeploymentDurationSeconds ..
 	MetricKindEnvironmentDeploymentDurationSeconds
 
+	// MetricKindEnvironmentDeploymentJobID ..
+	MetricKindEnvironmentDeploymentJobID
+
 	// MetricKindEnvironmentDeploymentStatus ..
 	MetricKindEnvironmentDeploymentStatus
 
