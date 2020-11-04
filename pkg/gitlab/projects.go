@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -33,8 +34,8 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 
 	var projects []schemas.Project
 	listOptions := gitlab.ListOptions{
-		PerPage: 100,
 		Page:    1,
+		PerPage: 100,
 	}
 
 	for {
@@ -58,12 +59,14 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 				w.Owner.Name,
 				&gitlab.ListGroupProjectsOptions{
 					Archived:         &w.Archived,
+					WithShared:       pointy.Bool(false),
 					IncludeSubgroups: &w.Owner.IncludeSubgroups,
 					ListOptions:      listOptions,
 					Search:           &w.Search,
 				},
 			)
 		default:
+			// List all visible projects
 			gps, resp, err = c.Projects.ListProjects(
 				&gitlab.ListProjectsOptions{
 					ListOptions: listOptions,

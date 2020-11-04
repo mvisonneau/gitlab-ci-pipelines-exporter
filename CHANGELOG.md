@@ -28,6 +28,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Updated the `pipelines` grafana dashboard
 - Fixed a bug which could lead to an overwrite of the refs and environments at scale, inducing unecessary GitLab API calls and discrepancy for some metrics
 - Optimized the storage layer implementation
+- Ensure group wildcards only returns projects belonging directly to the group
 
 ## [0.4.2] - 2020-10-22
 
