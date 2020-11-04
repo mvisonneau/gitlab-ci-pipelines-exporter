@@ -1,6 +1,6 @@
 # 🦊 gitlab-ci-pipelines-exporter
 
-[![GoDoc](https://godoc.org/github.com/mvisonneau/gitlab-ci-pipelines-exporter?status.svg)](https://pkg.go.dev/github.com/mvisonneau/gitlab-ci-pipelines-exporter?tab=overview)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/mvisonneau/gitlab-ci-pipelines-exporter)](https://pkg.go.dev/mod/github.com/mvisonneau/gitlab-ci-pipelines-exporter)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mvisonneau/gitlab-ci-pipelines-exporter)](https://goreportcard.com/report/github.com/mvisonneau/gitlab-ci-pipelines-exporter)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mvisonneau/gitlab-ci-pipelines-exporter.svg)](https://hub.docker.com/r/mvisonneau/gitlab-ci-pipelines-exporter/)
 [![Build Status](https://cloud.drone.io/api/badges/mvisonneau/gitlab-ci-pipelines-exporter/status.svg)](https://cloud.drone.io/mvisonneau/gitlab-ci-pipelines-exporter)

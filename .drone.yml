@@ -72,6 +72,11 @@ steps:
       - apk add --no-cache make
       - make release
 
+  - name: gopkg-refresh
+    image: curlimages/curl
+    commands:
+      - curl https://sum.golang.org/lookup/github.com/mvisonneau/gitlab-ci-pipelines-exporter@${DRONE_TAG}
+
 trigger:
   repo:
     - mvisonneau/gitlab-ci-pipelines-exporter
@@ -84,6 +89,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: 630523176d85777190f4fca3f6e944d2034d4ca99685ac4f76c8d66b5f8aaf94
+hmac: df91b85bfb22a9674279b1755de837ebe1d44d53e508a4d2022522dec909530d
 
 ...

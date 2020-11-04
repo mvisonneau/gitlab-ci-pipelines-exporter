@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- Automatically refresh _pkg.go.dev_ on new releases
+
 ## [v0.4.3] - 2020-10-04
 
 ### Added
