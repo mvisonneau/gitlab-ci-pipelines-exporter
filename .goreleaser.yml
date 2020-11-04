@@ -21,7 +21,7 @@ builds:
         goarch: 386
 
 archives:
-  - name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+  - name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
     format_overrides:
       - goos: windows
         format: zip
@@ -32,6 +32,7 @@ nfpms:
     license: &license Apache 2.0
     homepage: &homepage https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
     vendor: *author
+    file_name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
     formats:
       - deb
       - rpm
@@ -53,7 +54,7 @@ scoop:
     name: scoops
 
 checksum:
-  name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
+  name_template: '{{ .ProjectName }}_{{ .Tag }}_SHA256SUMS'
   algorithm: sha256
 
 snapshot:

@@ -1,5 +1,4 @@
 NAME          := gitlab-ci-pipelines-exporter
-VERSION       := $(shell git describe --tags --abbrev=1)
 FILES         := $(shell git ls-files */*.go)
 REPOSITORY    := mvisonneau/$(NAME)
 .DEFAULT_GOAL := help
