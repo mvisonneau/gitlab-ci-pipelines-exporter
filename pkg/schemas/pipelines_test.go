@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewPipeline(t *testing.T) {
-	updatedAt := time.Date(2020, 10, 01, 13, 05, 10, 0, time.Local)
+	updatedAt := time.Date(2020, 10, 01, 13, 05, 10, 0, time.UTC)
 
 	gitlabPipeline := goGitlab.Pipeline{
 		ID:        20,
@@ -22,7 +22,7 @@ func TestNewPipeline(t *testing.T) {
 	expectedPipeline := Pipeline{
 		ID:              20,
 		Coverage:        25.6,
-		Timestamp:       1601553910,
+		Timestamp:       1.60155751e+09,
 		DurationSeconds: 15,
 		Status:          "pending",
 	}

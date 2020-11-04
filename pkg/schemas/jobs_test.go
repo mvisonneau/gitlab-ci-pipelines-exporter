@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewJob(t *testing.T) {
-	createdAt := time.Date(2020, 10, 01, 13, 05, 05, 0, time.Local)
+	createdAt := time.Date(2020, 10, 01, 13, 05, 05, 0, time.UTC)
 	gitlabJob := goGitlab.Job{
 		ID:        2,
 		Name:      "foo",
@@ -36,7 +36,7 @@ func TestNewJob(t *testing.T) {
 		ID:              2,
 		Name:            "foo",
 		Stage:           "🚀",
-		Timestamp:       1601553905,
+		Timestamp:       1.601557505e+09,
 		DurationSeconds: 15,
 		Status:          "failed",
 		ArtifactSize:    150,
