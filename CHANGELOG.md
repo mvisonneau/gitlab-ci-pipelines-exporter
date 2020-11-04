@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.4.3] - 2020-10-04
+
 ### Added
 
 - Export `environments/deployments` related metrics
@@ -15,9 +17,11 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Released **.deb** and **.rpm** packages
 - More complete garbage collector capabilities
 - Newly supported statuses for pipelines and jobs: `created`, `waiting_for_resource`, `preparing`, `scheduled`
+- GitLab links for pipelines, jobs, environments and deployments in the dashboards
 
 ### Changed
 
+- Prefix new releases with `^v` to make pkg.go.dev happy
 - Bumped all dependencies
 - Fixed race conditions during tests
 - Always return coverage metric
@@ -25,7 +29,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Improved webhook parsing functions performance
 - Fixed a bug preventing the `gitlab_ci_pipeline_run_count` from being initialized correctly at startup
 - Fixed the `gitlab_ci_pipeline_job_run_count` and `gitlab_ci_pipeline_run_count` metrics incrementing algorithm
-- Updated the `pipelines` grafana dashboard
+- Improved the `pipelines` grafana dashboard
 - Fixed a bug which could lead to an overwrite of the refs and environments at scale, inducing unecessary GitLab API calls and discrepancy for some metrics
 - Optimized the storage layer implementation
 - Ensure group wildcards only returns projects belonging directly to the group
@@ -425,7 +429,9 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/0.4.1...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.4.3...HEAD
+[v0.4.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.3
+[0.4.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.4.2
 [0.4.1]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.4.1
 [0.4.0]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.4.0
 [0.3.5]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.3.5

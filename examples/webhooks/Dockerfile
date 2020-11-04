@@ -1,4 +1,4 @@
-FROM mvisonneau/gitlab-ci-pipelines-exporter:0.4.2
+FROM mvisonneau/gitlab-ci-pipelines-exporter:v0.4.3
 
 ENV GCPE_CONFIG=/config.yml
 ENV GCPE_LOG_LEVEL=debug
