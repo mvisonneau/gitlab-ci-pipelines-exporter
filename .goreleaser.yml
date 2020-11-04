@@ -21,7 +21,8 @@ builds:
         goarch: 386
 
 archives:
-  - format_overrides:
+  - name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    format_overrides:
       - goos: windows
         format: zip
 
@@ -52,7 +53,7 @@ scoop:
     name: scoops
 
 checksum:
-  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
   algorithm: sha256
 
 snapshot:
