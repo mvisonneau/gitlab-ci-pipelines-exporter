@@ -77,7 +77,7 @@ You can open this URL in your browser and should see the exporter is being confi
 
 You should then be able to see the following metrics under the `gitlab_ci_` prefix:
 
-[localhost:9090/new/graph](localhost:9090/new/graph)
+[http://localhost:9090/new/graph](http://localhost:9090/new/graph)
 
 ![prometheus_metrics_list](/docs/images/prometheus_metrics_list_example.png)
 
@@ -91,15 +91,15 @@ You can then validate that you get the expected values for your projects metrics
 
 Example dashboards should be available at these addresses:
 
-- **Pipelines dashboard** [http://localhost:3000/d/gitlab_ci_pipelines](localhost:3000/d/gitlab_ci_pipelines)
+- **Pipelines dashboard** - [http://localhost:3000/d/gitlab_ci_pipelines](http://localhost:3000/d/gitlab_ci_pipelines)
 
 ![grafana_dashboard_pipelines_example](/docs/images/grafana_dashboard_pipelines_example.png)
 
-- **Jobs dashboard** [http://localhost:3000/d/gitlab_ci_jobs](localhost:3000/d/gitlab_ci_jobs)
+- **Jobs dashboard** - [http://localhost:3000/d/gitlab_ci_jobs](http://localhost:3000/d/gitlab_ci_jobs)
 
 ![grafana_dashboard_jobs_example](/docs/images/grafana_dashboard_jobs_example.png)
 
-- **Environments / Deployments dashboard** [http://localhost:3000/d/gitlab_ci_environment_deployments](localhost:3000/d/gitlab_ci_environment_deployments)
+- **Environments / Deployments dashboard** - [http://localhost:3000/d/gitlab_ci_environment_deployments](http://localhost:3000/d/gitlab_ci_environment_deployments)
 
 ![grafana_dashboard_environments_example](/docs/images/grafana_dashboard_environments_example.png)
 
