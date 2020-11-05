@@ -2,7 +2,20 @@ gitlab:
   url: https://gitlab.com
   token: <your_token>
 
+# Pull jobs related metrics on all projects
+project_defaults:
+  pull:
+    pipeline:
+      jobs:
+        enabled: true
+
 # Example public projects to monitor
 projects:
   - name: gitlab-org/gitlab-runner
+    # Pull environments related metrics prefixed with 'stable' for this project
+    pull:
+      environments:
+        enabled: true
+        name_regexp: '^stable.*'
+
   - name: gitlab-org/charts/auto-deploy-app
