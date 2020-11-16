@@ -11,7 +11,11 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - Automatically refresh _pkg.go.dev_ on new releases
 
-## [v0.4.3] - 2020-10-04
+### Changed
+
+- Do not delete environemnts metrics when ref is a tag which may not be configured to be monitored for pipelines/jobs (#182)
+
+## [v0.4.3] - 2020-11-04
 
 ### Added
 

@@ -333,7 +333,7 @@ func garbageCollectMetrics() error {
 			}).Info("deleted metric from the store")
 		}
 
-		if metricLabelRefExists {
+		if metricLabelRefExists && !metricLabelEnvironmentExists {
 			refKey := schemas.Ref{
 				Kind:        schemas.RefKind(m.Labels["kind"]),
 				ProjectName: metricLabelProject,
