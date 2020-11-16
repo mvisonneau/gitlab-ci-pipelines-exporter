@@ -13,7 +13,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Changed
 
-- Do not delete environemnts metrics when ref is a tag which may not be configured to be monitored for pipelines/jobs (#182)
+- Do not delete environments metrics when ref is a tag which may not be configured to be monitored for pipelines/jobs (#182)
+- Fixed a bug making `latest_commit_short_id` labels reflect incorrect information on environment metrics when tags are used as refs
 - Bumped goreleaser to 0.147.1
 - Bumped all dependencies
 

@@ -83,7 +83,7 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	case schemas.RefKindBranch:
 		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetBranchLatestCommit(env.ProjectName, env.LatestDeployment.RefName)
 	case schemas.RefKindTag:
-		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetProjectMostRecentTagCommit(env.ProjectName, env.LatestDeployment.RefName)
+		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetProjectMostRecentTagCommit(env.ProjectName, env.TagsRegexp)
 	default:
 		infoLabels["latest_commit_short_id"] = env.LatestDeployment.CommitShortID
 		commitDate = env.LatestDeployment.Timestamp
