@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.4.4] - 2020-11-20
+
 ### Added
 
 - Automatically refresh _pkg.go.dev_ on new releases
@@ -15,6 +17,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - Do not delete environments metrics when ref is a tag which may not be configured to be monitored for pipelines/jobs (#182)
 - Fixed a bug making `latest_commit_short_id` labels reflect incorrect information on environment metrics when tags are used as refs
+- Enhanced logging for jobs pulling function
 - Bumped goreleaser to 0.147.1
 - Bumped all dependencies
 
@@ -440,7 +443,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.4.4...HEAD
+[v0.4.4]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.4
 [v0.4.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.3
 [0.4.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.4.2
 [0.4.1]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.4.1

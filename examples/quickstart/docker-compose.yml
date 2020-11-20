@@ -1,7 +1,7 @@
-version: '3.7'
+version: '3.8'
 services:
   gitlab-ci-pipelines-exporter:
-    image: mvisonneau/gitlab-ci-pipelines-exporter:v0.4.3
+    image: docker.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.4.4
     # You can comment out the image name and use the following statement
     # to build the image against the current version of the repository
     # build: ../..
@@ -16,7 +16,7 @@ services:
         target: /etc/gitlab-ci-pipelines-exporter
 
   prometheus:
-    image: prom/prometheus:v2.22.0
+    image: docker.io/prom/prometheus:v2.22.2
     ports:
       - 9090:9090
     links:
@@ -25,7 +25,7 @@ services:
       - ./prometheus/config.yml:/etc/prometheus/prometheus.yml
 
   grafana:
-    image: grafana/grafana:7.3.1
+    image: docker.io/grafana/grafana:7.3.3
     ports:
       - 3000:3000
     environment:
