@@ -1,6 +1,8 @@
 package gitlab
 
 import (
+	"strings"
+
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -112,11 +114,17 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
+			var notFoundJobs []string
+			for k := range jobsToRefresh {
+				notFoundJobs = append(notFoundJobs, k)
+			}
+
 			log.WithFields(
 				log.Fields{
-					"project-name": ref.ProjectName,
-					"ref":          ref.Name,
-					"jobs-count":   resp.TotalItems,
+					"project-name":   ref.ProjectName,
+					"ref":            ref.Name,
+					"jobs-count":     resp.TotalItems,
+					"not-found-jobs": strings.Join(notFoundJobs, ","),
 				},
 			).Warn("found some ref jobs but did not manage to refresh all jobs which were in memory")
 			break
