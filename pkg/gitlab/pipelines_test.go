@@ -127,7 +127,7 @@ func TestGetRefsFromPipelines(t *testing.T) {
 			assert.Equal(t, "GET", r.Method)
 			urlValues := r.URL.Query()
 			assert.Equal(t, []string{"1"}, urlValues["page"])
-			assert.Equal(t, []string{"33"}, urlValues["per_page"])
+			assert.Equal(t, []string{"100"}, urlValues["per_page"])
 
 			if scope, ok := urlValues["scope"]; ok && len(scope) == 1 && scope[0] == "branches" {
 				fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"}]`)
@@ -151,7 +151,7 @@ func TestGetRefsFromPipelines(t *testing.T) {
 					From: schemas.ProjectPullRefsFrom{
 						Pipelines: schemas.ProjectPullRefsFromPipelines{
 							EnabledValue: pointy.Bool(true),
-							DepthValue:   pointy.Int(33),
+							DepthValue:   pointy.Int(150),
 						},
 					},
 				},

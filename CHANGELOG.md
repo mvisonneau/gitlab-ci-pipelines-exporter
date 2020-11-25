@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- When fetching refs from pipelines, capped the maximum length to 100 in order to prevent the API call from failing
+
 ## [v0.4.4] - 2020-11-20
 
 ### Added

@@ -157,6 +157,14 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 		Scope: pointy.String("branches"),
 	}
 
+	if options.PerPage > 100 {
+		log.WithFields(log.Fields{
+			"project-name":   p.Name,
+			"required-depth": p.Pull.Refs.From.Pipelines.Depth(),
+		}).Warn("required pipeline depth was capped to '100'")
+		options.PerPage = 100
+	}
+
 	branchPipelines, err := c.GetProjectPipelines(p.Name, options)
 	if err != nil {
 		return nil, err
