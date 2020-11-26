@@ -209,8 +209,10 @@ project_defaults:
       # (optional, default: "^main|master$" -- main or master branch)
       regexp: "^main|master$"
 
-      # If the age of the most recent pipeline for the ref is greater than
+      # If the age of the most recent commit for the ref is greater than
       # this value, the ref won't get exported (optional, default: 0 (disabled))
+      # nb: when used in conjuction of pull.from.(pipelines|merge_requests).enabled = true, the creation date
+      # of the pipeline is taken in account, not the age of the commit
       max_age_seconds: 0
 
       from:
@@ -276,8 +278,10 @@ projects:
         # (optional, default: "^main|master$" -- main or master branch)
         regexp: "^main|master$"
 
-        # If the age of the most recent pipeline for the ref is greater than
+        # If the age of the most recent commit for the ref is greater than
         # this value, the ref won't get exported (optional, default: 0 (disabled))
+        # nb: when used in conjuction of pull.from.(pipelines|merge_requests).enabled = true, the creation date
+        # of the pipeline is taken in account, not the age of the commit
         max_age_seconds: 0
 
         from:
@@ -361,7 +365,7 @@ wildcards:
 
         # If the age of the most recent commit for the ref is greater than
         # this value, the ref won't get exported (optional, default: 0 (disabled))
-        # nb: when used in conjuction of pull.from.pipelines.enabled = true, the creation date
+        # nb: when used in conjuction of pull.from.(pipelines|merge_requests).enabled = true, the creation date
         # of the pipeline is taken in account, not the age of the commit
         max_age_seconds: 0
 
