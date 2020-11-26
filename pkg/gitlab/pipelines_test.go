@@ -74,7 +74,7 @@ func TestGetProjectMergeRequestsPipelines(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"},{"id":2,"ref":"refs/merge-requests/bar"},{"id":3,"ref":"yolo"}]`)
 		})
 
-	pipelines, err := c.GetProjectMergeRequestsPipelines("foo", 10)
+	pipelines, err := c.GetProjectMergeRequestsPipelines("foo", 10, 0)
 	assert.NoError(t, err)
 	assert.Len(t, pipelines, 2)
 }

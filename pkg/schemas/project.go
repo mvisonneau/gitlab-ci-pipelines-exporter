@@ -6,18 +6,19 @@ import (
 )
 
 var (
-	defaultProjectOutputSparseStatusMetrics        = true
-	defaultProjectPullEnvironmentsEnabled          = false
-	defaultProjectPullEnvironmentsNameRegexp       = `.*`
-	defaultProjectPullEnvironmentsTagsRegexp       = `.*`
-	defaultProjectPullRefsRegexp                   = `^(main|master)$`
-	defaultProjectPullRefsFromPipelinesEnabled     = false
-	defaultProjectPullRefsFromPipelinesDepth       = 100
-	defaultProjectPullRefsFromMergeRequestsEnabled = false
-	defaultProjectPullRefsFromMergeRequestsDepth   = 1
-	defaultProjectPullPipelineJobsEnabled          = false
-	defaultProjectPullPipelineVariablesEnabled     = false
-	defaultProjectPullPipelineVariablesRegexp      = `.*`
+	defaultProjectOutputSparseStatusMetrics             = true
+	defaultProjectPullEnvironmentsEnabled               = false
+	defaultProjectPullEnvironmentsNameRegexp            = `.*`
+	defaultProjectPullEnvironmentsTagsRegexp            = `.*`
+	defaultProjectPullRefsRegexp                        = `^(main|master)$`
+	defaultProjectPullRefsMaxAgeSeconds            uint = 0
+	defaultProjectPullRefsFromPipelinesEnabled          = false
+	defaultProjectPullRefsFromPipelinesDepth            = 100
+	defaultProjectPullRefsFromMergeRequestsEnabled      = false
+	defaultProjectPullRefsFromMergeRequestsDepth        = 1
+	defaultProjectPullPipelineJobsEnabled               = false
+	defaultProjectPullPipelineVariablesEnabled          = false
+	defaultProjectPullPipelineVariablesRegexp           = `.*`
 )
 
 // ProjectParameters for the fetching configuration of Projects and Wildcards
@@ -52,6 +53,9 @@ type ProjectPullEnvironments struct {
 type ProjectPullRefs struct {
 	// Regular expression to filter refs to fetch (defaults to '.*')
 	RegexpValue *string `yaml:"regexp"`
+
+	// If the age of the most recent pipeline for the ref is greater than this value, the ref won't get exported
+	MaxAgeSecondsValue *uint `yaml:"max_age_seconds"`
 
 	// From handles ProjectPullRefsFromParameters configuration
 	From ProjectPullRefsFrom `yaml:"from"`
@@ -115,6 +119,10 @@ func UpdateProjectDefaults(d ProjectParameters) {
 
 	if d.Pull.Refs.RegexpValue != nil {
 		defaultProjectPullRefsRegexp = *d.Pull.Refs.RegexpValue
+	}
+
+	if d.Pull.Refs.MaxAgeSecondsValue != nil {
+		defaultProjectPullRefsMaxAgeSeconds = *d.Pull.Refs.MaxAgeSecondsValue
 	}
 
 	if d.Pull.Refs.From.Pipelines.EnabledValue != nil {
@@ -209,6 +217,15 @@ func (p *ProjectPullRefs) Regexp() string {
 	}
 
 	return defaultProjectPullRefsRegexp
+}
+
+// MaxAgeSeconds ...
+func (p *ProjectPullRefs) MaxAgeSeconds() uint {
+	if p.MaxAgeSecondsValue != nil {
+		return *p.MaxAgeSecondsValue
+	}
+
+	return defaultProjectPullRefsMaxAgeSeconds
 }
 
 // Enabled ...

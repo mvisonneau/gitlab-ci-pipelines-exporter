@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
@@ -60,7 +61,7 @@ func (c *Client) GetProjectPipelines(projectName string, options *goGitlab.ListP
 }
 
 // GetProjectMergeRequestsPipelines ..
-func (c *Client) GetProjectMergeRequestsPipelines(projectName string, fetchLimit int) ([]string, error) {
+func (c *Client) GetProjectMergeRequestsPipelines(projectName string, fetchLimit int, maxAgeSeconds uint) ([]string, error) {
 	var names []string
 
 	options := &goGitlab.ListProjectPipelinesOptions{
@@ -81,6 +82,16 @@ func (c *Client) GetProjectMergeRequestsPipelines(projectName string, fetchLimit
 
 		for _, pipeline := range pipelines {
 			if re.MatchString(pipeline.Ref) {
+				if maxAgeSeconds > 0 && time.Now().Sub(*pipeline.UpdatedAt) > (time.Duration(maxAgeSeconds)*time.Second) {
+					log.WithFields(log.Fields{
+						"project-name":    projectName,
+						"ref":             pipeline.Ref,
+						"ref-kind":        schemas.RefKindMergeRequest,
+						"max-age-seconds": maxAgeSeconds,
+						"updated-at":      *pipeline.UpdatedAt,
+					}).Debug("merge request ref pipeline last updated at a date outside of the required timeframe, ignoring..")
+					continue
+				}
 				names = append(names, pipeline.Ref)
 				if len(names) >= fetchLimit {
 					return names, nil
@@ -183,6 +194,18 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 	} {
 		for _, pipeline := range pipelines {
 			if re.MatchString(pipeline.Ref) {
+				if p.Pull.Refs.MaxAgeSeconds() > 0 && time.Now().Sub(*pipeline.UpdatedAt) > (time.Duration(p.Pull.Refs.MaxAgeSeconds())*time.Second) {
+					log.WithFields(log.Fields{
+						"project-name":    p.Name,
+						"ref":             pipeline.Ref,
+						"ref-kind":        kind,
+						"regexp":          p.Pull.Refs.Regexp(),
+						"max-age-seconds": p.Pull.Refs.MaxAgeSeconds(),
+						"updated-at":      *pipeline.UpdatedAt,
+					}).Debug("ref matching regexp but pipeline last updated at a date outside of the required timeframe, ignoring..")
+					continue
+				}
+
 				ref := schemas.NewRef(
 					kind,
 					p.Name,
@@ -195,13 +218,11 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 				)
 
 				if _, ok := refs[ref.Key()]; !ok {
-					log.WithFields(
-						log.Fields{
-							"project-name": p.Name,
-							"ref":          pipeline.Ref,
-							"ref-kind":     kind,
-						},
-					).Info("found ref")
+					log.WithFields(log.Fields{
+						"project-name": p.Name,
+						"ref":          pipeline.Ref,
+						"ref-kind":     kind,
+					}).Info("found ref")
 					refs[ref.Key()] = ref
 				}
 			}
