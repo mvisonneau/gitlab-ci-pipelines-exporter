@@ -10,26 +10,27 @@ import (
 
 func getRefs(
 	projectName string,
-	refsRegexp string,
+	filterRegexp string,
+	maxAgeSeconds uint,
 	fetchMergeRequestsPipelinesRefs bool,
 	fetchMergeRequestsPipelinesRefsInitLimit int) (map[string]schemas.RefKind, error) {
 
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	branches, err := gitlabClient.GetProjectBranches(projectName, refsRegexp)
+	branches, err := gitlabClient.GetProjectBranches(projectName, filterRegexp, maxAgeSeconds)
 	if err != nil {
 		return nil, err
 	}
 
-	tags, err := gitlabClient.GetProjectTags(projectName, refsRegexp)
+	tags, err := gitlabClient.GetProjectTags(projectName, filterRegexp, maxAgeSeconds)
 	if err != nil {
 		return nil, err
 	}
 
 	mergeRequests := []string{}
 	if fetchMergeRequestsPipelinesRefs {
-		mergeRequests, err = gitlabClient.GetProjectMergeRequestsPipelines(projectName, fetchMergeRequestsPipelinesRefsInitLimit)
+		mergeRequests, err = gitlabClient.GetProjectMergeRequestsPipelines(projectName, fetchMergeRequestsPipelinesRefsInitLimit, maxAgeSeconds)
 		if err != nil {
 			return nil, err
 		}
@@ -64,6 +65,7 @@ func pullRefsFromProject(p schemas.Project) error {
 	refs, err := getRefs(
 		p.Name,
 		p.Pull.Refs.Regexp(),
+		p.Pull.Refs.MaxAgeSeconds(),
 		p.Pull.Refs.From.MergeRequests.Enabled(),
 		p.Pull.Refs.From.MergeRequests.Depth(),
 	)

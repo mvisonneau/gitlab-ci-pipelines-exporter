@@ -209,6 +209,10 @@ project_defaults:
       # (optional, default: "^main|master$" -- main or master branch)
       regexp: "^main|master$"
 
+      # If the age of the most recent pipeline for the ref is greater than
+      # this value, the ref won't get exported (optional, default: 0 (disabled))
+      max_age_seconds: 0
+
       from:
         pipelines:
           # Whether to trigger a discovery of the projects refs
@@ -271,6 +275,10 @@ projects:
         # Filter refs (branches/tags only) to include
         # (optional, default: "^main|master$" -- main or master branch)
         regexp: "^main|master$"
+
+        # If the age of the most recent pipeline for the ref is greater than
+        # this value, the ref won't get exported (optional, default: 0 (disabled))
+        max_age_seconds: 0
 
         from:
           pipelines:
@@ -351,6 +359,12 @@ wildcards:
         # (optional, default: "^main|master$" -- main or master branch)
         regexp: "^main|master$"
 
+        # If the age of the most recent commit for the ref is greater than
+        # this value, the ref won't get exported (optional, default: 0 (disabled))
+        # nb: when used in conjuction of pull.from.pipelines.enabled = true, the creation date
+        # of the pipeline is taken in account, not the age of the commit
+        max_age_seconds: 0
+
         from:
           pipelines:
             # Whether to trigger a discovery of the projects refs
@@ -361,7 +375,7 @@ wildcards:
             enabled: false
 
             # Maximum number of pipelines to analyze per project
-            # to search for refs on init (optional, default: 100)
+            # to search for refs on init (optional, default: 100, min: 1, max: 100)
             depth: 100
 
           merge_requests:

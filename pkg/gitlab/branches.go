@@ -2,13 +2,14 @@ package gitlab
 
 import (
 	"regexp"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 // GetProjectBranches ..
-func (c *Client) GetProjectBranches(project, refsRegexp string) ([]string, error) {
+func (c *Client) GetProjectBranches(projectName, filterRegexp string, maxAgeSeconds uint) ([]string, error) {
 	var names []string
 
 	options := &goGitlab.ListBranchesOptions{
@@ -18,20 +19,30 @@ func (c *Client) GetProjectBranches(project, refsRegexp string) ([]string, error
 		},
 	}
 
-	re, err := regexp.Compile(refsRegexp)
+	re, err := regexp.Compile(filterRegexp)
 	if err != nil {
 		return nil, err
 	}
 
 	for {
 		c.rateLimit()
-		branches, resp, err := c.Branches.ListBranches(project, options)
+		branches, resp, err := c.Branches.ListBranches(projectName, options)
 		if err != nil {
 			return names, err
 		}
 
 		for _, branch := range branches {
 			if re.MatchString(branch.Name) {
+				if maxAgeSeconds > 0 && time.Now().Sub(*branch.Commit.AuthoredDate) > (time.Duration(maxAgeSeconds)*time.Second) {
+					log.WithFields(log.Fields{
+						"project-name":    projectName,
+						"branch":          branch.Name,
+						"regexp":          filterRegexp,
+						"max-age-seconds": maxAgeSeconds,
+						"authored-date":   *branch.Commit.AuthoredDate,
+					}).Debug("branch matching regexp but last authored at a date outside of the required timeframe, ignoring..")
+					continue
+				}
 				names = append(names, branch.Name)
 			}
 		}

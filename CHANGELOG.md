@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- Implemented a `max_age_seconds` parameter to determine whether to pull a "stale ref" or not
+
 ### Changed
 
 - When fetching refs from pipelines, capped the maximum length to 100 in order to prevent the API call from failing

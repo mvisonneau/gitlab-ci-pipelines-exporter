@@ -24,12 +24,12 @@ func TestGetProjectTags(t *testing.T) {
 			fmt.Fprint(w, `[{"name":"foo"},{"name":"bar"}]`)
 		})
 
-	tags, err := c.GetProjectTags("foo", "[")
+	tags, err := c.GetProjectTags("foo", "[", 0)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
 	assert.Len(t, tags, 0)
 
-	tags, err = c.GetProjectTags("foo", "^f")
+	tags, err = c.GetProjectTags("foo", "^f", 0)
 	assert.NoError(t, err)
 	assert.Equal(t, []string{"foo"}, tags)
 }

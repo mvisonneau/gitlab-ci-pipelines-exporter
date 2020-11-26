@@ -29,7 +29,7 @@ func TestGetRefs(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"}]`)
 		})
 
-	foundRefs, err := getRefs("foo", "^keep", true, 10)
+	foundRefs, err := getRefs("foo", "^keep", 0, true, 10)
 	assert.NoError(t, err)
 
 	assert.Equal(t, foundRefs["keep/0.0.2"], schemas.RefKindTag)

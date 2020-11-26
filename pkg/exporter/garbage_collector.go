@@ -241,10 +241,10 @@ func garbageCollectRefs() error {
 		}
 	}
 
-	// Refresh the environments from the API
+	// Refresh the refs from the API
 	existingRefs := make(map[schemas.RefKey]struct{})
 	for projectName, projectPullRefs := range refProjects {
-		branches, err := gitlabClient.GetProjectBranches(projectName, projectPullRefs.Regexp())
+		branches, err := gitlabClient.GetProjectBranches(projectName, projectPullRefs.Regexp(), projectPullRefs.MaxAgeSeconds())
 		if err != nil {
 			return err
 		}
@@ -257,7 +257,7 @@ func garbageCollectRefs() error {
 			}.Key()] = struct{}{}
 		}
 
-		tags, err := gitlabClient.GetProjectTags(projectName, projectPullRefs.Regexp())
+		tags, err := gitlabClient.GetProjectTags(projectName, projectPullRefs.Regexp(), projectPullRefs.MaxAgeSeconds())
 		if err != nil {
 			return err
 		}
@@ -271,7 +271,7 @@ func garbageCollectRefs() error {
 		}
 
 		if projectPullRefs.From.MergeRequests.Enabled() {
-			mergeRequests, err := gitlabClient.GetProjectMergeRequestsPipelines(projectName, projectPullRefs.From.MergeRequests.Depth())
+			mergeRequests, err := gitlabClient.GetProjectMergeRequestsPipelines(projectName, projectPullRefs.From.MergeRequests.Depth(), projectPullRefs.MaxAgeSeconds())
 			if err != nil {
 				return err
 			}

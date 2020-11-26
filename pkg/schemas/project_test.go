@@ -85,6 +85,18 @@ func TestPullRefsRegexp(t *testing.T) {
 	assert.Equal(t, "bar", project.Pull.Refs.Regexp())
 }
 
+func TestPullRefsMaxAgeSeconds(t *testing.T) {
+	cfg, project := NewTestProjectVariables()
+	assert.Equal(t, defaultProjectPullRefsMaxAgeSeconds, project.Pull.Refs.MaxAgeSeconds())
+
+	cfg.ProjectDefaults.Pull.Refs.MaxAgeSecondsValue = pointy.Uint(1)
+	UpdateProjectDefaults(cfg.ProjectDefaults)
+	assert.Equal(t, uint(1), project.Pull.Refs.MaxAgeSeconds())
+
+	project.Pull.Refs.MaxAgeSecondsValue = pointy.Uint(2)
+	assert.Equal(t, uint(2), project.Pull.Refs.MaxAgeSeconds())
+}
+
 func TestPullRefsFromPipelinesEnabled(t *testing.T) {
 	cfg, project := NewTestProjectVariables()
 	assert.Equal(t, defaultProjectPullRefsFromPipelinesEnabled, project.Pull.Refs.From.Pipelines.Enabled())

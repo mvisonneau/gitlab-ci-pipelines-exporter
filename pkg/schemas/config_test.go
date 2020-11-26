@@ -104,6 +104,7 @@ project_defaults:
       tags_regexp: "^blah$"
     refs:
       regexp: "^baz$"
+      max_age_seconds: 1
       from:
         pipelines:
           enabled: true
@@ -128,6 +129,7 @@ projects:
         tags_regexp: "^foo$"
       refs:
         regexp: "^foo$"
+        max_age_seconds: 2
   - name: new/project
     pull:
       environments:
@@ -136,6 +138,7 @@ projects:
         tags_regexp: "^foo$"
       refs:
         regexp: "^bar$"
+        max_age_seconds: 3
 
 wildcards:
   - owner:
@@ -150,6 +153,7 @@ wildcards:
         tags_regexp: "^foo$"
       refs:
         regexp: "^yolo$"
+        max_age_seconds: 4
 `)
 
 	cfg, err := ParseConfigFile(f.Name())
@@ -232,7 +236,8 @@ wildcards:
 					TagsRegexpValue: pointy.String("^blah$"),
 				},
 				Refs: ProjectPullRefs{
-					RegexpValue: pointy.String("^baz$"),
+					RegexpValue:        pointy.String("^baz$"),
+					MaxAgeSecondsValue: pointy.Uint(1),
 					From: ProjectPullRefsFrom{
 						Pipelines: ProjectPullRefsFromPipelines{
 							EnabledValue: pointy.Bool(true),
@@ -269,7 +274,8 @@ wildcards:
 							TagsRegexpValue: pointy.String("^foo$"),
 						},
 						Refs: ProjectPullRefs{
-							RegexpValue: pointy.String("^foo$"),
+							RegexpValue:        pointy.String("^foo$"),
+							MaxAgeSecondsValue: pointy.Uint(2),
 						},
 					},
 				},
@@ -284,7 +290,8 @@ wildcards:
 							TagsRegexpValue: pointy.String("^foo$"),
 						},
 						Refs: ProjectPullRefs{
-							RegexpValue: pointy.String("^bar$"),
+							RegexpValue:        pointy.String("^bar$"),
+							MaxAgeSecondsValue: pointy.Uint(3),
 						},
 					},
 				},
@@ -309,7 +316,8 @@ wildcards:
 							TagsRegexpValue: pointy.String("^foo$"),
 						},
 						Refs: ProjectPullRefs{
-							RegexpValue: pointy.String("^yolo$"),
+							RegexpValue:        pointy.String("^yolo$"),
+							MaxAgeSecondsValue: pointy.Uint(4),
 						},
 					},
 				},
