@@ -177,7 +177,7 @@ func garbageCollectRefs() error {
 		return err
 	}
 
-	refProjects := make(map[string]string)
+	refProjects := make(map[string]schemas.ProjectPullRefs)
 	for k, ref := range storedRefs {
 		p := schemas.Project{Name: ref.ProjectName}
 		projectExists, err := store.ProjectExists(p.Key())
@@ -205,7 +205,7 @@ func garbageCollectRefs() error {
 
 		// Store the project information to be able to refresh all refs
 		// from the API later on
-		refProjects[p.Name] = p.Pull.Refs.Regexp()
+		refProjects[p.Name] = p.Pull.Refs
 
 		// If the ref is not configured to be pulled anymore, delete the ref
 		re := regexp.MustCompile(p.Pull.Refs.Regexp())
@@ -243,8 +243,8 @@ func garbageCollectRefs() error {
 
 	// Refresh the environments from the API
 	existingRefs := make(map[schemas.RefKey]struct{})
-	for projectName, refsRegexp := range refProjects {
-		branches, err := gitlabClient.GetProjectBranches(projectName, refsRegexp)
+	for projectName, projectPullRefs := range refProjects {
+		branches, err := gitlabClient.GetProjectBranches(projectName, projectPullRefs.Regexp())
 		if err != nil {
 			return err
 		}
@@ -257,7 +257,7 @@ func garbageCollectRefs() error {
 			}.Key()] = struct{}{}
 		}
 
-		tags, err := gitlabClient.GetProjectTags(projectName, refsRegexp)
+		tags, err := gitlabClient.GetProjectTags(projectName, projectPullRefs.Regexp())
 		if err != nil {
 			return err
 		}
@@ -269,6 +269,21 @@ func garbageCollectRefs() error {
 				Name:        tag,
 			}.Key()] = struct{}{}
 		}
+
+		if projectPullRefs.From.MergeRequests.Enabled() {
+			mergeRequests, err := gitlabClient.GetProjectMergeRequestsPipelines(projectName, projectPullRefs.From.MergeRequests.Depth())
+			if err != nil {
+				return err
+			}
+
+			for _, mr := range mergeRequests {
+				existingRefs[schemas.Ref{
+					Kind:        schemas.RefKindMergeRequest,
+					ProjectName: projectName,
+					Name:        mr,
+				}.Key()] = struct{}{}
+			}
+		}
 	}
 
 	storedRefs, err = store.Refs()
@@ -277,7 +292,7 @@ func garbageCollectRefs() error {
 	}
 
 	for k, ref := range storedRefs {
-		if _, exists := existingRefs[k]; !exists && ref.Kind != schemas.RefKindMergeRequest {
+		if _, exists := existingRefs[k]; !exists {
 			if err = store.DelRef(k); err != nil {
 				return err
 			}

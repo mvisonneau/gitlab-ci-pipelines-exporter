@@ -10,6 +10,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Changed
 
 - When fetching refs from pipelines, capped the maximum length to 100 in order to prevent the API call from failing
+- Garbage collect merge requests refs in order to keep the depth value as a maximum
 
 ## [v0.4.4] - 2020-11-20
 
