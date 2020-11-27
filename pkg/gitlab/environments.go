@@ -71,13 +71,22 @@ func (c *Client) GetEnvironment(project string, environmentID int) (schemas.Envi
 			environment.LatestDeployment.RefKind = schemas.RefKindBranch
 		}
 
-		environment.LatestDeployment.JobID = e.LastDeployment.Deployable.ID
 		environment.LatestDeployment.RefName = e.LastDeployment.Ref
-		environment.LatestDeployment.AuthorEmail = e.LastDeployment.Deployable.User.PublicEmail
-		environment.LatestDeployment.CommitShortID = e.LastDeployment.Deployable.Commit.ShortID
-		environment.LatestDeployment.Timestamp = float64(e.LastDeployment.CreatedAt.Unix())
+		environment.LatestDeployment.JobID = e.LastDeployment.Deployable.ID
 		environment.LatestDeployment.DurationSeconds = e.LastDeployment.Deployable.Duration
 		environment.LatestDeployment.Status = e.LastDeployment.Deployable.Status
+
+		if e.LastDeployment.Deployable.User != nil {
+			environment.LatestDeployment.AuthorEmail = e.LastDeployment.Deployable.User.PublicEmail
+		}
+
+		if e.LastDeployment.Deployable.Commit != nil {
+			environment.LatestDeployment.CommitShortID = e.LastDeployment.Deployable.Commit.ShortID
+		}
+
+		if e.LastDeployment.CreatedAt != nil {
+			environment.LatestDeployment.Timestamp = float64(e.LastDeployment.CreatedAt.Unix())
+		}
 	} else {
 		log.WithFields(log.Fields{
 			"project-name":     project,
