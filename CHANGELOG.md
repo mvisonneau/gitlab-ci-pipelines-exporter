@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.4.5] - 2020-11-27
+
 ### Added
 
 - Implemented a `max_age_seconds` parameter to determine whether to pull a "stale ref" or not
