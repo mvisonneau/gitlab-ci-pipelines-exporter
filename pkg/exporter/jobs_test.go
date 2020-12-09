@@ -79,6 +79,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		Status:          "failed",
 		Stage:           "🚀",
 		ArtifactSize:    150,
+		Runner:          "xxx",
 	}
 
 	ref := schemas.Ref{
@@ -122,6 +123,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		"variables": ref.LatestPipeline.Variables,
 		"stage":     newJob.Stage,
 		"job_name":  newJob.Name,
+		"runner":    newJob.Runner,
 	}
 
 	lastJobRunID := schemas.Metric{

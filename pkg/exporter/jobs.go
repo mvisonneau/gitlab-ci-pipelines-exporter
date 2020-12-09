@@ -51,6 +51,7 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 	labels := ref.DefaultLabelsValues()
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
+	labels["runner"] = job.Runner
 
 	projectRefLogFields := log.Fields{
 		"project-name": ref.ProjectName,

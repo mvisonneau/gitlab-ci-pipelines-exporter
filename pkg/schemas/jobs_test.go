@@ -17,6 +17,15 @@ func TestNewJob(t *testing.T) {
 		Duration:  15,
 		Status:    "failed",
 		Stage:     "🚀",
+		Runner: struct {
+			ID          int    "json:\"id\""
+			Description string "json:\"description\""
+			Active      bool   "json:\"active\""
+			IsShared    bool   "json:\"is_shared\""
+			Name        string "json:\"name\""
+		}{
+			Description: "xxx",
+		},
 		Artifacts: []struct {
 			FileType   string "json:\"file_type\""
 			Filename   string "json:\"filename\""
@@ -39,6 +48,7 @@ func TestNewJob(t *testing.T) {
 		Timestamp:       1.601557505e+09,
 		DurationSeconds: 15,
 		Status:          "failed",
+		Runner:          "xxx",
 		ArtifactSize:    150,
 	}
 

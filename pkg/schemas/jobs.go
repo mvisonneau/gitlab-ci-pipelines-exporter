@@ -9,6 +9,7 @@ type Job struct {
 	ID              int
 	Name            string
 	Stage           string
+	Runner          string
 	Timestamp       float64
 	DurationSeconds float64
 	Status          string
@@ -34,6 +35,7 @@ func NewJob(gj goGitlab.Job) Job {
 		ID:              gj.ID,
 		Name:            gj.Name,
 		Stage:           gj.Stage,
+		Runner:          gj.Runner.Description,
 		Timestamp:       timestamp,
 		DurationSeconds: gj.Duration,
 		Status:          gj.Status,
