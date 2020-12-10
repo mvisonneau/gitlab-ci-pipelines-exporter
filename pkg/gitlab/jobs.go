@@ -76,7 +76,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 		jobsToRefresh[k] = v
 	}
 
-	var foundJobs []goGitlab.Job
+	var foundJobs []*goGitlab.Job
 	var resp *goGitlab.Response
 
 	options := &goGitlab.ListJobsOptions{
@@ -96,7 +96,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 		for _, job := range foundJobs {
 			if _, ok := jobsToRefresh[job.Name]; ok {
 				if ref.Name == job.Ref {
-					jobs = append(jobs, schemas.NewJob(job))
+					jobs = append(jobs, schemas.NewJob(*job))
 					delete(jobsToRefresh, job.Name)
 				}
 			}

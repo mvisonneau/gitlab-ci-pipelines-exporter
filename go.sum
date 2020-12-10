@@ -231,8 +231,6 @@ github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJ
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
-github.com/mvisonneau/go-gitlab v0.20.2-0.20201031120209-a4b33b12e52f h1:rq/5HbVlkgYMFkjIsfLv5QjntX0aBU+4rKUGenLAOYI=
-github.com/mvisonneau/go-gitlab v0.20.2-0.20201031120209-a4b33b12e52f/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
 github.com/mvisonneau/go-helpers v0.0.1 h1:jp/eaRBixQeCwILkqSDlNIAtRjBdRR3AENTxx5Ts04Y=
 github.com/mvisonneau/go-helpers v0.0.1/go.mod h1:9gxWJlesYQqoVW4jj+okotqvG5CB8BfLD06UbyyfKZA=
 github.com/mvisonneau/taskq/v3 v3.2.4-0.20201127170227-fddacd1811f5 h1:NSxZfOOzcdkCI9hh2Ly/3gzyFG1d+mTuYk0sGXJFKck=
@@ -364,6 +362,10 @@ github.com/vmihailenco/msgpack/v5 v5.0.0 h1:nCaMMPEyfgwkGc/Y0GreJPhuvzqCqW+Ufq5l
 github.com/vmihailenco/msgpack/v5 v5.0.0/go.mod h1:HVxBVPUK/+fZMonk4bi1islLa8V3cfnBug0+4dykPzo=
 github.com/vmihailenco/tagparser v0.1.2 h1:gnjoVuB/kljJ5wICEEOpx98oXMWPLj22G67Vbd1qPqc=
 github.com/vmihailenco/tagparser v0.1.2/go.mod h1:OeAg3pn3UbLjkWt+rN9oFYB6u/cQgqMEUPoW2WPyhdI=
+github.com/xanzy/go-gitlab v0.39.0 h1:7aiZ03fJfCdqoHFhsZq/SoVYp2lR91hfYWmiXLOU5Qo=
+github.com/xanzy/go-gitlab v0.39.0/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
+github.com/xanzy/go-gitlab v0.40.1 h1:jHueLh5Inzv20TL5Yki+CaLmyvtw3Yq7blbWx7GmglQ=
+github.com/xanzy/go-gitlab v0.40.1/go.mod h1:sPLojNBn68fMUWSxIJtdVVIP8uSBYqesTfDUseX11Ug=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/yuin/gopher-lua v0.0.0-20191220021717-ab39c6098bdb h1:ZkM6LRnq40pR1Ox0hTHlnpkcOTuFIDQpZ1IN8rKKhX0=
 github.com/yuin/gopher-lua v0.0.0-20191220021717-ab39c6098bdb/go.mod h1:gqRgreBUhTSL0GeU64rtZ3Uq3wtjOa/TB2YfrtkCbVQ=
