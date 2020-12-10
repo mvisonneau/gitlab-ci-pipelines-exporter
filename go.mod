@@ -18,12 +18,10 @@ require (
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/vmihailenco/msgpack/v5 v5.0.0
 	github.com/vmihailenco/taskq/v3 v3.2.3
-	github.com/xanzy/go-gitlab v0.39.0
+	github.com/xanzy/go-gitlab v0.40.1
 	go.uber.org/ratelimit v0.1.0
+	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
 
-replace (
-	github.com/vmihailenco/taskq/v3 => github.com/mvisonneau/taskq/v3 v3.2.4-0.20201127170227-fddacd1811f5
-	github.com/xanzy/go-gitlab => github.com/mvisonneau/go-gitlab v0.20.2-0.20201031120209-a4b33b12e52f
-)
+replace github.com/vmihailenco/taskq/v3 => github.com/mvisonneau/taskq/v3 v3.2.4-0.20201127170227-fddacd1811f5
