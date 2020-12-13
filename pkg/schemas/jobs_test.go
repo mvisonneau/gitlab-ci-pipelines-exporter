@@ -48,8 +48,11 @@ func TestNewJob(t *testing.T) {
 		Timestamp:       1.601557505e+09,
 		DurationSeconds: 15,
 		Status:          "failed",
-		Runner:          "xxx",
 		ArtifactSize:    150,
+
+		Runner: Runner{
+			Description: "xxx",
+		},
 	}
 
 	assert.Equal(t, expectedJob, NewJob(gitlabJob))

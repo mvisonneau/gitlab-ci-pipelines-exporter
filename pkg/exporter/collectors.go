@@ -4,11 +4,11 @@ import "github.com/prometheus/client_golang/prometheus"
 
 var (
 	defaultLabels                = []string{"project", "topics", "kind", "ref", "variables"}
-	jobLabels                    = []string{"stage", "job_name", "runner"}
+	jobLabels                    = []string{"stage", "job_name", "runner_description"}
 	statusLabels                 = []string{"status"}
-	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"}
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "author_email"}
+	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"}
 )
 
 // NewCollectorCoverage returns a new collector for the gitlab_ci_pipeline_coverage metric

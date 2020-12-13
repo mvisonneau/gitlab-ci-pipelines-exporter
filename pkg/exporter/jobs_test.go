@@ -79,7 +79,9 @@ func TestProcessJobMetrics(t *testing.T) {
 		Status:          "failed",
 		Stage:           "🚀",
 		ArtifactSize:    150,
-		Runner:          "xxx",
+		Runner: schemas.Runner{
+			Description: "xxx",
+		},
 	}
 
 	ref := schemas.Ref{
@@ -116,14 +118,14 @@ func TestProcessJobMetrics(t *testing.T) {
 	// Check if all the metrics exist
 	metrics, _ := store.Metrics()
 	labels := map[string]string{
-		"project":   ref.ProjectName,
-		"topics":    ref.Topics,
-		"ref":       ref.Name,
-		"kind":      string(ref.Kind),
-		"variables": ref.LatestPipeline.Variables,
-		"stage":     newJob.Stage,
-		"job_name":  newJob.Name,
-		"runner":    newJob.Runner,
+		"project":            ref.ProjectName,
+		"topics":             ref.Topics,
+		"ref":                ref.Name,
+		"kind":               string(ref.Kind),
+		"variables":          ref.LatestPipeline.Variables,
+		"stage":              newJob.Stage,
+		"job_name":           newJob.Name,
+		"runner_description": newJob.Runner.Description,
 	}
 
 	lastJobRunID := schemas.Metric{

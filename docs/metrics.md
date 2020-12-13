@@ -15,12 +15,12 @@
 | `gitlab_ci_pipeline_coverage` | Coverage of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_duration_seconds` | Duration in seconds of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_id` | ID of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
-| `gitlab_ci_pipeline_job_artifact_size_bytes` | Artifact size in bytes (sum of all of them) of the most recent job | [project], [topics], [ref], [runner], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
-| `gitlab_ci_pipeline_job_duration_seconds` | Duration in seconds of the most recent job | [project], [topics], [ref], [runner], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
-| `gitlab_ci_pipeline_job_id` | ID of the most recent job | [project], [topics], [ref], [runner], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
-| `gitlab_ci_pipeline_job_run_count` | Number of executions of a job | [project], [topics], [ref], [runner], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
-| `gitlab_ci_pipeline_job_status` | Status of the most recent job | [project], [topics], [ref], [runner], [kind], [variables], [stage], [job_name], [status] | `project_defaults.pull.pipeline.jobs.enabled` |
-| `gitlab_ci_pipeline_job_timestamp` | Creation date timestamp of the the most recent job | [project], [topics], [ref], [runner], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
+| `gitlab_ci_pipeline_job_artifact_size_bytes` | Artifact size in bytes (sum of all of them) of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
+| `gitlab_ci_pipeline_job_duration_seconds` | Duration in seconds of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
+| `gitlab_ci_pipeline_job_id` | ID of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
+| `gitlab_ci_pipeline_job_run_count` | Number of executions of a job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
+| `gitlab_ci_pipeline_job_status` | Status of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name], [status] | `project_defaults.pull.pipeline.jobs.enabled` |
+| `gitlab_ci_pipeline_job_timestamp` | Creation date timestamp of the the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_status` | Status of the most recent pipeline | [project], [topics], [ref], [kind], [variables], [status] | *available by default* |
 | `gitlab_ci_pipeline_timestamp` | Timestamp of the last update of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_run_count` | Number of executions of a pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
@@ -39,9 +39,9 @@ Topics configured on the project
 
 Name of the ref (branch, tag or merge request) used by the pipeline
 
-### Runner
+### Runner Description
 
-Description of the runner
+Description of the runner on which the most recent job ran
 
 ### Ref Kind
 
@@ -131,4 +131,4 @@ This flag affect every `_status$` metrics:
 [status]: #status
 [topics]: #topics
 [variables]: #variables
-[runner]: #runner
+[runner_description]: #runner-description
