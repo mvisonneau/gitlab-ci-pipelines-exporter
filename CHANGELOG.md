@@ -7,6 +7,14 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- New `runner_description` label for all the `job` related metrics.
+
+### Changed
+
+- Ensure consistency of the exported metrics by distinguishing immutable from mutable labels used as metric key.
+
 ## [v0.4.5] - 2020-11-27
 
 ### Added
