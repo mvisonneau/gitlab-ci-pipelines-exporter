@@ -8,7 +8,7 @@ import (
 )
 
 func TestMetricKey(t *testing.T) {
-	assert.Equal(t, MetricKey("2152003002"), Metric{
+	assert.Equal(t, MetricKey("3273426995"), Metric{
 		Kind: MetricKindCoverage,
 		Labels: prometheus.Labels{
 			"foo": "bar",
