@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.4.6] - 2020-12-16
+
 ### Added
 
 - When configured to export job metrics, it will now pull child/downstream pipelines jobs related ones as well

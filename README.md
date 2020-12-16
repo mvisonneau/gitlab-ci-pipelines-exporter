@@ -51,7 +51,9 @@ If you want to quickly try them out with your own data, have a look into the [ex
 ### Docker
 
 ```bash
-~$ docker run -it --rm mvisonneau/gitlab-ci-pipelines-exporter
+~$ docker run -it --rm docker.io/mvisonneau/gitlab-ci-pipelines-exporter
+or
+~$ docker run -it --rm ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter
 ```
 
 ### Scoop
