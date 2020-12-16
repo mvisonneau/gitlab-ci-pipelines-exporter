@@ -157,6 +157,18 @@ func TestPullPipelineJobsEnabled(t *testing.T) {
 	assert.Equal(t, defaultProjectPullPipelineJobsEnabled, project.Pull.Pipeline.Jobs.Enabled())
 }
 
+func TestPullPipelineJobsFromChildPipelinesEnabled(t *testing.T) {
+	cfg, project := NewTestProjectVariables()
+	assert.Equal(t, defaultProjectPullPipelineJobsFromChildPipelinesEnabled, project.Pull.Pipeline.Jobs.FromChildPipelines.Enabled())
+
+	cfg.ProjectDefaults.Pull.Pipeline.Jobs.FromChildPipelines.EnabledValue = pointy.Bool(!defaultProjectPullPipelineJobsFromChildPipelinesEnabled)
+	UpdateProjectDefaults(cfg.ProjectDefaults)
+	assert.Equal(t, defaultProjectPullPipelineJobsFromChildPipelinesEnabled, project.Pull.Pipeline.Jobs.FromChildPipelines.Enabled())
+
+	project.Pull.Pipeline.Jobs.FromChildPipelines.EnabledValue = pointy.Bool(defaultProjectPullPipelineJobsFromChildPipelinesEnabled)
+	assert.Equal(t, defaultProjectPullPipelineJobsFromChildPipelinesEnabled, project.Pull.Pipeline.Jobs.FromChildPipelines.Enabled())
+}
+
 func TestPullPipelineVariablesEnabled(t *testing.T) {
 	cfg, project := NewTestProjectVariables()
 	assert.Equal(t, defaultProjectPullPipelineVariablesEnabled, project.Pull.Pipeline.Variables.Enabled())

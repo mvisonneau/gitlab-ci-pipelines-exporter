@@ -243,6 +243,11 @@ project_defaults:
         # (optional, default: false)
         enabled: false
 
+        from_child_pipelines:
+          # Collect jobs from subsequent child/downstream pipelines
+          # (optional, default: true)
+          enabled: true
+
       variables:
         # Fetch pipeline variables in a separate metric (optional, default: false)
         enabled: false
@@ -311,6 +316,11 @@ projects:
           # Increases the number of outputed metrics significantly!
           # (optional, default: false)
           enabled: false
+
+          from_child_pipelines:
+            # Collect jobs from subsequent child/downstream pipelines
+            # (optional, default: true)
+            enabled: true
 
         variables:
           # Fetch pipeline variables in a separate metric (optional, default: false)
@@ -396,6 +406,11 @@ wildcards:
           # Increases the number of outputed metrics significantly!
           # (optional, default: false)
           enabled: false
+
+          from_child_pipelines:
+            # Collect jobs from subsequent child/downstream pipelines
+            # (optional, default: true)
+            enabled: true
 
         variables:
           # Fetch pipeline variables in a separate metric (optional, default: false)

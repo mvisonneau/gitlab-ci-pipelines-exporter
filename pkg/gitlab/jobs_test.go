@@ -17,12 +17,65 @@ func TestListRefPipelineJobs(t *testing.T) {
 	ref := schemas.Ref{
 		ProjectName: "foo",
 		Name:        "yay",
+		PullPipelineJobsFromChildPipelinesEnabled: true,
 	}
 
 	// Test with no most recent pipeline defined
 	jobs, err := c.ListRefPipelineJobs(ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 0)
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"id":10}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/2/jobs",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"id":20}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/3/jobs",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"id":30}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2}}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/2/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":3}}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/3/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[]`)
+		})
+
+	ref.LatestPipeline = schemas.Pipeline{
+		ID: 1,
+	}
+
+	jobs, err = c.ListRefPipelineJobs(ref)
+	assert.NoError(t, err)
+	assert.Equal(t, []schemas.Job{
+		{ID: 10},
+		{ID: 20},
+		{ID: 30},
+	}, jobs)
+
+	// Test invalid project id
+	ref.ProjectName = "bar"
+	_, err = c.ListRefPipelineJobs(ref)
+	assert.Error(t, err)
+}
+
+func TestListPipelineJobs(t *testing.T) {
+	mux, server, c := getMockedClient()
+	defer server.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -40,17 +93,41 @@ func TestListRefPipelineJobs(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	ref.LatestPipeline = schemas.Pipeline{
-		ID: 1,
-	}
-
-	jobs, err = c.ListRefPipelineJobs(ref)
+	jobs, err := c.ListPipelineJobs("foo", 1)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 2)
 
 	// Test invalid project id
-	ref.ProjectName = "bar"
-	_, err = c.ListRefPipelineJobs(ref)
+	_, err = c.ListPipelineJobs("bar", 1)
+	assert.Error(t, err)
+}
+
+func TestListPipelineBridges(t *testing.T) {
+	mux, server, c := getMockedClient()
+	defer server.Close()
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			expectedQueryParams := url.Values{
+				"page":     []string{"1"},
+				"per_page": []string{"100"},
+			}
+			assert.Equal(t, expectedQueryParams, r.URL.Query())
+			fmt.Fprint(w, `[{"id":1,"pipeline":{"id":100}}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/bar/pipelines/1/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNotFound)
+		})
+
+	bridges, err := c.ListPipelineBridges("foo", 1)
+	assert.NoError(t, err)
+	assert.Len(t, bridges, 1)
+
+	// Test invalid project id
+	_, err = c.ListPipelineBridges("bar", 1)
 	assert.Error(t, err)
 }
 

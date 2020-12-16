@@ -213,6 +213,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 					topics,
 					p.OutputSparseStatusMetrics(),
 					p.Pull.Pipeline.Jobs.Enabled(),
+					p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled(),
 					p.Pull.Pipeline.Variables.Enabled(),
 					p.Pull.Pipeline.Variables.Regexp(),
 				)

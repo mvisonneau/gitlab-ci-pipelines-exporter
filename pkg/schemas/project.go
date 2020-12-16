@@ -6,19 +6,20 @@ import (
 )
 
 var (
-	defaultProjectOutputSparseStatusMetrics             = true
-	defaultProjectPullEnvironmentsEnabled               = false
-	defaultProjectPullEnvironmentsNameRegexp            = `.*`
-	defaultProjectPullEnvironmentsTagsRegexp            = `.*`
-	defaultProjectPullRefsRegexp                        = `^(main|master)$`
-	defaultProjectPullRefsMaxAgeSeconds            uint = 0
-	defaultProjectPullRefsFromPipelinesEnabled          = false
-	defaultProjectPullRefsFromPipelinesDepth            = 100
-	defaultProjectPullRefsFromMergeRequestsEnabled      = false
-	defaultProjectPullRefsFromMergeRequestsDepth        = 1
-	defaultProjectPullPipelineJobsEnabled               = false
-	defaultProjectPullPipelineVariablesEnabled          = false
-	defaultProjectPullPipelineVariablesRegexp           = `.*`
+	defaultProjectOutputSparseStatusMetrics                      = true
+	defaultProjectPullEnvironmentsEnabled                        = false
+	defaultProjectPullEnvironmentsNameRegexp                     = `.*`
+	defaultProjectPullEnvironmentsTagsRegexp                     = `.*`
+	defaultProjectPullRefsRegexp                                 = `^(main|master)$`
+	defaultProjectPullRefsMaxAgeSeconds                     uint = 0
+	defaultProjectPullRefsFromPipelinesEnabled                   = false
+	defaultProjectPullRefsFromPipelinesDepth                     = 100
+	defaultProjectPullRefsFromMergeRequestsEnabled               = false
+	defaultProjectPullRefsFromMergeRequestsDepth                 = 1
+	defaultProjectPullPipelineJobsEnabled                        = false
+	defaultProjectPullPipelineJobsFromChildPipelinesEnabled      = true
+	defaultProjectPullPipelineVariablesEnabled                   = false
+	defaultProjectPullPipelineVariablesRegexp                    = `.*`
 )
 
 // ProjectParameters for the fetching configuration of Projects and Wildcards
@@ -92,6 +93,15 @@ type ProjectPullPipeline struct {
 type ProjectPullPipelineJobs struct {
 	// Enabled set to true will pull pipeline jobs related metrics
 	EnabledValue *bool `yaml:"enabled"`
+
+	// Pull pipeline jobs from child/downstream pipelines
+	FromChildPipelines ProjectPullPipelineJobsFromChildPipelines `yaml:"from_child_pipelines"`
+}
+
+// ProjectPullPipelineJobsFromChildPipelines ..
+type ProjectPullPipelineJobsFromChildPipelines struct {
+	// Enabled set to true will pull pipeline jobs from child/downstream pipelines related metrics
+	EnabledValue *bool `yaml:"enabled"`
 }
 
 // ProjectPullPipelineVariables ..
@@ -143,6 +153,10 @@ func UpdateProjectDefaults(d ProjectParameters) {
 
 	if d.Pull.Pipeline.Jobs.EnabledValue != nil {
 		defaultProjectPullPipelineJobsEnabled = *d.Pull.Pipeline.Jobs.EnabledValue
+	}
+
+	if d.Pull.Pipeline.Jobs.FromChildPipelines.EnabledValue != nil {
+		defaultProjectPullPipelineJobsFromChildPipelinesEnabled = *d.Pull.Pipeline.Jobs.FromChildPipelines.EnabledValue
 	}
 
 	if d.Pull.Pipeline.Variables.EnabledValue != nil {
@@ -271,6 +285,15 @@ func (p *ProjectPullPipelineJobs) Enabled() bool {
 	}
 
 	return defaultProjectPullPipelineJobsEnabled
+}
+
+// Enabled ...
+func (p *ProjectPullPipelineJobsFromChildPipelines) Enabled() bool {
+	if p.EnabledValue != nil {
+		return *p.EnabledValue
+	}
+
+	return defaultProjectPullPipelineJobsFromChildPipelinesEnabled
 }
 
 // Enabled ...

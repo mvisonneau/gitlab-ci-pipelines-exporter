@@ -29,10 +29,11 @@ type Ref struct {
 	LatestPipeline Pipeline
 	LatestJobs     Jobs
 
-	OutputSparseStatusMetrics    bool
-	PullPipelineJobsEnabled      bool
-	PullPipelineVariablesEnabled bool
-	PullPipelineVariablesRegexp  string
+	OutputSparseStatusMetrics                 bool
+	PullPipelineJobsEnabled                   bool
+	PullPipelineJobsFromChildPipelinesEnabled bool
+	PullPipelineVariablesEnabled              bool
+	PullPipelineVariablesRegexp               string
 }
 
 // RefKey ..
@@ -67,7 +68,7 @@ func (ref Ref) DefaultLabelsValues() map[string]string {
 func NewRef(
 	kind RefKind,
 	projectName, name, topics string,
-	outputSparseStatusMetrics, pullPipelineJobsEnabled, pullPipelineVariablesEnabled bool,
+	outputSparseStatusMetrics, pullPipelineJobsEnabled, pullPipelineJobsFromChildPipelinesEnabled, pullPipelineVariablesEnabled bool,
 	pullPipelineVariablesRegexp string,
 ) Ref {
 	return Ref{
@@ -77,9 +78,10 @@ func NewRef(
 		Topics:      topics,
 		LatestJobs:  make(Jobs),
 
-		OutputSparseStatusMetrics:    outputSparseStatusMetrics,
-		PullPipelineJobsEnabled:      pullPipelineJobsEnabled,
-		PullPipelineVariablesEnabled: pullPipelineVariablesEnabled,
-		PullPipelineVariablesRegexp:  pullPipelineVariablesRegexp,
+		OutputSparseStatusMetrics:                 outputSparseStatusMetrics,
+		PullPipelineJobsEnabled:                   pullPipelineJobsEnabled,
+		PullPipelineJobsFromChildPipelinesEnabled: pullPipelineJobsFromChildPipelinesEnabled,
+		PullPipelineVariablesEnabled:              pullPipelineVariablesEnabled,
+		PullPipelineVariablesRegexp:               pullPipelineVariablesRegexp,
 	}
 }

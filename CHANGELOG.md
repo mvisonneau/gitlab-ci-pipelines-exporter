@@ -9,6 +9,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Added
 
+- When configured to export job metrics, it will now pull child/downstream pipelines jobs related ones as well
 - New `runner_description` label for all the `job` related metrics.
 
 ### Changed

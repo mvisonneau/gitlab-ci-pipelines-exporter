@@ -10,9 +10,6 @@ import (
 
 // ListRefPipelineJobs ..
 func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err error) {
-	var foundJobs []*goGitlab.Job
-	var resp *goGitlab.Response
-
 	if ref.LatestPipeline == (schemas.Pipeline{}) {
 		log.WithFields(
 			log.Fields{
@@ -23,6 +20,31 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 		return
 	}
 
+	jobs, err = c.ListPipelineJobs(ref.ProjectName, ref.LatestPipeline.ID)
+	if err != nil {
+		return
+	}
+
+	if ref.PullPipelineJobsFromChildPipelinesEnabled {
+		childJobs := []schemas.Job{}
+		childJobs, err = c.ListPipelineChildJobs(ref.ProjectName, ref.LatestPipeline.ID)
+		if err != nil {
+			return
+		}
+
+		for _, childJob := range childJobs {
+			jobs = append(jobs, childJob)
+		}
+	}
+
+	return
+}
+
+// ListPipelineJobs ..
+func (c *Client) ListPipelineJobs(projectName string, pipelineID int) (jobs []schemas.Job, err error) {
+	var foundJobs []*goGitlab.Job
+	var resp *goGitlab.Response
+
 	options := &goGitlab.ListJobsOptions{
 		ListOptions: goGitlab.ListOptions{
 			Page:    1,
@@ -32,7 +54,7 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 
 	for {
 		c.rateLimit()
-		foundJobs, resp, err = c.Jobs.ListPipelineJobs(ref.ProjectName, ref.LatestPipeline.ID, options)
+		foundJobs, resp, err = c.Jobs.ListPipelineJobs(projectName, pipelineID, options)
 		if err != nil {
 			return
 		}
@@ -44,9 +66,8 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 		if resp.CurrentPage >= resp.TotalPages {
 			log.WithFields(
 				log.Fields{
-					"project-name": ref.ProjectName,
-					"ref":          ref.Name,
-					"pipeline-id":  ref.LatestPipeline.ID,
+					"project-name": projectName,
+					"pipeline-id":  pipelineID,
 					"jobs-count":   resp.TotalItems,
 				},
 			).Debug("found pipeline jobs")
@@ -56,6 +77,78 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 		options.Page = resp.NextPage
 	}
 	return
+}
+
+// ListPipelineBridges ..
+func (c *Client) ListPipelineBridges(projectName string, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
+	var foundBridges []*goGitlab.Bridge
+	var resp *goGitlab.Response
+
+	options := &goGitlab.ListJobsOptions{
+		ListOptions: goGitlab.ListOptions{
+			Page:    1,
+			PerPage: 100,
+		},
+	}
+
+	for {
+		c.rateLimit()
+		foundBridges, resp, err = c.Jobs.ListPipelineBridges(projectName, pipelineID, options)
+		if err != nil {
+			return
+		}
+
+		for _, bridge := range foundBridges {
+			bridges = append(bridges, bridge)
+		}
+
+		if resp.CurrentPage >= resp.TotalPages {
+			log.WithFields(
+				log.Fields{
+					"project-name":  projectName,
+					"pipeline-id":   pipelineID,
+					"bridges-count": resp.TotalItems,
+				},
+			).Debug("found pipeline bridges")
+			break
+		}
+
+		options.Page = resp.NextPage
+	}
+	return
+}
+
+// ListPipelineChildJobs ..
+func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int) (jobs []schemas.Job, err error) {
+	pipelineIDs := []int{parentPipelineID}
+
+	for {
+		if len(pipelineIDs) == 0 {
+			return
+		}
+
+		pipelineID := pipelineIDs[len(pipelineIDs)-1]
+		pipelineIDs = pipelineIDs[:len(pipelineIDs)-1]
+
+		foundBridges := []*goGitlab.Bridge{}
+		foundBridges, err = c.ListPipelineBridges(projectName, pipelineID)
+		if err != nil {
+			return
+		}
+
+		for _, foundBridge := range foundBridges {
+			pipelineIDs = append(pipelineIDs, foundBridge.DownstreamPipeline.ID)
+			foundJobs := []schemas.Job{}
+			foundJobs, err = c.ListPipelineJobs(projectName, foundBridge.DownstreamPipeline.ID)
+			if err != nil {
+				return
+			}
+
+			for _, foundJob := range foundJobs {
+				jobs = append(jobs, foundJob)
+			}
+		}
+	}
 }
 
 // ListRefMostRecentJobs ..
