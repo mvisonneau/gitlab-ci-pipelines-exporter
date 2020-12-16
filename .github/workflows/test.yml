@@ -1,0 +1,45 @@
+---
+name: test
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        go-version:
+          - 1.15
+        os:
+          - ubuntu-20.04
+          - macos-10.15
+          - macos-11.0
+          - windows-2019
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Lint
+        if: ${{ matrix.os == 'ubuntu-20.04' && matrix.go-version == '1.15' }}
+        run: make lint
+
+      - name: Test
+        run: make coverage
+
+      - name: Publish coverage to coveralls.io
+        uses: shogo82148/actions-goveralls@v1
+        if: ${{ matrix.os == 'ubuntu-20.04' && matrix.go-version == '1.15' }}
+        with:
+          path-to-profile: coverage.out
+
+      - name: Build
+        run: make build-local

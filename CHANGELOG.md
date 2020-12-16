@@ -11,11 +11,14 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - When configured to export job metrics, it will now pull child/downstream pipelines jobs related ones as well
 - New `runner_description` label for all the `job` related metrics.
+- Release GitHub container registry based images: [ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter](https://github.com/users/mvisonneau/packages/container/package/gitlab-ci-pipelines-exporter)
+- Release `arm64v8` based container images as part of docker manifests in both **docker.io** and **ghcr.io**
 
 ### Changed
 
-- Ensure consistency of the exported metrics by distinguishing immutable from mutable labels used as metric key.
+- Ensure consistency of the exported metrics by distinguishing immutable from mutable labels used as metric key
 - Updated all dependencies
+- Migrated CI from Drone to GitHub actions
 
 ## [v0.4.5] - 2020-11-27
 
