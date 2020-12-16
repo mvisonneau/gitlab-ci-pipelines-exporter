@@ -26,7 +26,7 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 	}
 
 	if ref.PullPipelineJobsFromChildPipelinesEnabled {
-		childJobs := []schemas.Job{}
+		var childJobs []schemas.Job
 		childJobs, err = c.ListPipelineChildJobs(ref.ProjectName, ref.LatestPipeline.ID)
 		if err != nil {
 			return
@@ -130,7 +130,7 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 		pipelineID := pipelineIDs[len(pipelineIDs)-1]
 		pipelineIDs = pipelineIDs[:len(pipelineIDs)-1]
 
-		foundBridges := []*goGitlab.Bridge{}
+		var foundBridges []*goGitlab.Bridge
 		foundBridges, err = c.ListPipelineBridges(projectName, pipelineID)
 		if err != nil {
 			return
@@ -138,7 +138,7 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 
 		for _, foundBridge := range foundBridges {
 			pipelineIDs = append(pipelineIDs, foundBridge.DownstreamPipeline.ID)
-			foundJobs := []schemas.Job{}
+			var foundJobs []schemas.Job
 			foundJobs, err = c.ListPipelineJobs(projectName, foundBridge.DownstreamPipeline.ID)
 			if err != nil {
 				return

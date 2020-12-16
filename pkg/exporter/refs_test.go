@@ -63,12 +63,13 @@ func TestPullRefsFromProject(t *testing.T) {
 	projectsRefs, _ := store.Refs()
 	expectedRefs := schemas.Refs{
 		"99908380": schemas.Ref{
-			Kind:                        schemas.RefKindBranch,
-			ProjectName:                 "foo",
-			Name:                        "main",
-			LatestJobs:                  make(schemas.Jobs),
-			OutputSparseStatusMetrics:   true,
-			PullPipelineVariablesRegexp: ".*",
+			Kind:                      schemas.RefKindBranch,
+			ProjectName:               "foo",
+			Name:                      "main",
+			LatestJobs:                make(schemas.Jobs),
+			OutputSparseStatusMetrics: true,
+			PullPipelineJobsFromChildPipelinesEnabled: true,
+			PullPipelineVariablesRegexp:               ".*",
 		},
 	}
 	assert.Equal(t, expectedRefs, projectsRefs)
@@ -102,20 +103,22 @@ func TestPullRefsFromPipelines(t *testing.T) {
 	projectsRefs, _ := store.Refs()
 	expectedRefs := schemas.Refs{
 		"964648533": schemas.Ref{
-			Kind:                        schemas.RefKindTag,
-			ProjectName:                 "foo",
-			Name:                        "master",
-			LatestJobs:                  make(schemas.Jobs),
-			OutputSparseStatusMetrics:   true,
-			PullPipelineVariablesRegexp: ".*",
+			Kind:                      schemas.RefKindTag,
+			ProjectName:               "foo",
+			Name:                      "master",
+			LatestJobs:                make(schemas.Jobs),
+			OutputSparseStatusMetrics: true,
+			PullPipelineJobsFromChildPipelinesEnabled: true,
+			PullPipelineVariablesRegexp:               ".*",
 		},
 		"99908380": schemas.Ref{
-			Kind:                        schemas.RefKindBranch,
-			ProjectName:                 "foo",
-			Name:                        "main",
-			LatestJobs:                  make(schemas.Jobs),
-			OutputSparseStatusMetrics:   true,
-			PullPipelineVariablesRegexp: ".*",
+			Kind:                      schemas.RefKindBranch,
+			ProjectName:               "foo",
+			Name:                      "main",
+			LatestJobs:                make(schemas.Jobs),
+			OutputSparseStatusMetrics: true,
+			PullPipelineJobsFromChildPipelinesEnabled: true,
+			PullPipelineVariablesRegexp:               ".*",
 		},
 	}
 	assert.Equal(t, expectedRefs, projectsRefs)
