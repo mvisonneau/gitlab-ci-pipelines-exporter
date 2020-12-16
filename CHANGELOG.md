@@ -15,6 +15,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Changed
 
 - Ensure consistency of the exported metrics by distinguishing immutable from mutable labels used as metric key.
+- Updated all dependencies
 
 ## [v0.4.5] - 2020-11-27
 
