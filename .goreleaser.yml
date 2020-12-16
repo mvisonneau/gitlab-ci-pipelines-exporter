@@ -71,6 +71,7 @@ dockers:
       - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=Apache-2.0
+
   - image_templates:
       - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8'
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8'
@@ -114,6 +115,18 @@ docker_manifests:
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Tag }}_SHA256SUMS'
   algorithm: sha256
+
+signs:
+  - artifacts: checksum
+    args:
+      [
+        '-u',
+        '4D8900874BE004976FD945D892E0D0BACD70E16F',
+        '--output',
+        '${signature}',
+        '--detach-sign',
+        '${artifact}',
+      ]
 
 snapshot:
   name_template: '{{ .Tag }}-{{ .ShortCommit }}'
