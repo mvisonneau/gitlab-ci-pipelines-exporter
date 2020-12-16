@@ -10,7 +10,6 @@ import (
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
-	"github.com/xanzy/go-gitlab"
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -50,9 +49,9 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch event := event.(type) {
-	case *gitlab.PipelineEvent:
+	case *goGitlab.PipelineEvent:
 		go processPipelineEvent(*event)
-	case *gitlab.DeploymentEvent:
+	case *goGitlab.DeploymentEvent:
 		go processDeploymentEvent(*event)
 	default:
 		log.WithFields(logFields).WithField("event-type", reflect.TypeOf(event).String()).Warn("received a non supported event type as a webhook")
