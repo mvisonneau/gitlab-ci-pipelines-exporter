@@ -7,6 +7,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.14.1
 	github.com/go-redis/redis/v8 v8.4.2
 	github.com/go-redis/redis_rate/v9 v9.1.0
+	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/mvisonneau/go-helpers v0.0.1
 	github.com/openlyinc/pointy v1.1.2
@@ -19,7 +20,10 @@ require (
 	github.com/vmihailenco/taskq/v3 v3.2.3
 	github.com/xanzy/go-gitlab v0.40.1
 	go.uber.org/ratelimit v0.1.0
+	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
 
 replace github.com/vmihailenco/taskq/v3 => github.com/mvisonneau/taskq/v3 v3.2.4-0.20201127170227-fddacd1811f5
+
+replace github.com/mvisonneau/gitlab-ci-pipelines-exporter => github.com/devopsext/gitlab-ci-pipelines-exporter v0.4.6-0.20201216132931-2ada86ba9eac

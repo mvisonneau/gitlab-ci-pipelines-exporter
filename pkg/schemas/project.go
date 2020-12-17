@@ -20,6 +20,7 @@ var (
 	defaultProjectPullPipelineJobsFromChildPipelinesEnabled      = true
 	defaultProjectPullPipelineVariablesEnabled                   = false
 	defaultProjectPullPipelineVariablesRegexp                    = `.*`
+	defaultProjectPullPipelinesDepth                             = 10
 )
 
 // ProjectParameters for the fetching configuration of Projects and Wildcards
@@ -85,8 +86,9 @@ type ProjectPullRefsFromMergeRequests ProjectPullRefsFromParameters
 
 // ProjectPullPipeline ..
 type ProjectPullPipeline struct {
-	Jobs      ProjectPullPipelineJobs      `yaml:"jobs"`
-	Variables ProjectPullPipelineVariables `yaml:"variables"`
+	Jobs       ProjectPullPipelineJobs      `yaml:"jobs"`
+	Variables  ProjectPullPipelineVariables `yaml:"variables"`
+	DepthValue *int                         `yaml:"depth"`
 }
 
 // ProjectPullPipelineJobs ..
@@ -165,6 +167,10 @@ func UpdateProjectDefaults(d ProjectParameters) {
 
 	if d.Pull.Pipeline.Variables.RegexpValue != nil {
 		defaultProjectPullPipelineVariablesRegexp = *d.Pull.Pipeline.Variables.RegexpValue
+	}
+
+	if d.Pull.Pipeline.DepthValue != nil {
+		defaultProjectPullPipelinesDepth = *d.Pull.Pipeline.DepthValue
 	}
 }
 
@@ -312,4 +318,13 @@ func (p *ProjectPullPipelineVariables) Regexp() string {
 	}
 
 	return defaultProjectPullPipelineVariablesRegexp
+}
+
+// Depth ...
+func (p *ProjectPullPipeline) Depth() int {
+	if p.DepthValue != nil {
+		return *p.DepthValue
+	}
+
+	return defaultProjectPullPipelinesDepth
 }

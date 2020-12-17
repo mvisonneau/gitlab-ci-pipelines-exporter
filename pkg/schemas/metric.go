@@ -68,6 +68,18 @@ const (
 
 	// MetricKindTimestamp ..
 	MetricKindTimestamp
+
+	// MetricKindExPipelineStatus ..
+	MetricKindExPipelineStatus
+
+	// MetricKindExPipelineDuration ..
+	MetricKindExPipelineDuration
+
+	// MetricKindExPipelineJobStatus ..
+	MetricKindExPipelineJobStatus
+
+	// MetricKindExPipelineJobDuration ..
+	MetricKindExPipelineJobDuration
 )
 
 // MetricKind ..
@@ -118,6 +130,34 @@ func (m Metric) Key() MetricKey {
 	switch m.Kind {
 	case MetricKindJobStatus, MetricKindEnvironmentDeploymentStatus, MetricKindStatus:
 		key += m.Labels["status"]
+	}
+
+	// Ex metrics
+	switch m.Kind {
+	case MetricKindExPipelineStatus, MetricKindExPipelineDuration:
+		key += fmt.Sprintf("%v", []string{
+			m.Labels["project"],
+			m.Labels["kind"],
+			m.Labels["ref"],
+			m.Labels["topics"],
+			m.Labels["variables"],
+			m.Labels["status"],
+			m.Labels["pipeline_id"],
+		})
+	case MetricKindExPipelineJobStatus, MetricKindExPipelineJobDuration:
+		key += fmt.Sprintf("%v", []string{
+			m.Labels["project"],
+			m.Labels["kind"],
+			m.Labels["ref"],
+			m.Labels["stage"],
+			m.Labels["job_name"],
+			m.Labels["runner_description"],
+			m.Labels["topics"],
+			m.Labels["variables"],
+			m.Labels["status"],
+			m.Labels["pipeline_id"],
+			m.Labels["job_id"],
+		})
 	}
 
 	return MetricKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(key)))))
