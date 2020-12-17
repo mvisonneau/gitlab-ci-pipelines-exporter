@@ -109,19 +109,20 @@ docker_manifests:
 
   - name_template: ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest
     image_templates:
-      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64
-      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8
+      # It doesn't work if we point it to the latest tags..
+      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64
+      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8
 
 checksum:
-  name_template: '{{ .ProjectName }}_{{ .Tag }}_SHA256SUMS'
-  algorithm: sha256
+  name_template: '{{ .ProjectName }}_{{ .Tag }}_sha512sums.txt'
+  algorithm: sha512
 
 signs:
   - artifacts: checksum
     args:
       [
         '-u',
-        '4D8900874BE004976FD945D892E0D0BACD70E16F',
+        'C09CA9F71C5C988E65E3E5FCADEA38EDC46F25BE',
         '--output',
         '${signature}',
         '--detach-sign',
