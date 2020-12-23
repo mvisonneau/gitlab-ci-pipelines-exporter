@@ -46,6 +46,10 @@ func NewRegistry() *Registry {
 			schemas.MetricKindRunCount:                             NewCollectorRunCount(),
 			schemas.MetricKindStatus:                               NewCollectorStatus(),
 			schemas.MetricKindTimestamp:                            NewCollectorTimestamp(),
+			schemas.MetricKindExPipelineStatus:                     NewCollectorExPipelineStatus(),
+			schemas.MetricKindExPipelineDuration:                   NewCollectorExPipelineDuration(),
+			schemas.MetricKindExPipelineJobStatus:                  NewCollectorExPipelineJobStatus(),
+			schemas.MetricKindExPipelineJobDuration:                NewCollectorExPipelineJobDuration(),
 		},
 	}
 

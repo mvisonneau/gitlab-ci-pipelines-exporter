@@ -3,6 +3,7 @@ package exporter
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
@@ -39,7 +40,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 	pipelines, err := gitlabClient.GetProjectPipelines(ref.ProjectName, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
-			PerPage: 1,
+			PerPage: ref.PullPipelineDepth,
 			Page:    1,
 		},
 		Ref: goGitlab.String(ref.Name),
@@ -54,6 +55,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 		return nil
 	}
 
+	// Getting metrics for the most recent pipeline
 	pipeline, err := gitlabClient.GetRefPipeline(ref, pipelines[0].ID)
 	if err != nil {
 		return err
@@ -132,6 +134,38 @@ func pullRefMetrics(ref schemas.Ref) error {
 	if ref.PullPipelineJobsEnabled {
 		if err := pullRefMostRecentJobsMetrics(ref); err != nil {
 			return err
+		}
+	}
+
+	// Getting metrics for the other pipelines (Ex metrics)
+	for i := range pipelines {
+
+		pipeline, err := gitlabClient.GetRefPipeline(ref, pipelines[i].ID)
+		if err != nil {
+			return err
+		}
+
+		labels := ref.DefaultLabelsValues()
+		labels["pipeline_id"] = strconv.Itoa(pipeline.ID)
+
+		emitStatusMetric(
+			schemas.MetricKindExPipelineStatus,
+			labels,
+			statusesList[:],
+			pipeline.Status,
+			ref.OutputSparseStatusMetrics,
+		)
+
+		storeSetMetric(schemas.Metric{
+			Kind:   schemas.MetricKindExPipelineDuration,
+			Labels: labels,
+			Value:  pipeline.DurationSeconds,
+		})
+
+		if ref.PullPipelineJobsEnabled {
+			if err := pullRefExPipelineJobsMetrics(ref, pipelines[i].ID); err != nil {
+				return err
+			}
 		}
 	}
 

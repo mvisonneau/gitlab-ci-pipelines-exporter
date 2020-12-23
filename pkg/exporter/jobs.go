@@ -3,6 +3,7 @@ package exporter
 import (
 	"reflect"
 	"regexp"
+	"strconv"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
@@ -148,4 +149,70 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 		job.Status,
 		ref.OutputSparseStatusMetrics,
 	)
+}
+
+func pullRefExPipelineJobsMetrics(ref schemas.Ref, pipelineID int) error {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	jobs, err := gitlabClient.ListRefExPipelineJobs(ref, pipelineID)
+	if err != nil {
+		return err
+	}
+
+	for _, job := range jobs {
+		processExJobMetrics(ref, job, pipelineID)
+	}
+
+	return nil
+}
+
+func processExJobMetrics(ref schemas.Ref, job schemas.Job, pipelineID int) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	labels := ref.DefaultLabelsValues()
+	labels["stage"] = job.Stage
+	labels["job_name"] = job.Name
+	labels["runner_description"] = job.Runner.Description
+	labels["pipeline_id"] = strconv.Itoa(pipelineID)
+	labels["job_id"] = strconv.Itoa(job.ID)
+
+	projectRefLogFields := log.Fields{
+		"project-name": ref.ProjectName,
+		"job-name":     job.Name,
+		"job-id":       job.ID,
+	}
+
+	// Refresh ref state from the store
+	if err := store.GetRef(&ref); err != nil {
+		log.WithFields(
+			projectRefLogFields,
+		).WithField("error", err.Error()).Error("getting ref from the store")
+		return
+	}
+
+	if err := store.SetRef(ref); err != nil {
+		log.WithFields(
+			projectRefLogFields,
+		).WithField("error", err.Error()).Error("writing ref in the store")
+		return
+	}
+
+	log.WithFields(projectRefLogFields).Debug("processing job metrics")
+
+	emitStatusMetric(
+		schemas.MetricKindExPipelineJobStatus,
+		labels,
+		statusesList[:],
+		job.Status,
+		ref.OutputSparseStatusMetrics,
+	)
+
+	storeSetMetric(schemas.Metric{
+		Kind:   schemas.MetricKindExPipelineJobDuration,
+		Labels: labels,
+		Value:  job.DurationSeconds,
+	})
+
 }

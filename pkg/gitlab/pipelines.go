@@ -216,6 +216,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 					p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled(),
 					p.Pull.Pipeline.Variables.Enabled(),
 					p.Pull.Pipeline.Variables.Regexp(),
+					p.Pull.Pipeline.Depth(),
 				)
 
 				if _, ok := refs[ref.Key()]; !ok {

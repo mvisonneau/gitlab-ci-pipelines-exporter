@@ -230,3 +230,47 @@ func NewCollectorRunCount() prometheus.Collector {
 		defaultLabels,
 	)
 }
+
+// NewCollectorExPipelineStatus returns a new collector for the gitlab_ci_ex_pipeline_status metric
+func NewCollectorExPipelineStatus() prometheus.Collector {
+	return prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "gitlab_ci_ex_pipeline_status",
+			Help: "Status of the most recent pipelines",
+		},
+		append(defaultLabels, "status", "pipeline_id"),
+	)
+}
+
+// NewCollectorExPipelineDuration returns a new collector for the gitlab_ci_ex_pipeline_duration metric
+func NewCollectorExPipelineDuration() prometheus.Collector {
+	return prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "gitlab_ci_ex_pipeline_duration",
+			Help: "Duration of the most recent pipelines",
+		},
+		append(defaultLabels, "pipeline_id"),
+	)
+}
+
+// NewCollectorExPipelineJobStatus returns a new collector for the gitlab_ci_ex_pipeline_job_status metric
+func NewCollectorExPipelineJobStatus() prometheus.Collector {
+	return prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "gitlab_ci_ex_pipeline_job_status",
+			Help: "Status of the most recent pipelines",
+		},
+		append(defaultLabels, append(jobLabels, "status", "pipeline_id", "job_id")...),
+	)
+}
+
+// NewCollectorExPipelineJobDuration returns a new collector for the gitlab_ci_ex_pipeline_job_duration metric
+func NewCollectorExPipelineJobDuration() prometheus.Collector {
+	return prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "gitlab_ci_ex_pipeline_job_duration",
+			Help: "Duration of the most recent pipelines",
+		},
+		append(defaultLabels, append(jobLabels, "pipeline_id", "job_id")...),
+	)
+}

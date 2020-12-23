@@ -227,3 +227,26 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 	}
 	return
 }
+
+// ListRefExPipelineJobs ..
+func (c *Client) ListRefExPipelineJobs(ref schemas.Ref, pipelineID int) (jobs []schemas.Job, err error) {
+
+	jobs, err = c.ListPipelineJobs(ref.ProjectName, pipelineID)
+	if err != nil {
+		return
+	}
+
+	if ref.PullPipelineJobsFromChildPipelinesEnabled {
+		var childJobs []schemas.Job
+		childJobs, err = c.ListPipelineChildJobs(ref.ProjectName, pipelineID)
+		if err != nil {
+			return
+		}
+
+		for _, childJob := range childJobs {
+			jobs = append(jobs, childJob)
+		}
+	}
+
+	return
+}

@@ -71,5 +71,6 @@ func TestNewRef(t *testing.T) {
 		false,
 		true,
 		".*",
+		1,
 	))
 }

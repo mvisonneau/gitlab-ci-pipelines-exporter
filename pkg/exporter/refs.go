@@ -85,6 +85,7 @@ func pullRefsFromProject(p schemas.Project) error {
 			p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled(),
 			p.Pull.Pipeline.Variables.Enabled(),
 			p.Pull.Pipeline.Variables.Regexp(),
+			p.Pull.Pipeline.Depth(),
 		)
 
 		refExists, err := store.RefExists(ref.Key())
