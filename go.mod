@@ -7,6 +7,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.14.1
 	github.com/go-redis/redis/v8 v8.4.4
 	github.com/go-redis/redis_rate/v9 v9.1.0
+	github.com/gomodule/redigo v1.8.3 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/mvisonneau/go-helpers v0.0.1
 	github.com/openlyinc/pointy v1.1.2
@@ -19,6 +20,7 @@ require (
 	github.com/vmihailenco/taskq/v3 v3.2.3
 	github.com/xanzy/go-gitlab v0.40.2
 	go.uber.org/ratelimit v0.1.0
+	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
 
