@@ -137,6 +137,13 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 		}
 
 		for _, foundBridge := range foundBridges {
+			// Trigger job was created but not yet executed
+			// so downstream pipeline is not yet scheduled to start.
+			// Therefore no pipeline is available and bridge could be skipped.
+			if foundBridge.DownstreamPipeline == nil {
+				continue
+			}
+
 			pipelineIDs = append(pipelineIDs, foundBridge.DownstreamPipeline.ID)
 			var foundJobs []schemas.Job
 			foundJobs, err = c.ListPipelineJobs(projectName, foundBridge.DownstreamPipeline.ID)
