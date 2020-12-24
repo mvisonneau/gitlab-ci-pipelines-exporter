@@ -32,9 +32,7 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 			return
 		}
 
-		for _, childJob := range childJobs {
-			jobs = append(jobs, childJob)
-		}
+		jobs = append(jobs, childJobs...)
 	}
 
 	return
@@ -98,9 +96,7 @@ func (c *Client) ListPipelineBridges(projectName string, pipelineID int) (bridge
 			return
 		}
 
-		for _, bridge := range foundBridges {
-			bridges = append(bridges, bridge)
-		}
+		bridges = append(bridges, foundBridges...)
 
 		if resp.CurrentPage >= resp.TotalPages {
 			log.WithFields(
@@ -151,9 +147,7 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 				return
 			}
 
-			for _, foundJob := range foundJobs {
-				jobs = append(jobs, foundJob)
-			}
+			jobs = append(jobs, foundJobs...)
 		}
 	}
 }
