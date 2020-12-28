@@ -15,7 +15,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1
 	github.com/urfave/cli/v2 v2.3.0
-	github.com/vmihailenco/msgpack/v5 v5.1.0
+	github.com/vmihailenco/msgpack/v5 v5.1.3
 	github.com/vmihailenco/taskq/v3 v3.2.3
 	github.com/xanzy/go-gitlab v0.40.2
 	go.uber.org/ratelimit v0.1.0
