@@ -11,6 +11,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - GPG sign released artifacts checksums
 
+### Changed
+
+- Fixed a bug on child/downstream pipelines pull when the trigger has not been fired yet
+
 ## [v0.4.6] - 2020-12-16
 
 ### Added
