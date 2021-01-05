@@ -44,7 +44,6 @@ func pullRefMetrics(ref schemas.Ref) error {
 		},
 		Ref: goGitlab.String(ref.Name),
 	})
-
 	if err != nil {
 		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.ProjectName, err)
 	}

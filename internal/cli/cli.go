@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/internal/cmd"
-	cli "github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v2"
 )
 
 // Run handles the instanciation of the CLI application

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/exporter"
-	cli "github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v2"
 )
 
 // Run launches the exporter

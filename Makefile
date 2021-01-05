@@ -8,7 +8,7 @@ export GO111MODULE=on
 .PHONY: setup
 setup: ## Install required libraries/tools for build tasks
 	@command -v cover 2>&1 >/dev/null       || GO111MODULE=off go get -u -v golang.org/x/tools/cmd/cover
-	@command -v goimports 2>&1 >/dev/null   || GO111MODULE=off go get -u -v golang.org/x/tools/cmd/goimports
+	@command -v gofumpt 2>&1 >/dev/null     || GO111MODULE=off go get -u -v mvdan.cc/gofumpt
 	@command -v gosec 2>&1 >/dev/null       || GO111MODULE=off go get -u -v github.com/securego/gosec/cmd/gosec
 	@command -v goveralls 2>&1 >/dev/null   || GO111MODULE=off go get -u -v github.com/mattn/goveralls
 	@command -v ineffassign 2>&1 >/dev/null || GO111MODULE=off go get -u -v github.com/gordonklaus/ineffassign
@@ -17,10 +17,10 @@ setup: ## Install required libraries/tools for build tasks
 
 .PHONY: fmt
 fmt: setup ## Format source code
-	goimports -w $(FILES)
+	gofumpt -w $(FILES)
 
 .PHONY: lint
-lint: revive vet goimports ineffassign misspell gosec ## Run all lint related tests against the codebase
+lint: revive vet gofumpt ineffassign misspell gosec ## Run all lint related tests against the codebase
 
 .PHONY: revive
 revive: setup ## Test code syntax with revive
@@ -30,10 +30,10 @@ revive: setup ## Test code syntax with revive
 vet: ## Test code syntax with go vet
 	go vet ./...
 
-.PHONY: goimports
-goimports: setup ## Test code syntax with goimports
-	goimports -d $(FILES) > goimports.out
-	@if [ -s goimports.out ]; then cat goimports.out; rm goimports.out; exit 1; else rm goimports.out; fi
+.PHONY: gofumpt
+gofumpt: setup ## Test code syntax with gofumpt
+	gofumpt -d $(FILES) > gofumpt.out
+	@if [ -s gofumpt.out ]; then cat gofumpt.out; rm gofumpt.out; exit 1; else rm gofumpt.out; fi
 
 .PHONY: ineffassign
 ineffassign: setup ## Test code syntax for ineffassign

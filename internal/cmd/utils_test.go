@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	cli "github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v2"
 )
 
 func NewTestContext() (ctx *cli.Context, flags *flag.FlagSet) {
@@ -45,7 +45,7 @@ func TestConfigure(t *testing.T) {
 	assert.NoError(t, configure(ctx))
 
 	// Invalid config file syntax
-	ioutil.WriteFile(f.Name(), []byte("["), 0644)
+	ioutil.WriteFile(f.Name(), []byte("["), 0o644)
 	assert.Error(t, configure(ctx))
 
 	// Webhook endpoint enabled
@@ -53,7 +53,7 @@ func TestConfigure(t *testing.T) {
 server:
   webhook:
     enabled: true
-`), 0644)
+`), 0o644)
 
 	// No secret token defined for the webhook endpoint
 	assert.Error(t, configure(ctx))

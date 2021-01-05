@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewPipeline(t *testing.T) {
-	updatedAt := time.Date(2020, 10, 01, 13, 05, 10, 0, time.UTC)
+	updatedAt := time.Date(2020, 10, 1, 13, 5, 10, 0, time.UTC)
 
 	gitlabPipeline := goGitlab.Pipeline{
 		ID:        20,

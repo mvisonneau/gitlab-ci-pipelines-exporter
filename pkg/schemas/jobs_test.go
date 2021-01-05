@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewJob(t *testing.T) {
-	createdAt := time.Date(2020, 10, 01, 13, 05, 05, 0, time.UTC)
+	createdAt := time.Date(2020, 10, 1, 13, 5, 5, 0, time.UTC)
 	gitlabJob := goGitlab.Job{
 		ID:        2,
 		Name:      "foo",

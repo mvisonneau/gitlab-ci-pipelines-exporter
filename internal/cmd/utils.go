@@ -13,7 +13,7 @@ import (
 	"github.com/vmihailenco/taskq/v3"
 
 	log "github.com/sirupsen/logrus"
-	cli "github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v2"
 )
 
 var start time.Time

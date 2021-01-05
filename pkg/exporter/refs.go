@@ -14,7 +14,6 @@ func getRefs(
 	maxAgeSeconds uint,
 	fetchMergeRequestsPipelinesRefs bool,
 	fetchMergeRequestsPipelinesRefsInitLimit int) (map[string]schemas.RefKind, error) {
-
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -69,7 +68,6 @@ func pullRefsFromProject(p schemas.Project) error {
 		p.Pull.Refs.From.MergeRequests.Enabled(),
 		p.Pull.Refs.From.MergeRequests.Depth(),
 	)
-
 	if err != nil {
 		return err
 	}
