@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/alicebob/miniredis/v2 v2.14.1
-	github.com/go-redis/redis/v8 v8.4.4
+	github.com/go-redis/redis/v8 v8.4.8
 	github.com/go-redis/redis_rate/v9 v9.1.0
 	github.com/gomodule/redigo v1.8.3 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
