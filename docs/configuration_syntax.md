@@ -431,3 +431,12 @@ wildcards:
 ```
 
 The exporter will then search for all accessible projects and start pulling their metrics.
+
+## Using a forward proxy to reach GitLab's endpoints
+
+You can refer to the documentation of the [net/http package regarding ProxyFromEnvironment](https://godoc.org/net/http#ProxyFromEnvironment)
+
+```bash
+# eg:
+export HTTP_PROXY=http://10.x.x.x:3128
+```
