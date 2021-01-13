@@ -1,7 +1,6 @@
 package gitlab
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -34,12 +33,8 @@ func getMockedClient() (*http.ServeMux, *httptest.Server, *Client) {
 }
 
 func TestNewHTTPClient(t *testing.T) {
-	expected := &http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}}
-
 	c := NewHTTPClient(true)
-	assert.Equal(t, expected, c)
+	assert.True(t, c.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify)
 }
 
 func TestNewClient(t *testing.T) {

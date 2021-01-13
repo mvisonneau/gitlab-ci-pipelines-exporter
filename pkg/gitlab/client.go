@@ -40,9 +40,14 @@ type ClientConfig struct {
 
 // NewHTTPClient ..
 func NewHTTPClient(disableTLSVerify bool) *http.Client {
-	return &http.Client{Transport: &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: disableTLSVerify},
-	}}
+	// http.DefaultTransport contains useful settings such as the correct values for the picking
+	// up proxy informations from env variables
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: disableTLSVerify}
+
+	return &http.Client{
+		Transport: transport,
+	}
 }
 
 // NewClient ..
