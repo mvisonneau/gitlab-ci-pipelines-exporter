@@ -7,12 +7,12 @@ require (
 	github.com/alicebob/miniredis/v2 v2.14.1
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/go-redis/redis/v8 v8.4.10
-	github.com/go-redis/redis_rate/v9 v9.1.0
+	github.com/go-redis/redis_rate/v9 v9.1.1
 	github.com/gomodule/redigo v1.8.3 // indirect
-	github.com/google/uuid v1.1.4 // indirect
+	github.com/google/uuid v1.1.5 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
-	github.com/klauspost/compress v1.11.6 // indirect
+	github.com/klauspost/compress v1.11.7 // indirect
 	github.com/mvisonneau/go-helpers v0.0.1
 	github.com/openlyinc/pointy v1.1.2
 	github.com/pkg/errors v0.9.1
@@ -20,7 +20,7 @@ require (
 	github.com/prometheus/procfs v0.3.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.7.0
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/vmihailenco/msgpack/v5 v5.1.4
 	github.com/vmihailenco/taskq/v3 v3.2.3
