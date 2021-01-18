@@ -4,7 +4,7 @@ ARG ARCH
 # BUILD CONTAINER
 ##
 
-FROM alpine:3.12 as builder
+FROM alpine:3.13 as certs
 
 RUN \
 apk add --no-cache ca-certificates
@@ -17,7 +17,7 @@ FROM ${ARCH}/busybox:1.32-glibc
 
 WORKDIR /
 
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY gitlab-ci-pipelines-exporter /usr/local/bin/
 
 # Run as nobody user
