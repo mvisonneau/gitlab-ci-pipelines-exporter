@@ -1,0 +1,96 @@
+# URL and Token with sufficient permissions to access your GitLab's projects
+# pipelines informations
+# server:
+#   webhook:
+#     enabled: true
+#     secret_token: yolo
+
+gitlab:
+  # url: https://gitlab.com
+  # token: ztpobCYUX4eY8cbwbQ1-
+  url: https://git.sph.re
+  token: QVEFT4DJvBW5sSqS7jEB
+  health_url: 'https://git.sph.re/-/liveness?token=-GosN1QyYAfnvFu-ws5x'
+
+# redis:
+#   url: 'redis://localhost:6379'
+
+pull:
+  maximum_gitlab_api_requests_per_second: 20
+
+  metrics:
+    # on_init: false
+    # scheduled: false
+    interval_seconds: 10
+
+  projects_from_wildcards:
+    # on_init: false
+    # scheduled: false
+    interval_seconds: 1800
+
+  project_refs_from_branches_tags_and_mrs:
+    # on_init: false
+    # scheduled: false
+    interval_seconds: 300
+
+# garbage_collect:
+#   projects:
+#     on_init: false
+#     scheduled: true
+#     interval_seconds: 60
+
+#   environments:
+#     on_init: false
+#     scheduled: true
+#     interval_seconds: 60
+
+#   refs:
+#     on_init: false
+#     scheduled: true
+#     interval_seconds: 60
+
+#   metrics:
+#     on_init: false
+#     scheduled: true
+#     interval_seconds: 60
+
+# project_defaults:
+#   pull:
+#     environments:
+#       enabled: true
+#       name_regexp: '^aew1'
+
+#     refs:
+#       regexp: '^(main|master|dev)$'
+
+#     pipeline:
+#       jobs:
+#         enabled: true
+
+# The list of the projects you want to monitor
+# projects:
+#   - name: mvisonneau/child-pipelines
+#  - name: infra/k8s/nginx-ingress
+#  - name: infra/k8s/harbor
+#  - name: infra/k8s/oauth2-proxy
+#- name: max/api
+# - name: gitlab-org/gitlab-runner
+#   refs: '^master$'
+# - name: dsdlc/ims/libs
+#   fetch_pipeline_variables: true
+# - name: dsdlc/website
+#   refs: '^master|dev$'
+# Dynamically fetch the projects
+# wildcards:
+#   - owner:
+#       name: infra
+#       kind: group
+#search: 'ims'
+wildcards:
+  - search: ''
+  #- {}
+  #- owner: { name: dsdlc, kind: group, include_subgroups: true }
+  #- owner: { name: infra, kind: group, include_subgroups: true }
+  # - owner: { name: frontend, kind: group, include_subgroups: true }
+  #- owner: { name: backend, kind: group, include_subgroups: true }
+  # - owner: { name: data, kind: group, include_subgroups: true }
