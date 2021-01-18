@@ -20,7 +20,7 @@ require (
 	github.com/prometheus/procfs v0.3.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.7.0
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/vmihailenco/msgpack/v5 v5.1.4
 	github.com/vmihailenco/taskq/v3 v3.2.3
