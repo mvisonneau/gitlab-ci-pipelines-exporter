@@ -17,10 +17,12 @@ services:
     links:
       - redis
     environment:
-      GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter/config.yml
+      GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter.yml
       GCPE_LOG_LEVEL: debug
     volumes:
-      - ./gitlab-ci-pipelines-exporter/config.yml:/etc/gitlab-ci-pipelines-exporter/config.yml
+      - type: bind
+        source: ./gitlab-ci-pipelines-exporter.yml
+        target: /etc/gitlab-ci-pipelines-exporter.yml
 
   gitlab-ci-pipelines-exporter-2:
     <<: *gitlab-ci-pipelines-exporter

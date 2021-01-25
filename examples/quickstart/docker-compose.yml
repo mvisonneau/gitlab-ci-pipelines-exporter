@@ -8,12 +8,12 @@ services:
     ports:
       - 8080:8080
     environment:
-      GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter/config.yml
+      GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter.yml
       GCPE_LOG_LEVEL: debug
     volumes:
       - type: bind
-        source: ./gitlab-ci-pipelines-exporter
-        target: /etc/gitlab-ci-pipelines-exporter
+        source: ./gitlab-ci-pipelines-exporter.yml
+        target: /etc/gitlab-ci-pipelines-exporter.yml
 
   prometheus:
     image: docker.io/prom/prometheus:v2.22.2
