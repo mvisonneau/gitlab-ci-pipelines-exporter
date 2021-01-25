@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  gitlab-ci-pipelines-exporter:
+    image: docker.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.4.6
+    # You can comment out the image name and use the following statement
+    # to build the image against the current version of the repository
+    # build: ../..
+    ports:
+      - 8080:8080
+    environment:
+      GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter.yml
+      GCPE_LOG_LEVEL: debug
+    volumes:
+      - type: bind
+        source: ./gitlab-ci-pipelines-exporter.yml
+        target: /etc/gitlab-ci-pipelines-exporter.yml
+
+networks:
+  default:
+    driver: bridge
