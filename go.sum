@@ -131,6 +131,7 @@ github.com/go-redis/redis/v8 v8.4.0 h1:J5NCReIgh3QgUJu398hUncxDExN4gMOHI11NVbVic
 github.com/go-redis/redis/v8 v8.4.0/go.mod h1:A1tbYoHSa1fXwN+//ljcCYYJeLmVrwL9hbQN45Jdy0M=
 github.com/go-redis/redis/v8 v8.4.8 h1:sEG4g6Jq4hvQzbrNsVDNTDdxFCUnFC0jxuOp6tgALlA=
 github.com/go-redis/redis/v8 v8.4.8/go.mod h1:/cTZsrSn1DPqRuOnSDuyH2OSvd9iX0iUGT0s7hYGIAg=
+github.com/go-redis/redis/v8 v8.4.10/go.mod h1:d5yY/TlkQyYBSBHnXUmnf1OrHbyQere5JV4dLKwvXmo=
 github.com/go-redis/redis_rate/v9 v9.1.0 h1:5FOi8UWgxTQ2KlvUg25xPdv2UBxyeRIJJtMZJhBF78U=
 github.com/go-redis/redis_rate/v9 v9.1.0/go.mod h1:jjU9YxOSZ3cz0yj1QJVAJiy5ueKmL9o4AySJHcKyTSE=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
