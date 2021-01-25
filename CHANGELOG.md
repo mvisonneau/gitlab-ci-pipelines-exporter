@@ -15,6 +15,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Changed
 
 - Fixed a bug on child/downstream pipelines pull when the trigger has not been fired yet
+- Made the default config local file location not hidden as it makes very little sense
 - Updated all dependencies
 
 ## [v0.4.6] - 2020-12-16

@@ -1,7 +1,7 @@
 dist
 vendor
 **/*.tgz
-.gitlab-ci-pipelines-exporter.yml
+/gitlab-ci-pipelines-exporter.yml
 **/.DS_Store
 gitlab-ci-pipelines-exporter
 !cmd/gitlab-ci-pipelines-exporter
