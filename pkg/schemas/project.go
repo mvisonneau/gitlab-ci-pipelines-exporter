@@ -6,20 +6,22 @@ import (
 )
 
 var (
-	defaultProjectOutputSparseStatusMetrics                      = true
-	defaultProjectPullEnvironmentsEnabled                        = false
-	defaultProjectPullEnvironmentsNameRegexp                     = `.*`
-	defaultProjectPullEnvironmentsTagsRegexp                     = `.*`
-	defaultProjectPullRefsRegexp                                 = `^(main|master)$`
-	defaultProjectPullRefsMaxAgeSeconds                     uint = 0
-	defaultProjectPullRefsFromPipelinesEnabled                   = false
-	defaultProjectPullRefsFromPipelinesDepth                     = 100
-	defaultProjectPullRefsFromMergeRequestsEnabled               = false
-	defaultProjectPullRefsFromMergeRequestsDepth                 = 1
-	defaultProjectPullPipelineJobsEnabled                        = false
-	defaultProjectPullPipelineJobsFromChildPipelinesEnabled      = true
-	defaultProjectPullPipelineVariablesEnabled                   = false
-	defaultProjectPullPipelineVariablesRegexp                    = `.*`
+	defaultProjectOutputSparseStatusMetrics                               = true
+	defaultProjectPullEnvironmentsEnabled                                 = false
+	defaultProjectPullEnvironmentsNameRegexp                              = `.*`
+	defaultProjectPullEnvironmentsTagsRegexp                              = `.*`
+	defaultProjectPullRefsRegexp                                          = `^(main|master)$`
+	defaultProjectPullRefsMaxAgeSeconds                              uint = 0
+	defaultProjectPullRefsFromPipelinesEnabled                            = false
+	defaultProjectPullRefsFromPipelinesDepth                              = 100
+	defaultProjectPullRefsFromMergeRequestsEnabled                        = false
+	defaultProjectPullRefsFromMergeRequestsDepth                          = 1
+	defaultProjectPullPipelineJobsEnabled                                 = false
+	defaultProjectPullPipelineJobsFromChildPipelinesEnabled               = true
+	defaultProjectPullPipelineJobsRunnerDescriptionEnabled                = true
+	defaultProjectPullPipelineJobsRunnerDescriptionAggregationRegexp      = `shared-runners-manager-(\d*)\.gitlab\.com`
+	defaultProjectPullPipelineVariablesEnabled                            = false
+	defaultProjectPullPipelineVariablesRegexp                             = `.*`
 )
 
 // ProjectParameters for the fetching configuration of Projects and Wildcards
@@ -96,12 +98,24 @@ type ProjectPullPipelineJobs struct {
 
 	// Pull pipeline jobs from child/downstream pipelines
 	FromChildPipelines ProjectPullPipelineJobsFromChildPipelines `yaml:"from_child_pipelines"`
+
+	// Configure the export of the runner description which ran the job
+	RunnerDescription ProjectPullPipelineJobsRunnerDescription `yaml:"runner_description"`
 }
 
 // ProjectPullPipelineJobsFromChildPipelines ..
 type ProjectPullPipelineJobsFromChildPipelines struct {
 	// Enabled set to true will pull pipeline jobs from child/downstream pipelines related metrics
 	EnabledValue *bool `yaml:"enabled"`
+}
+
+// ProjectPullPipelineJobsRunnerDescription ..
+type ProjectPullPipelineJobsRunnerDescription struct {
+	// Enabled set to true will export the description of the runner which ran the job
+	EnabledValue *bool `yaml:"enabled"`
+
+	// Regular expression to be able to reduce the cardinality of the exported value when necessary
+	AggregationRegexpValue *string `yaml:"aggregation_regexp"`
 }
 
 // ProjectPullPipelineVariables ..
@@ -157,6 +171,14 @@ func UpdateProjectDefaults(d ProjectParameters) {
 
 	if d.Pull.Pipeline.Jobs.FromChildPipelines.EnabledValue != nil {
 		defaultProjectPullPipelineJobsFromChildPipelinesEnabled = *d.Pull.Pipeline.Jobs.FromChildPipelines.EnabledValue
+	}
+
+	if d.Pull.Pipeline.Jobs.RunnerDescription.EnabledValue != nil {
+		defaultProjectPullPipelineJobsRunnerDescriptionEnabled = *d.Pull.Pipeline.Jobs.RunnerDescription.EnabledValue
+	}
+
+	if d.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexpValue != nil {
+		defaultProjectPullPipelineJobsRunnerDescriptionAggregationRegexp = *d.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexpValue
 	}
 
 	if d.Pull.Pipeline.Variables.EnabledValue != nil {
@@ -294,6 +316,24 @@ func (p *ProjectPullPipelineJobsFromChildPipelines) Enabled() bool {
 	}
 
 	return defaultProjectPullPipelineJobsFromChildPipelinesEnabled
+}
+
+// Enabled ...
+func (p *ProjectPullPipelineJobsRunnerDescription) Enabled() bool {
+	if p.EnabledValue != nil {
+		return *p.EnabledValue
+	}
+
+	return defaultProjectPullPipelineJobsRunnerDescriptionEnabled
+}
+
+// AggregationRegexp ...
+func (p *ProjectPullPipelineJobsRunnerDescription) AggregationRegexp() string {
+	if p.AggregationRegexpValue != nil {
+		return *p.AggregationRegexpValue
+	}
+
+	return defaultProjectPullPipelineJobsRunnerDescriptionAggregationRegexp
 }
 
 // Enabled ...

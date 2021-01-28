@@ -68,8 +68,10 @@ func TestPullRefsFromProject(t *testing.T) {
 			Name:                      "main",
 			LatestJobs:                make(schemas.Jobs),
 			OutputSparseStatusMetrics: true,
-			PullPipelineJobsFromChildPipelinesEnabled: true,
-			PullPipelineVariablesRegexp:               ".*",
+			PullPipelineJobsFromChildPipelinesEnabled:          true,
+			PullPipelineJobsRunnerDescriptionEnabled:           true,
+			PullPipelineVariablesRegexp:                        ".*",
+			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
 		},
 	}
 	assert.Equal(t, expectedRefs, projectsRefs)
@@ -108,8 +110,10 @@ func TestPullRefsFromPipelines(t *testing.T) {
 			Name:                      "master",
 			LatestJobs:                make(schemas.Jobs),
 			OutputSparseStatusMetrics: true,
-			PullPipelineJobsFromChildPipelinesEnabled: true,
-			PullPipelineVariablesRegexp:               ".*",
+			PullPipelineJobsFromChildPipelinesEnabled:          true,
+			PullPipelineJobsRunnerDescriptionEnabled:           true,
+			PullPipelineVariablesRegexp:                        ".*",
+			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
 		},
 		"99908380": schemas.Ref{
 			Kind:                      schemas.RefKindBranch,
@@ -117,8 +121,10 @@ func TestPullRefsFromPipelines(t *testing.T) {
 			Name:                      "main",
 			LatestJobs:                make(schemas.Jobs),
 			OutputSparseStatusMetrics: true,
-			PullPipelineJobsFromChildPipelinesEnabled: true,
-			PullPipelineVariablesRegexp:               ".*",
+			PullPipelineJobsFromChildPipelinesEnabled:          true,
+			PullPipelineJobsRunnerDescriptionEnabled:           true,
+			PullPipelineVariablesRegexp:                        ".*",
+			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
 		},
 	}
 	assert.Equal(t, expectedRefs, projectsRefs)

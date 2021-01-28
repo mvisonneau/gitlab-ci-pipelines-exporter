@@ -29,11 +29,13 @@ type Ref struct {
 	LatestPipeline Pipeline
 	LatestJobs     Jobs
 
-	OutputSparseStatusMetrics                 bool
-	PullPipelineJobsEnabled                   bool
-	PullPipelineJobsFromChildPipelinesEnabled bool
-	PullPipelineVariablesEnabled              bool
-	PullPipelineVariablesRegexp               string
+	OutputSparseStatusMetrics                          bool
+	PullPipelineJobsEnabled                            bool
+	PullPipelineJobsFromChildPipelinesEnabled          bool
+	PullPipelineJobsRunnerDescriptionEnabled           bool
+	PullPipelineJobsRunnerDescriptionAggregationRegexp string
+	PullPipelineVariablesEnabled                       bool
+	PullPipelineVariablesRegexp                        string
 }
 
 // RefKey ..
@@ -68,8 +70,8 @@ func (ref Ref) DefaultLabelsValues() map[string]string {
 func NewRef(
 	kind RefKind,
 	projectName, name, topics string,
-	outputSparseStatusMetrics, pullPipelineJobsEnabled, pullPipelineJobsFromChildPipelinesEnabled, pullPipelineVariablesEnabled bool,
-	pullPipelineVariablesRegexp string,
+	outputSparseStatusMetrics, pullPipelineJobsEnabled, pullPipelineJobsFromChildPipelinesEnabled, pullPipelineJobsRunnerDescriptionEnabled, pullPipelineVariablesEnabled bool,
+	pullPipelineVariablesRegexp, pullPipelineJobsRunnerDescriptionAggregationRegexp string,
 ) Ref {
 	return Ref{
 		Kind:        kind,
@@ -78,10 +80,12 @@ func NewRef(
 		Topics:      topics,
 		LatestJobs:  make(Jobs),
 
-		OutputSparseStatusMetrics:                 outputSparseStatusMetrics,
-		PullPipelineJobsEnabled:                   pullPipelineJobsEnabled,
-		PullPipelineJobsFromChildPipelinesEnabled: pullPipelineJobsFromChildPipelinesEnabled,
-		PullPipelineVariablesEnabled:              pullPipelineVariablesEnabled,
-		PullPipelineVariablesRegexp:               pullPipelineVariablesRegexp,
+		OutputSparseStatusMetrics:                          outputSparseStatusMetrics,
+		PullPipelineJobsEnabled:                            pullPipelineJobsEnabled,
+		PullPipelineJobsFromChildPipelinesEnabled:          pullPipelineJobsFromChildPipelinesEnabled,
+		PullPipelineJobsRunnerDescriptionEnabled:           pullPipelineJobsRunnerDescriptionEnabled,
+		PullPipelineJobsRunnerDescriptionAggregationRegexp: pullPipelineJobsRunnerDescriptionAggregationRegexp,
+		PullPipelineVariablesEnabled:                       pullPipelineVariablesEnabled,
+		PullPipelineVariablesRegexp:                        pullPipelineVariablesRegexp,
 	}
 }

@@ -54,11 +54,13 @@ func TestNewRef(t *testing.T) {
 		Topics:      "bar,baz",
 		LatestJobs:  make(Jobs),
 
-		OutputSparseStatusMetrics:                 true,
-		PullPipelineJobsEnabled:                   true,
-		PullPipelineJobsFromChildPipelinesEnabled: false,
-		PullPipelineVariablesEnabled:              true,
-		PullPipelineVariablesRegexp:               ".*",
+		OutputSparseStatusMetrics:                          true,
+		PullPipelineJobsEnabled:                            true,
+		PullPipelineJobsFromChildPipelinesEnabled:          false,
+		PullPipelineJobsRunnerDescriptionEnabled:           false,
+		PullPipelineVariablesEnabled:                       true,
+		PullPipelineVariablesRegexp:                        ".*",
+		PullPipelineJobsRunnerDescriptionAggregationRegexp: ".*",
 	}
 
 	assert.Equal(t, expectedValue, NewRef(
@@ -69,7 +71,9 @@ func TestNewRef(t *testing.T) {
 		true,
 		true,
 		false,
+		false,
 		true,
+		".*",
 		".*",
 	))
 }

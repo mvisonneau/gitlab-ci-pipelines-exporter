@@ -247,6 +247,16 @@ project_defaults:
           # Collect jobs from subsequent child/downstream pipelines
           # (optional, default: true)
           enabled: true
+        
+        runner_description:
+          # Export the description of the runner which ran the job
+          # (optional, default: true)
+          enabled: true
+
+          # Whenever the description of a runner will match this regexp
+          # The regexp will be used as the value of the runner description instead
+          # (optional, default: "shared-runners-manager-(\d*)\.gitlab\.com")
+          aggregation_regexp: shared-runners-manager-(\d*)\.gitlab\.com
 
       variables:
         # Fetch pipeline variables in a separate metric (optional, default: false)
@@ -321,6 +331,16 @@ projects:
             # Collect jobs from subsequent child/downstream pipelines
             # (optional, default: true)
             enabled: true
+
+          runner_description:
+            # Export the description of the runner which ran the job
+            # (optional, default: true)
+            enabled: true
+
+            # Whenever the description of a runner will match this regexp
+            # The regexp will be used as the value of the runner description instead
+            # (optional, default: "shared-runners-manager-(\d*)\.gitlab\.com")
+            aggregation_regexp: shared-runners-manager-(\d*)\.gitlab\.com
 
         variables:
           # Fetch pipeline variables in a separate metric (optional, default: false)
@@ -411,6 +431,16 @@ wildcards:
             # Collect jobs from subsequent child/downstream pipelines
             # (optional, default: true)
             enabled: true
+
+          runner_description:
+            # Export the description of the runner which ran the job
+            # (optional, default: true)
+            enabled: true
+
+            # Whenever the description of a runner will match this regexp
+            # The regexp will be used as the value of the runner description instead
+            # (optional, default: "shared-runners-manager-(\d*)\.gitlab\.com")
+            aggregation_regexp: shared-runners-manager-(\d*)\.gitlab\.com
 
         variables:
           # Fetch pipeline variables in a separate metric (optional, default: false)

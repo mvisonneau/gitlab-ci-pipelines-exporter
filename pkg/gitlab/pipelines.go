@@ -214,8 +214,10 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 					p.OutputSparseStatusMetrics(),
 					p.Pull.Pipeline.Jobs.Enabled(),
 					p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled(),
+					p.Pull.Pipeline.Jobs.RunnerDescription.Enabled(),
 					p.Pull.Pipeline.Variables.Enabled(),
 					p.Pull.Pipeline.Variables.Regexp(),
+					p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp(),
 				)
 
 				if _, ok := refs[ref.Key()]; !ok {

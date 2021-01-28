@@ -11,6 +11,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - GPG sign released artifacts checksums
 - Support for performing requests through a forward proxy using standard env variables
+- New parameters to enable/disable/aggregate the export of the runner description which executed the job
 
 ### Changed
 

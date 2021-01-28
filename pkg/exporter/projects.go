@@ -41,5 +41,6 @@ func pullProjectsFromWildcard(w schemas.Wildcard) error {
 			go schedulePullEnvironmentsFromProject(context.Background(), p)
 		}
 	}
+
 	return nil
 }

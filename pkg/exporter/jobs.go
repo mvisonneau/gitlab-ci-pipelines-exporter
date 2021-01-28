@@ -48,22 +48,35 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	labels := ref.DefaultLabelsValues()
-	labels["stage"] = job.Stage
-	labels["job_name"] = job.Name
-	labels["runner_description"] = job.Runner.Description
-
 	projectRefLogFields := log.Fields{
 		"project-name": ref.ProjectName,
 		"job-name":     job.Name,
 		"job-id":       job.ID,
 	}
 
+	labels := ref.DefaultLabelsValues()
+	labels["stage"] = job.Stage
+	labels["job_name"] = job.Name
+
+	if ref.PullPipelineJobsRunnerDescriptionEnabled {
+		re, err := regexp.Compile(ref.PullPipelineJobsRunnerDescriptionAggregationRegexp)
+		if err != nil {
+			log.WithFields(projectRefLogFields).WithField("error", err.Error()).Error("invalid job runner description aggregation regexp")
+		}
+
+		if re.MatchString(job.Runner.Description) {
+			labels["runner_description"] = ref.PullPipelineJobsRunnerDescriptionAggregationRegexp
+		} else {
+			labels["runner_description"] = job.Runner.Description
+		}
+	} else {
+		// TODO: Figure out how to completely remove it from the exporter instead of keeping it empty
+		labels["runner_description"] = ""
+	}
+
 	// Refresh ref state from the store
 	if err := store.GetRef(&ref); err != nil {
-		log.WithFields(
-			projectRefLogFields,
-		).WithField("error", err.Error()).Error("getting ref from the store")
+		log.WithFields(projectRefLogFields).WithField("error", err.Error()).Error("getting ref from the store")
 		return
 	}
 

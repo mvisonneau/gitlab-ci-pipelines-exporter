@@ -80,7 +80,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		Stage:           "🚀",
 		ArtifactSize:    150,
 		Runner: schemas.Runner{
-			Description: "xxx",
+			Description: "foo-123-bar",
 		},
 	}
 
@@ -96,7 +96,9 @@ func TestProcessJobMetrics(t *testing.T) {
 		LatestJobs: schemas.Jobs{
 			"foo": oldJob,
 		},
-		OutputSparseStatusMetrics: true,
+		OutputSparseStatusMetrics:                          true,
+		PullPipelineJobsRunnerDescriptionEnabled:           true,
+		PullPipelineJobsRunnerDescriptionAggregationRegexp: "foo-(.*)-bar",
 	}
 
 	store.SetRef(ref)
@@ -125,7 +127,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		"variables":          ref.LatestPipeline.Variables,
 		"stage":              newJob.Stage,
 		"job_name":           newJob.Name,
-		"runner_description": newJob.Runner.Description,
+		"runner_description": ref.PullPipelineJobsRunnerDescriptionAggregationRegexp,
 	}
 
 	lastJobRunID := schemas.Metric{

@@ -169,6 +169,30 @@ func TestPullPipelineJobsFromChildPipelinesEnabled(t *testing.T) {
 	assert.Equal(t, defaultProjectPullPipelineJobsFromChildPipelinesEnabled, project.Pull.Pipeline.Jobs.FromChildPipelines.Enabled())
 }
 
+func TestPullPipelineJobsRunnerDescriptionEnabled(t *testing.T) {
+	cfg, project := NewTestProjectVariables()
+	assert.Equal(t, defaultProjectPullPipelineJobsRunnerDescriptionEnabled, project.Pull.Pipeline.Jobs.RunnerDescription.Enabled())
+
+	cfg.ProjectDefaults.Pull.Pipeline.Jobs.RunnerDescription.EnabledValue = pointy.Bool(!defaultProjectPullPipelineJobsRunnerDescriptionEnabled)
+	UpdateProjectDefaults(cfg.ProjectDefaults)
+	assert.Equal(t, defaultProjectPullPipelineJobsRunnerDescriptionEnabled, project.Pull.Pipeline.Jobs.RunnerDescription.Enabled())
+
+	project.Pull.Pipeline.Jobs.RunnerDescription.EnabledValue = pointy.Bool(defaultProjectPullPipelineJobsRunnerDescriptionEnabled)
+	assert.Equal(t, defaultProjectPullPipelineJobsRunnerDescriptionEnabled, project.Pull.Pipeline.Jobs.RunnerDescription.Enabled())
+}
+
+func TestPullPipelineJobsRunnerDescriptionAggregationRegexp(t *testing.T) {
+	cfg, project := NewTestProjectVariables()
+	assert.Equal(t, defaultProjectPullPipelineJobsRunnerDescriptionAggregationRegexp, project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp())
+
+	cfg.ProjectDefaults.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexpValue = pointy.String("foo")
+	UpdateProjectDefaults(cfg.ProjectDefaults)
+	assert.Equal(t, "foo", project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp())
+
+	project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexpValue = pointy.String("bar")
+	assert.Equal(t, "bar", project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp())
+}
+
 func TestPullPipelineVariablesEnabled(t *testing.T) {
 	cfg, project := NewTestProjectVariables()
 	assert.Equal(t, defaultProjectPullPipelineVariablesEnabled, project.Pull.Pipeline.Variables.Enabled())
