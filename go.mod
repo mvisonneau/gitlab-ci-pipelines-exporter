@@ -25,7 +25,6 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.1.4
 	github.com/vmihailenco/taskq/v3 v3.2.3
 	github.com/xanzy/go-gitlab v0.42.0
-	go.opentelemetry.io/otel v0.16.0 // indirect
 	go.uber.org/ratelimit v0.1.0
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3 // indirect
