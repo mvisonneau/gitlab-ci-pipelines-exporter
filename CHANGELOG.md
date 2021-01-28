@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.4.7] - 2021-01-28
+
 ### Added
 
 - GPG sign released artifacts checksums
@@ -487,7 +489,10 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.4.4...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.4.7...HEAD
+[v0.4.7]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.7
+[v0.4.6]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.6
+[v0.4.5]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.5
 [v0.4.4]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.4
 [v0.4.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.3
 [0.4.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/0.4.2
