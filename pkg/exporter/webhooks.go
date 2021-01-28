@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
@@ -91,6 +92,7 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 		log.WithFields(logFields).WithField("error", err.Error()).Error("reading ref from the store")
 	}
 
+	// Let's try to see if the project is configured to export this ref
 	if !exists {
 		p := schemas.Project{
 			Name: ref.ProjectName,
@@ -99,6 +101,20 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 		exists, err = store.ProjectExists(p.Key())
 		if err != nil {
 			log.WithFields(logFields).WithField("error", err.Error()).Error("reading project from the store")
+		}
+
+		// Perhaps the project is discoverable through a wildcard
+		if !exists && len(config.Wildcards) > 0 {
+			for _, w := range config.Wildcards {
+				// If in all our wildcards we have one which can potentially match the project ref
+				// received, we trigger a scan
+				if w.Owner.Kind == "" ||
+					(strings.Contains(p.Name, w.Owner.Name) && regexp.MustCompile(w.Pull.Refs.Regexp()).MatchString(ref.Name)) {
+					go schedulePullProjectsFromWildcardTask(context.TODO(), w)
+					log.WithFields(logFields).Info("project ref not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
+					return
+				}
+			}
 		}
 
 		if exists {
@@ -154,6 +170,19 @@ func triggerEnvironmentMetricsPull(env schemas.Environment) {
 		exists, err = store.ProjectExists(p.Key())
 		if err != nil {
 			log.WithFields(logFields).WithField("error", err.Error()).Error("reading project from the store")
+		}
+
+		// Perhaps the project is discoverable through a wildcard
+		if !exists && len(config.Wildcards) > 0 {
+			for _, w := range config.Wildcards {
+				// If in all our wildcards we have one which can potentially match the project ref
+				// received, we trigger a scan
+				if w.Pull.Environments.Enabled() && (w.Owner.Kind == "" || (strings.Contains(p.Name, w.Owner.Name) && regexp.MustCompile(w.Pull.Environments.NameRegexp()).MatchString(env.ProjectName))) {
+					go schedulePullProjectsFromWildcardTask(context.TODO(), w)
+					log.WithFields(logFields).Info("project environment not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
+					return
+				}
+			}
 		}
 
 		if exists {

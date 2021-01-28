@@ -19,6 +19,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Updated examples/webhook with ngrok+docker-compose instead of hashicorp waypoint
 - Bumped goreleaser to 0.155.0 and leverage docker buildx
 - Enhanced logging of the settings at startup to get more visibility on the interpreted parameters
+- Fixed a bug preventing the webhooks from working properly when pull is completely disabled in conjunction of wildcards
 - Updated all dependencies
 
 ## [v0.4.6] - 2020-12-16
