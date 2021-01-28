@@ -1,5 +1,3 @@
-ARG ARCH
-
 ##
 # BUILD CONTAINER
 ##
@@ -13,7 +11,7 @@ apk add --no-cache ca-certificates
 # RELEASE CONTAINER
 ##
 
-FROM ${ARCH}/busybox:1.32-glibc
+FROM busybox:1.32-glibc
 
 WORKDIR /
 
