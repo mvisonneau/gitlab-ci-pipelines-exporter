@@ -94,7 +94,7 @@ If the last pipeline which ran on your project is on a ref that is configured to
 ```bash
 ~$ docker-compose logs -f
 [..]
-time="2021-01-28T09:51:28Z" level=debug msg="webhook request" ip-address="192.168.0.1:57954" user-agent=GitLab/13.9.0-pre
+time="2021-01-28T09:51:28Z" level=debug msg="webhook request" ip-address="[::1]:56118" user-agent=GitLab/13.9.0-pre
 time="2021-01-28T09:51:28Z" level=info msg="received a pipeline webhook from GitLab for a ref, triggering metrics pull" project-name=foo/bar ref=main ref-kind=branch
 [..]
 ```
