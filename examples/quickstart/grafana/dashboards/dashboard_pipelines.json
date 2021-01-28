@@ -1485,7 +1485,7 @@
         "name": "OWNER",
         "options": [],
         "query": "label_values(gitlab_ci_pipeline_id, project)",
-        "refresh": 2,
+        "refresh": 1,
         "regex": "/(.*)\\/.*$/",
         "skipUrlSync": false,
         "sort": 0,
@@ -1496,7 +1496,7 @@
         "useTags": false
       },
       {
-        "allValue": ".*",
+        "allValue": "",
         "current": {
           "selected": true,
           "text": [
@@ -1516,7 +1516,7 @@
         "name": "PROJECT",
         "options": [],
         "query": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, project)",
-        "refresh": 2,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
@@ -1547,7 +1547,7 @@
         "name": "REF",
         "options": [],
         "query": "label_values(gitlab_ci_pipeline_id{project=~\"$PROJECT\"}, ref)",
-        "refresh": 2,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
