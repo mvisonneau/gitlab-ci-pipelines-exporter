@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/openlyinc/pointy"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -382,4 +383,17 @@ gitlab:
 	cfg, err := ParseConfigFile(f.Name())
 	assert.NoError(t, err)
 	assert.Equal(t, "https://gitlab.example.com/-/health", cfg.Gitlab.HealthURL)
+}
+
+func TestSchedulerConfigLog(t *testing.T) {
+	sc := SchedulerConfig{
+		OnInit:          true,
+		Scheduled:       true,
+		IntervalSeconds: 300,
+	}
+
+	assert.Equal(t, log.Fields{
+		"on-init":   "yes",
+		"scheduled": "every 300s",
+	}, sc.Log())
 }

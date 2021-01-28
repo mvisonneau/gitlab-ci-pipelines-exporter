@@ -18,6 +18,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Made the default config local file location not hidden as it makes very little sense
 - Updated examples/webhook with ngrok+docker-compose instead of hashicorp waypoint
 - Bumped goreleaser to 0.155.0 and leverage docker buildx
+- Enhanced logging of the settings at startup to get more visibility on the interpreted parameters
 - Updated all dependencies
 
 ## [v0.4.6] - 2020-12-16

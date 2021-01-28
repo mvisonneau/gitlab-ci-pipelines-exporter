@@ -222,10 +222,11 @@ func Run() {
 
 	log.WithFields(
 		log.Fields{
-			"listen-address":           config.Server.ListenAddress,
-			"pprof-endpoint-enabled":   config.Server.EnablePprof,
-			"metrics-endpoint-enabled": config.Server.Metrics.Enabled,
-			"webhook-endpoint-enabled": config.Server.Webhook.Enabled,
+			"listen-address":               config.Server.ListenAddress,
+			"pprof-endpoint-enabled":       config.Server.EnablePprof,
+			"metrics-endpoint-enabled":     config.Server.Metrics.Enabled,
+			"webhook-endpoint-enabled":     config.Server.Webhook.Enabled,
+			"openmetrics-encoding-enabled": config.Server.Metrics.EnableOpenmetricsEncoding,
 		},
 	).Info("http server started")
 

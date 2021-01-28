@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -254,4 +255,21 @@ func ParseConfigFile(path string) (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// Log returns some logging fields to showcase the configuration to the enduser
+func (sc *SchedulerConfig) Log() log.Fields {
+	onInit, scheduled := "no", "no"
+	if sc.OnInit {
+		onInit = "yes"
+	}
+
+	if sc.Scheduled {
+		scheduled = fmt.Sprintf("every %vs", sc.IntervalSeconds)
+	}
+
+	return log.Fields{
+		"on-init":   onInit,
+		"scheduled": scheduled,
+	}
 }
