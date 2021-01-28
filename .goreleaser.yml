@@ -59,7 +59,7 @@ dockers:
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64'
       - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64'
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64'
-    binaries: [gitlab-ci-pipelines-exporter]
+    ids: [gitlab-ci-pipelines-exporter]
     goarch: amd64
     use_buildx: true
     build_flag_templates:
@@ -78,7 +78,7 @@ dockers:
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8'
       - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8'
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8'
-    binaries: [gitlab-ci-pipelines-exporter]
+    ids: [gitlab-ci-pipelines-exporter]
     goarch: arm64
     use_buildx: true
     build_flag_templates:
@@ -107,6 +107,12 @@ docker_manifests:
     image_templates:
       - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64
       - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8
+
+  - name_template: ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest
+    image_templates:
+      # It doesn't work if we point it to the latest tags..
+      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64
+      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8
 
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Tag }}_sha512sums.txt'
