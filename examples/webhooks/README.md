@@ -92,14 +92,59 @@ You can then trigger a manual test:
 If the last pipeline which ran on your project is on a ref that is configured to be exported, you will see the following logs:
 
 ```bash
-~$ waypoint logs
+~$ docker-compose logs -f
 [..]
-DEBU[2020-10-09T15:03:49+01:00] webhook request         ip-address="127.0.0.1:62838" user-agent=
+time="2021-01-28T09:51:28Z" level=debug msg="webhook request" ip-address="192.168.0.1:57954" user-agent=GitLab/13.9.0-pre
+time="2021-01-28T09:51:28Z" level=info msg="received a pipeline webhook from GitLab for a ref, triggering metrics pull" project-name=foo/bar ref=main ref-kind=branch
 [..]
 ```
+
+If you query the `/metrics` endpoint of the exporter you should be able to see associated metrics:
+
+```shell
+gitlab_ci_pipeline_coverage{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 0
+gitlab_ci_pipeline_duration_seconds{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 494
+gitlab_ci_pipeline_id{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 1.00308162e+08
+gitlab_ci_pipeline_run_count{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="canceled",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="created",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="failed",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="manual",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="pending",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="preparing",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="running",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="scheduled",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="skipped",topics="",variables=""} 0
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="success",topics="",variables=""} 1
+gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="waiting_for_resource",topics="",variables=""} 0
+gitlab_ci_pipeline_timestamp{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 1.611826041e+09
+```
+
+In this configuration, the exporter does not even attempt to fetch the metrics on init, this means that on start, you won't be getting any metrics populated/exported until
+a webhook has been triggered). This can be mitigated by whether using it in a ["ha-fashion" with a Redis backend](../ha-setup) or by enabling the following in the exporter config:
+
+```yaml
+pull:
+  projects_from_wildcards:
+    on_init: true
+
+  environments_from_projects:
+    on_init: true
+
+  refs_from_projects:
+    on_init: true
+
+  metrics:
+    on_init: true
+```
+
+You can also use it in an hybrid fashion pull/push with greater pull intervals if you want to ensure you have a consistent/convergent state over time.
 
 ## Cleanup
 
 ```bash
-~$ waypoint destroy
+~$ docker-compose down
+~$ <stop ngrok>
 ```
+
+Also remove the configured test webhook on your GitLab project.

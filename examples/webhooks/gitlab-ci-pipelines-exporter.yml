@@ -2,10 +2,28 @@ gitlab:
   url: https://gitlab.com
   token: <your_token>
 
-redis:
-  url: redis://redis:6379
+server:
+  webhook:
+    enabled: true
+    secret_token: <strong_arbitrary_secret_token>
 
-# Example public projects to monitor
+pull:
+  projects_from_wildcards:
+    on_init: false
+    scheduled: false
+
+  environments_from_projects:
+    on_init: false
+    scheduled: false
+
+  refs_from_projects:
+    on_init: false
+    scheduled: false
+
+  metrics:
+    on_init: false
+    scheduled: false
+
 projects:
-  - name: gitlab-org/gitlab-runner
-  - name: gitlab-org/charts/auto-deploy-app
+  # Configure a project on which you are authorized to configure webhooks
+  - name: <your_project_path_with_namespace>
