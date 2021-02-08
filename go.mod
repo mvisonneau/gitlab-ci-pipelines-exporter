@@ -6,7 +6,7 @@ require (
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/alicebob/miniredis/v2 v2.14.1
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
-	github.com/go-redis/redis/v8 v8.4.10
+	github.com/go-redis/redis/v8 v8.5.0
 	github.com/go-redis/redis_rate/v9 v9.1.1
 	github.com/gomodule/redigo v1.8.3 // indirect
 	github.com/google/uuid v1.1.5 // indirect
