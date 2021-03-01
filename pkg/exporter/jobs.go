@@ -1,14 +1,17 @@
 package exporter
 
 import (
+	"bytes"
+	"fmt"
 	"reflect"
 	"regexp"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+
 	log "github.com/sirupsen/logrus"
 )
 
-func pullRefPipelineJobsMetrics(ref schemas.Ref) error {
+func pullRefPipelineJobsMetrics(ref schemas.Ref, pullJobTraces bool) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -18,13 +21,13 @@ func pullRefPipelineJobsMetrics(ref schemas.Ref) error {
 	}
 
 	for _, job := range jobs {
-		processJobMetrics(ref, job)
+		processJobMetrics(ref, job, pullJobTraces)
 	}
 
 	return nil
 }
 
-func pullRefMostRecentJobsMetrics(ref schemas.Ref) error {
+func pullRefMostRecentJobsMetrics(ref schemas.Ref, pullJobTraces bool) error {
 	if !ref.PullPipelineJobsEnabled {
 		return nil
 	}
@@ -38,13 +41,77 @@ func pullRefMostRecentJobsMetrics(ref schemas.Ref) error {
 	}
 
 	for _, job := range jobs {
-		processJobMetrics(ref, job)
+		processJobMetrics(ref, job, pullJobTraces)
 	}
 
 	return nil
 }
 
-func processJobMetrics(ref schemas.Ref, job schemas.Job) {
+// ParseJobTrace ..
+// func (c *Client) ParseJobTrace(projectName string, jobID int, rules []string) (parsedOutput string, err error) {
+
+// 	trace, _, err := c.Jobs.GetTraceFile(projectName, jobID)
+
+// 	buf := new(bytes.Buffer)
+// 	buf.ReadFrom(trace)
+// 	parsedOutput = buf.String()
+
+// 	r, _ := regexp.Compile("---> (.*)")
+// 	foundStrings := r.FindAllString(parsedOutput, -1)
+
+// 	for i, s := range foundStrings {
+// 		fmt.Println(i, s)
+// 	}
+
+// 	return
+
+// }
+
+func processJobTrace(ref schemas.Ref, job schemas.Job) {
+	fmt.Println("Pull and parse trace output for: ", ref.ProjectName, " / ", job.Name, " / ", job.ID)
+
+	var newTraceMatch schemas.TraceMatch
+	var foundTraceMatches []schemas.TraceMatch
+
+	for _, configRule := range config.Pull.TraceRules {
+		for _, jobRule := range ref.PullPipelineJobsTraceRules {
+			if configRule.Name == jobRule {
+				fmt.Println("This job trace process we must: ", configRule.RegexpValue)
+				newTraceMatch.RuleName = configRule.Name
+				newTraceMatch.RegexpValue = configRule.RegexpValue
+				foundTraceMatches = append(foundTraceMatches, newTraceMatch)
+			}
+		}
+	}
+
+	fmt.Println(foundTraceMatches)
+
+	trace, _, err := gitlabClient.Jobs.GetTraceFile(ref.ProjectName, job.ID)
+
+	if err != nil {
+		return
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(trace)
+	parsedOutput := buf.String()
+
+	r, _ := regexp.Compile("---> (.*)")
+	foundStrings := r.FindAllString(parsedOutput, -1)
+
+	for i, s := range foundStrings {
+		fmt.Println(i, s)
+	}
+
+}
+
+func processJobMetrics(ref schemas.Ref, job schemas.Job, pullJobTraces bool) {
+
+	// Trace match metrics
+	if pullJobTraces && len(ref.PullPipelineJobsTraceRules) > 0 {
+		processJobTrace(ref, job)
+	}
+
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -100,6 +167,20 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 	}
 
 	log.WithFields(projectRefLogFields).Debug("processing job metrics")
+
+	// Trace match metrics
+	if pullJobTraces && len(ref.PullPipelineJobsTraceRules) > 0 {
+		processJobTrace(ref, job)
+		labels["trace_rule"] = ""
+	} else {
+		labels["trace_rule"] = ""
+	}
+
+	storeSetMetric(schemas.Metric{
+		Kind:   schemas.MetricKindJobTraceMatchCount,
+		Labels: labels,
+		Value:  123,
+	})
 
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindJobID,

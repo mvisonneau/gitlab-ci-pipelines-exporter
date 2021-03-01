@@ -13,12 +13,20 @@ type Job struct {
 	DurationSeconds float64
 	Status          string
 	ArtifactSize    float64
+	TraceMatches    []TraceMatch
 	Runner          Runner
 }
 
 // Runner ..
 type Runner struct {
 	Description string
+}
+
+// TraceMatch ..
+type TraceMatch struct {
+	RuleName    string
+	RegexpValue string
+	MatchCount  int
 }
 
 // Jobs ..

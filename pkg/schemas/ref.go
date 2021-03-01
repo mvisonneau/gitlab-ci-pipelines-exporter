@@ -34,6 +34,7 @@ type Ref struct {
 	PullPipelineJobsFromChildPipelinesEnabled          bool
 	PullPipelineJobsRunnerDescriptionEnabled           bool
 	PullPipelineJobsRunnerDescriptionAggregationRegexp string
+	PullPipelineJobsTraceRules                         []string
 	PullPipelineVariablesEnabled                       bool
 	PullPipelineVariablesRegexp                        string
 }
@@ -71,7 +72,7 @@ func NewRef(
 	kind RefKind,
 	projectName, name, topics string,
 	outputSparseStatusMetrics, pullPipelineJobsEnabled, pullPipelineJobsFromChildPipelinesEnabled, pullPipelineJobsRunnerDescriptionEnabled, pullPipelineVariablesEnabled bool,
-	pullPipelineVariablesRegexp, pullPipelineJobsRunnerDescriptionAggregationRegexp string,
+	pullPipelineVariablesRegexp, pullPipelineJobsRunnerDescriptionAggregationRegexp string, pullPipelineJobsTraceRules []string,
 ) Ref {
 	return Ref{
 		Kind:        kind,
@@ -85,6 +86,7 @@ func NewRef(
 		PullPipelineJobsFromChildPipelinesEnabled:          pullPipelineJobsFromChildPipelinesEnabled,
 		PullPipelineJobsRunnerDescriptionEnabled:           pullPipelineJobsRunnerDescriptionEnabled,
 		PullPipelineJobsRunnerDescriptionAggregationRegexp: pullPipelineJobsRunnerDescriptionAggregationRegexp,
+		PullPipelineJobsTraceRules:                         pullPipelineJobsTraceRules,
 		PullPipelineVariablesEnabled:                       pullPipelineVariablesEnabled,
 		PullPipelineVariablesRegexp:                        pullPipelineVariablesRegexp,
 	}

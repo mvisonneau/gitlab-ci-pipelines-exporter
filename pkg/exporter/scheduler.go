@@ -73,9 +73,9 @@ var (
 	})
 	pullRefMetricsTask = taskq.RegisterTask(&taskq.TaskOptions{
 		Name: "pullRefMetricsTask",
-		Handler: func(ref schemas.Ref) (err error) {
+		Handler: func(ref schemas.Ref, pullJobTraces bool) (err error) {
 			// On errors, we do not want to retry these tasks
-			if err := pullRefMetrics(ref); err != nil {
+			if err := pullRefMetrics(ref, pullJobTraces); err != nil {
 				log.WithFields(log.Fields{
 					"project-name": ref.ProjectName,
 					"ref":          ref.Name,
@@ -124,6 +124,7 @@ func schedule(ctx context.Context) {
 		pullEnvironmentsFromProjectsTicker := time.NewTicker(time.Duration(config.Pull.EnvironmentsFromProjects.IntervalSeconds) * time.Second)
 		pullRefsFromProjectsTicker := time.NewTicker(time.Duration(config.Pull.RefsFromProjects.IntervalSeconds) * time.Second)
 		pullMetricsTicker := time.NewTicker(time.Duration(config.Pull.Metrics.IntervalSeconds) * time.Second)
+		pullMetricsWithTracesTicker := time.NewTicker(time.Duration(config.Pull.MetricsWithTraces.IntervalSeconds) * time.Second)
 		garbageCollectProjectsTicker := time.NewTicker(time.Duration(config.GarbageCollect.Projects.IntervalSeconds) * time.Second)
 		garbageCollectEnvironmentsTicker := time.NewTicker(time.Duration(config.GarbageCollect.Environments.IntervalSeconds) * time.Second)
 		garbageCollectRefsTicker := time.NewTicker(time.Duration(config.GarbageCollect.Refs.IntervalSeconds) * time.Second)
@@ -144,6 +145,10 @@ func schedule(ctx context.Context) {
 
 		if !config.Pull.Metrics.Scheduled {
 			pullMetricsTicker.Stop()
+		}
+
+		if !config.Pull.MetricsWithTraces.Scheduled {
+			pullMetricsWithTracesTicker.Stop()
 		}
 
 		if !config.GarbageCollect.Projects.Scheduled {
@@ -175,7 +180,9 @@ func schedule(ctx context.Context) {
 			case <-pullRefsFromProjectsTicker.C:
 				schedulePullRefsFromProjects(ctx)
 			case <-pullMetricsTicker.C:
-				schedulePullMetrics(ctx)
+				schedulePullMetrics(ctx, false)
+			case <-pullMetricsWithTracesTicker.C:
+				schedulePullMetrics(ctx, true)
 			case <-garbageCollectProjectsTicker.C:
 				scheduleGarbageCollectProjects(ctx)
 			case <-garbageCollectEnvironmentsTicker.C:
@@ -206,7 +213,11 @@ func schedulerInit(ctx context.Context) {
 	}
 
 	if config.Pull.Metrics.OnInit {
-		schedulePullMetrics(ctx)
+		schedulePullMetrics(ctx, false)
+	}
+
+	if config.Pull.MetricsWithTraces.OnInit {
+		schedulePullMetrics(ctx, true)
 	}
 
 	if config.GarbageCollect.Projects.OnInit {
@@ -288,7 +299,7 @@ func schedulePullRefsFromProjects(ctx context.Context) {
 	}
 }
 
-func schedulePullMetrics(ctx context.Context) {
+func schedulePullMetrics(ctx context.Context, pullJobTraces bool) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -302,12 +313,17 @@ func schedulePullMetrics(ctx context.Context) {
 		log.Error(err)
 	}
 
+	traceInfoSuffix := ""
+	if pullJobTraces {
+		traceInfoSuffix = "with job traces"
+	}
+
 	log.WithFields(
 		log.Fields{
 			"environments-count": envsCount,
 			"refs-count":         refsCount,
 		},
-	).Info("scheduling metrics pull")
+	).Info("scheduling metrics pull ", traceInfoSuffix)
 
 	// ENVIRONMENTS
 	envs, err := store.Environments()
@@ -326,7 +342,7 @@ func schedulePullMetrics(ctx context.Context) {
 	}
 
 	for _, ref := range refs {
-		go schedulePullRefMetrics(ctx, ref)
+		go schedulePullRefMetrics(ctx, ref, pullJobTraces)
 	}
 }
 
@@ -432,7 +448,7 @@ func schedulePullRefsFromProject(ctx context.Context, p schemas.Project) {
 	}
 }
 
-func schedulePullRefMetrics(ctx context.Context, ref schemas.Ref) {
+func schedulePullRefMetrics(ctx context.Context, ref schemas.Ref, pullJobTraces bool) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -441,7 +457,7 @@ func schedulePullRefMetrics(ctx context.Context, ref schemas.Ref) {
 		return
 	}
 
-	if err := pullingQueue.Add(pullRefMetricsTask.WithArgs(ctx, ref)); err != nil {
+	if err := pullingQueue.Add(pullRefMetricsTask.WithArgs(ctx, ref, pullJobTraces)); err != nil {
 		log.WithFields(log.Fields{
 			"project-name": ref.ProjectName,
 			"ref-name":     ref.Name,

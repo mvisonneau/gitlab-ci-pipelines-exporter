@@ -138,7 +138,7 @@ schedulePull:
 	log.WithFields(logFields).Info("received a pipeline webhook from GitLab for a ref, triggering metrics pull")
 	// TODO: When all the metrics will be sent over the webhook, we might be able to avoid redoing a pull
 	// eg: 'coverage' is not in the pipeline payload yet, neither is 'artifacts' in the job one
-	go schedulePullRefMetrics(context.Background(), ref)
+	go schedulePullRefMetrics(context.Background(), ref, false)
 }
 
 func processDeploymentEvent(e goGitlab.DeploymentEvent) {

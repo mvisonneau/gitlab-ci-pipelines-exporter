@@ -8,3 +8,4 @@ gitlab-ci-pipelines-exporter
 !examples/**/gitlab-ci-pipelines-exporter
 coverage.out
 .waypoint
+go.sum

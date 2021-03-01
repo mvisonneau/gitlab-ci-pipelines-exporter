@@ -88,6 +88,7 @@ func configure(ctx *cli.Context) (err error) {
 	log.WithFields(cfg.Pull.EnvironmentsFromProjects.Log()).Info("pull environments from projects")
 	log.WithFields(cfg.Pull.RefsFromProjects.Log()).Info("pull refs from projects")
 	log.WithFields(cfg.Pull.Metrics.Log()).Info("pull metrics")
+	log.WithFields(cfg.Pull.MetricsWithTraces.Log()).Info("pull metrics with job traces")
 
 	log.WithFields(cfg.GarbageCollect.Projects.Log()).Info("garbage collect projects")
 	log.WithFields(cfg.GarbageCollect.Environments.Log()).Info("garbage collect environments")
