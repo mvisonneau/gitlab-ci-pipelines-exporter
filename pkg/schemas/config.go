@@ -274,7 +274,6 @@ func ParseConfigFile(path string) (Config, error) {
 	if cfg.Gitlab.URL != "https://gitlab.com" {
 		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/-/health", cfg.Gitlab.URL)
 	}
-	fmt.Println(cfg)
 	return cfg, nil
 }
 
