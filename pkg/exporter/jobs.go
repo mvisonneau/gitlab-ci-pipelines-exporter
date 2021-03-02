@@ -2,7 +2,6 @@ package exporter
 
 import (
 	"bytes"
-	"fmt"
 	"reflect"
 	"regexp"
 
@@ -22,6 +21,7 @@ func pullRefPipelineJobsMetrics(ref schemas.Ref, pullJobTraces bool) error {
 
 	for _, job := range jobs {
 		processJobMetrics(ref, job, pullJobTraces)
+		processJobTraceMetrics(ref, job, pullJobTraces)
 	}
 
 	return nil
@@ -42,76 +42,69 @@ func pullRefMostRecentJobsMetrics(ref schemas.Ref, pullJobTraces bool) error {
 
 	for _, job := range jobs {
 		processJobMetrics(ref, job, pullJobTraces)
+		processJobTraceMetrics(ref, job, pullJobTraces)
 	}
 
 	return nil
 }
 
-// ParseJobTrace ..
-// func (c *Client) ParseJobTrace(projectName string, jobID int, rules []string) (parsedOutput string, err error) {
-
-// 	trace, _, err := c.Jobs.GetTraceFile(projectName, jobID)
-
-// 	buf := new(bytes.Buffer)
-// 	buf.ReadFrom(trace)
-// 	parsedOutput = buf.String()
-
-// 	r, _ := regexp.Compile("---> (.*)")
-// 	foundStrings := r.FindAllString(parsedOutput, -1)
-
-// 	for i, s := range foundStrings {
-// 		fmt.Println(i, s)
-// 	}
-
-// 	return
-
-// }
-
-func processJobTrace(ref schemas.Ref, job schemas.Job) {
-	fmt.Println("Pull and parse trace output for: ", ref.ProjectName, " / ", job.Name, " / ", job.ID)
-
+func processJobTrace(ref schemas.Ref, job schemas.Job) schemas.Job {
 	var newTraceMatch schemas.TraceMatch
-	var foundTraceMatches []schemas.TraceMatch
+	var singleMatch bool = false
 
 	for _, configRule := range config.Pull.TraceRules {
 		for _, jobRule := range ref.PullPipelineJobsTraceRules {
 			if configRule.Name == jobRule {
-				fmt.Println("This job trace process we must: ", configRule.RegexpValue)
+				singleMatch = true
 				newTraceMatch.RuleName = configRule.Name
 				newTraceMatch.RegexpValue = configRule.RegexpValue
-				foundTraceMatches = append(foundTraceMatches, newTraceMatch)
+				newTraceMatch.MatchCount = 0
+				job.TraceMatches = append(job.TraceMatches, newTraceMatch)
 			}
 		}
 	}
 
-	fmt.Println(foundTraceMatches)
-
-	trace, _, err := gitlabClient.Jobs.GetTraceFile(ref.ProjectName, job.ID)
-
-	if err != nil {
-		return
+	if singleMatch {
+		trace, _, err := gitlabClient.Jobs.GetTraceFile(ref.ProjectName, job.ID)
+		if err != nil {
+			return job
+		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(trace)
+		jobTrace := buf.String()
+		for i := range job.TraceMatches {
+			r, _ := regexp.Compile(job.TraceMatches[i].RegexpValue)
+			foundStrings := r.FindAllString(jobTrace, -1)
+			job.TraceMatches[i].MatchCount = job.TraceMatches[i].MatchCount + len(foundStrings)
+		}
 	}
-
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(trace)
-	parsedOutput := buf.String()
-
-	r, _ := regexp.Compile("---> (.*)")
-	foundStrings := r.FindAllString(parsedOutput, -1)
-
-	for i, s := range foundStrings {
-		fmt.Println(i, s)
-	}
-
+	return job
 }
 
-func processJobMetrics(ref schemas.Ref, job schemas.Job, pullJobTraces bool) {
+func processJobTraceMetrics(ref schemas.Ref, job schemas.Job, pullJobTraces bool) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
 
 	// Trace match metrics
 	if pullJobTraces && len(ref.PullPipelineJobsTraceRules) > 0 {
-		processJobTrace(ref, job)
+		job = processJobTrace(ref, job)
+		for i := range job.TraceMatches {
+			labels := ref.DefaultLabelsValues()
+			labels["stage"] = job.Stage
+			labels["job_name"] = job.Name
+			labels["runner_description"] = ""
+			labels["trace_rule"] = job.TraceMatches[i].RuleName
+			jobTraceMatch := schemas.Metric{
+				Kind:   schemas.MetricKindJobTraceMatchCount,
+				Labels: labels,
+				Value:  float64(job.TraceMatches[i].MatchCount),
+			}
+			storeSetMetric(jobTraceMatch)
+		}
 	}
+}
 
+func processJobMetrics(ref schemas.Ref, job schemas.Job, pullJobTraces bool) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -167,20 +160,6 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job, pullJobTraces bool) {
 	}
 
 	log.WithFields(projectRefLogFields).Debug("processing job metrics")
-
-	// Trace match metrics
-	if pullJobTraces && len(ref.PullPipelineJobsTraceRules) > 0 {
-		processJobTrace(ref, job)
-		labels["trace_rule"] = ""
-	} else {
-		labels["trace_rule"] = ""
-	}
-
-	storeSetMetric(schemas.Metric{
-		Kind:   schemas.MetricKindJobTraceMatchCount,
-		Labels: labels,
-		Value:  123,
-	})
 
 	storeSetMetric(schemas.Metric{
 		Kind:   schemas.MetricKindJobID,

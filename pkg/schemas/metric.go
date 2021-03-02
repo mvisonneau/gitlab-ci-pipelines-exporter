@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	// MetricKindCoverage refers to the coerage of a job/pipeline
+	// MetricKindCoverage refers to the coverage of a job/pipeline
 	MetricKindCoverage MetricKind = iota
 
 	// MetricKindDurationSeconds ..

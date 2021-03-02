@@ -28,7 +28,6 @@ func storeGetMetric(m *schemas.Metric) {
 func storeSetMetric(m schemas.Metric) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
-
 	if err := store.SetMetric(m); err != nil {
 		log.WithFields(
 			metricLogFields(m),

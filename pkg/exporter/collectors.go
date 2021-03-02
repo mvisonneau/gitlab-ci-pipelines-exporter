@@ -4,7 +4,8 @@ import "github.com/prometheus/client_golang/prometheus"
 
 var (
 	defaultLabels                = []string{"project", "topics", "kind", "ref", "variables"}
-	jobLabels                    = []string{"stage", "job_name", "runner_description", "trace_rule"}
+	jobLabels                    = []string{"stage", "job_name", "runner_description"}
+	traceLabels                  = []string{"trace_rule"}
 	statusLabels                 = []string{"status"}
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "author_email"}
@@ -194,7 +195,7 @@ func NewCollectorJobTraceMatchCount() prometheus.Collector {
 			Name: "gitlab_ci_pipeline_job_trace_match_count",
 			Help: "Number of regex matches in job trace",
 		},
-		append(defaultLabels, jobLabels...),
+		append(defaultLabels, append(jobLabels, traceLabels...)...),
 	)
 }
 
