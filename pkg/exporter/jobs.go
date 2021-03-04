@@ -2,8 +2,10 @@ package exporter
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 
@@ -21,7 +23,6 @@ func pullRefPipelineJobsMetrics(ref schemas.Ref, pullJobTraces bool) error {
 
 	for _, job := range jobs {
 		processJobMetrics(ref, job, pullJobTraces)
-		processJobTraceMetrics(ref, job, pullJobTraces)
 	}
 
 	return nil
@@ -42,7 +43,6 @@ func pullRefMostRecentJobsMetrics(ref schemas.Ref, pullJobTraces bool) error {
 
 	for _, job := range jobs {
 		processJobMetrics(ref, job, pullJobTraces)
-		processJobTraceMetrics(ref, job, pullJobTraces)
 	}
 
 	return nil
@@ -75,22 +75,24 @@ func processJobTrace(ref schemas.Ref, job schemas.Job) schemas.Job {
 		for i := range job.TraceMatches {
 			r, _ := regexp.Compile(job.TraceMatches[i].RegexpValue)
 			foundStrings := r.FindAllString(jobTrace, -1)
+			fmt.Println(foundStrings)
 			job.TraceMatches[i].MatchCount = job.TraceMatches[i].MatchCount + len(foundStrings)
 		}
 	}
 	return job
 }
 
-func processJobTraceMetrics(ref schemas.Ref, job schemas.Job, pullJobTraces bool) {
+func processJobTraceMetrics(ref schemas.Ref, job schemas.Job) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	// Trace match metrics
-	if pullJobTraces && len(ref.PullPipelineJobsTraceRules) > 0 {
+	// Create trace match metrics, if at least one rule defined
+	if len(ref.PullPipelineJobsTraceRules) > 0 {
 		job = processJobTrace(ref, job)
 		for i := range job.TraceMatches {
 			labels := ref.DefaultLabelsValues()
 			labels["stage"] = job.Stage
+			labels["job_id"] = strconv.Itoa(job.ID)
 			labels["job_name"] = job.Name
 			labels["runner_description"] = ""
 			labels["trace_rule"] = job.TraceMatches[i].RuleName
@@ -107,6 +109,11 @@ func processJobTraceMetrics(ref schemas.Ref, job schemas.Job, pullJobTraces bool
 func processJobMetrics(ref schemas.Ref, job schemas.Job, pullJobTraces bool) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
+
+	// Trigger job trace processing, if available
+	if pullJobTraces && len(ref.PullPipelineJobsTraceRules) > 0 {
+		processJobTraceMetrics(ref, job)
+	}
 
 	projectRefLogFields := log.Fields{
 		"project-name": ref.ProjectName,

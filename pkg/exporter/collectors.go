@@ -5,7 +5,7 @@ import "github.com/prometheus/client_golang/prometheus"
 var (
 	defaultLabels                = []string{"project", "topics", "kind", "ref", "variables"}
 	jobLabels                    = []string{"stage", "job_name", "runner_description"}
-	traceLabels                  = []string{"trace_rule"}
+	traceLabels                  = []string{"job_id", "trace_rule"}
 	statusLabels                 = []string{"status"}
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "author_email"}
