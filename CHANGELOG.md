@@ -14,6 +14,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Changed
 
+- Scoped down the projects fetched from wildcard onto the one starting with the owner's name to make it clearer for endusers
 - Upgraded to go 1.16
 - Bumped all dependencies to their latest versions
 
