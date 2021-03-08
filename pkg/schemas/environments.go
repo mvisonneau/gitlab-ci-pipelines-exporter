@@ -53,7 +53,7 @@ func (e Environment) InformationLabelsValues() (v map[string]string) {
 	v["current_commit_short_id"] = e.LatestDeployment.CommitShortID
 	v["latest_commit_short_id"] = ""
 	v["available"] = strconv.FormatBool(e.Available)
-	v["author_email"] = e.LatestDeployment.AuthorEmail
+	v["username"] = e.LatestDeployment.Username
 
 	return
 }

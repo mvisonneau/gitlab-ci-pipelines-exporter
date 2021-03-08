@@ -73,7 +73,7 @@ func TestGetEnvironment(t *testing.T) {
 			"tag": false,
 			"duration": 21623.13423,
 			"user": {
-				"public_email": "foo@bar.com"
+				"username": "alice"
 			},
 			"commit": {
 				"short_id": "416d8ea1"
@@ -97,7 +97,7 @@ func TestGetEnvironment(t *testing.T) {
 			JobID:           23,
 			RefKind:         schemas.RefKindBranch,
 			RefName:         "bar",
-			AuthorEmail:     "foo@bar.com",
+			Username:        "alice",
 			Timestamp:       1553540113,
 			DurationSeconds: 21623.13423,
 			CommitShortID:   "416d8ea1",

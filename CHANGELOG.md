@@ -11,6 +11,11 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - Snapcraft releases
 - darwin/arm64 releases
+- `username` label from the **gitlab_ci_environment_information** flag
+
+### Removed
+
+- `author_email` label from the **gitlab_ci_environment_information** flag (replaced by `username`)
 
 ### Changed
 

@@ -11,7 +11,7 @@
 | `gitlab_ci_environment_deployment_job_id` | ID of the most recent deployment job for an environment | [project], [environment] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_environment_deployment_status` | Status of the most recent deployment of the environment | [project], [environment], [status] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_environment_deployment_timestamp` | Creation date of the most recent deployment of the environment | [project], [environment] | `project_defaults.pull.environments.enabled` |
-| `gitlab_ci_environment_information` | Information about the environment | [project], [environment], [environment_id], [external_url], [kind], [ref], [latest_commit_short_id], [current_commit_short_id], [available], [author_email] | `project_defaults.pull.environments.enabled` |
+| `gitlab_ci_environment_information` | Information about the environment | [project], [environment], [environment_id], [external_url], [kind], [ref], [latest_commit_short_id], [current_commit_short_id], [available], [username] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_pipeline_coverage` | Coverage of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_duration_seconds` | Duration in seconds of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_id` | ID of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
@@ -72,9 +72,9 @@ Most recent commit short ID on the ref which was last used to deploy to the envi
 
 Currently deployed commit short ID on the environment
 
-### Author email
+### Username
 
-Email of whom created the most recent deployment on the environment
+GitLab username of the person which triggered the most recent deployment of the environment
 
 ### Status
 
@@ -116,7 +116,6 @@ This flag affect every `_status$` metrics:
 - `gitlab_ci_pipeline_job_status`
 - `gitlab_ci_pipeline_status`
 
-[author_email]: #author-email
 [available]: #available
 [current_commit_short_id]: #current-commit-short-id
 [environment]: #environment
@@ -127,8 +126,9 @@ This flag affect every `_status$` metrics:
 [latest_commit_short_id]: #latest-commit-short-id
 [project]: #project
 [ref]: #ref-name
+[runner_description]: #runner-description
 [stage]: #stage
 [status]: #status
 [topics]: #topics
+[username]: #username
 [variables]: #variables
-[runner_description]: #runner-description
