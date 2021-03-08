@@ -2,6 +2,7 @@ package exporter
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -74,6 +75,7 @@ func processJobTrace(ref schemas.Ref, job schemas.Job) schemas.Job {
 		for i := range job.TraceMatches {
 			r, _ := regexp.Compile(job.TraceMatches[i].RegexpValue)
 			foundStrings := r.FindAllString(jobTrace, -1)
+			fmt.Println(foundStrings)
 			job.TraceMatches[i].MatchCount = job.TraceMatches[i].MatchCount + len(foundStrings)
 		}
 	}
