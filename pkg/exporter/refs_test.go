@@ -61,6 +61,7 @@ func TestPullRefsFromProject(t *testing.T) {
 	assert.NoError(t, pullRefsFromProject(schemas.Project{Name: "foo"}))
 
 	projectsRefs, _ := store.Refs()
+	var traceRules []string
 	expectedRefs := schemas.Refs{
 		"99908380": schemas.Ref{
 			Kind:                      schemas.RefKindBranch,
@@ -71,6 +72,7 @@ func TestPullRefsFromProject(t *testing.T) {
 			PullPipelineJobsFromChildPipelinesEnabled:          true,
 			PullPipelineJobsRunnerDescriptionEnabled:           true,
 			PullPipelineVariablesRegexp:                        ".*",
+			PullPipelineJobsTraceRules:                         traceRules,
 			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
 		},
 	}

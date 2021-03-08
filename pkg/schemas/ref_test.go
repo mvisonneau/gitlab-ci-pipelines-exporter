@@ -63,6 +63,8 @@ func TestNewRef(t *testing.T) {
 		PullPipelineJobsRunnerDescriptionAggregationRegexp: ".*",
 	}
 
+	var traceRules []string
+
 	assert.Equal(t, expectedValue, NewRef(
 		RefKindTag,
 		"foo/bar",
@@ -75,5 +77,6 @@ func TestNewRef(t *testing.T) {
 		true,
 		".*",
 		".*",
+		traceRules,
 	))
 }
