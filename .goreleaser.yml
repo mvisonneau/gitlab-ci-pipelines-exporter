@@ -29,7 +29,7 @@ archives:
 nfpms:
   - maintainer: &author Maxime VISONNEAU <maxime.visonneau@gmail.com>
     description: &description GitLab CI pipelines exporter (prometheus/open-metrics)
-    license: &license Apache 2.0
+    license: &license Apache-2.0
     homepage: &homepage https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
     vendor: *author
     file_name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
