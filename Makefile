@@ -55,17 +55,23 @@ test: ## Run the tests against the codebase
 install: ## Build and install locally the binary (dev purpose)
 	go install ./cmd/$(NAME)
 
-.PHONY: build-local
-build-local: ## Build the binaries using local GOOS
+.PHONY: build
+build: ## Build the binaries using local GOOS
 	go build ./cmd/$(NAME)
 
-.PHONY: build
-build: ## Build the binaries
-	goreleaser release --snapshot --skip-publish --rm-dist
-
 .PHONY: release
-release: ## Build & release the binaries
+release: ## Build & release the binaries (stable)
+	git tag -d edge
 	goreleaser release --rm-dist
+	find dist -type f -name "*.snap" -exec snapcraft upload --release stable,edge '{}' \;
+
+.PHONY: prerelease
+prerelease: setup ## Build & prerelease the binaries (edge)
+	@\
+		REPOSITORY=$(REPOSITORY) \
+    	NAME=$(NAME) \
+    	GITHUB_TOKEN=$(GITHUB_TOKEN) \
+    	.github/prerelease.sh
 
 .PHONY: clean
 clean: ## Remove binary if it exists
@@ -86,7 +92,7 @@ dev-env: ## Build a local development environment using Docker
 		-v $(shell pwd):/go/src/github.com/mvisonneau/$(NAME) \
 		-w /go/src/github.com/mvisonneau/$(NAME) \
 		-p 8080:8080 \
-		golang:1.15 \
+		golang:1.16 \
 		/bin/bash -c 'make setup; make install; bash'
 
 .PHONY: is-git-dirty

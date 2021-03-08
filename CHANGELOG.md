@@ -7,6 +7,16 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- Snapcraft releases
+- darwin/arm64 releases
+
+### Changed
+
+- Upgraded to go 1.16
+- Bumped all dependencies to their latest versions
+
 ## [v0.4.7] - 2021-01-28
 
 ### Added

@@ -4,14 +4,15 @@ name: release
 on:
   push:
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+    branches:
+      - main
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
     env:
-      # Required to be able to push docker manifests
       DOCKER_CLI_EXPERIMENTAL: 'enabled'
 
     steps:
@@ -40,10 +41,15 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
+      - name: Snapcraft config
+        uses: samuelmeuli/action-snapcraft@v1
+        with:
+          snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
+
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.15
+          go-version: 1.16
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v3
@@ -51,15 +57,13 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Run GoReleaser
+      - name: Install goreleaser
         uses: goreleaser/goreleaser-action@v2
         with:
-          version: v0.155.0
-          args: release --rm-dist
+          version: v0.159.0
+          install-only: true
+      
+      - name: Run goreleaser
+        run: make ${{ github.ref == 'refs/heads/main' && 'pre' || '' }}release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-
-      - name: Clear
-        if: always()
-        run: |
-          rm -f ${HOME}/.docker/config.json
