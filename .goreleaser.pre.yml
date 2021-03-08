@@ -44,9 +44,10 @@ dockers:
       - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64'
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64'
     ids: [gitlab-ci-pipelines-exporter]
-    dockerfile: Dockerfile
+    goarch: amd64
+    use_buildx: true
     build_flag_templates:
-      - --build-arg=ARCH=amd64
+      - --platform=linux/amd64
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.description={{ .ProjectName }}
       - --label=org.opencontainers.image.url=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
@@ -61,9 +62,9 @@ dockers:
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8'
     ids: [gitlab-ci-pipelines-exporter]
     goarch: arm64
-    dockerfile: Dockerfile
+    use_buildx: true
     build_flag_templates:
-      - --build-arg=ARCH=arm64v8
+      - --platform=linux/arm64/v8
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.description={{ .ProjectName }}
       - --label=org.opencontainers.image.url=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
