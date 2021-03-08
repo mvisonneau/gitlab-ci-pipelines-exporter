@@ -33,7 +33,7 @@ func configure(ctx *cli.Context) (err error) {
 	taskq.SetLogger(stdlibLog.New(log.StandardLogger().WriterLevel(log.WarnLevel), "taskq", 0))
 
 	// Initialize config
-	cfg := schemas.Config{}
+	var cfg schemas.Config
 	if cfg, err = schemas.ParseConfigFile(ctx.String("config")); err != nil {
 		return
 	}
