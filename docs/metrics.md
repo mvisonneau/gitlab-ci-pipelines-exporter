@@ -141,3 +141,5 @@ This flag affect every `_status$` metrics:
 [topics]: #topics
 [variables]: #variables
 [runner_description]: #runner-description
+[job_id]: #job-id
+[trace_rule]: #trace-rule
