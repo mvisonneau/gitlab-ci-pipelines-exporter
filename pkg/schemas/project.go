@@ -101,6 +101,9 @@ type ProjectPullPipelineJobs struct {
 
 	// Configure the export of the runner description which ran the job
 	RunnerDescription ProjectPullPipelineJobsRunnerDescription `yaml:"runner_description"`
+
+	// Reference job trace parsing rules from main pull configuration
+	TraceRules []string `yaml:"trace_rules"`
 }
 
 // ProjectPullPipelineJobsFromChildPipelines ..

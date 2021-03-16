@@ -1,14 +1,17 @@
 package exporter
 
 import (
+	"bytes"
+	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 )
 
-func pullRefPipelineJobsMetrics(ref schemas.Ref) error {
+func pullRefPipelineJobsMetrics(ref schemas.Ref, pullJobTraces bool) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -18,13 +21,13 @@ func pullRefPipelineJobsMetrics(ref schemas.Ref) error {
 	}
 
 	for _, job := range jobs {
-		processJobMetrics(ref, job)
+		processJobMetrics(ref, job, pullJobTraces)
 	}
 
 	return nil
 }
 
-func pullRefMostRecentJobsMetrics(ref schemas.Ref) error {
+func pullRefMostRecentJobsMetrics(ref schemas.Ref, pullJobTraces bool) error {
 	if !ref.PullPipelineJobsEnabled {
 		return nil
 	}
@@ -38,15 +41,78 @@ func pullRefMostRecentJobsMetrics(ref schemas.Ref) error {
 	}
 
 	for _, job := range jobs {
-		processJobMetrics(ref, job)
+		processJobMetrics(ref, job, pullJobTraces)
 	}
 
 	return nil
 }
 
-func processJobMetrics(ref schemas.Ref, job schemas.Job) {
+func processJobTrace(ref schemas.Ref, job schemas.Job) schemas.Job {
+	var newTraceMatch schemas.TraceMatch
+	var singleMatch bool = false
+
+	for _, configRule := range config.Pull.TraceRules {
+		for _, jobRule := range ref.PullPipelineJobsTraceRules {
+			if configRule.Name == jobRule {
+				singleMatch = true
+				newTraceMatch.RuleName = configRule.Name
+				newTraceMatch.RegexpValue = configRule.RegexpValue
+				newTraceMatch.MatchCount = 0
+				job.TraceMatches = append(job.TraceMatches, newTraceMatch)
+			}
+		}
+	}
+
+	if singleMatch {
+		trace, _, err := gitlabClient.Jobs.GetTraceFile(ref.ProjectName, job.ID)
+		if err != nil {
+			return job
+		}
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(trace)
+		jobTrace := buf.String()
+		for i := range job.TraceMatches {
+			r, _ := regexp.Compile(job.TraceMatches[i].RegexpValue)
+			foundStrings := r.FindAllString(jobTrace, -1)
+			fmt.Println(foundStrings)
+			job.TraceMatches[i].MatchCount = job.TraceMatches[i].MatchCount + len(foundStrings)
+		}
+	}
+	return job
+}
+
+func processJobTraceMetrics(ref schemas.Ref, job schemas.Job) {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
+
+	// Create trace match metrics, if at least one rule defined
+	if len(ref.PullPipelineJobsTraceRules) > 0 {
+		job = processJobTrace(ref, job)
+		for i := range job.TraceMatches {
+			labels := ref.DefaultLabelsValues()
+			labels["stage"] = job.Stage
+			labels["job_id"] = strconv.Itoa(job.ID)
+			labels["job_name"] = job.Name
+			labels["runner_description"] = ""
+			labels["trace_rule"] = job.TraceMatches[i].RuleName
+			jobTraceMatch := schemas.Metric{
+				Kind:   schemas.MetricKindJobTraceMatchCount,
+				Labels: labels,
+				Value:  float64(job.TraceMatches[i].MatchCount),
+			}
+			storeSetMetric(jobTraceMatch)
+		}
+	}
+}
+
+func processJobMetrics(ref schemas.Ref, job schemas.Job, pullJobTraces bool) {
+	cfgUpdateLock.RLock()
+	defer cfgUpdateLock.RUnlock()
+
+	// Trigger job trace processing, if available
+	if pullJobTraces && len(ref.PullPipelineJobsTraceRules) > 0 {
+		processJobTraceMetrics(ref, job)
+	}
 
 	projectRefLogFields := log.Fields{
 		"project-name": ref.ProjectName,

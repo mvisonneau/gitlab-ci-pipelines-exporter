@@ -85,6 +85,7 @@ func pullRefsFromProject(p schemas.Project) error {
 			p.Pull.Pipeline.Variables.Enabled(),
 			p.Pull.Pipeline.Variables.Regexp(),
 			p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp(),
+			p.Pull.Pipeline.Jobs.TraceRules,
 		)
 
 		refExists, err := store.RefExists(ref.Key())
@@ -103,7 +104,7 @@ func pullRefsFromProject(p schemas.Project) error {
 				return err
 			}
 
-			go schedulePullRefMetrics(context.Background(), ref)
+			go schedulePullRefMetrics(context.Background(), ref, false)
 		}
 	}
 	return nil
@@ -146,7 +147,7 @@ func pullRefsFromPipelines(p schemas.Project) error {
 				return err
 			}
 
-			go schedulePullRefMetrics(context.Background(), ref)
+			go schedulePullRefMetrics(context.Background(), ref, false)
 		}
 	}
 	return nil

@@ -42,6 +42,7 @@ func NewRegistry() *Registry {
 			schemas.MetricKindJobID:                                NewCollectorJobID(),
 			schemas.MetricKindJobRunCount:                          NewCollectorJobRunCount(),
 			schemas.MetricKindJobStatus:                            NewCollectorJobStatus(),
+			schemas.MetricKindJobTraceMatchCount:                   NewCollectorJobTraceMatchCount(),
 			schemas.MetricKindJobTimestamp:                         NewCollectorJobTimestamp(),
 			schemas.MetricKindRunCount:                             NewCollectorRunCount(),
 			schemas.MetricKindStatus:                               NewCollectorStatus(),

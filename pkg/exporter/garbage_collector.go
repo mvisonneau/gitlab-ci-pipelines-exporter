@@ -377,6 +377,7 @@ func garbageCollectMetrics() error {
 				schemas.MetricKindJobDurationSeconds,
 				schemas.MetricKindJobID,
 				schemas.MetricKindJobRunCount,
+				schemas.MetricKindJobTraceMatchCount,
 				schemas.MetricKindJobStatus,
 				schemas.MetricKindJobTimestamp:
 

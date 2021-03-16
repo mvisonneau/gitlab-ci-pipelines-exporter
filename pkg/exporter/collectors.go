@@ -5,6 +5,7 @@ import "github.com/prometheus/client_golang/prometheus"
 var (
 	defaultLabels                = []string{"project", "topics", "kind", "ref", "variables"}
 	jobLabels                    = []string{"stage", "job_name", "runner_description"}
+	traceLabels                  = []string{"job_id", "trace_rule"}
 	statusLabels                 = []string{"status"}
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "author_email"}
@@ -184,6 +185,17 @@ func NewCollectorJobStatus() prometheus.Collector {
 			Help: "Status of the most recent job",
 		},
 		append(defaultLabels, append(jobLabels, statusLabels...)...),
+	)
+}
+
+// NewCollectorJobTraceMatchCount returns a new collector for the gitlab_ci_pipeline_job_trace_match_count metric
+func NewCollectorJobTraceMatchCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_job_trace_match_count",
+			Help: "Number of regex matches in job trace",
+		},
+		append(defaultLabels, append(jobLabels, traceLabels...)...),
 	)
 }
 

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	// MetricKindCoverage refers to the coerage of a job/pipeline
+	// MetricKindCoverage refers to the coverage of a job/pipeline
 	MetricKindCoverage MetricKind = iota
 
 	// MetricKindDurationSeconds ..
@@ -60,6 +60,9 @@ const (
 	// MetricKindJobTimestamp ..
 	MetricKindJobTimestamp
 
+	// MetricKindJobTraceMatchCount ..
+	MetricKindJobTraceMatchCount
+
 	// MetricKindStatus ..
 	MetricKindStatus
 
@@ -98,7 +101,7 @@ func (m Metric) Key() MetricKey {
 			m.Labels["ref"],
 		})
 
-	case MetricKindJobArtifactSizeBytes, MetricKindJobDurationSeconds, MetricKindJobID, MetricKindJobRunCount, MetricKindJobStatus, MetricKindJobTimestamp:
+	case MetricKindJobArtifactSizeBytes, MetricKindJobDurationSeconds, MetricKindJobID, MetricKindJobRunCount, MetricKindJobStatus, MetricKindJobTimestamp, MetricKindJobTraceMatchCount:
 		key += fmt.Sprintf("%v", []string{
 			m.Labels["project"],
 			m.Labels["kind"],
@@ -118,6 +121,11 @@ func (m Metric) Key() MetricKey {
 	switch m.Kind {
 	case MetricKindJobStatus, MetricKindEnvironmentDeploymentStatus, MetricKindStatus:
 		key += m.Labels["status"]
+	}
+
+	// If the metric is a "trace_match_count" one, add the trace_rule label
+	if m.Kind == MetricKindJobTraceMatchCount {
+		key += m.Labels["trace_rule"]
 	}
 
 	return MetricKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(key)))))

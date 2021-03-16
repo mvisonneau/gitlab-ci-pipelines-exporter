@@ -47,6 +47,8 @@ func TestRefDefaultLabelsValues(t *testing.T) {
 }
 
 func TestNewRef(t *testing.T) {
+	traceRules := []string{"example-rule"}
+
 	expectedValue := Ref{
 		Kind:        RefKindTag,
 		ProjectName: "foo/bar",
@@ -61,6 +63,7 @@ func TestNewRef(t *testing.T) {
 		PullPipelineVariablesEnabled:                       true,
 		PullPipelineVariablesRegexp:                        ".*",
 		PullPipelineJobsRunnerDescriptionAggregationRegexp: ".*",
+		PullPipelineJobsTraceRules:                         traceRules,
 	}
 
 	assert.Equal(t, expectedValue, NewRef(
@@ -75,5 +78,6 @@ func TestNewRef(t *testing.T) {
 		true,
 		".*",
 		".*",
+		traceRules,
 	))
 }
