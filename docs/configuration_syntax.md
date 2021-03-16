@@ -128,6 +128,18 @@ pull:
     # discovered project refs (optional, default: 30)
     interval_seconds: 30
 
+  metrics_with_traces:
+    # Interval in seconds to pull trace match metrics from
+    # discovered project refs (optional, default: 1800)
+    interval_seconds: 1800
+
+  trace_rules:
+    # Search rules to apply on job traces output
+    # An array of rules with unique name and a regex pattern
+    # The rules defined here are referenced below in jobs configuration
+      - name: example_rule
+        regexp: 'example.*SomeRegex'
+
 garbage_collect:
   projects:
     # Whether or not to trigger a garbage collection of the
@@ -258,6 +270,11 @@ project_defaults:
           # (optional, default: "shared-runners-manager-(\d*)\.gitlab\.com")
           aggregation_regexp: shared-runners-manager-(\d*)\.gitlab\.com
 
+        trace_rules:
+          # Refer to pre-defined rules in the pull configuration
+          # Simple list of rules to apply on job trace output
+          - ansible_deprecations
+
       variables:
         # Fetch pipeline variables in a separate metric (optional, default: false)
         enabled: false
@@ -341,6 +358,11 @@ projects:
             # The regexp will be used as the value of the runner description instead
             # (optional, default: "shared-runners-manager-(\d*)\.gitlab\.com")
             aggregation_regexp: shared-runners-manager-(\d*)\.gitlab\.com
+
+          trace_rules:
+            # Refer to pre-defined rules in the pull configuration
+            # Simple list of rules to apply on job trace output
+            - ansible_deprecations
 
         variables:
           # Fetch pipeline variables in a separate metric (optional, default: false)
@@ -441,6 +463,11 @@ wildcards:
             # The regexp will be used as the value of the runner description instead
             # (optional, default: "shared-runners-manager-(\d*)\.gitlab\.com")
             aggregation_regexp: shared-runners-manager-(\d*)\.gitlab\.com
+
+          trace_rules:
+            # Refer to pre-defined rules in the pull configuration
+            # Simple list of rules to apply on job trace output
+            - ansible_deprecations
 
         variables:
           # Fetch pipeline variables in a separate metric (optional, default: false)
