@@ -77,6 +77,10 @@ pull:
     on_init: false
     scheduled: false
     interval_seconds: 4
+  metrics_with_traces:
+    on_init: false
+    scheduled: false
+    interval_seconds: 5
 
 garbage_collect:
   projects:
@@ -204,6 +208,11 @@ wildcards:
 				OnInit:          false,
 				Scheduled:       false,
 				IntervalSeconds: 4,
+			},
+			MetricsWithTraces: SchedulerConfig{
+				OnInit:          false,
+				Scheduled:       false,
+				IntervalSeconds: 5,
 			},
 		},
 		GarbageCollect: GarbageCollectConfig{

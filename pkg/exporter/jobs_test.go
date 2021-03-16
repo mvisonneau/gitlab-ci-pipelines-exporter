@@ -27,9 +27,9 @@ func TestPullRefPipelineJobsMetrics(t *testing.T) {
 		},
 	}
 
-	assert.NoError(t, pullRefPipelineJobsMetrics(ref))
+	assert.NoError(t, pullRefPipelineJobsMetrics(ref, true))
 	server.Close()
-	assert.Error(t, pullRefPipelineJobsMetrics(ref))
+	assert.Error(t, pullRefPipelineJobsMetrics(ref, true))
 }
 
 func TestPullRefMostRecentJobsMetrics(t *testing.T) {
@@ -53,13 +53,13 @@ func TestPullRefMostRecentJobsMetrics(t *testing.T) {
 	}
 
 	// Test with FetchPipelineJobMetrics disabled
-	assert.NoError(t, pullRefMostRecentJobsMetrics(ref))
+	assert.NoError(t, pullRefMostRecentJobsMetrics(ref, true))
 
 	// Enable FetchPipelineJobMetrics
 	ref.PullPipelineJobsEnabled = true
-	assert.NoError(t, pullRefMostRecentJobsMetrics(ref))
+	assert.NoError(t, pullRefMostRecentJobsMetrics(ref, true))
 	server.Close()
-	assert.Error(t, pullRefMostRecentJobsMetrics(ref))
+	assert.Error(t, pullRefMostRecentJobsMetrics(ref, true))
 }
 
 func TestProcessJobMetrics(t *testing.T) {
@@ -104,14 +104,14 @@ func TestProcessJobMetrics(t *testing.T) {
 	store.SetRef(ref)
 
 	// If we run it against the same job, nothing should change in the store
-	processJobMetrics(ref, oldJob)
+	processJobMetrics(ref, oldJob, true)
 	refs, _ := store.Refs()
 	assert.Equal(t, schemas.Jobs{
 		"foo": oldJob,
 	}, refs[ref.Key()].LatestJobs)
 
 	// Update the ref
-	processJobMetrics(ref, newJob)
+	processJobMetrics(ref, newJob, true)
 	refs, _ = store.Refs()
 	assert.Equal(t, schemas.Jobs{
 		"foo": newJob,
