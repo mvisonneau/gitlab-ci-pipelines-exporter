@@ -19,6 +19,7 @@
 | `gitlab_ci_pipeline_job_duration_seconds` | Duration in seconds of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_job_id` | ID of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_job_run_count` | Number of executions of a job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
+| `gitlab_ci_pipeline_job_trace_match_count` | Number of matches in trace output | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name], [job_id], [trace_rule] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_job_status` | Status of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name], [status] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_job_timestamp` | Creation date timestamp of the the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_status` | Status of the most recent pipeline | [project], [topics], [ref], [kind], [variables], [status] | *available by default* |
@@ -87,6 +88,14 @@ Stage of the job
 ### Job name
 
 Name of the job
+
+### Job ID
+
+ID of the job
+
+### Trace rule
+
+Referenced trace rule for this job
 
 ### Environment ID
 
