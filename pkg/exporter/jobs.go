@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-
 	log "github.com/sirupsen/logrus"
 )
 
