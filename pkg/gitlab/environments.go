@@ -77,7 +77,7 @@ func (c *Client) GetEnvironment(project string, environmentID int) (schemas.Envi
 		environment.LatestDeployment.Status = e.LastDeployment.Deployable.Status
 
 		if e.LastDeployment.Deployable.User != nil {
-			environment.LatestDeployment.AuthorEmail = e.LastDeployment.Deployable.User.PublicEmail
+			environment.LatestDeployment.Username = e.LastDeployment.Deployable.User.Username
 		}
 
 		if e.LastDeployment.Deployable.Commit != nil {

@@ -8,7 +8,7 @@ var (
 	traceLabels                  = []string{"job_id", "trace_rule"}
 	statusLabels                 = []string{"status"}
 	environmentLabels            = []string{"project", "environment"}
-	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "author_email"}
+	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "username"}
 	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"}
 )
 

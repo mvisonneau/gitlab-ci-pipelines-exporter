@@ -7,6 +7,24 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.4.8] - 2021-03-08
+
+### Added
+
+- Snapcraft releases
+- darwin/arm64 releases
+- `username` label from the **gitlab_ci_environment_information** flag
+
+### Removed
+
+- `author_email` label from the **gitlab_ci_environment_information** flag (replaced by `username`)
+
+### Changed
+
+- Scoped down the projects fetched from wildcard onto the one starting with the owner's name to make it clearer for endusers
+- Upgraded to go 1.16
+- Bumped all dependencies to their latest versions
+
 ## [v0.4.7] - 2021-01-28
 
 ### Added
@@ -489,7 +507,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.4.7...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.4.8...HEAD
+[v0.4.8]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.8
 [v0.4.7]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.7
 [v0.4.6]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.6
 [v0.4.5]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.5

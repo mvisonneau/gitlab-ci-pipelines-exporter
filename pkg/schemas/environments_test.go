@@ -47,7 +47,7 @@ func TestEnvironmentInformationLabelsValues(t *testing.T) {
 			RefKind:       RefKindBranch,
 			RefName:       "foo",
 			CommitShortID: "123abcde",
-			AuthorEmail:   "foo@bar.net",
+			Username:      "bob",
 		},
 	}
 
@@ -61,7 +61,7 @@ func TestEnvironmentInformationLabelsValues(t *testing.T) {
 		"current_commit_short_id": "123abcde",
 		"latest_commit_short_id":  "",
 		"available":               "true",
-		"author_email":            "foo@bar.net",
+		"username":                "bob",
 	}
 
 	assert.Equal(t, expectedValue, e.InformationLabelsValues())

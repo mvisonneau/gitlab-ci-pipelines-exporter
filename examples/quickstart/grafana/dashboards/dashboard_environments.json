@@ -1356,7 +1356,7 @@
           "refId": "C"
         },
         {
-          "expr": "max(gitlab_ci_environment_information{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (environment_id, project, environment, author_email, current_commit_short_id, ref, latest_commit_short_id)",
+          "expr": "max(gitlab_ci_environment_information{project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (environment_id, project, environment, username, current_commit_short_id, ref, latest_commit_short_id)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1414,7 +1414,7 @@
               "Value #E": 12,
               "Value #F": 13,
               "Value #G": 4,
-              "author_email": 9,
+              "username": 9,
               "current_commit_short_id": 10,
               "environment": 2,
               "environment_id": 1,
@@ -1431,7 +1431,7 @@
               "Value #E": "# of commits behind",
               "Value #F": "Time behind",
               "Value #G": "Latest deployment",
-              "author_email": "Author",
+              "username": "Author",
               "current_commit_short_id": "Deployed commit",
               "environment": "Environment Name",
               "environment_id": "Environment ID",

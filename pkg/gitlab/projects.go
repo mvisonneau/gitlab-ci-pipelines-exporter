@@ -2,6 +2,7 @@ package gitlab
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
@@ -36,6 +37,17 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 	listOptions := gitlab.ListOptions{
 		Page:    1,
 		PerPage: 100,
+	}
+
+	// As a result, the API will return the projects that the owner has access onto.
+	// This is not necessarily what we the end-user would intend when leveraging a
+	// scoped wildcard. Therefore, if the wildcard owner name is set, we want to filter
+	// out to project actually *belonging* to the owner.
+	var ownerRegexp *regexp.Regexp
+	if len(w.Owner.Name) > 0 {
+		ownerRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\/`, w.Owner.Name))
+	} else {
+		ownerRegexp = regexp.MustCompile(`.*`)
 	}
 
 	for {
@@ -82,11 +94,19 @@ func (c *Client) ListProjects(w schemas.Wildcard) ([]schemas.Project, error) {
 
 		// Copy relevant settings from wildcard into created project
 		for _, gp := range gps {
+			if !ownerRegexp.MatchString(gp.PathWithNamespace) {
+				log.WithFields(logFields).WithFields(log.Fields{
+					"project-id":   gp.ID,
+					"project-name": gp.PathWithNamespace,
+				}).Debug("project path not matching owner's name, skipping")
+				continue
+			}
+
 			if !gp.JobsEnabled {
 				log.WithFields(logFields).WithFields(log.Fields{
 					"project-id":   gp.ID,
 					"project-name": gp.PathWithNamespace,
-				}).Debug("jobs/pipelines not enabled on project, ignoring")
+				}).Debug("jobs/pipelines not enabled on project, skipping")
 				continue
 			}
 
