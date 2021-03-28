@@ -129,6 +129,10 @@ type ProjectPullPipelineVariables struct {
 
 // UpdateProjectDefaults ..
 func UpdateProjectDefaults(d ProjectParameters) {
+	if d.OutputSparseStatusMetricsValue != nil {
+		defaultProjectOutputSparseStatusMetrics = *d.OutputSparseStatusMetricsValue
+	}
+
 	if d.Pull.Environments.EnabledValue != nil {
 		defaultProjectPullEnvironmentsEnabled = *d.Pull.Environments.EnabledValue
 	}
