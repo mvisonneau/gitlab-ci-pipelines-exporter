@@ -10,6 +10,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Changed
 
 - Fixed a bug preventing to set `output_sparse_status_metrics` globally or at the wildcard level
+- Updated all dependencies to their latest versions
 
 ## [v0.4.8] - 2021-03-08
 
