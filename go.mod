@@ -27,7 +27,7 @@ require (
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/vmihailenco/msgpack/v5 v5.3.1
 	github.com/vmihailenco/taskq/v3 v3.2.3
-	github.com/xanzy/go-gitlab v0.47.0
+	github.com/xanzy/go-gitlab v0.48.0
 	go.uber.org/ratelimit v0.2.0
 	golang.org/x/net v0.0.0-20210326220855-61e056675ecf // indirect
 	golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558 // indirect
