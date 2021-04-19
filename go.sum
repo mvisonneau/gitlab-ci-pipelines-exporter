@@ -130,6 +130,7 @@ github.com/go-redis/redis/v8 v8.3.4/go.mod h1:jszGxBCez8QA1HWSmQxJO9Y82kNibbUmeY
 github.com/go-redis/redis/v8 v8.4.0/go.mod h1:A1tbYoHSa1fXwN+//ljcCYYJeLmVrwL9hbQN45Jdy0M=
 github.com/go-redis/redis/v8 v8.8.0 h1:fDZP58UN/1RD3DjtTXP/fFZ04TFohSYhjZDkcDe2dnw=
 github.com/go-redis/redis/v8 v8.8.0/go.mod h1:F7resOH5Kdug49Otu24RjHWwgK7u9AmtqWMnCV1iP5Y=
+github.com/go-redis/redis/v8 v8.8.2/go.mod h1:F7resOH5Kdug49Otu24RjHWwgK7u9AmtqWMnCV1iP5Y=
 github.com/go-redis/redis_rate/v9 v9.1.0/go.mod h1:jjU9YxOSZ3cz0yj1QJVAJiy5ueKmL9o4AySJHcKyTSE=
 github.com/go-redis/redis_rate/v9 v9.1.1 h1:7SIrbnhQ7zsTNEgIvprFhJf7/+l3wSpZc2iRVwUmaq8=
 github.com/go-redis/redis_rate/v9 v9.1.1/go.mod h1:jjU9YxOSZ3cz0yj1QJVAJiy5ueKmL9o4AySJHcKyTSE=
