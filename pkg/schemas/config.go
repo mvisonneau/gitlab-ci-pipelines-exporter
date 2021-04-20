@@ -20,7 +20,7 @@ const (
 	defaultGitlabConfigHealthURL                                   = "https://gitlab.com/explore"
 	defaultGitlabConfigEnableHealthCheck                           = true
 	defaultGitlabConfigEnableTLSVerify                             = true
-	defaultPullConfigMaximumGitLabAPIRequestsPerSecond             = 10
+	defaultPullConfigMaximumGitLabAPIRequestsPerSecond             = 1
 	defaultPullConfigProjectsFromWildcardsOnInit                   = true
 	defaultPullConfigProjectsFromWildcardsScheduled                = true
 	defaultPullConfigProjectsFromWildcardsIntervalSeconds          = 1800
@@ -138,7 +138,7 @@ type SchedulerConfig struct {
 
 // PullConfig ..
 type PullConfig struct {
-	// Maximum amount of requests per seconds to make against the GitLab API (default: 10)
+	// Maximum amount of requests per seconds to make against the GitLab API (default: 1)
 	MaximumGitLabAPIRequestsPerSecond int `yaml:"maximum_gitlab_api_requests_per_second"`
 
 	// ProjectsFromWildcards configuration
