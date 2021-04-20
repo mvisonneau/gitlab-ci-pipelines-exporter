@@ -70,8 +70,8 @@ gitlab:
 
 pull:
   # Global rate limit for the GitLab API request/sec
-  # (optional, default: 10)
-  maximum_gitlab_api_requests_per_second: 10
+  # (optional, default: 1)
+  maximum_gitlab_api_requests_per_second: 1
 
   projects_from_wildcards:
     # Whether to trigger a discovery or not when the
