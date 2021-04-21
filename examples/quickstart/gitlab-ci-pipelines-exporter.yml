@@ -2,12 +2,6 @@ gitlab:
   url: https://gitlab.com
   token: <your_token>
 
-# Global pull settings
-pull:
-  # Global rate limit for the GitLab API request/sec
-  # (optional, default: 1)
-  maximum_gitlab_api_requests_per_second: 1
-
 # Pull jobs related metrics on all projects
 project_defaults:
   pull:

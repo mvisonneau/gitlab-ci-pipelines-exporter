@@ -5,12 +5,6 @@ gitlab:
 redis:
   url: redis://redis:6379
 
-# Global pull settings
-pull:
-  # Global rate limit for the GitLab API request/sec
-  # (optional, default: 1)
-  maximum_gitlab_api_requests_per_second: 1
-
 # Example public projects to monitor
 projects:
   - name: gitlab-org/gitlab-runner
