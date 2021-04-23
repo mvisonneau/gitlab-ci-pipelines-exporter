@@ -13,8 +13,10 @@ func (c *Client) GetProjectEnvironments(project, envRegexp string) (map[int]stri
 	environments := map[int]string{}
 
 	options := &goGitlab.ListEnvironmentsOptions{
-		Page:    1,
-		PerPage: 100,
+		ListOptions: goGitlab.ListOptions{
+			Page:    1,
+			PerPage: 100,
+		},
 	}
 
 	re, err := regexp.Compile(envRegexp)
