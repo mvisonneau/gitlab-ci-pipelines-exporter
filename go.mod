@@ -7,6 +7,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.14.3
 	github.com/go-redis/redis/v8 v8.8.2
 	github.com/go-redis/redis_rate/v9 v9.1.1
+	github.com/gomodule/redigo v1.8.4 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/mvisonneau/go-helpers v0.0.1
 	github.com/openlyinc/pointy v1.1.2
