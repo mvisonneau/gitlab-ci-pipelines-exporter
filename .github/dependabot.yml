@@ -1,0 +1,37 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: weekly
+    time: "10:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: github.com/xanzy/go-gitlab
+    versions:
+    - ">= 0.29.a, < 0.30"
+  - dependency-name: github.com/go-redis/redis/v8
+    versions:
+    - 8.4.11
+    - 8.8.2
+  - dependency-name: github.com/xanzy/go-gitlab
+    versions:
+    - 0.47.0
+    - 0.48.0
+  - dependency-name: github.com/vmihailenco/msgpack/v5
+    versions:
+    - 5.2.0
+    - 5.2.1
+    - 5.3.0
+  - dependency-name: github.com/prometheus/client_golang
+    versions:
+    - 1.10.0
+  - dependency-name: github.com/sirupsen/logrus
+    versions:
+    - 1.8.1
+- package-ecosystem: docker
+  directory: "/"
+  schedule:
+    interval: weekly
+    time: "10:00"
+  open-pull-requests-limit: 10
