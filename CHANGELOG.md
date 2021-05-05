@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.4.9] - 2021-05-05
+
 ### Changed
 
 - Fixed a bug preventing to set `output_sparse_status_metrics` globally or at the wildcard level
@@ -513,7 +515,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.4.8...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.4.9...HEAD
+[v0.4.9]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.9
 [v0.4.8]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.8
 [v0.4.7]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.7
 [v0.4.6]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.6
