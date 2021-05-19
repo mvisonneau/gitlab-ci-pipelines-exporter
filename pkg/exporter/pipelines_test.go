@@ -70,6 +70,13 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	}
 	assert.Equal(t, runID, metrics[runID.Key()])
 
+	queued := schemas.Metric{
+		Kind:   schemas.MetricKindQueuedDurationSeconds,
+		Labels: labels,
+		Value:  60,
+	}
+	assert.Equal(t, queued, metrics[queued.Key()])
+
 	labels["status"] = "running"
 	status := schemas.Metric{
 		Kind:   schemas.MetricKindStatus,
@@ -78,12 +85,6 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	}
 	assert.Equal(t, status, metrics[status.Key()])
 
-	queued := schemas.Metric{
-		Kind:   schemas.MetricKindQueuedDurationSeconds,
-		Labels: labels,
-		Value:  60,
-	}
-	assert.Equal(t, queued, metrics[queued.Key()])
 }
 
 func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
