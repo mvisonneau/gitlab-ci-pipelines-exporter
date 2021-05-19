@@ -35,10 +35,10 @@ func NewPipeline(gp goGitlab.Pipeline) Pipeline {
 		timestamp = float64(gp.UpdatedAt.Unix())
 	}
 
-	var queued float64
+	var queued time.Duration
 	if gp.StartedAt != nil && gp.CreatedAt != nil {
 		if gp.CreatedAt.Before(*gp.StartedAt) {
-			queued = float64(gp.CreatedAt.Sub(*gp.StartedAt) * time.Second)
+			queued = gp.StartedAt.Sub(*gp.CreatedAt)
 		}
 	}
 
@@ -47,7 +47,7 @@ func NewPipeline(gp goGitlab.Pipeline) Pipeline {
 		Coverage:              coverage,
 		Timestamp:             timestamp,
 		DurationSeconds:       float64(gp.Duration),
-		QueuedDurationSeconds: queued,
+		QueuedDurationSeconds: queued.Seconds(),
 		Status:                gp.Status,
 	}
 }
