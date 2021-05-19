@@ -104,6 +104,7 @@ If you query the `/metrics` endpoint of the exporter you should be able to see a
 ```shell
 gitlab_ci_pipeline_coverage{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 0
 gitlab_ci_pipeline_duration_seconds{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 494
+gitlab_ci_pipeline_queued_duration_seconds{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 60
 gitlab_ci_pipeline_id{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 1.00308162e+08
 gitlab_ci_pipeline_run_count{kind="branch",project="foo/bar",ref="main",topics="",variables=""} 0
 gitlab_ci_pipeline_status{kind="branch",project="foo/bar",ref="main",status="canceled",topics="",variables=""} 0
