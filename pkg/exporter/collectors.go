@@ -33,6 +33,17 @@ func NewCollectorDurationSeconds() prometheus.Collector {
 	)
 }
 
+// NewCollectorQueuedDurationSeconds returns a new collector for the gitlab_ci_pipeline_queued_duration_seconds metric
+func NewCollectorQueuedDurationSeconds() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_queued_duration_seconds",
+			Help: "Duration in seconds the most recent pipeline has been queued",
+		},
+		defaultLabels,
+	)
+}
+
 // NewCollectorEnvironmentBehindCommitsCount returns a new collector for the gitlab_ci_environment_behind_commits_count metric
 func NewCollectorEnvironmentBehindCommitsCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
