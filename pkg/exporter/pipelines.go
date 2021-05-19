@@ -115,6 +115,12 @@ func pullRefMetrics(ref schemas.Ref) error {
 		})
 
 		storeSetMetric(schemas.Metric{
+			Kind:   schemas.MetricKindQueuedDurationSeconds,
+			Labels: ref.DefaultLabelsValues(),
+			Value:  pipeline.QueuedDurationSeconds,
+		})
+
+		storeSetMetric(schemas.Metric{
 			Kind:   schemas.MetricKindTimestamp,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  pipeline.Timestamp,
