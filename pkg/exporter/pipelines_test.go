@@ -84,7 +84,6 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 		Value:  1,
 	}
 	assert.Equal(t, status, metrics[status.Key()])
-
 }
 
 func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
