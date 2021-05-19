@@ -2,6 +2,7 @@ package schemas
 
 import (
 	"strconv"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -9,12 +10,13 @@ import (
 
 // Pipeline ..
 type Pipeline struct {
-	ID              int
-	Coverage        float64
-	Timestamp       float64
-	DurationSeconds float64
-	Status          string
-	Variables       string
+	ID                    int
+	Coverage              float64
+	Timestamp             float64
+	DurationSeconds       float64
+	QueuedDurationSeconds float64
+	Status                string
+	Variables             string
 }
 
 // NewPipeline ..
@@ -33,11 +35,17 @@ func NewPipeline(gp goGitlab.Pipeline) Pipeline {
 		timestamp = float64(gp.UpdatedAt.Unix())
 	}
 
+	var queued float64
+	if gp.StartedAt != nil && gp.CreatedAt != nil {
+		queued = float64(gp.CreatedAt.Sub(*gp.StartedAt) * time.Second)
+	}
+
 	return Pipeline{
-		ID:              gp.ID,
-		Coverage:        coverage,
-		Timestamp:       timestamp,
-		DurationSeconds: float64(gp.Duration),
-		Status:          gp.Status,
+		ID:                    gp.ID,
+		Coverage:              coverage,
+		Timestamp:             timestamp,
+		DurationSeconds:       float64(gp.Duration),
+		QueuedDurationSeconds: queued,
+		Status:                gp.Status,
 	}
 }
