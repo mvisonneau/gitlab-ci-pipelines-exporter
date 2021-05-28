@@ -1,6 +1,8 @@
 package gitlab
 
 import (
+	"fmt"
+
 	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -20,5 +22,13 @@ func (c *Client) GetCommitCountBetweenRefs(project, from, to string) (int, error
 		To:       &to,
 		Straight: pointy.Bool(true),
 	}, nil)
-	return len(cmp.Commits), err
+	if err != nil {
+		return 0, err
+	}
+
+	if cmp == nil {
+		return 0, fmt.Errorf("could not compare refs successfully")
+	}
+
+	return len(cmp.Commits), nil
 }
