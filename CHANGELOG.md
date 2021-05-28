@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- New metric `gitlab_ci_pipeline_queued_duration_seconds`
+
 ### Changed
 
 - Fixed the error handling when comparing 2 refs which resulted into nil pointer dereferences
