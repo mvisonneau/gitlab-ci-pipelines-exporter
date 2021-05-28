@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped all dependencies
+
 ## [v0.4.9] - 2021-05-05
 
 ### Changed
