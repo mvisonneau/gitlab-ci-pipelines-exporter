@@ -28,6 +28,7 @@ func NewRegistry() *Registry {
 		Collectors: RegistryCollectors{
 			schemas.MetricKindCoverage:                             NewCollectorCoverage(),
 			schemas.MetricKindDurationSeconds:                      NewCollectorDurationSeconds(),
+			schemas.MetricKindQueuedDurationSeconds:                NewCollectorQueuedDurationSeconds(),
 			schemas.MetricKindEnvironmentBehindCommitsCount:        NewCollectorEnvironmentBehindCommitsCount(),
 			schemas.MetricKindEnvironmentBehindDurationSeconds:     NewCollectorEnvironmentBehindDurationSeconds(),
 			schemas.MetricKindEnvironmentDeploymentCount:           NewCollectorEnvironmentDeploymentCount(),

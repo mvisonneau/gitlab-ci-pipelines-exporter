@@ -11,6 +11,7 @@ func TestNewCollectorFunctions(t *testing.T) {
 	for _, f := range [](func() prometheus.Collector){
 		NewCollectorCoverage,
 		NewCollectorDurationSeconds,
+		NewCollectorQueuedDurationSeconds,
 		NewCollectorEnvironmentBehindCommitsCount,
 		NewCollectorEnvironmentBehindDurationSeconds,
 		NewCollectorEnvironmentDeploymentDurationSeconds,
