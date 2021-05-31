@@ -37,7 +37,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 		ProjectName:                  "foo",
 		Name:                         "bar",
 		PullPipelineVariablesEnabled: true,
-	}))
+	}, true))
 
 	// Check if all the metrics exist
 	metrics, _ := store.Metrics()
@@ -96,5 +96,5 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 		},
 	}
 
-	assert.NoError(t, pullRefMetrics(ref))
+	assert.NoError(t, pullRefMetrics(ref, true))
 }

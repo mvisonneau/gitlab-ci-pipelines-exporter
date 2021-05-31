@@ -9,7 +9,7 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func pullRefMetrics(ref schemas.Ref) error {
+func pullRefMetrics(ref schemas.Ref, pullJobTraces bool) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -127,7 +127,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 		})
 
 		if ref.PullPipelineJobsEnabled {
-			if err := pullRefPipelineJobsMetrics(ref); err != nil {
+			if err := pullRefPipelineJobsMetrics(ref, pullJobTraces); err != nil {
 				return err
 			}
 		}
@@ -135,7 +135,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 	}
 
 	if ref.PullPipelineJobsEnabled {
-		if err := pullRefMostRecentJobsMetrics(ref); err != nil {
+		if err := pullRefMostRecentJobsMetrics(ref, pullJobTraces); err != nil {
 			return err
 		}
 	}

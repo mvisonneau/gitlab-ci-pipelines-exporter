@@ -33,6 +33,7 @@ const (
 	defaultPullConfigMetricsOnInit                                 = true
 	defaultPullConfigMetricsScheduled                              = true
 	defaultPullConfigMetricsIntervalSeconds                        = 30
+	defaultPullConfigMetricsWithTracesIntervalSeconds              = 1800
 	defaultGarbageCollectConfigProjectsOnInit                      = false
 	defaultGarbageCollectConfigProjectsScheduled                   = true
 	defaultGarbageCollectConfigProjectsIntervalSeconds             = 14400
@@ -152,7 +153,22 @@ type PullConfig struct {
 
 	// Metrics configuration
 	Metrics SchedulerConfig `yaml:"metrics"`
+
+	// Metrics configuration
+	MetricsWithTraces SchedulerConfig `yaml:"metrics_with_traces"`
+
+	// TraceRules configuration
+	TraceRules TraceRules `yaml:"trace_rules"`
 }
+
+// TraceRule is a regex rule for job trace parsing
+type TraceRule struct {
+	Name        string `yaml:"name"`
+	RegexpValue string `yaml:"regexp"`
+}
+
+// TraceRules ..
+type TraceRules []TraceRule
 
 // GarbageCollectConfig ..
 type GarbageCollectConfig struct {
@@ -210,6 +226,11 @@ func NewConfig() Config {
 				OnInit:          defaultPullConfigMetricsOnInit,
 				Scheduled:       defaultPullConfigMetricsScheduled,
 				IntervalSeconds: defaultPullConfigMetricsIntervalSeconds,
+			},
+			MetricsWithTraces: SchedulerConfig{
+				OnInit:          defaultPullConfigMetricsOnInit,
+				Scheduled:       defaultPullConfigMetricsScheduled,
+				IntervalSeconds: defaultPullConfigMetricsWithTracesIntervalSeconds,
 			},
 		},
 		GarbageCollect: GarbageCollectConfig{
