@@ -14,6 +14,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Changed
 
 - Fixed the error handling when comparing 2 refs which resulted into nil pointer dereferences
+- Fixed the pulling of merge-request based pipelines
 - Bumped all dependencies
 
 ## [v0.4.9] - 2021-05-05

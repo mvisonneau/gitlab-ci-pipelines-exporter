@@ -16,6 +16,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "bar", r.URL.Query().Get("ref"))
 			fmt.Fprint(w, `[{"id":1}]`)
 		})
 
@@ -87,6 +88,37 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 }
 
 func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
+	resetGlobalValues()
+	mux, server := configureMockedGitlabClient()
+	defer server.Close()
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "refs/merge-requests/1234/head", r.URL.Query().Get("ref"))
+			fmt.Fprint(w, `[{"id":1}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `{"id":1,"updated_at":"2016-08-11T11:28:34.085Z","duration":300,"status":"running","coverage":"30.2"}`)
+		})
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/pipelines/1/variables"),
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
+		})
+
+	// Metrics pull shall succeed
+	assert.NoError(t, pullRefMetrics(schemas.Ref{
+		Kind:                         schemas.RefKindMergeRequest,
+		ProjectName:                  "foo",
+		Name:                         "1234",
+		PullPipelineVariablesEnabled: true,
+	}))
+}
+
+func TestPullRefMetricsMergeRequestPipelineAlreadyLoaded(t *testing.T) {
 	resetGlobalValues()
 	ref := schemas.Ref{
 		Kind: schemas.RefKindMergeRequest,

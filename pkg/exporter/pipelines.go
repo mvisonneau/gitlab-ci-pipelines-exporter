@@ -36,13 +36,21 @@ func pullRefMetrics(ref schemas.Ref) error {
 		}
 	}
 
+	// We need a different syntax if the ref is a merge-request
+	var refName string
+	if ref.Kind == schemas.RefKindMergeRequest {
+		refName = fmt.Sprintf("refs/merge-requests/%s/head", ref.Name)
+	} else {
+		refName = ref.Name
+	}
+
 	pipelines, err := gitlabClient.GetProjectPipelines(ref.ProjectName, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
 			PerPage: 1,
 			Page:    1,
 		},
-		Ref: goGitlab.String(ref.Name),
+		Ref: &refName,
 	})
 	if err != nil {
 		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.ProjectName, err)
