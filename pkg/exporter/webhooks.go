@@ -177,7 +177,7 @@ func triggerEnvironmentMetricsPull(env schemas.Environment) {
 			for _, w := range config.Wildcards {
 				// If in all our wildcards we have one which can potentially match the project ref
 				// received, we trigger a scan
-				if w.Pull.Environments.Enabled() && (w.Owner.Kind == "" || (strings.Contains(p.Name, w.Owner.Name) && regexp.MustCompile(w.Pull.Environments.NameRegexp()).MatchString(env.ProjectName))) {
+				if w.Pull.Environments.Enabled() && (w.Owner.Kind == "" || (strings.Contains(p.Name, w.Owner.Name) && regexp.MustCompile(w.Pull.Environments.Regexp()).MatchString(env.ProjectName))) {
 					go schedulePullProjectsFromWildcardTask(context.TODO(), w)
 					log.WithFields(logFields).Info("project environment not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
 					return
@@ -191,7 +191,7 @@ func triggerEnvironmentMetricsPull(env schemas.Environment) {
 			}
 
 			// As we do not get the environment ID within the deployment event, we need to query it back..
-			envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.NameRegexp())
+			envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.Regexp())
 			if err != nil {
 				log.WithFields(logFields).WithField("error", err.Error()).Error("listing project envs from GitLab API")
 			}

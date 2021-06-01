@@ -94,10 +94,10 @@ func garbageCollectEnvironments() error {
 
 		// Store the project information to be able to refresh its environments
 		// from the API later on
-		envProjects[p.Name] = p.Pull.Environments.NameRegexp()
+		envProjects[p.Name] = p.Pull.Environments.Regexp()
 
 		// If the environment is not configured to be pulled anymore, delete it
-		re := regexp.MustCompile(p.Pull.Environments.NameRegexp())
+		re := regexp.MustCompile(p.Pull.Environments.Regexp())
 		if !re.MatchString(env.Name) {
 			if err = store.DelEnvironment(k); err != nil {
 				return err
@@ -112,10 +112,8 @@ func garbageCollectEnvironments() error {
 		}
 
 		// Check if the latest configuration of the project in store matches the environment one
-		if env.OutputSparseStatusMetrics != p.OutputSparseStatusMetrics() ||
-			env.TagsRegexp != p.Pull.Environments.TagsRegexp() {
+		if env.OutputSparseStatusMetrics != p.OutputSparseStatusMetrics() {
 			env.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics()
-			env.TagsRegexp = p.Pull.Environments.TagsRegexp()
 
 			if err = store.SetEnvironment(env); err != nil {
 				return err

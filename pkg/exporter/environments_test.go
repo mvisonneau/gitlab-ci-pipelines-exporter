@@ -48,7 +48,7 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 		})
 
 	p := schemas.Project{Name: "foo"}
-	p.Pull.Environments.NameRegexpValue = pointy.String("^prod")
+	p.Pull.Environments.RegexpValue = pointy.String("^prod")
 	assert.NoError(t, pullEnvironmentsFromProject(p))
 
 	storedEnvironments, _ := store.Environments()
@@ -69,7 +69,6 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 				CommitShortID:   "416d8ea1",
 				Status:          "success",
 			},
-			TagsRegexp:                ".*",
 			OutputSparseStatusMetrics: true,
 		},
 	}

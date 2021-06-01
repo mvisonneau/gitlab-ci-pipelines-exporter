@@ -11,7 +11,7 @@ func pullEnvironmentsFromProject(p schemas.Project) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.NameRegexp())
+	envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.Regexp())
 	if err != nil {
 		return err
 	}
@@ -22,7 +22,6 @@ func pullEnvironmentsFromProject(p schemas.Project) error {
 			Name:        envName,
 			ID:          envID,
 
-			TagsRegexp:                p.Pull.Environments.TagsRegexp(),
 			OutputSparseStatusMetrics: p.OutputSparseStatusMetrics(),
 		}
 
@@ -83,7 +82,8 @@ func pullEnvironmentMetrics(env schemas.Environment) (err error) {
 	case schemas.RefKindBranch:
 		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetBranchLatestCommit(env.ProjectName, env.LatestDeployment.RefName)
 	case schemas.RefKindTag:
-		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetProjectMostRecentTagCommit(env.ProjectName, env.TagsRegexp)
+		// TODO: Review how to manage this in a nicier fashion
+		infoLabels["latest_commit_short_id"], commitDate, err = gitlabClient.GetProjectMostRecentTagCommit(env.ProjectName, ".*")
 	default:
 		infoLabels["latest_commit_short_id"] = env.LatestDeployment.CommitShortID
 		commitDate = env.LatestDeployment.Timestamp

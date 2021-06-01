@@ -49,28 +49,16 @@ func TestPullEnvironmentsFromProjectsEnabled(t *testing.T) {
 	assert.Equal(t, defaultProjectPullEnvironmentsEnabled, project.Pull.Environments.Enabled())
 }
 
-func TestPullEnvironmentsFromProjectsNameRegexp(t *testing.T) {
+func TestPullEnvironmentsFromProjectsRegexp(t *testing.T) {
 	cfg, project := NewTestProjectVariables()
-	assert.Equal(t, defaultProjectPullEnvironmentsNameRegexp, project.Pull.Environments.NameRegexp())
+	assert.Equal(t, defaultProjectPullEnvironmentsRegexp, project.Pull.Environments.Regexp())
 
-	cfg.ProjectDefaults.Pull.Environments.NameRegexpValue = pointy.String("foo")
+	cfg.ProjectDefaults.Pull.Environments.RegexpValue = pointy.String("foo")
 	UpdateProjectDefaults(cfg.ProjectDefaults)
-	assert.Equal(t, "foo", project.Pull.Environments.NameRegexp())
+	assert.Equal(t, "foo", project.Pull.Environments.Regexp())
 
-	project.Pull.Environments.NameRegexpValue = pointy.String("bar")
-	assert.Equal(t, "bar", project.Pull.Environments.NameRegexp())
-}
-
-func TestPullEnvironmentsFromProjectsTagsRegexp(t *testing.T) {
-	cfg, project := NewTestProjectVariables()
-	assert.Equal(t, defaultProjectPullEnvironmentsTagsRegexp, project.Pull.Environments.TagsRegexp())
-
-	cfg.ProjectDefaults.Pull.Environments.TagsRegexpValue = pointy.String("foo")
-	UpdateProjectDefaults(cfg.ProjectDefaults)
-	assert.Equal(t, "foo", project.Pull.Environments.TagsRegexp())
-
-	project.Pull.Environments.TagsRegexpValue = pointy.String("bar")
-	assert.Equal(t, "bar", project.Pull.Environments.TagsRegexp())
+	project.Pull.Environments.RegexpValue = pointy.String("bar")
+	assert.Equal(t, "bar", project.Pull.Environments.Regexp())
 }
 
 func TestPullRefsRegexp(t *testing.T) {

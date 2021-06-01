@@ -70,7 +70,7 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 		ProjectParameters: schemas.ProjectParameters{
 			Pull: schemas.ProjectPull{
 				Environments: schemas.ProjectPullEnvironments{
-					NameRegexpValue: pointy.String("^main$"),
+					RegexpValue: pointy.String("^main$"),
 				},
 			},
 		},
@@ -92,7 +92,6 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 		envp2main.Key(): schemas.Environment{
 			ProjectName:               "p2",
 			Name:                      "main",
-			TagsRegexp:                ".*",
 			OutputSparseStatusMetrics: true,
 		},
 	}

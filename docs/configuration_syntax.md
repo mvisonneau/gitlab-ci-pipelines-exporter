@@ -199,11 +199,6 @@ project_defaults:
       # (optional, default: ".*")
       name_regexp: ".*"
 
-      # When deployments are based upon tags, you can
-      # choose to filter out the ones which you are
-      # using to deploy your environment (optional, default: ".*")
-      tags_regexp: ".*"
-
     refs:
       # Filter refs (branches/tags only) to include
       # (optional, default: "^main|master$" -- main or master branch)
@@ -283,11 +278,6 @@ projects:
         # (optional, default: ".*")
         name_regexp: ".*"
 
-        # When deployments are based upon tags, you can
-        # choose to filter out the ones which you are
-        # using to deploy your environment (optional, default: ".*")
-        tags_regexp: ".*"
-  
       refs:
         # Filter refs (branches/tags only) to include
         # (optional, default: "^main|master$" -- main or master branch)
@@ -382,11 +372,6 @@ wildcards:
         # Filter out by name environments to include
         # (optional, default: ".*")
         name_regexp: ".*"
-
-        # When deployments are based upon tags, you can
-        # choose to filter out the ones which you are
-        # using to deploy your environment (optional, default: ".*")
-        tags_regexp: ".*"
 
       refs:
         # Filter refs (branches/tags only) to include

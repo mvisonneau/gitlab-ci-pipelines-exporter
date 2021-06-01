@@ -14,7 +14,6 @@ type Environment struct {
 	Available        bool
 	LatestDeployment Deployment
 
-	TagsRegexp                string
 	OutputSparseStatusMetrics bool
 }
 

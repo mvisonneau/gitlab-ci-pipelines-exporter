@@ -101,8 +101,7 @@ project_defaults:
   pull:
     environments:
       enabled: true
-      name_regexp: "^baz$"
-      tags_regexp: "^blah$"
+      regexp: "^baz$"
     refs:
       regexp: "^baz$"
       max_age_seconds: 1
@@ -126,8 +125,7 @@ projects:
     pull:
       environments:
         enabled: false
-        name_regexp: "^foo$"
-        tags_regexp: "^foo$"
+        regexp: "^foo$"
       refs:
         regexp: "^foo$"
         max_age_seconds: 2
@@ -135,8 +133,7 @@ projects:
     pull:
       environments:
         enabled: false
-        name_regexp: "^foo$"
-        tags_regexp: "^foo$"
+        regexp: "^foo$"
       refs:
         regexp: "^bar$"
         max_age_seconds: 3
@@ -150,8 +147,7 @@ wildcards:
     pull:
       environments:
         enabled: false
-        name_regexp: "^foo$"
-        tags_regexp: "^foo$"
+        regexp: "^foo$"
       refs:
         regexp: "^yolo$"
         max_age_seconds: 4
@@ -232,9 +228,8 @@ wildcards:
 			OutputSparseStatusMetricsValue: pointy.Bool(false),
 			Pull: ProjectPull{
 				Environments: ProjectPullEnvironments{
-					EnabledValue:    pointy.Bool(true),
-					NameRegexpValue: pointy.String("^baz$"),
-					TagsRegexpValue: pointy.String("^blah$"),
+					EnabledValue: pointy.Bool(true),
+					RegexpValue:  pointy.String("^baz$"),
 				},
 				Refs: ProjectPullRefs{
 					RegexpValue:        pointy.String("^baz$"),
@@ -270,9 +265,8 @@ wildcards:
 				ProjectParameters: ProjectParameters{
 					Pull: ProjectPull{
 						Environments: ProjectPullEnvironments{
-							EnabledValue:    pointy.Bool(false),
-							NameRegexpValue: pointy.String("^foo$"),
-							TagsRegexpValue: pointy.String("^foo$"),
+							EnabledValue: pointy.Bool(false),
+							RegexpValue:  pointy.String("^foo$"),
 						},
 						Refs: ProjectPullRefs{
 							RegexpValue:        pointy.String("^foo$"),
@@ -286,9 +280,8 @@ wildcards:
 				ProjectParameters: ProjectParameters{
 					Pull: ProjectPull{
 						Environments: ProjectPullEnvironments{
-							EnabledValue:    pointy.Bool(false),
-							NameRegexpValue: pointy.String("^foo$"),
-							TagsRegexpValue: pointy.String("^foo$"),
+							EnabledValue: pointy.Bool(false),
+							RegexpValue:  pointy.String("^foo$"),
 						},
 						Refs: ProjectPullRefs{
 							RegexpValue:        pointy.String("^bar$"),
@@ -312,9 +305,8 @@ wildcards:
 				ProjectParameters: ProjectParameters{
 					Pull: ProjectPull{
 						Environments: ProjectPullEnvironments{
-							EnabledValue:    pointy.Bool(false),
-							NameRegexpValue: pointy.String("^foo$"),
-							TagsRegexpValue: pointy.String("^foo$"),
+							EnabledValue: pointy.Bool(false),
+							RegexpValue:  pointy.String("^foo$"),
 						},
 						Refs: ProjectPullRefs{
 							RegexpValue:        pointy.String("^yolo$"),
@@ -352,8 +344,7 @@ func TestParseConfigDefaultsValues(t *testing.T) {
 	assert.Equal(t, defaultProjectOutputSparseStatusMetrics, cfg.ProjectDefaults.OutputSparseStatusMetrics())
 
 	assert.Equal(t, defaultProjectPullEnvironmentsEnabled, cfg.ProjectDefaults.Pull.Environments.Enabled())
-	assert.Equal(t, defaultProjectPullEnvironmentsNameRegexp, cfg.ProjectDefaults.Pull.Environments.NameRegexp())
-	assert.Equal(t, defaultProjectPullEnvironmentsTagsRegexp, cfg.ProjectDefaults.Pull.Environments.TagsRegexp())
+	assert.Equal(t, defaultProjectPullEnvironmentsRegexp, cfg.ProjectDefaults.Pull.Environments.Regexp())
 
 	assert.Equal(t, defaultProjectPullRefsRegexp, cfg.ProjectDefaults.Pull.Refs.Regexp())
 	assert.Equal(t, defaultProjectPullRefsFromPipelinesEnabled, cfg.ProjectDefaults.Pull.Refs.From.Pipelines.Enabled())

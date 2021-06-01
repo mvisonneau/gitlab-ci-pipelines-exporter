@@ -8,8 +8,7 @@ import (
 var (
 	defaultProjectOutputSparseStatusMetrics                               = true
 	defaultProjectPullEnvironmentsEnabled                                 = false
-	defaultProjectPullEnvironmentsNameRegexp                              = `.*`
-	defaultProjectPullEnvironmentsTagsRegexp                              = `.*`
+	defaultProjectPullEnvironmentsRegexp                                  = `.*`
 	defaultProjectPullRefsRegexp                                          = `^(main|master)$`
 	defaultProjectPullRefsMaxAgeSeconds                              uint = 0
 	defaultProjectPullRefsFromPipelinesEnabled                            = false
@@ -45,11 +44,8 @@ type ProjectPullEnvironments struct {
 	// Whether to pull environments/deployments or not for this project
 	EnabledValue *bool `yaml:"enabled"`
 
-	// Regular expression to filter environments to fetch by their names (defaults to '^prod')
-	NameRegexpValue *string `yaml:"name_regexp"`
-
-	// Regular expression to filter out commit id to consider when deployments are based upon tags (defaults to '.*')
-	TagsRegexpValue *string `yaml:"tags_regexp"`
+	// Regular expression to filter environments to fetch by their names
+	RegexpValue *string `yaml:"regexp"`
 }
 
 // ProjectPullRefs ..
@@ -137,12 +133,8 @@ func UpdateProjectDefaults(d ProjectParameters) {
 		defaultProjectPullEnvironmentsEnabled = *d.Pull.Environments.EnabledValue
 	}
 
-	if d.Pull.Environments.NameRegexpValue != nil {
-		defaultProjectPullEnvironmentsNameRegexp = *d.Pull.Environments.NameRegexpValue
-	}
-
-	if d.Pull.Environments.TagsRegexpValue != nil {
-		defaultProjectPullEnvironmentsTagsRegexp = *d.Pull.Environments.TagsRegexpValue
+	if d.Pull.Environments.RegexpValue != nil {
+		defaultProjectPullEnvironmentsRegexp = *d.Pull.Environments.RegexpValue
 	}
 
 	if d.Pull.Refs.RegexpValue != nil {
@@ -232,22 +224,13 @@ func (p *ProjectPullEnvironments) Enabled() bool {
 	return defaultProjectPullEnvironmentsEnabled
 }
 
-// NameRegexp ...
-func (p *ProjectPullEnvironments) NameRegexp() string {
-	if p.NameRegexpValue != nil {
-		return *p.NameRegexpValue
+// Regexp ...
+func (p *ProjectPullEnvironments) Regexp() string {
+	if p.RegexpValue != nil {
+		return *p.RegexpValue
 	}
 
-	return defaultProjectPullEnvironmentsNameRegexp
-}
-
-// TagsRegexp ...
-func (p *ProjectPullEnvironments) TagsRegexp() string {
-	if p.TagsRegexpValue != nil {
-		return *p.TagsRegexpValue
-	}
-
-	return defaultProjectPullEnvironmentsTagsRegexp
+	return defaultProjectPullEnvironmentsRegexp
 }
 
 // Regexp ...
