@@ -1,4 +1,4 @@
-package exporter
+package controller
 
 import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"

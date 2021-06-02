@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/exporter"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/controller"
 	"github.com/mvisonneau/go-helpers/logger"
 	"github.com/vmihailenco/taskq/v3"
 
@@ -53,12 +53,12 @@ func configure(ctx *cli.Context) (err error) {
 			return
 		}
 
-		if err = exporter.ConfigureRedisClient(redis.NewClient(opt)); err != nil {
+		if err = controller.ConfigureRedisClient(redis.NewClient(opt)); err != nil {
 			return
 		}
 	}
 
-	if err = exporter.Configure(cfg, ctx.App.Version); err != nil {
+	if err = controller.Configure(cfg, ctx.App.Version); err != nil {
 		return
 	}
 
@@ -67,7 +67,7 @@ func configure(ctx *cli.Context) (err error) {
 			"gitlab-endpoint": cfg.Gitlab.URL,
 			"pull-rate-limit": fmt.Sprintf("%drps", cfg.Pull.MaximumGitLabAPIRequestsPerSecond),
 		},
-	).Info("exporter configured")
+	).Info("configured")
 
 	log.WithFields(config.SchedulerConfig(cfg.Pull.ProjectsFromWildcards).Log()).Info("pull projects from wildcards")
 	log.WithFields(config.SchedulerConfig(cfg.Pull.EnvironmentsFromProjects).Log()).Info("pull environments from projects")

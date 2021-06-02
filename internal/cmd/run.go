@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/exporter"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/controller"
 	"github.com/urfave/cli/v2"
 )
 
@@ -11,6 +11,6 @@ func Run(ctx *cli.Context) (int, error) {
 		return 1, err
 	}
 
-	exporter.Run()
+	controller.Run()
 	return 0, nil
 }
