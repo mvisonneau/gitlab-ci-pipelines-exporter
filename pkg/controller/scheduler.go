@@ -316,9 +316,11 @@ func (c *Controller) Schedule(ctx context.Context, pull config.Pull, gc config.G
 func (c *Controller) ScheduleTask(ctx context.Context, tt TaskType, args ...interface{}) {
 	task := c.TaskController.TaskMap.Get(string(tt))
 	msg := task.WithArgs(ctx, args...)
-	if err := c.TaskController.Queue.Add(msg); err != nil {
-		log.WithError(err).Warning("scheduling task")
-	}
+	go func(msg *taskq.Message) {
+		if err := c.TaskController.Queue.Add(msg); err != nil {
+			log.WithError(err).Warning("scheduling task")
+		}
+	}(msg)
 }
 
 // ScheduleTaskWithTicker ..
