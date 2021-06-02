@@ -3,17 +3,17 @@ package storage
 import (
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/openlyinc/pointy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLocalProjectFunctions(t *testing.T) {
-	p := schemas.Project{
+	p := config.Project{
 		Name: "foo/bar",
-		ProjectParameters: schemas.ProjectParameters{
-			OutputSparseStatusMetricsValue: pointy.Bool(false),
+		ProjectParameters: config.ProjectParameters{
+			OutputSparseStatusMetrics: false,
 		},
 	}
 
@@ -32,9 +32,7 @@ func TestLocalProjectFunctions(t *testing.T) {
 	assert.True(t, exists)
 
 	// GetProject should succeed
-	newProject := schemas.Project{
-		Name: "foo/bar",
-	}
+	newProject := config.NewProject("foo/bar")
 	assert.NoError(t, l.GetProject(&newProject))
 	assert.Equal(t, p, newProject)
 
@@ -54,9 +52,7 @@ func TestLocalProjectFunctions(t *testing.T) {
 	assert.False(t, exists)
 
 	// GetProject should not update the var this time
-	newProject = schemas.Project{
-		Name: "foo/bar",
-	}
+	newProject = config.NewProject("foo/bar")
 	assert.NoError(t, l.GetProject(&newProject))
 	assert.NotEqual(t, p, newProject)
 }

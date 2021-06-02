@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
@@ -153,8 +154,8 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (s
 }
 
 // GetRefsFromPipelines ..
-func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas.Refs, error) {
-	re, err := regexp.Compile(p.Pull.Refs.Regexp())
+func (c *Client) GetRefsFromPipelines(p config.Project, topics string) (schemas.Refs, error) {
+	re, err := regexp.Compile(p.Pull.Refs.Regexp)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +164,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 		ListOptions: goGitlab.ListOptions{
 			Page: 1,
 			// TODO: Get a proper loop to split this query up
-			PerPage: p.Pull.Refs.From.Pipelines.Depth(),
+			PerPage: int(p.Pull.Refs.From.Pipelines.Depth),
 		},
 		Scope: pointy.String("branches"),
 	}
@@ -171,7 +172,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 	if options.PerPage > 100 {
 		log.WithFields(log.Fields{
 			"project-name":   p.Name,
-			"required-depth": p.Pull.Refs.From.Pipelines.Depth(),
+			"required-depth": p.Pull.Refs.From.Pipelines.Depth,
 		}).Warn("required pipeline depth was capped to '100'")
 		options.PerPage = 100
 	}
@@ -194,13 +195,13 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 	} {
 		for _, pipeline := range pipelines {
 			if re.MatchString(pipeline.Ref) {
-				if p.Pull.Refs.MaxAgeSeconds() > 0 && time.Now().Sub(*pipeline.UpdatedAt) > (time.Duration(p.Pull.Refs.MaxAgeSeconds())*time.Second) {
+				if p.Pull.Refs.MaxAgeSeconds > 0 && time.Now().Sub(*pipeline.UpdatedAt) > (time.Duration(p.Pull.Refs.MaxAgeSeconds)*time.Second) {
 					log.WithFields(log.Fields{
 						"project-name":    p.Name,
 						"ref":             pipeline.Ref,
 						"ref-kind":        kind,
-						"regexp":          p.Pull.Refs.Regexp(),
-						"max-age-seconds": p.Pull.Refs.MaxAgeSeconds(),
+						"regexp":          p.Pull.Refs.Regexp,
+						"max-age-seconds": p.Pull.Refs.MaxAgeSeconds,
 						"updated-at":      *pipeline.UpdatedAt,
 					}).Debug("ref matching regexp but pipeline last updated at a date outside of the required timeframe, ignoring..")
 					continue
@@ -211,13 +212,13 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, topics string) (schemas
 					p.Name,
 					pipeline.Ref,
 					topics,
-					p.OutputSparseStatusMetrics(),
-					p.Pull.Pipeline.Jobs.Enabled(),
-					p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled(),
-					p.Pull.Pipeline.Jobs.RunnerDescription.Enabled(),
-					p.Pull.Pipeline.Variables.Enabled(),
-					p.Pull.Pipeline.Variables.Regexp(),
-					p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp(),
+					p.OutputSparseStatusMetrics,
+					p.Pull.Pipeline.Jobs.Enabled,
+					p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled,
+					p.Pull.Pipeline.Jobs.RunnerDescription.Enabled,
+					p.Pull.Pipeline.Variables.Enabled,
+					p.Pull.Pipeline.Variables.Regexp,
+					p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp,
 				)
 
 				if _, ok := refs[ref.Key()]; !ok {

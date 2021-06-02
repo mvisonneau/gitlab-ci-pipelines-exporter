@@ -3,15 +3,16 @@ package exporter
 import (
 	"context"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 )
 
-func pullEnvironmentsFromProject(p schemas.Project) error {
+func pullEnvironmentsFromProject(p config.Project) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
-	envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.Regexp())
+	envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.Regexp)
 	if err != nil {
 		return err
 	}
@@ -22,7 +23,7 @@ func pullEnvironmentsFromProject(p schemas.Project) error {
 			Name:        envName,
 			ID:          envID,
 
-			OutputSparseStatusMetrics: p.OutputSparseStatusMetrics(),
+			OutputSparseStatusMetrics: p.OutputSparseStatusMetrics,
 		}
 
 		envExists, err := store.EnvironmentExists(env.Key())

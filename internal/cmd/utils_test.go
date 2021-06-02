@@ -27,9 +27,12 @@ func NewTestContext() (ctx *cli.Context, flags *flag.FlagSet) {
 }
 
 func TestConfigure(t *testing.T) {
-	f, err := ioutil.TempFile("/tmp", "test-")
+	f, err := ioutil.TempFile(".", "test-*.yml")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
+
+	// Webhook endpoint enabled
+	ioutil.WriteFile(f.Name(), []byte(`wildcards: [{}]`), 0o644)
 
 	ctx, flags := NewTestContext()
 	flags.String("log-format", "text", "")
@@ -50,6 +53,7 @@ func TestConfigure(t *testing.T) {
 
 	// Webhook endpoint enabled
 	ioutil.WriteFile(f.Name(), []byte(`
+wildcards: [{}]
 server:
   webhook:
     enabled: true

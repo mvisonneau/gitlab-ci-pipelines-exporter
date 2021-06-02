@@ -1,4 +1,4 @@
-package schemas
+package config
 
 import (
 	"testing"
@@ -11,5 +11,5 @@ func TestWildcardKey(t *testing.T) {
 		Search: "foo",
 	}
 
-	assert.Equal(t, WildcardKey("3142989457"), w.Key())
+	assert.Equal(t, WildcardKey("2203518986"), w.Key())
 }

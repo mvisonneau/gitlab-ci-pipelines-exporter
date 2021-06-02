@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -22,7 +23,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.WithFields(logFields).Debug("webhook request")
 
-	if r.Header.Get("X-Gitlab-Token") != config.Server.Webhook.SecretToken {
+	if r.Header.Get("X-Gitlab-Token") != cfg.Server.Webhook.SecretToken {
 		log.WithFields(logFields).Debug("invalid token provided for a webhook request")
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprint(w, "{\"error\": \"invalid token\"")
@@ -94,7 +95,7 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 
 	// Let's try to see if the project is configured to export this ref
 	if !exists {
-		p := schemas.Project{
+		p := config.Project{
 			Name: ref.ProjectName,
 		}
 
@@ -104,12 +105,12 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 		}
 
 		// Perhaps the project is discoverable through a wildcard
-		if !exists && len(config.Wildcards) > 0 {
-			for _, w := range config.Wildcards {
+		if !exists && len(cfg.Wildcards) > 0 {
+			for _, w := range cfg.Wildcards {
 				// If in all our wildcards we have one which can potentially match the project ref
 				// received, we trigger a scan
 				if w.Owner.Kind == "" ||
-					(strings.Contains(p.Name, w.Owner.Name) && regexp.MustCompile(w.Pull.Refs.Regexp()).MatchString(ref.Name)) {
+					(strings.Contains(p.Name, w.Owner.Name) && regexp.MustCompile(w.Pull.Refs.Regexp).MatchString(ref.Name)) {
 					go schedulePullProjectsFromWildcardTask(context.TODO(), w)
 					log.WithFields(logFields).Info("project ref not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
 					return
@@ -122,7 +123,7 @@ func triggerRefMetricsPull(ref schemas.Ref) {
 				log.WithFields(logFields).WithField("error", err.Error()).Error("reading project from the store")
 			}
 
-			if regexp.MustCompile(p.Pull.Refs.Regexp()).MatchString(ref.Name) {
+			if regexp.MustCompile(p.Pull.Refs.Regexp).MatchString(ref.Name) {
 				if err = store.SetRef(ref); err != nil {
 					log.WithFields(logFields).WithField("error", err.Error()).Error("writing ref in the store")
 				}
@@ -163,7 +164,7 @@ func triggerEnvironmentMetricsPull(env schemas.Environment) {
 	}
 
 	if !exists {
-		p := schemas.Project{
+		p := config.Project{
 			Name: env.ProjectName,
 		}
 
@@ -173,11 +174,11 @@ func triggerEnvironmentMetricsPull(env schemas.Environment) {
 		}
 
 		// Perhaps the project is discoverable through a wildcard
-		if !exists && len(config.Wildcards) > 0 {
-			for _, w := range config.Wildcards {
+		if !exists && len(cfg.Wildcards) > 0 {
+			for _, w := range cfg.Wildcards {
 				// If in all our wildcards we have one which can potentially match the project ref
 				// received, we trigger a scan
-				if w.Pull.Environments.Enabled() && (w.Owner.Kind == "" || (strings.Contains(p.Name, w.Owner.Name) && regexp.MustCompile(w.Pull.Environments.Regexp()).MatchString(env.ProjectName))) {
+				if w.Pull.Environments.Enabled && (w.Owner.Kind == "" || (strings.Contains(p.Name, w.Owner.Name) && regexp.MustCompile(w.Pull.Environments.Regexp).MatchString(env.ProjectName))) {
 					go schedulePullProjectsFromWildcardTask(context.TODO(), w)
 					log.WithFields(logFields).Info("project environment not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
 					return
@@ -191,7 +192,7 @@ func triggerEnvironmentMetricsPull(env schemas.Environment) {
 			}
 
 			// As we do not get the environment ID within the deployment event, we need to query it back..
-			envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.Regexp())
+			envs, err := gitlabClient.GetProjectEnvironments(p.Name, p.Pull.Environments.Regexp)
 			if err != nil {
 				log.WithFields(logFields).WithField("error", err.Error()).Error("listing project envs from GitLab API")
 			}

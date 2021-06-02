@@ -3,6 +3,7 @@ package exporter
 import (
 	"regexp"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 )
@@ -19,12 +20,12 @@ func garbageCollectProjects() error {
 	}
 
 	// Loop through all configured projects
-	for _, p := range config.Projects {
+	for _, p := range cfg.Projects {
 		delete(storedProjects, p.Key())
 	}
 
 	// Loop through what can be found from the wildcards
-	for _, w := range config.Wildcards {
+	for _, w := range cfg.Wildcards {
 		foundProjects, err := gitlabClient.ListProjects(w)
 		if err != nil {
 			return err
@@ -65,7 +66,7 @@ func garbageCollectEnvironments() error {
 
 	envProjects := make(map[string]string)
 	for k, env := range storedEnvironments {
-		p := schemas.Project{
+		p := config.Project{
 			Name: env.ProjectName,
 		}
 
@@ -94,10 +95,10 @@ func garbageCollectEnvironments() error {
 
 		// Store the project information to be able to refresh its environments
 		// from the API later on
-		envProjects[p.Name] = p.Pull.Environments.Regexp()
+		envProjects[p.Name] = p.Pull.Environments.Regexp
 
 		// If the environment is not configured to be pulled anymore, delete it
-		re := regexp.MustCompile(p.Pull.Environments.Regexp())
+		re := regexp.MustCompile(p.Pull.Environments.Regexp)
 		if !re.MatchString(env.Name) {
 			if err = store.DelEnvironment(k); err != nil {
 				return err
@@ -112,8 +113,8 @@ func garbageCollectEnvironments() error {
 		}
 
 		// Check if the latest configuration of the project in store matches the environment one
-		if env.OutputSparseStatusMetrics != p.OutputSparseStatusMetrics() {
-			env.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics()
+		if env.OutputSparseStatusMetrics != p.OutputSparseStatusMetrics {
+			env.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics
 
 			if err = store.SetEnvironment(env); err != nil {
 				return err
@@ -175,9 +176,9 @@ func garbageCollectRefs() error {
 		return err
 	}
 
-	refProjects := make(map[string]schemas.ProjectPullRefs)
+	refProjects := make(map[string]config.ProjectPullRefs)
 	for k, ref := range storedRefs {
-		p := schemas.Project{Name: ref.ProjectName}
+		p := config.Project{Name: ref.ProjectName}
 		projectExists, err := store.ProjectExists(p.Key())
 		if err != nil {
 			return err
@@ -206,7 +207,7 @@ func garbageCollectRefs() error {
 		refProjects[p.Name] = p.Pull.Refs
 
 		// If the ref is not configured to be pulled anymore, delete the ref
-		re := regexp.MustCompile(p.Pull.Refs.Regexp())
+		re := regexp.MustCompile(p.Pull.Refs.Regexp)
 		if !re.MatchString(ref.Name) {
 			if err = store.DelRef(k); err != nil {
 				return err
@@ -221,14 +222,14 @@ func garbageCollectRefs() error {
 		}
 
 		// Check if the latest configuration of the project in store matches the ref one
-		if ref.OutputSparseStatusMetrics != p.OutputSparseStatusMetrics() ||
-			ref.PullPipelineJobsEnabled != p.Pull.Pipeline.Jobs.Enabled() ||
-			ref.PullPipelineVariablesEnabled != p.Pull.Pipeline.Variables.Enabled() ||
-			ref.PullPipelineVariablesRegexp != p.Pull.Pipeline.Variables.Regexp() {
-			ref.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics()
-			ref.PullPipelineJobsEnabled = p.Pull.Pipeline.Jobs.Enabled()
-			ref.PullPipelineVariablesEnabled = p.Pull.Pipeline.Variables.Enabled()
-			ref.PullPipelineVariablesRegexp = p.Pull.Pipeline.Variables.Regexp()
+		if ref.OutputSparseStatusMetrics != p.OutputSparseStatusMetrics ||
+			ref.PullPipelineJobsEnabled != p.Pull.Pipeline.Jobs.Enabled ||
+			ref.PullPipelineVariablesEnabled != p.Pull.Pipeline.Variables.Enabled ||
+			ref.PullPipelineVariablesRegexp != p.Pull.Pipeline.Variables.Regexp {
+			ref.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics
+			ref.PullPipelineJobsEnabled = p.Pull.Pipeline.Jobs.Enabled
+			ref.PullPipelineVariablesEnabled = p.Pull.Pipeline.Variables.Enabled
+			ref.PullPipelineVariablesRegexp = p.Pull.Pipeline.Variables.Regexp
 			if err = store.SetRef(ref); err != nil {
 				return err
 			}
@@ -242,7 +243,7 @@ func garbageCollectRefs() error {
 	// Refresh the refs from the API
 	existingRefs := make(map[schemas.RefKey]struct{})
 	for projectName, projectPullRefs := range refProjects {
-		branches, err := gitlabClient.GetProjectBranches(projectName, projectPullRefs.Regexp(), projectPullRefs.MaxAgeSeconds())
+		branches, err := gitlabClient.GetProjectBranches(projectName, projectPullRefs.Regexp, projectPullRefs.MaxAgeSeconds)
 		if err != nil {
 			return err
 		}
@@ -255,7 +256,7 @@ func garbageCollectRefs() error {
 			}.Key()] = struct{}{}
 		}
 
-		tags, err := gitlabClient.GetProjectTags(projectName, projectPullRefs.Regexp(), projectPullRefs.MaxAgeSeconds())
+		tags, err := gitlabClient.GetProjectTags(projectName, projectPullRefs.Regexp, projectPullRefs.MaxAgeSeconds)
 		if err != nil {
 			return err
 		}
@@ -268,8 +269,8 @@ func garbageCollectRefs() error {
 			}.Key()] = struct{}{}
 		}
 
-		if projectPullRefs.From.MergeRequests.Enabled() {
-			mergeRequests, err := gitlabClient.GetProjectMergeRequestsPipelines(projectName, projectPullRefs.From.MergeRequests.Depth(), projectPullRefs.MaxAgeSeconds())
+		if projectPullRefs.From.MergeRequests.Enabled {
+			mergeRequests, err := gitlabClient.GetProjectMergeRequestsPipelines(projectName, int(projectPullRefs.From.MergeRequests.Depth), projectPullRefs.MaxAgeSeconds)
 			if err != nil {
 				return err
 			}

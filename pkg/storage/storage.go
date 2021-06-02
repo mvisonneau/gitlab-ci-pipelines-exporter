@@ -4,16 +4,17 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // Storage ..
 type Storage interface {
-	SetProject(schemas.Project) error
-	DelProject(schemas.ProjectKey) error
-	GetProject(*schemas.Project) error
-	ProjectExists(schemas.ProjectKey) (bool, error)
-	Projects() (schemas.Projects, error)
+	SetProject(config.Project) error
+	DelProject(config.ProjectKey) error
+	GetProject(*config.Project) error
+	ProjectExists(config.ProjectKey) (bool, error)
+	Projects() (config.Projects, error)
 	ProjectsCount() (int64, error)
 
 	SetEnvironment(schemas.Environment) error
@@ -41,7 +42,7 @@ type Storage interface {
 // NewLocalStorage ..
 func NewLocalStorage() Storage {
 	return &Local{
-		projects:     make(schemas.Projects),
+		projects:     make(config.Projects),
 		environments: make(schemas.Environments),
 		refs:         make(schemas.Refs),
 		metrics:      make(schemas.Metrics),

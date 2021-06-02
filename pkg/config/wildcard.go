@@ -1,9 +1,11 @@
-package schemas
+package config
 
 import (
 	"fmt"
 	"hash/crc32"
 	"strconv"
+
+	"github.com/creasty/defaults"
 )
 
 // Wildcard is a specific handler to dynamically search projects
@@ -21,7 +23,7 @@ type Wildcard struct {
 type WildcardOwner struct {
 	Name             string `yaml:"name"`
 	Kind             string `yaml:"kind"`
-	IncludeSubgroups bool   `yaml:"include_subgroups"`
+	IncludeSubgroups bool   `default:"false" yaml:"include_subgroups"`
 }
 
 // Wildcards ..
@@ -33,4 +35,10 @@ type WildcardKey string
 // Key ..
 func (w Wildcard) Key() WildcardKey {
 	return WildcardKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(fmt.Sprintf("%v", w))))))
+}
+
+// NewWildcard returns a new wildcard with the default parameters
+func NewWildcard() (w Wildcard) {
+	defaults.MustSet(&w)
+	return
 }

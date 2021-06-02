@@ -5,8 +5,8 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/openlyinc/pointy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,10 +20,10 @@ func TestRedisProjectFunctions(t *testing.T) {
 
 	r := NewRedisStorage(redis.NewClient(&redis.Options{Addr: s.Addr()}))
 
-	p := schemas.Project{
+	p := config.Project{
 		Name: "foo/bar",
-		ProjectParameters: schemas.ProjectParameters{
-			OutputSparseStatusMetricsValue: pointy.Bool(false),
+		ProjectParameters: config.ProjectParameters{
+			OutputSparseStatusMetrics: false,
 		},
 	}
 
@@ -40,9 +40,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	assert.True(t, exists)
 
 	// GetProject should succeed
-	newProject := schemas.Project{
-		Name: "foo/bar",
-	}
+	newProject := config.NewProject("foo/bar")
 	assert.NoError(t, r.GetProject(&newProject))
 	assert.Equal(t, p, newProject)
 
@@ -62,9 +60,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	assert.False(t, exists)
 
 	// GetProject should not update the var this time
-	newProject = schemas.Project{
-		Name: "foo/bar",
-	}
+	newProject = config.NewProject("foo/bar")
 	assert.NoError(t, r.GetProject(&newProject))
 	assert.NotEqual(t, p, newProject)
 }

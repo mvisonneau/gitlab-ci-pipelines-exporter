@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,13 +30,9 @@ func TestListUserProjects(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	w := schemas.Wildcard{
+	w := config.Wildcard{
 		Search: "bar",
-		Owner: struct {
-			Name             string `yaml:"name"`
-			Kind             string `yaml:"kind"`
-			IncludeSubgroups bool   `yaml:"include_subgroups"`
-		}{
+		Owner: config.WildcardOwner{
 			Name:             "foo",
 			Kind:             "user",
 			IncludeSubgroups: false,
@@ -60,13 +56,9 @@ func TestListGroupProjects(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	w := schemas.Wildcard{
+	w := config.Wildcard{
 		Search: "bar",
-		Owner: struct {
-			Name             string `yaml:"name"`
-			Kind             string `yaml:"kind"`
-			IncludeSubgroups bool   `yaml:"include_subgroups"`
-		}{
+		Owner: config.WildcardOwner{
 			Name:             "foo",
 			Kind:             "group",
 			IncludeSubgroups: false,
@@ -90,13 +82,9 @@ func TestListProjects(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	w := schemas.Wildcard{
+	w := config.Wildcard{
 		Search: "bar",
-		Owner: struct {
-			Name             string `yaml:"name"`
-			Kind             string `yaml:"kind"`
-			IncludeSubgroups bool   `yaml:"include_subgroups"`
-		}{
+		Owner: config.WildcardOwner{
 			Name:             "",
 			Kind:             "",
 			IncludeSubgroups: false,
@@ -120,13 +108,9 @@ func TestListProjectsAPIError(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	w := schemas.Wildcard{
+	w := config.Wildcard{
 		Search: "bar",
-		Owner: struct {
-			Name             string `yaml:"name"`
-			Kind             string `yaml:"kind"`
-			IncludeSubgroups bool   `yaml:"include_subgroups"`
-		}{
+		Owner: config.WildcardOwner{
 			Name: "foo",
 			Kind: "user",
 		},
@@ -142,19 +126,4 @@ func TestListProjectsAPIError(t *testing.T) {
 	_, err := c.ListProjects(w)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unable to list projects with search pattern")
-}
-
-func readProjects(until chan struct{}, projects ...schemas.Project) <-chan schemas.Project {
-	p := make(chan schemas.Project)
-	go func() {
-		defer close(p)
-		for _, i := range projects {
-			select {
-			case <-until:
-				return
-			case p <- i:
-			}
-		}
-	}()
-	return p
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 )
@@ -58,7 +59,7 @@ func TestPullRefsFromProject(t *testing.T) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	assert.NoError(t, pullRefsFromProject(schemas.Project{Name: "foo"}))
+	assert.NoError(t, pullRefsFromProject(config.NewProject("foo")))
 
 	projectsRefs, _ := store.Refs()
 	expectedRefs := schemas.Refs{
@@ -71,7 +72,7 @@ func TestPullRefsFromProject(t *testing.T) {
 			PullPipelineJobsFromChildPipelinesEnabled:          true,
 			PullPipelineJobsRunnerDescriptionEnabled:           true,
 			PullPipelineVariablesRegexp:                        ".*",
-			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
+			PullPipelineJobsRunnerDescriptionAggregationRegexp: `shared-runners-manager-(\d*)\.gitlab\.com`,
 		},
 	}
 	assert.Equal(t, expectedRefs, projectsRefs)
@@ -100,7 +101,7 @@ func TestPullRefsFromPipelines(t *testing.T) {
 			}
 		})
 
-	assert.NoError(t, pullRefsFromPipelines(schemas.Project{Name: "foo"}))
+	assert.NoError(t, pullRefsFromPipelines(config.NewProject("foo")))
 
 	projectsRefs, _ := store.Refs()
 	expectedRefs := schemas.Refs{

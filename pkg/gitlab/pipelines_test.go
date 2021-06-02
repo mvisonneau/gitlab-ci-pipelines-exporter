@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
@@ -142,29 +143,17 @@ func TestGetRefsFromPipelines(t *testing.T) {
 			fmt.Fprint(w, `{"error": "undefined or unsupported scope"`)
 		})
 
-	p := schemas.Project{
-		Name: "foo",
-		ProjectParameters: schemas.ProjectParameters{
-			Pull: schemas.ProjectPull{
-				Refs: schemas.ProjectPullRefs{
-					RegexpValue: pointy.String("["), // invalid regexp pattern
-					From: schemas.ProjectPullRefsFrom{
-						Pipelines: schemas.ProjectPullRefsFromPipelines{
-							EnabledValue: pointy.Bool(true),
-							DepthValue:   pointy.Int(150),
-						},
-					},
-				},
-			},
-		},
-	}
+	p := config.NewProject("foo")
+	p.Pull.Refs.Regexp = "[" // invalid regexp pattern
+	p.Pull.Refs.From.Pipelines.Enabled = true
+	p.Pull.Refs.From.Pipelines.Depth = 150
 
 	refs, err := c.GetRefsFromPipelines(p, "")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
 	assert.Len(t, refs, 0)
 
-	p.Pull.Refs.RegexpValue = pointy.String("^keep.*")
+	p.Pull.Refs.Regexp = "^keep.*"
 	refs, err = c.GetRefsFromPipelines(p, "")
 	assert.NoError(t, err)
 

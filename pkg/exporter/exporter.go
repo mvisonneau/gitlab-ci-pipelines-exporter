@@ -18,14 +18,14 @@ import (
 	"github.com/vmihailenco/taskq/v3/memqueue"
 	"github.com/vmihailenco/taskq/v3/redisq"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/storage"
 )
 
 var (
-	config        schemas.Config
+	cfg           config.Config
 	gitlabClient  *gitlab.Client
 	redisClient   *redis.Client
 	taskFactory   taskq.Factory
@@ -35,9 +35,9 @@ var (
 )
 
 // Configure ..
-func Configure(cfg schemas.Config, userAgentVersion string) error {
+func Configure(c config.Config, userAgentVersion string) error {
 	cfgUpdateLock.Lock()
-	config = cfg
+	cfg = c
 	cfgUpdateLock.Unlock()
 
 	configurePullingQueue()
@@ -51,12 +51,12 @@ func configureGitlabClient(userAgentVersion string) (err error) {
 	defer cfgUpdateLock.Unlock()
 
 	gitlabClient, err = gitlab.NewClient(gitlab.ClientConfig{
-		URL:              config.Gitlab.URL,
-		Token:            config.Gitlab.Token,
-		DisableTLSVerify: !config.Gitlab.EnableTLSVerify,
+		URL:              cfg.Gitlab.URL,
+		Token:            cfg.Gitlab.Token,
+		DisableTLSVerify: !cfg.Gitlab.EnableTLSVerify,
 		UserAgentVersion: userAgentVersion,
 		RateLimiter:      newRateLimiter(),
-		ReadinessURL:     config.Gitlab.HealthURL,
+		ReadinessURL:     cfg.Gitlab.HealthURL,
 	})
 	return
 }
@@ -118,7 +118,7 @@ func configureStore() {
 	}
 
 	// Load all the configured projects in the store
-	for _, p := range config.Projects {
+	for _, p := range cfg.Projects {
 		exists, err := store.ProjectExists(p.Key())
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -135,12 +135,12 @@ func configureStore() {
 				}).Error("writing project in the store")
 			}
 
-			if config.Pull.RefsFromProjects.OnInit {
+			if cfg.Pull.RefsFromProjects.OnInit {
 				go schedulePullRefsFromProject(context.Background(), p)
 				go schedulePullRefsFromPipeline(context.Background(), p)
 			}
 
-			if config.Pull.EnvironmentsFromProjects.OnInit {
+			if cfg.Pull.EnvironmentsFromProjects.OnInit {
 				go schedulePullEnvironmentsFromProject(context.Background(), p)
 			}
 		}
@@ -149,9 +149,9 @@ func configureStore() {
 
 func newRateLimiter() ratelimit.Limiter {
 	if redisClient != nil {
-		return ratelimit.NewRedisLimiter(context.Background(), redisClient, config.Pull.MaximumGitLabAPIRequestsPerSecond)
+		return ratelimit.NewRedisLimiter(context.Background(), redisClient, cfg.Pull.MaximumGitLabAPIRequestsPerSecond)
 	}
-	return ratelimit.NewLocalLimiter(config.Pull.MaximumGitLabAPIRequestsPerSecond)
+	return ratelimit.NewLocalLimiter(cfg.Pull.MaximumGitLabAPIRequestsPerSecond)
 }
 
 func processPullingQueue(ctx context.Context) {
@@ -164,7 +164,7 @@ func processPullingQueue(ctx context.Context) {
 
 func healthCheckHandler() (h healthcheck.Handler) {
 	h = healthcheck.NewHandler()
-	if config.Gitlab.EnableHealthCheck {
+	if cfg.Gitlab.EnableHealthCheck {
 		h.AddReadinessCheck("gitlab-reachable", gitlabClient.ReadinessCheck())
 	} else {
 		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
@@ -186,7 +186,7 @@ func Run() {
 	// HTTP server
 	mux := http.NewServeMux()
 	srv := &http.Server{
-		Addr:    config.Server.ListenAddress,
+		Addr:    cfg.Server.ListenAddress,
 		Handler: mux,
 	}
 
@@ -196,12 +196,12 @@ func Run() {
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
 
 	// metrics endpoint
-	if config.Server.Metrics.Enabled {
+	if cfg.Server.Metrics.Enabled {
 		mux.HandleFunc("/metrics", MetricsHandler)
 	}
 
 	// pprof/debug endpoints
-	if config.Server.EnablePprof {
+	if cfg.Server.EnablePprof {
 		mux.HandleFunc("/debug/pprof/", pprof.Index)
 		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
@@ -210,7 +210,7 @@ func Run() {
 	}
 
 	// webhook endpoints
-	if config.Server.Webhook.Enabled {
+	if cfg.Server.Webhook.Enabled {
 		mux.HandleFunc("/webhook", WebhookHandler)
 	}
 
@@ -222,11 +222,11 @@ func Run() {
 
 	log.WithFields(
 		log.Fields{
-			"listen-address":               config.Server.ListenAddress,
-			"pprof-endpoint-enabled":       config.Server.EnablePprof,
-			"metrics-endpoint-enabled":     config.Server.Metrics.Enabled,
-			"webhook-endpoint-enabled":     config.Server.Webhook.Enabled,
-			"openmetrics-encoding-enabled": config.Server.Metrics.EnableOpenmetricsEncoding,
+			"listen-address":               cfg.Server.ListenAddress,
+			"pprof-endpoint-enabled":       cfg.Server.EnablePprof,
+			"metrics-endpoint-enabled":     cfg.Server.Metrics.Enabled,
+			"webhook-endpoint-enabled":     cfg.Server.Webhook.Enabled,
+			"openmetrics-encoding-enabled": cfg.Server.Metrics.EnableOpenmetricsEncoding,
 		},
 	).Info("http server started")
 

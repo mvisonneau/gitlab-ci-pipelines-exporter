@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/openlyinc/pointy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,21 +22,21 @@ func TestGarbageCollectProjects(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1, "path_with_namespace": "wc/p3", "jobs_enabled": true}]`)
 		})
 
-	p1 := schemas.Project{Name: "cfg/p1"}
-	p2 := schemas.Project{Name: "cfg/p2"}
-	p3 := schemas.Project{Name: "wc/p3"}
-	p4 := schemas.Project{Name: "wc/p4"}
+	p1 := config.NewProject("cfg/p1")
+	p2 := config.NewProject("cfg/p2")
+	p3 := config.NewProject("wc/p3")
+	p4 := config.NewProject("wc/p4")
 
 	store.SetProject(p1)
 	store.SetProject(p2)
 	store.SetProject(p3)
 	store.SetProject(p4)
 
-	config = schemas.Config{
-		Projects: []schemas.Project{p1},
-		Wildcards: schemas.Wildcards{
-			schemas.Wildcard{
-				Owner: schemas.WildcardOwner{
+	cfg = config.Config{
+		Projects: []config.Project{p1},
+		Wildcards: config.Wildcards{
+			config.Wildcard{
+				Owner: config.WildcardOwner{
 					Kind: "group",
 					Name: "wc",
 				},
@@ -48,7 +48,7 @@ func TestGarbageCollectProjects(t *testing.T) {
 	storedProjects, err := store.Projects()
 	assert.NoError(t, err)
 
-	expectedProjects := schemas.Projects{
+	expectedProjects := config.Projects{
 		p1.Key(): p1,
 		p3.Key(): p3,
 	}
@@ -65,16 +65,9 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 			fmt.Fprint(w, `[{"name": "main"}]`)
 		})
 
-	p2 := schemas.Project{
-		Name: "p2",
-		ProjectParameters: schemas.ProjectParameters{
-			Pull: schemas.ProjectPull{
-				Environments: schemas.ProjectPullEnvironments{
-					RegexpValue: pointy.String("^main$"),
-				},
-			},
-		},
-	}
+	p2 := config.NewProject("p2")
+	p2.Pull.Environments.Regexp = "^main$"
+
 	envp1main := schemas.Environment{ProjectName: "p1", Name: "main"}
 	envp2dev := schemas.Environment{ProjectName: "p2", Name: "dev"}
 	envp2main := schemas.Environment{ProjectName: "p2", Name: "main"}
@@ -116,16 +109,9 @@ func TestGarbageCollectRefs(t *testing.T) {
 	pr1dev := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p1", Name: "dev"}
 	pr1main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p1", Name: "main"}
 
-	p2 := schemas.Project{
-		Name: "p2",
-		ProjectParameters: schemas.ProjectParameters{
-			Pull: schemas.ProjectPull{
-				Refs: schemas.ProjectPullRefs{
-					RegexpValue: pointy.String("^main$"),
-				},
-			},
-		},
-	}
+	p2 := config.NewProject("p2")
+	p2.Pull.Environments.Regexp = "^main$"
+
 	pr2dev := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "dev"}
 	pr2main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "main"}
 

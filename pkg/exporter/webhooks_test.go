@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +15,7 @@ import (
 func TestWebhookHandler(t *testing.T) {
 	resetGlobalValues()
 
-	config.Server.Webhook.SecretToken = "secret"
+	cfg.Server.Webhook.SecretToken = "secret"
 	req := httptest.NewRequest("POST", "/webhook", nil)
 
 	// Test without auth token, should return a 403
@@ -74,7 +75,7 @@ func TestTriggerRefMetricsPull(_ *testing.T) {
 		Name:        "main",
 	}
 
-	p2 := schemas.Project{Name: "group/bar"}
+	p2 := config.Project{Name: "group/bar"}
 	ref2 := schemas.Ref{
 		ProjectName: "group/bar",
 		Name:        "main",
@@ -91,7 +92,7 @@ func TestTriggerRefMetricsPull(_ *testing.T) {
 func TestTriggerEnvironmentMetricsPull(_ *testing.T) {
 	resetGlobalValues()
 
-	p1 := schemas.Project{Name: "foo/bar"}
+	p1 := config.Project{Name: "foo/bar"}
 	env1 := schemas.Environment{
 		ProjectName: "foo/bar",
 		Name:        "dev",

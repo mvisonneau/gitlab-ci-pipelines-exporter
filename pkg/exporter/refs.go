@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 )
@@ -52,7 +53,7 @@ func getRefs(
 	return foundRefs, nil
 }
 
-func pullRefsFromProject(p schemas.Project) error {
+func pullRefsFromProject(p config.Project) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 
@@ -63,10 +64,10 @@ func pullRefsFromProject(p schemas.Project) error {
 
 	refs, err := getRefs(
 		p.Name,
-		p.Pull.Refs.Regexp(),
-		p.Pull.Refs.MaxAgeSeconds(),
-		p.Pull.Refs.From.MergeRequests.Enabled(),
-		p.Pull.Refs.From.MergeRequests.Depth(),
+		p.Pull.Refs.Regexp,
+		p.Pull.Refs.MaxAgeSeconds,
+		p.Pull.Refs.From.MergeRequests.Enabled,
+		int(p.Pull.Refs.From.MergeRequests.Depth),
 	)
 	if err != nil {
 		return err
@@ -78,13 +79,13 @@ func pullRefsFromProject(p schemas.Project) error {
 			p.Name,
 			ref,
 			strings.Join(gp.TagList, ","),
-			p.OutputSparseStatusMetrics(),
-			p.Pull.Pipeline.Jobs.Enabled(),
-			p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled(),
-			p.Pull.Pipeline.Jobs.RunnerDescription.Enabled(),
-			p.Pull.Pipeline.Variables.Enabled(),
-			p.Pull.Pipeline.Variables.Regexp(),
-			p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp(),
+			p.OutputSparseStatusMetrics,
+			p.Pull.Pipeline.Jobs.Enabled,
+			p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled,
+			p.Pull.Pipeline.Jobs.RunnerDescription.Enabled,
+			p.Pull.Pipeline.Variables.Enabled,
+			p.Pull.Pipeline.Variables.Regexp,
+			p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp,
 		)
 
 		refExists, err := store.RefExists(ref.Key())
@@ -109,7 +110,7 @@ func pullRefsFromProject(p schemas.Project) error {
 	return nil
 }
 
-func pullRefsFromPipelines(p schemas.Project) error {
+func pullRefsFromPipelines(p config.Project) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 

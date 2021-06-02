@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,12 +19,12 @@ func TestPullProjectsFromWildcard(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo","jobs_enabled":false},{"id":2,"path_with_namespace":"bar","jobs_enabled":true}]`)
 		})
 
-	w := schemas.Wildcard{}
+	w := config.Wildcard{}
 	assert.NoError(t, pullProjectsFromWildcard(w))
 
 	projects, _ := store.Projects()
-	expectedProjects := schemas.Projects{
-		"1996459178": schemas.Project{
+	expectedProjects := config.Projects{
+		"1996459178": config.Project{
 			Name: "bar",
 		},
 	}

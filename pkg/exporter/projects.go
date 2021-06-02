@@ -3,11 +3,11 @@ package exporter
 import (
 	"context"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	log "github.com/sirupsen/logrus"
 )
 
-func pullProjectsFromWildcard(w schemas.Wildcard) error {
+func pullProjectsFromWildcard(w config.Wildcard) error {
 	cfgUpdateLock.RLock()
 	defer cfgUpdateLock.RUnlock()
 

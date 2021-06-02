@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/openlyinc/pointy"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,8 +47,8 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 }`)
 		})
 
-	p := schemas.Project{Name: "foo"}
-	p.Pull.Environments.RegexpValue = pointy.String("^prod")
+	p := config.NewProject("foo")
+	p.Pull.Environments.Regexp = "^prod"
 	assert.NoError(t, pullEnvironmentsFromProject(p))
 
 	storedEnvironments, _ := store.Environments()
