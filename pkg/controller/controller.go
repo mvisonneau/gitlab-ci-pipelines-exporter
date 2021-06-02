@@ -19,13 +19,12 @@ type Controller struct {
 	Redis          *redis.Client
 	Gitlab         *gitlab.Client
 	Store          store.Store
-	Registry       *Registry
 	TaskController TaskController
 
 	ProjectDefaults config.ProjectParameters
 	Projects        []config.Project
 	Wildcards       []config.Wildcard
-	Webhook         config.ServerWebhook
+	Server          config.Server
 }
 
 // New creates a new controller
@@ -33,8 +32,7 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 	c.ProjectDefaults = cfg.ProjectDefaults
 	c.Projects = cfg.Projects
 	c.Wildcards = cfg.Wildcards
-	c.Webhook = cfg.Server.Webhook
-	c.Registry = NewRegistry()
+	c.Server = cfg.Server
 
 	if err = c.configureRedis(cfg.Redis.URL); err != nil {
 		return

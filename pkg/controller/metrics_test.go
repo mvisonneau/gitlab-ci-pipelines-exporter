@@ -36,10 +36,9 @@ func TestRegistryGetCollector(t *testing.T) {
 }
 
 func TestExportMetrics(t *testing.T) {
-	c, _, srv := newTestController(config.Config{})
-	srv.Close()
+	r := NewRegistry()
 
-	c.Store.SetMetric(schemas.Metric{
+	m1 := schemas.Metric{
 		Kind: schemas.MetricKindCoverage,
 		Labels: prometheus.Labels{
 			"project":   "foo",
@@ -49,9 +48,9 @@ func TestExportMetrics(t *testing.T) {
 			"variables": "beta",
 		},
 		Value: float64(107.7),
-	})
+	}
 
-	c.Store.SetMetric(schemas.Metric{
+	m2 := schemas.Metric{
 		Kind: schemas.MetricKindRunCount,
 		Labels: prometheus.Labels{
 			"project":   "foo",
@@ -61,8 +60,13 @@ func TestExportMetrics(t *testing.T) {
 			"variables": "beta",
 		},
 		Value: float64(10),
-	})
+	}
 
-	assert.NoError(t, c.ExportMetrics())
+	metrics := schemas.Metrics{
+		m1.Key(): m1,
+		m2.Key(): m2,
+	}
+
 	// TODO: Assert that we have the correct metrics being rendered by the exporter
+	r.ExportMetrics(metrics)
 }

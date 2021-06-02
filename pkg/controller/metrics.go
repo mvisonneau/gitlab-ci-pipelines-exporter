@@ -14,8 +14,7 @@ import (
 type Registry struct {
 	*prometheus.Registry
 
-	Collectors                RegistryCollectors
-	EnableOpenmetricsEncoding bool
+	Collectors RegistryCollectors
 }
 
 // RegistryCollectors ..
@@ -73,14 +72,9 @@ func (r *Registry) GetCollector(kind schemas.MetricKind) prometheus.Collector {
 }
 
 // ExportMetrics ..
-func (c *Controller) ExportMetrics() error {
-	metrics, err := c.Store.Metrics()
-	if err != nil {
-		return err
-	}
-
+func (r *Registry) ExportMetrics(metrics schemas.Metrics) {
 	for _, m := range metrics {
-		switch c := c.Registry.GetCollector(m.Kind).(type) {
+		switch c := r.GetCollector(m.Kind).(type) {
 		case *prometheus.GaugeVec:
 			c.With(m.Labels).Set(m.Value)
 		case *prometheus.CounterVec:
@@ -89,8 +83,6 @@ func (c *Controller) ExportMetrics() error {
 			log.Errorf("unsupported collector type : %v", reflect.TypeOf(c))
 		}
 	}
-
-	return nil
 }
 
 func emitStatusMetric(s store.Store, metricKind schemas.MetricKind, labelValues map[string]string, statuses []string, status string, sparseMetrics bool) {

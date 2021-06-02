@@ -25,13 +25,16 @@ func (c *Controller) HealthCheckHandler() (h healthcheck.Handler) {
 
 // MetricsHandler ..
 func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
-	if err := c.ExportMetrics(); err != nil {
+	registry := NewRegistry()
+	metrics, err := c.Store.Metrics()
+	if err != nil {
 		log.Error(err.Error())
 	}
 
-	promhttp.HandlerFor(c.Registry, promhttp.HandlerOpts{
-		Registry:          c.Registry,
-		EnableOpenMetrics: c.Registry.EnableOpenmetricsEncoding,
+	registry.ExportMetrics(metrics)
+	promhttp.HandlerFor(registry, promhttp.HandlerOpts{
+		Registry:          registry,
+		EnableOpenMetrics: c.Server.Metrics.EnableOpenmetricsEncoding,
 	}).ServeHTTP(w, r)
 }
 
@@ -43,7 +46,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.WithFields(logFields).Debug("webhook request")
 
-	if r.Header.Get("X-Gitlab-Token") != c.Webhook.SecretToken {
+	if r.Header.Get("X-Gitlab-Token") != c.Server.Webhook.SecretToken {
 		log.WithFields(logFields).Debug("invalid token provided for a webhook request")
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprint(w, "{\"error\": \"invalid token\"")
