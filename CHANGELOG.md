@@ -18,6 +18,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Fixed the pulling of merge-request based pipelines
 - Bumped all dependencies
 - Fixed unit tests on windows
+- environments: simplified the configuration by removing the tags regexp
 
 ## [v0.4.9] - 2021-05-05
 
