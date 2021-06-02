@@ -35,7 +35,7 @@ func TestRegistryGetCollector(t *testing.T) {
 	assert.Nil(t, r.GetCollector(150))
 }
 
-func TestExportMetrics(t *testing.T) {
+func TestExportMetrics(_ *testing.T) {
 	r := NewRegistry()
 
 	m1 := schemas.Metric{
