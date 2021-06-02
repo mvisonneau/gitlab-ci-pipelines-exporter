@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -11,9 +12,8 @@ import (
 )
 
 func TestPullEnvironmentsFromProject(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/environments"),
 		func(w http.ResponseWriter, r *http.Request) {
@@ -49,9 +49,9 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 
 	p := config.NewProject("foo")
 	p.Pull.Environments.Regexp = "^prod"
-	assert.NoError(t, pullEnvironmentsFromProject(p))
+	assert.NoError(t, c.PullEnvironmentsFromProject(context.Background(), p))
 
-	storedEnvironments, _ := store.Environments()
+	storedEnvironments, _ := c.Store.Environments()
 	expectedEnvironments := schemas.Environments{
 		"54146361": schemas.Environment{
 			ProjectName: "foo",
@@ -76,9 +76,8 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 }
 
 func TestPullEnvironmentMetricsSucceed(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/environments/1",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -125,10 +124,10 @@ func TestPullEnvironmentMetricsSucceed(t *testing.T) {
 	}
 
 	// Metrics pull shall succeed
-	assert.NoError(t, pullEnvironmentMetrics(env))
+	assert.NoError(t, c.PullEnvironmentMetrics(env))
 
 	// Check if all the metrics exist
-	metrics, _ := store.Metrics()
+	metrics, _ := c.Store.Metrics()
 	labels := map[string]string{
 		"project":     "foo",
 		"environment": "prod",

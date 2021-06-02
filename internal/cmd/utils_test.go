@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli/v2"
 )
@@ -27,6 +28,8 @@ func NewTestContext() (ctx *cli.Context, flags *flag.FlagSet) {
 }
 
 func TestConfigure(t *testing.T) {
+	var cfg config.Config
+	var err error
 	f, err := ioutil.TempFile(".", "test-*.yml")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
@@ -41,15 +44,19 @@ func TestConfigure(t *testing.T) {
 
 	// Undefined gitlab-token
 	flags.String("gitlab-token", "", "")
-	assert.Error(t, configure(ctx))
+	_, err = configure(ctx)
+	assert.Error(t, err)
 
 	// Valid configuration
 	flags.Set("gitlab-token", "secret")
-	assert.NoError(t, configure(ctx))
+	cfg, err = configure(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, "secret", cfg.Gitlab.Token)
 
 	// Invalid config file syntax
 	ioutil.WriteFile(f.Name(), []byte("["), 0o644)
-	assert.Error(t, configure(ctx))
+	cfg, err = configure(ctx)
+	assert.Error(t, err)
 
 	// Webhook endpoint enabled
 	ioutil.WriteFile(f.Name(), []byte(`
@@ -60,30 +67,14 @@ server:
 `), 0o644)
 
 	// No secret token defined for the webhook endpoint
-	assert.Error(t, configure(ctx))
+	cfg, err = configure(ctx)
+	assert.Error(t, err)
 
 	// Defining the webhook secret token
 	flags.String("webhook-secret-token", "secret", "")
-	assert.NoError(t, configure(ctx))
-
-	// Invalid redis-url
-	flags.String("redis-url", "[", "")
-	assert.Error(t, configure(ctx))
-
-	// Valid redis-url with unreachable server
-	flags.Set("redis-url", "redis://localhost:6379")
-	assert.Error(t, configure(ctx))
-
-	// Valid redis-url with reachable server
-	// TODO: Figure out how to make it work without failing other tests by timing out
-	// s, err := miniredis.Run()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer s.Close()
-
-	// flags.Set("redis-url", fmt.Sprintf("redis://%s", s.Addr()))
-	// assert.NoError(t, configure(ctx))
+	cfg, err = configure(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, "secret", cfg.Server.Webhook.SecretToken)
 }
 
 func TestExit(t *testing.T) {

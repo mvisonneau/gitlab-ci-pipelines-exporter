@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"regexp"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
@@ -8,25 +9,24 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func garbageCollectProjects() error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
+// GarbageCollectProjects ..
+func (c *Controller) GarbageCollectProjects(_ context.Context) error {
 	log.Info("starting 'projects' garbage collection")
 	defer log.Info("ending 'projects' garbage collection")
 
-	storedProjects, err := store.Projects()
+	storedProjects, err := c.Store.Projects()
 	if err != nil {
 		return err
 	}
 
 	// Loop through all configured projects
-	for _, p := range cfg.Projects {
+	for _, p := range c.Projects {
 		delete(storedProjects, p.Key())
 	}
 
 	// Loop through what can be found from the wildcards
-	for _, w := range cfg.Wildcards {
-		foundProjects, err := gitlabClient.ListProjects(w)
+	for _, w := range c.Wildcards {
+		foundProjects, err := c.Gitlab.ListProjects(w)
 		if err != nil {
 			return err
 		}
@@ -41,7 +41,7 @@ func garbageCollectProjects() error {
 	}).Debug("found projects to garbage collect")
 
 	for k, p := range storedProjects {
-		if err = store.DelProject(k); err != nil {
+		if err = c.Store.DelProject(k); err != nil {
 			return err
 		}
 
@@ -53,13 +53,12 @@ func garbageCollectProjects() error {
 	return nil
 }
 
-func garbageCollectEnvironments() error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
+// GarbageCollectEnvironments ..
+func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 	log.Info("starting 'environments' garbage collection")
 	defer log.Info("ending 'environments' garbage collection")
 
-	storedEnvironments, err := store.Environments()
+	storedEnvironments, err := c.Store.Environments()
 	if err != nil {
 		return err
 	}
@@ -70,14 +69,14 @@ func garbageCollectEnvironments() error {
 			Name: env.ProjectName,
 		}
 
-		projectExists, err := store.ProjectExists(p.Key())
+		projectExists, err := c.Store.ProjectExists(p.Key())
 		if err != nil {
 			return err
 		}
 
 		// If the project does not exist anymore, delete the environment
 		if !projectExists {
-			if err = store.DelEnvironment(k); err != nil {
+			if err = c.Store.DelEnvironment(k); err != nil {
 				return err
 			}
 
@@ -89,7 +88,7 @@ func garbageCollectEnvironments() error {
 			continue
 		}
 
-		if err = store.GetProject(&p); err != nil {
+		if err = c.Store.GetProject(&p); err != nil {
 			return err
 		}
 
@@ -100,7 +99,7 @@ func garbageCollectEnvironments() error {
 		// If the environment is not configured to be pulled anymore, delete it
 		re := regexp.MustCompile(p.Pull.Environments.Regexp)
 		if !re.MatchString(env.Name) {
-			if err = store.DelEnvironment(k); err != nil {
+			if err = c.Store.DelEnvironment(k); err != nil {
 				return err
 			}
 
@@ -116,7 +115,7 @@ func garbageCollectEnvironments() error {
 		if env.OutputSparseStatusMetrics != p.OutputSparseStatusMetrics {
 			env.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics
 
-			if err = store.SetEnvironment(env); err != nil {
+			if err = c.Store.SetEnvironment(env); err != nil {
 				return err
 			}
 
@@ -130,7 +129,7 @@ func garbageCollectEnvironments() error {
 	// Refresh the environments from the API
 	existingEnvs := make(map[schemas.EnvironmentKey]struct{})
 	for projectName, envRegexp := range envProjects {
-		envs, err := gitlabClient.GetProjectEnvironments(projectName, envRegexp)
+		envs, err := c.Gitlab.GetProjectEnvironments(projectName, envRegexp)
 		if err != nil {
 			return err
 		}
@@ -143,14 +142,14 @@ func garbageCollectEnvironments() error {
 		}
 	}
 
-	storedEnvironments, err = store.Environments()
+	storedEnvironments, err = c.Store.Environments()
 	if err != nil {
 		return err
 	}
 
 	for k, env := range storedEnvironments {
 		if _, exists := existingEnvs[k]; !exists {
-			if err = store.DelEnvironment(k); err != nil {
+			if err = c.Store.DelEnvironment(k); err != nil {
 				return err
 			}
 
@@ -165,13 +164,12 @@ func garbageCollectEnvironments() error {
 	return nil
 }
 
-func garbageCollectRefs() error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
+// GarbageCollectRefs ..
+func (c *Controller) GarbageCollectRefs(_ context.Context) error {
 	log.Info("starting 'refs' garbage collection")
 	defer log.Info("ending 'refs' garbage collection")
 
-	storedRefs, err := store.Refs()
+	storedRefs, err := c.Store.Refs()
 	if err != nil {
 		return err
 	}
@@ -179,14 +177,14 @@ func garbageCollectRefs() error {
 	refProjects := make(map[string]config.ProjectPullRefs)
 	for k, ref := range storedRefs {
 		p := config.Project{Name: ref.ProjectName}
-		projectExists, err := store.ProjectExists(p.Key())
+		projectExists, err := c.Store.ProjectExists(p.Key())
 		if err != nil {
 			return err
 		}
 
 		// If the project does not exist anymore, delete the ref
 		if !projectExists {
-			if err = store.DelRef(k); err != nil {
+			if err = c.Store.DelRef(k); err != nil {
 				return err
 			}
 
@@ -198,7 +196,7 @@ func garbageCollectRefs() error {
 			continue
 		}
 
-		if err = store.GetProject(&p); err != nil {
+		if err = c.Store.GetProject(&p); err != nil {
 			return err
 		}
 
@@ -209,7 +207,7 @@ func garbageCollectRefs() error {
 		// If the ref is not configured to be pulled anymore, delete the ref
 		re := regexp.MustCompile(p.Pull.Refs.Regexp)
 		if !re.MatchString(ref.Name) {
-			if err = store.DelRef(k); err != nil {
+			if err = c.Store.DelRef(k); err != nil {
 				return err
 			}
 
@@ -230,7 +228,7 @@ func garbageCollectRefs() error {
 			ref.PullPipelineJobsEnabled = p.Pull.Pipeline.Jobs.Enabled
 			ref.PullPipelineVariablesEnabled = p.Pull.Pipeline.Variables.Enabled
 			ref.PullPipelineVariablesRegexp = p.Pull.Pipeline.Variables.Regexp
-			if err = store.SetRef(ref); err != nil {
+			if err = c.Store.SetRef(ref); err != nil {
 				return err
 			}
 			log.WithFields(log.Fields{
@@ -243,7 +241,7 @@ func garbageCollectRefs() error {
 	// Refresh the refs from the API
 	existingRefs := make(map[schemas.RefKey]struct{})
 	for projectName, projectPullRefs := range refProjects {
-		branches, err := gitlabClient.GetProjectBranches(projectName, projectPullRefs.Regexp, projectPullRefs.MaxAgeSeconds)
+		branches, err := c.Gitlab.GetProjectBranches(projectName, projectPullRefs.Regexp, projectPullRefs.MaxAgeSeconds)
 		if err != nil {
 			return err
 		}
@@ -256,7 +254,7 @@ func garbageCollectRefs() error {
 			}.Key()] = struct{}{}
 		}
 
-		tags, err := gitlabClient.GetProjectTags(projectName, projectPullRefs.Regexp, projectPullRefs.MaxAgeSeconds)
+		tags, err := c.Gitlab.GetProjectTags(projectName, projectPullRefs.Regexp, projectPullRefs.MaxAgeSeconds)
 		if err != nil {
 			return err
 		}
@@ -270,7 +268,7 @@ func garbageCollectRefs() error {
 		}
 
 		if projectPullRefs.From.MergeRequests.Enabled {
-			mergeRequests, err := gitlabClient.GetProjectMergeRequestsPipelines(projectName, int(projectPullRefs.From.MergeRequests.Depth), projectPullRefs.MaxAgeSeconds)
+			mergeRequests, err := c.Gitlab.GetProjectMergeRequestsPipelines(projectName, int(projectPullRefs.From.MergeRequests.Depth), projectPullRefs.MaxAgeSeconds)
 			if err != nil {
 				return err
 			}
@@ -285,14 +283,14 @@ func garbageCollectRefs() error {
 		}
 	}
 
-	storedRefs, err = store.Refs()
+	storedRefs, err = c.Store.Refs()
 	if err != nil {
 		return err
 	}
 
 	for k, ref := range storedRefs {
 		if _, exists := existingRefs[k]; !exists {
-			if err = store.DelRef(k); err != nil {
+			if err = c.Store.DelRef(k); err != nil {
 				return err
 			}
 
@@ -307,23 +305,22 @@ func garbageCollectRefs() error {
 	return nil
 }
 
-func garbageCollectMetrics() error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
+// GarbageCollectMetrics ..
+func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 	log.Info("starting 'metrics' garbage collection")
 	defer log.Info("ending 'metrics' garbage collection")
 
-	storedEnvironments, err := store.Environments()
+	storedEnvironments, err := c.Store.Environments()
 	if err != nil {
 		return err
 	}
 
-	storedRefs, err := store.Refs()
+	storedRefs, err := c.Store.Refs()
 	if err != nil {
 		return err
 	}
 
-	storedMetrics, err := store.Metrics()
+	storedMetrics, err := c.Store.Metrics()
 	if err != nil {
 		return err
 	}
@@ -336,7 +333,7 @@ func garbageCollectMetrics() error {
 		metricLabelEnvironment, metricLabelEnvironmentExists := m.Labels["environment"]
 
 		if !metricLabelProjectExists || (!metricLabelRefExists && !metricLabelEnvironmentExists) {
-			if err = store.DelMetric(k); err != nil {
+			if err = c.Store.DelMetric(k); err != nil {
 				return err
 			}
 
@@ -358,7 +355,7 @@ func garbageCollectMetrics() error {
 
 			// If the ref does not exist anymore, delete the metric
 			if !refExists {
-				if err = store.DelMetric(k); err != nil {
+				if err = c.Store.DelMetric(k); err != nil {
 					return err
 				}
 
@@ -380,7 +377,7 @@ func garbageCollectMetrics() error {
 				schemas.MetricKindJobTimestamp:
 
 				if !ref.PullPipelineJobsEnabled {
-					if err = store.DelMetric(k); err != nil {
+					if err = c.Store.DelMetric(k); err != nil {
 						return err
 					}
 
@@ -401,7 +398,7 @@ func garbageCollectMetrics() error {
 				schemas.MetricKindStatus:
 
 				if ref.OutputSparseStatusMetrics && m.Value != 1 {
-					if err = store.DelMetric(k); err != nil {
+					if err = c.Store.DelMetric(k); err != nil {
 						return err
 					}
 
@@ -427,7 +424,7 @@ func garbageCollectMetrics() error {
 
 			// If the ref does not exist anymore, delete the metric
 			if !envExists {
-				if err = store.DelMetric(k); err != nil {
+				if err = c.Store.DelMetric(k); err != nil {
 					return err
 				}
 
@@ -443,7 +440,7 @@ func garbageCollectMetrics() error {
 			switch m.Kind {
 			case schemas.MetricKindEnvironmentDeploymentStatus:
 				if env.OutputSparseStatusMetrics && m.Value != 1 {
-					if err = store.DelMetric(k); err != nil {
+					if err = c.Store.DelMetric(k); err != nil {
 						return err
 					}
 

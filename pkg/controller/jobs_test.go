@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPullRefPipelineJobsMetrics(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -27,15 +27,14 @@ func TestPullRefPipelineJobsMetrics(t *testing.T) {
 		},
 	}
 
-	assert.NoError(t, pullRefPipelineJobsMetrics(ref))
-	server.Close()
-	assert.Error(t, pullRefPipelineJobsMetrics(ref))
+	assert.NoError(t, c.PullRefPipelineJobsMetrics(ref))
+	srv.Close()
+	assert.Error(t, c.PullRefPipelineJobsMetrics(ref))
 }
 
 func TestPullRefMostRecentJobsMetrics(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -53,17 +52,18 @@ func TestPullRefMostRecentJobsMetrics(t *testing.T) {
 	}
 
 	// Test with FetchPipelineJobMetrics disabled
-	assert.NoError(t, pullRefMostRecentJobsMetrics(ref))
+	assert.NoError(t, c.PullRefMostRecentJobsMetrics(ref))
 
 	// Enable FetchPipelineJobMetrics
 	ref.PullPipelineJobsEnabled = true
-	assert.NoError(t, pullRefMostRecentJobsMetrics(ref))
-	server.Close()
-	assert.Error(t, pullRefMostRecentJobsMetrics(ref))
+	assert.NoError(t, c.PullRefMostRecentJobsMetrics(ref))
+	srv.Close()
+	assert.Error(t, c.PullRefMostRecentJobsMetrics(ref))
 }
 
 func TestProcessJobMetrics(t *testing.T) {
-	resetGlobalValues()
+	c, _, srv := newTestController(config.Config{})
+	srv.Close()
 
 	oldJob := schemas.Job{
 		ID:        1,
@@ -101,24 +101,24 @@ func TestProcessJobMetrics(t *testing.T) {
 		PullPipelineJobsRunnerDescriptionAggregationRegexp: "foo-(.*)-bar",
 	}
 
-	store.SetRef(ref)
+	c.Store.SetRef(ref)
 
 	// If we run it against the same job, nothing should change in the store
-	processJobMetrics(ref, oldJob)
-	refs, _ := store.Refs()
+	c.ProcessJobMetrics(ref, oldJob)
+	refs, _ := c.Store.Refs()
 	assert.Equal(t, schemas.Jobs{
 		"foo": oldJob,
 	}, refs[ref.Key()].LatestJobs)
 
 	// Update the ref
-	processJobMetrics(ref, newJob)
-	refs, _ = store.Refs()
+	c.ProcessJobMetrics(ref, newJob)
+	refs, _ = c.Store.Refs()
 	assert.Equal(t, schemas.Jobs{
 		"foo": newJob,
 	}, refs[ref.Key()].LatestJobs)
 
 	// Check if all the metrics exist
-	metrics, _ := store.Metrics()
+	metrics, _ := c.Store.Metrics()
 	labels := map[string]string{
 		"project":            ref.ProjectName,
 		"topics":             ref.Topics,

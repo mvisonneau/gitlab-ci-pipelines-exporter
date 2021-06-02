@@ -1,4 +1,4 @@
-package storage
+package store
 
 import (
 	"testing"
@@ -18,7 +18,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	}
 	defer s.Close()
 
-	r := NewRedisStorage(redis.NewClient(&redis.Options{Addr: s.Addr()}))
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
 
 	p := config.Project{
 		Name: "foo/bar",
@@ -72,7 +72,7 @@ func TestRedisEnvironmentFunctions(t *testing.T) {
 	}
 	defer s.Close()
 
-	r := NewRedisStorage(redis.NewClient(&redis.Options{Addr: s.Addr()}))
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
 
 	environment := schemas.Environment{
 		ProjectName: "foo",
@@ -132,7 +132,7 @@ func TestRedisRefFunctions(t *testing.T) {
 	}
 	defer s.Close()
 
-	r := NewRedisStorage(redis.NewClient(&redis.Options{Addr: s.Addr()}))
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
 
 	ref := schemas.Ref{
 		Kind:        schemas.RefKindBranch,
@@ -194,7 +194,7 @@ func TestRedisMetricFunctions(t *testing.T) {
 	}
 	defer s.Close()
 
-	r := NewRedisStorage(redis.NewClient(&redis.Options{Addr: s.Addr()}))
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
 
 	m := schemas.Metric{
 		Kind: schemas.MetricKindCoverage,

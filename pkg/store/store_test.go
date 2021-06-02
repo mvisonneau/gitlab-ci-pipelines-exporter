@@ -1,4 +1,4 @@
-package storage
+package store
 
 import (
 	"context"
@@ -10,22 +10,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewLocalStorage(t *testing.T) {
+func TestNewLocalStore(t *testing.T) {
 	expectedValue := &Local{
 		projects:     make(config.Projects),
 		environments: make(schemas.Environments),
 		refs:         make(schemas.Refs),
 		metrics:      make(schemas.Metrics),
 	}
-	assert.Equal(t, expectedValue, NewLocalStorage())
+	assert.Equal(t, expectedValue, NewLocalStore())
 }
 
-func TestNewRedisStorage(t *testing.T) {
+func TestNewRedisStore(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{})
 	expectedValue := &Redis{
 		Client: redisClient,
 		ctx:    context.TODO(),
 	}
 
-	assert.Equal(t, expectedValue, NewRedisStorage(redisClient))
+	assert.Equal(t, expectedValue, NewRedisStore(redisClient))
 }

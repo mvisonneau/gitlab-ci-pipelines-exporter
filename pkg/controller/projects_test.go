@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -10,9 +11,8 @@ import (
 )
 
 func TestPullProjectsFromWildcard(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -20,9 +20,9 @@ func TestPullProjectsFromWildcard(t *testing.T) {
 		})
 
 	w := config.Wildcard{}
-	assert.NoError(t, pullProjectsFromWildcard(w))
+	assert.NoError(t, c.PullProjectsFromWildcard(context.Background(), w))
 
-	projects, _ := store.Projects()
+	projects, _ := c.Store.Projects()
 	expectedProjects := config.Projects{
 		"1996459178": config.Project{
 			Name: "bar",

@@ -9,13 +9,11 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func pullRefMetrics(ref schemas.Ref) error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
+// PullRefMetrics ..
+func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 	// At scale, the scheduled ref may be behind the actual state being stored
 	// to avoid issues, we refresh it from the store before manipulating it
-	if err := store.GetRef(&ref); err != nil {
+	if err := c.Store.GetRef(&ref); err != nil {
 		return err
 	}
 
@@ -44,7 +42,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 		refName = ref.Name
 	}
 
-	pipelines, err := gitlabClient.GetProjectPipelines(ref.ProjectName, &goGitlab.ListProjectPipelinesOptions{
+	pipelines, err := c.Gitlab.GetProjectPipelines(ref.ProjectName, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
 			PerPage: 1,
@@ -61,7 +59,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 		return nil
 	}
 
-	pipeline, err := gitlabClient.GetRefPipeline(ref, pipelines[0].ID)
+	pipeline, err := c.Gitlab.GetRefPipeline(ref, pipelines[0].ID)
 	if err != nil {
 		return err
 	}
@@ -72,14 +70,14 @@ func pullRefMetrics(ref schemas.Ref) error {
 
 		// fetch pipeline variables
 		if ref.PullPipelineVariablesEnabled {
-			ref.LatestPipeline.Variables, err = gitlabClient.GetRefPipelineVariablesAsConcatenatedString(ref)
+			ref.LatestPipeline.Variables, err = c.Gitlab.GetRefPipelineVariablesAsConcatenatedString(ref)
 			if err != nil {
 				return err
 			}
 		}
 
 		// Update the ref in the store
-		if err = store.SetRef(ref); err != nil {
+		if err = c.Store.SetRef(ref); err != nil {
 			return err
 		}
 
@@ -90,25 +88,26 @@ func pullRefMetrics(ref schemas.Ref) error {
 			Kind:   schemas.MetricKindRunCount,
 			Labels: ref.DefaultLabelsValues(),
 		}
-		storeGetMetric(&runCount)
+		storeGetMetric(c.Store, &runCount)
 		if formerPipeline.ID != 0 {
 			runCount.Value++
 		}
-		storeSetMetric(runCount)
+		storeSetMetric(c.Store, runCount)
 
-		storeSetMetric(schemas.Metric{
+		storeSetMetric(c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindCoverage,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  pipeline.Coverage,
 		})
 
-		storeSetMetric(schemas.Metric{
+		storeSetMetric(c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindID,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  float64(pipeline.ID),
 		})
 
 		emitStatusMetric(
+			c.Store,
 			schemas.MetricKindStatus,
 			ref.DefaultLabelsValues(),
 			statusesList[:],
@@ -116,26 +115,26 @@ func pullRefMetrics(ref schemas.Ref) error {
 			ref.OutputSparseStatusMetrics,
 		)
 
-		storeSetMetric(schemas.Metric{
+		storeSetMetric(c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindDurationSeconds,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  pipeline.DurationSeconds,
 		})
 
-		storeSetMetric(schemas.Metric{
+		storeSetMetric(c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindQueuedDurationSeconds,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  pipeline.QueuedDurationSeconds,
 		})
 
-		storeSetMetric(schemas.Metric{
+		storeSetMetric(c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindTimestamp,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  pipeline.Timestamp,
 		})
 
 		if ref.PullPipelineJobsEnabled {
-			if err := pullRefPipelineJobsMetrics(ref); err != nil {
+			if err := c.PullRefPipelineJobsMetrics(ref); err != nil {
 				return err
 			}
 		}
@@ -143,7 +142,7 @@ func pullRefMetrics(ref schemas.Ref) error {
 	}
 
 	if ref.PullPipelineJobsEnabled {
-		if err := pullRefMostRecentJobsMetrics(ref); err != nil {
+		if err := c.PullRefMostRecentJobsMetrics(ref); err != nil {
 			return err
 		}
 	}

@@ -1,4 +1,4 @@
-package storage
+package store
 
 import (
 	"context"
@@ -6,10 +6,11 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	log "github.com/sirupsen/logrus"
 )
 
-// Storage ..
-type Storage interface {
+// Store ..
+type Store interface {
 	SetProject(config.Project) error
 	DelProject(config.ProjectKey) error
 	GetProject(*config.Project) error
@@ -39,8 +40,8 @@ type Storage interface {
 	MetricsCount() (int64, error)
 }
 
-// NewLocalStorage ..
-func NewLocalStorage() Storage {
+// NewLocalStore ..
+func NewLocalStore() Store {
 	return &Local{
 		projects:     make(config.Projects),
 		environments: make(schemas.Environments),
@@ -49,10 +50,45 @@ func NewLocalStorage() Storage {
 	}
 }
 
-// NewRedisStorage ..
-func NewRedisStorage(client *redis.Client) Storage {
+// NewRedisStore ..
+func NewRedisStore(client *redis.Client) Store {
 	return &Redis{
 		Client: client,
 		ctx:    context.TODO(),
 	}
+}
+
+// New creates a new store and populates it with
+// provided []config.Project
+func New(
+	r *redis.Client,
+	projects []config.Project,
+) (s Store) {
+	if r != nil {
+		s = NewRedisStore(r)
+	} else {
+		s = NewLocalStore()
+	}
+
+	// Load all the configured projects in the store
+	for _, p := range projects {
+		exists, err := s.ProjectExists(p.Key())
+		if err != nil {
+			log.WithFields(log.Fields{
+				"project-name": p.Name,
+				"error":        err.Error(),
+			}).Error("reading project from the store")
+		}
+
+		if !exists {
+			if err = s.SetProject(p); err != nil {
+				log.WithFields(log.Fields{
+					"project-name": p.Name,
+					"error":        err.Error(),
+				}).Error("writing project in the store")
+			}
+		}
+	}
+
+	return
 }

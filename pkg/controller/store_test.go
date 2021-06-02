@@ -24,9 +24,5 @@ func TestMetricLogFields(t *testing.T) {
 }
 
 func TestStoreGetSetDelMetric(_ *testing.T) {
-	resetGlobalValues()
-
-	storeGetMetric(&schemas.Metric{})
-	storeSetMetric(schemas.Metric{})
-	storeDelMetric(schemas.Metric{})
+	// TODO: implement correctly
 }

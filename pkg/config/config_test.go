@@ -17,8 +17,7 @@ func TestNew(t *testing.T) {
 	c.Gitlab.HealthURL = "https://gitlab.com/explore"
 	c.Gitlab.EnableHealthCheck = true
 	c.Gitlab.EnableTLSVerify = true
-
-	c.Pull.MaximumGitLabAPIRequestsPerSecond = 1
+	c.Gitlab.MaximumRequestsPerSecond = 1
 
 	c.Pull.ProjectsFromWildcards.OnInit = true
 	c.Pull.ProjectsFromWildcards.Scheduled = true

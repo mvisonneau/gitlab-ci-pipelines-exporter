@@ -68,11 +68,11 @@ gitlab:
   # GitLab instance (handy when self-hosting) (optional, default: true)
   enable_tls_verify: true
 
-pull:
-  # Global rate limit for the GitLab API request/sec
+  # Rate limit for the GitLab API requests/sec
   # (optional, default: 1)
-  maximum_gitlab_api_requests_per_second: 1
+  maximum_requests_per_second: 1
 
+pull:
   projects_from_wildcards:
     # Whether to trigger a discovery or not when the
     # exporter starts (optional, default: true)

@@ -1,4 +1,4 @@
-package storage
+package store
 
 import (
 	"testing"
@@ -17,7 +17,7 @@ func TestLocalProjectFunctions(t *testing.T) {
 		},
 	}
 
-	l := NewLocalStorage()
+	l := NewLocalStore()
 	l.SetProject(p)
 
 	// Set project
@@ -63,7 +63,7 @@ func TestLocalEnvironmentFunctions(t *testing.T) {
 		ID:          1,
 	}
 
-	l := NewLocalStorage()
+	l := NewLocalStore()
 	l.SetEnvironment(environment)
 
 	// Set project
@@ -119,7 +119,7 @@ func TestLocalMetricFunctions(t *testing.T) {
 		Value: 5,
 	}
 
-	l := NewLocalStorage()
+	l := NewLocalStore()
 	l.SetMetric(m)
 
 	// Set metric

@@ -84,6 +84,9 @@ type Gitlab struct {
 
 	// Whether to skip TLS validation when querying HealthURL
 	EnableTLSVerify bool `default:"true" yaml:"enable_tls_verify"`
+
+	// Rate limit for the GitLab API requests/sec
+	MaximumRequestsPerSecond int `default:"1" validate:"gte=1" yaml:"maximum_requests_per_second"`
 }
 
 // Redis ..
@@ -95,9 +98,6 @@ type Redis struct {
 
 // Pull ..
 type Pull struct {
-	// Maximum amount of requests per seconds to make against the GitLab API (default: 1)
-	MaximumGitLabAPIRequestsPerSecond int `default:"1" validate:"gte=1" yaml:"maximum_gitlab_api_requests_per_second"`
-
 	// ProjectsFromWildcards configuration
 	ProjectsFromWildcards struct {
 		OnInit          bool `default:"true" yaml:"on_init"`

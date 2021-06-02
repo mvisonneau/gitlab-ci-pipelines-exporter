@@ -6,9 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/controller"
 	"github.com/mvisonneau/go-helpers/logger"
 	"github.com/vmihailenco/taskq/v3"
 
@@ -18,12 +16,11 @@ import (
 
 var start time.Time
 
-func configure(ctx *cli.Context) (err error) {
+func configure(ctx *cli.Context) (cfg config.Config, err error) {
 	start = ctx.App.Metadata["startTime"].(time.Time)
 
 	assertStringVariableDefined(ctx, "config")
 
-	var cfg config.Config
 	cfg, err = config.ParseFile(ctx.String("config"))
 	if err != nil {
 		return
@@ -46,26 +43,10 @@ func configure(ctx *cli.Context) (err error) {
 	// This hack is to embed taskq logs with logrus
 	taskq.SetLogger(stdlibLog.New(log.StandardLogger().WriterLevel(log.WarnLevel), "taskq", 0))
 
-	if len(cfg.Redis.URL) > 0 {
-		log.Info("redis url configured, initializing connection..")
-		var opt *redis.Options
-		if opt, err = redis.ParseURL(cfg.Redis.URL); err != nil {
-			return
-		}
-
-		if err = controller.ConfigureRedisClient(redis.NewClient(opt)); err != nil {
-			return
-		}
-	}
-
-	if err = controller.Configure(cfg, ctx.App.Version); err != nil {
-		return
-	}
-
 	log.WithFields(
 		log.Fields{
-			"gitlab-endpoint": cfg.Gitlab.URL,
-			"pull-rate-limit": fmt.Sprintf("%drps", cfg.Pull.MaximumGitLabAPIRequestsPerSecond),
+			"gitlab-endpoint":   cfg.Gitlab.URL,
+			"gitlab-rate-limit": fmt.Sprintf("%drps", cfg.Gitlab.MaximumRequestsPerSecond),
 		},
 	).Info("configured")
 

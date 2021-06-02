@@ -2,12 +2,11 @@ package controller
 
 import (
 	"fmt"
-	"net/http"
 	"reflect"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -15,7 +14,8 @@ import (
 type Registry struct {
 	*prometheus.Registry
 
-	Collectors RegistryCollectors
+	Collectors                RegistryCollectors
+	EnableOpenmetricsEncoding bool
 }
 
 // RegistryCollectors ..
@@ -67,37 +67,20 @@ func (r *Registry) RegisterCollectors() error {
 	return nil
 }
 
-// MetricsHandler returns an http handler containing with the desired configuration
-func MetricsHandler(w http.ResponseWriter, r *http.Request) {
-	registry := NewRegistry()
-
-	if err := registry.ExportMetrics(); err != nil {
-		log.Error(err.Error())
-	}
-
-	promhttp.HandlerFor(registry, promhttp.HandlerOpts{
-		Registry:          registry,
-		EnableOpenMetrics: cfg.Server.Metrics.EnableOpenmetricsEncoding,
-	}).ServeHTTP(w, r)
-}
-
 // GetCollector ..
 func (r *Registry) GetCollector(kind schemas.MetricKind) prometheus.Collector {
 	return r.Collectors[kind]
 }
 
 // ExportMetrics ..
-func (r *Registry) ExportMetrics() error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	metrics, err := store.Metrics()
+func (c *Controller) ExportMetrics() error {
+	metrics, err := c.Store.Metrics()
 	if err != nil {
 		return err
 	}
 
 	for _, m := range metrics {
-		switch c := r.GetCollector(m.Kind).(type) {
+		switch c := c.Registry.GetCollector(m.Kind).(type) {
 		case *prometheus.GaugeVec:
 			c.With(m.Labels).Set(m.Value)
 		case *prometheus.CounterVec:
@@ -110,17 +93,17 @@ func (r *Registry) ExportMetrics() error {
 	return nil
 }
 
-func emitStatusMetric(metricKind schemas.MetricKind, labelValues map[string]string, statuses []string, status string, sparseMetrics bool) {
+func emitStatusMetric(s store.Store, metricKind schemas.MetricKind, labelValues map[string]string, statuses []string, status string, sparseMetrics bool) {
 	// Moved into separate function to reduce cyclomatic complexity
 	// List of available statuses from the API spec
 	// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
-	for _, s := range statuses {
+	for _, currentStatus := range statuses {
 		var value float64
 		statusLabels := make(map[string]string)
 		for k, v := range labelValues {
 			statusLabels[k] = v
 		}
-		statusLabels["status"] = s
+		statusLabels["status"] = currentStatus
 
 		statusMetric := schemas.Metric{
 			Kind:   metricKind,
@@ -128,16 +111,16 @@ func emitStatusMetric(metricKind schemas.MetricKind, labelValues map[string]stri
 			Value:  value,
 		}
 
-		if s == status {
+		if currentStatus == status {
 			statusMetric.Value = 1
 		} else {
 			if sparseMetrics {
-				storeDelMetric(statusMetric)
+				storeDelMetric(s, statusMetric)
 				continue
 			}
 			statusMetric.Value = 0
 		}
 
-		storeSetMetric(statusMetric)
+		storeSetMetric(s, statusMetric)
 	}
 }

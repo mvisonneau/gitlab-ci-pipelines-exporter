@@ -14,6 +14,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Changed
 
 - Replaced custom config mangement implementation with `creasty/defaults` and `go-playground/validator`
+- Rewrote the non-OOP approach used so far for the controller
 - Fixed the error handling when comparing 2 refs which resulted into nil pointer dereferences
 - Fixed the pulling of merge-request based pipelines
 - Bumped all dependencies

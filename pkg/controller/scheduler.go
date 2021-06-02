@@ -4,246 +4,189 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
-
 	"github.com/vmihailenco/taskq/v3"
+	"github.com/vmihailenco/taskq/v3/memqueue"
+	"github.com/vmihailenco/taskq/v3/redisq"
 )
 
-var (
-	pullProjectsFromWildcardTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "getProjectsFromWildcardTask",
-		Handler: func(ctx context.Context, w config.Wildcard) error {
-			return pullProjectsFromWildcard(w)
-		},
-	})
-	pullEnvironmentsFromProjectTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "pullEnvironmentsFromProjectTask",
-		Handler: func(p config.Project) (err error) {
-			// On errors, we do not want to retry these tasks
-			if err := pullEnvironmentsFromProject(p); err != nil {
-				log.WithFields(log.Fields{
-					"project-name": p.Name,
-					"error":        err.Error(),
-				}).Warn("pulling environments from project")
-			}
-			return
-		},
-	})
-	pullEnvironmentMetricsTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "pullEnvironmentMetricsTask",
-		Handler: func(env schemas.Environment) (err error) {
-			// On errors, we do not want to retry these tasks
-			if err := pullEnvironmentMetrics(env); err != nil {
-				log.WithFields(log.Fields{
-					"project-name":     env.ProjectName,
-					"environment-name": env.Name,
-					"environment-id":   env.ID,
-					"error":            err.Error(),
-				}).Warn("pulling environment metrics")
-			}
-			return
-		},
-	})
-	pullRefsFromProjectTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "pullRefsFromProjectTask",
-		Handler: func(p config.Project) (err error) {
-			// On errors, we do not want to retry these tasks
-			if err := pullRefsFromProject(p); err != nil {
-				log.WithFields(log.Fields{
-					"project-name": p.Name,
-					"error":        err.Error(),
-				}).Warn("pulling refs from project")
-			}
-			return
-		},
-	})
-	pullRefsFromPipelinesTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "getRefsFromPipelinesTask",
-		Handler: func(p config.Project) (err error) {
-			// On errors, we do not want to retry these tasks
-			if err := pullRefsFromPipelines(p); err != nil {
-				log.WithFields(log.Fields{
-					"project-name": p.Name,
-					"error":        err.Error(),
-				}).Warn("pulling projects refs from pipelines")
-			}
-			return
-		},
-	})
-	pullRefMetricsTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "pullRefMetricsTask",
-		Handler: func(ref schemas.Ref) (err error) {
-			// On errors, we do not want to retry these tasks
-			if err := pullRefMetrics(ref); err != nil {
-				log.WithFields(log.Fields{
-					"project-name": ref.ProjectName,
-					"ref":          ref.Name,
-					"error":        err.Error(),
-				}).Warn("pulling ref metrics")
-			}
-			return
-		},
-	})
-	garbageCollectProjectsTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "garbageCollectProjectsTask",
-		Handler: func() error {
-			return garbageCollectProjects()
-		},
-	})
-	garbageCollectEnvironmentsTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "garbageCollectEnvironmentsTask",
-		Handler: func() error {
-			return garbageCollectEnvironments()
-		},
-	})
-	garbageCollectRefsTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "garbageCollectRefsTask",
-		Handler: func() error {
-			return garbageCollectRefs()
-		},
-	})
-	garbageCollectMetricsTask = taskq.RegisterTask(&taskq.TaskOptions{
-		Name: "garbageCollectMetricsTask",
-		Handler: func() error {
-			return garbageCollectMetrics()
-		},
-	})
-)
-
-// Schedule ..
-func schedule(ctx context.Context) {
-	// Check if some tasks are configured to be run on start
-	schedulerInit(ctx)
-
-	go func(ctx context.Context) {
-		cfgUpdateLock.RLock()
-		defer cfgUpdateLock.RUnlock()
-
-		pullProjectsFromWildcardsTicker := time.NewTicker(time.Duration(cfg.Pull.ProjectsFromWildcards.IntervalSeconds) * time.Second)
-		pullEnvironmentsFromProjectsTicker := time.NewTicker(time.Duration(cfg.Pull.EnvironmentsFromProjects.IntervalSeconds) * time.Second)
-		pullRefsFromProjectsTicker := time.NewTicker(time.Duration(cfg.Pull.RefsFromProjects.IntervalSeconds) * time.Second)
-		pullMetricsTicker := time.NewTicker(time.Duration(cfg.Pull.Metrics.IntervalSeconds) * time.Second)
-		garbageCollectProjectsTicker := time.NewTicker(time.Duration(cfg.GarbageCollect.Projects.IntervalSeconds) * time.Second)
-		garbageCollectEnvironmentsTicker := time.NewTicker(time.Duration(cfg.GarbageCollect.Environments.IntervalSeconds) * time.Second)
-		garbageCollectRefsTicker := time.NewTicker(time.Duration(cfg.GarbageCollect.Refs.IntervalSeconds) * time.Second)
-		garbageCollectMetricsTicker := time.NewTicker(time.Duration(cfg.GarbageCollect.Metrics.IntervalSeconds) * time.Second)
-
-		// Ticker configuration
-		if !cfg.Pull.ProjectsFromWildcards.Scheduled {
-			pullProjectsFromWildcardsTicker.Stop()
-		}
-
-		if !cfg.Pull.EnvironmentsFromProjects.Scheduled {
-			pullEnvironmentsFromProjectsTicker.Stop()
-		}
-
-		if !cfg.Pull.RefsFromProjects.Scheduled {
-			pullRefsFromProjectsTicker.Stop()
-		}
-
-		if !cfg.Pull.Metrics.Scheduled {
-			pullMetricsTicker.Stop()
-		}
-
-		if !cfg.GarbageCollect.Projects.Scheduled {
-			garbageCollectProjectsTicker.Stop()
-		}
-
-		if !cfg.GarbageCollect.Environments.Scheduled {
-			garbageCollectEnvironmentsTicker.Stop()
-		}
-
-		if !cfg.GarbageCollect.Refs.Scheduled {
-			garbageCollectRefsTicker.Stop()
-		}
-
-		if !cfg.GarbageCollect.Metrics.Scheduled {
-			garbageCollectMetricsTicker.Stop()
-		}
-
-		// Waiting for the tickers to kick in
-		for {
-			select {
-			case <-ctx.Done():
-				log.Info("stopped gitlab api pull orchestration")
-				return
-			case <-pullProjectsFromWildcardsTicker.C:
-				schedulePullProjectsFromWildcards(ctx)
-			case <-pullEnvironmentsFromProjectsTicker.C:
-				schedulePullEnvironmentsFromProjects(ctx)
-			case <-pullRefsFromProjectsTicker.C:
-				schedulePullRefsFromProjects(ctx)
-			case <-pullMetricsTicker.C:
-				schedulePullMetrics(ctx)
-			case <-garbageCollectProjectsTicker.C:
-				scheduleGarbageCollectProjects(ctx)
-			case <-garbageCollectEnvironmentsTicker.C:
-				scheduleGarbageCollectEnvironments(ctx)
-			case <-garbageCollectRefsTicker.C:
-				scheduleGarbageCollectRefs(ctx)
-			case <-garbageCollectMetricsTicker.C:
-				scheduleGarbageCollectMetrics(ctx)
-			}
-		}
-	}(ctx)
+// TaskController holds task related clients
+type TaskController struct {
+	Factory taskq.Factory
+	Queue   taskq.Queue
+	TaskMap *taskq.TaskMap
 }
 
-func schedulerInit(ctx context.Context) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
+// TaskType represents the type of a task
+type TaskType string
 
-	if cfg.Pull.ProjectsFromWildcards.OnInit {
-		schedulePullProjectsFromWildcards(ctx)
+const (
+	// TaskTypePullProjectsFromWildcard ..
+	TaskTypePullProjectsFromWildcard TaskType = "PullProjectsFromWildcard"
+
+	// TaskTypePullProjectsFromWildcards ..
+	TaskTypePullProjectsFromWildcards TaskType = "PullProjectsFromWildcards"
+
+	// TaskTypePullEnvironmentsFromProject ..
+	TaskTypePullEnvironmentsFromProject TaskType = "PullEnvironmentsFromProject"
+
+	// TaskTypePullEnvironmentsFromProjects ..
+	TaskTypePullEnvironmentsFromProjects TaskType = "PullEnvironmentsFromProjects"
+
+	// TaskTypePullEnvironmentMetrics ..
+	TaskTypePullEnvironmentMetrics TaskType = "PullEnvironmentMetrics"
+
+	// TaskTypePullMetrics ..
+	TaskTypePullMetrics TaskType = "PullMetrics"
+
+	// TaskTypePullRefsFromProject ..
+	TaskTypePullRefsFromProject TaskType = "PullRefsFromProject"
+
+	// TaskTypePullRefsFromProjects ..
+	TaskTypePullRefsFromProjects TaskType = "PullRefsFromProjects"
+
+	// TaskTypePullRefsFromPipelines ..
+	TaskTypePullRefsFromPipelines TaskType = "PullRefsFromPipelines"
+
+	// TaskTypePullRefMetrics ..
+	TaskTypePullRefMetrics TaskType = "PullRefMetrics"
+
+	// TaskTypeGarbageCollectProjects ..
+	TaskTypeGarbageCollectProjects TaskType = "GarbageCollectProjects"
+
+	// TaskTypeGarbageCollectEnvironments ..
+	TaskTypeGarbageCollectEnvironments TaskType = "GarbageCollectEnvironments"
+
+	// TaskTypeGarbageCollectRefs ..
+	TaskTypeGarbageCollectRefs TaskType = "GarbageCollectRefs"
+
+	// TaskTypeGarbageCollectMetrics ..
+	TaskTypeGarbageCollectMetrics TaskType = "GarbageCollectMetrics"
+)
+
+// NewTaskController initializes and returns a new TaskController object
+func NewTaskController(r *redis.Client) (t TaskController) {
+	t.TaskMap = &taskq.TaskMap{}
+
+	queueOptions := &taskq.QueueOptions{
+		Name:                 "default",
+		PauseErrorsThreshold: 3,
+		Handler:              t.TaskMap,
+
+		// Disable system resources checks
+		MinSystemResources: taskq.SystemResources{
+			Load1PerCPU:          -1,
+			MemoryFreeMB:         0,
+			MemoryFreePercentage: 0,
+		},
 	}
 
-	if cfg.Pull.EnvironmentsFromProjects.OnInit {
-		schedulePullEnvironmentsFromProjects(ctx)
+	if r != nil {
+		t.Factory = redisq.NewFactory()
+		queueOptions.Redis = r
+	} else {
+		t.Factory = memqueue.NewFactory()
 	}
 
-	if cfg.Pull.RefsFromProjects.OnInit {
-		schedulePullRefsFromProjects(ctx)
+	t.Queue = t.Factory.RegisterQueue(queueOptions)
+
+	// Purge the queue when we start
+	// I am only partially convinced this will not cause issues in HA fashion
+	if err := t.Queue.Purge(); err != nil {
+		log.WithField("error", err.Error()).Error("purging the pulling queue")
 	}
 
-	if cfg.Pull.Metrics.OnInit {
-		schedulePullMetrics(ctx)
+	if r != nil {
+		if err := t.Factory.StartConsumers(context.TODO()); err != nil {
+			log.WithError(err).Fatal("starting consuming the task queue")
+		}
 	}
 
-	if cfg.GarbageCollect.Projects.OnInit {
-		scheduleGarbageCollectProjects(ctx)
-	}
+	return
+}
 
-	if cfg.GarbageCollect.Environments.OnInit {
-		scheduleGarbageCollectEnvironments(ctx)
-	}
+// TaskHandlerPullProjectsFromWildcard ..
+func (c *Controller) TaskHandlerPullProjectsFromWildcard(ctx context.Context, w config.Wildcard) error {
+	return c.PullProjectsFromWildcard(ctx, w)
+}
 
-	if cfg.GarbageCollect.Refs.OnInit {
-		scheduleGarbageCollectRefs(ctx)
-	}
-
-	if cfg.GarbageCollect.Metrics.OnInit {
-		scheduleGarbageCollectMetrics(ctx)
+// TaskHandlerPullEnvironmentsFromProject ..
+func (c *Controller) TaskHandlerPullEnvironmentsFromProject(ctx context.Context, p config.Project) {
+	// On errors, we do not want to retry these tasks
+	if err := c.PullEnvironmentsFromProject(ctx, p); err != nil {
+		log.WithFields(log.Fields{
+			"project-name": p.Name,
+			"error":        err.Error(),
+		}).Warn("pulling environments from project")
 	}
 }
 
-func schedulePullProjectsFromWildcards(ctx context.Context) {
+// TaskHandlerPullEnvironmentMetrics ..
+func (c *Controller) TaskHandlerPullEnvironmentMetrics(env schemas.Environment) {
+	// On errors, we do not want to retry these tasks
+	if err := c.PullEnvironmentMetrics(env); err != nil {
+		log.WithFields(log.Fields{
+			"project-name":     env.ProjectName,
+			"environment-name": env.Name,
+			"environment-id":   env.ID,
+			"error":            err.Error(),
+		}).Warn("pulling environment metrics")
+	}
+}
+
+// TaskHandlerPullRefsFromProject ..
+func (c *Controller) TaskHandlerPullRefsFromProject(ctx context.Context, p config.Project) {
+	// On errors, we do not want to retry these tasks
+	if err := c.PullRefsFromProject(ctx, p); err != nil {
+		log.WithFields(log.Fields{
+			"project-name": p.Name,
+			"error":        err.Error(),
+		}).Warn("pulling refs from project")
+	}
+}
+
+// TaskHandlerPullRefsFromPipelines ..
+func (c *Controller) TaskHandlerPullRefsFromPipelines(ctx context.Context, p config.Project) {
+	// On errors, we do not want to retry these tasks
+	if err := c.PullRefsFromPipelines(ctx, p); err != nil {
+		log.WithFields(log.Fields{
+			"project-name": p.Name,
+			"error":        err.Error(),
+		}).Warn("pulling projects refs from pipelines")
+	}
+}
+
+// TaskHandlerPullRefMetrics ..
+func (c *Controller) TaskHandlerPullRefMetrics(ref schemas.Ref) {
+	// On errors, we do not want to retry these tasks
+	if err := c.PullRefMetrics(ref); err != nil {
+		log.WithFields(log.Fields{
+			"project-name": ref.ProjectName,
+			"ref":          ref.Name,
+			"error":        err.Error(),
+		}).Warn("pulling ref metrics")
+	}
+}
+
+// TaskHandlerPullProjectsFromWildcards ..
+func (c *Controller) TaskHandlerPullProjectsFromWildcards(ctx context.Context) {
 	log.WithFields(
 		log.Fields{
-			"wildcards-count": len(cfg.Wildcards),
+			"wildcards-count": len(c.Wildcards),
 		},
 	).Info("scheduling projects from wildcards pull")
 
-	for _, w := range cfg.Wildcards {
-		go schedulePullProjectsFromWildcardTask(ctx, w)
+	for _, w := range c.Wildcards {
+		c.ScheduleTask(ctx, TaskTypePullProjectsFromWildcard, w)
 	}
 }
 
-func schedulePullEnvironmentsFromProjects(ctx context.Context) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	projectsCount, err := store.ProjectsCount()
+// TaskHandlerPullEnvironmentsFromProjects ..
+func (c *Controller) TaskHandlerPullEnvironmentsFromProjects(ctx context.Context) {
+	projectsCount, err := c.Store.ProjectsCount()
 	if err != nil {
 		log.Error(err.Error())
 	}
@@ -254,21 +197,19 @@ func schedulePullEnvironmentsFromProjects(ctx context.Context) {
 		},
 	).Info("scheduling environments from projects pull")
 
-	projects, err := store.Projects()
+	projects, err := c.Store.Projects()
 	if err != nil {
 		log.Error(err)
 	}
 
 	for _, p := range projects {
-		go schedulePullEnvironmentsFromProject(ctx, p)
+		c.ScheduleTask(ctx, TaskTypePullEnvironmentsFromProject, p)
 	}
 }
 
-func schedulePullRefsFromProjects(ctx context.Context) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	projectsCount, err := store.ProjectsCount()
+// TaskHandlerPullRefsFromProjects ..
+func (c *Controller) TaskHandlerPullRefsFromProjects(ctx context.Context) {
+	projectsCount, err := c.Store.ProjectsCount()
 	if err != nil {
 		log.Error(err.Error())
 	}
@@ -279,26 +220,24 @@ func schedulePullRefsFromProjects(ctx context.Context) {
 		},
 	).Info("scheduling refs from projects pull")
 
-	projects, err := store.Projects()
+	projects, err := c.Store.Projects()
 	if err != nil {
 		log.Error(err)
 	}
 
 	for _, p := range projects {
-		go schedulePullRefsFromProject(ctx, p)
+		c.ScheduleTask(ctx, TaskTypePullRefsFromProject, p)
 	}
 }
 
-func schedulePullMetrics(ctx context.Context) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	refsCount, err := store.RefsCount()
+// TaskHandlerPullMetrics ..
+func (c *Controller) TaskHandlerPullMetrics(ctx context.Context) {
+	refsCount, err := c.Store.RefsCount()
 	if err != nil {
 		log.Error(err)
 	}
 
-	envsCount, err := store.EnvironmentsCount()
+	envsCount, err := c.Store.EnvironmentsCount()
 	if err != nil {
 		log.Error(err)
 	}
@@ -311,206 +250,102 @@ func schedulePullMetrics(ctx context.Context) {
 	).Info("scheduling metrics pull")
 
 	// ENVIRONMENTS
-	envs, err := store.Environments()
+	envs, err := c.Store.Environments()
 	if err != nil {
 		log.Error(err)
 	}
 
 	for _, env := range envs {
-		go schedulePullEnvironmentMetrics(ctx, env)
+		c.ScheduleTask(ctx, TaskTypePullEnvironmentMetrics, env)
 	}
 
 	// REFS
-	refs, err := store.Refs()
+	refs, err := c.Store.Refs()
 	if err != nil {
 		log.Error(err)
 	}
 
 	for _, ref := range refs {
-		go schedulePullRefMetrics(ctx, ref)
+		c.ScheduleTask(ctx, TaskTypePullRefMetrics, ref)
 	}
 }
 
-func schedulePullProjectsFromWildcardTask(ctx context.Context, w config.Wildcard) {
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
+// TaskHandlerGarbageCollectProjects ..
+func (c *Controller) TaskHandlerGarbageCollectProjects(ctx context.Context) error {
+	return c.GarbageCollectProjects(ctx)
+}
 
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
+// TaskHandlerGarbageCollectEnvironments ..
+func (c *Controller) TaskHandlerGarbageCollectEnvironments(ctx context.Context) error {
+	return c.GarbageCollectEnvironments(ctx)
+}
 
-	if err := pullingQueue.Add(pullProjectsFromWildcardTask.WithArgs(ctx, w)); err != nil {
-		log.WithFields(log.Fields{
-			"wildcard-owner-kind": w.Owner.Kind,
-			"wildcard-owner-name": w.Owner.Name,
-			"error":               err.Error(),
-		}).Error("scheduling 'projects from wildcard' pull")
+// TaskHandlerGarbageCollectRefs ..
+func (c *Controller) TaskHandlerGarbageCollectRefs(ctx context.Context) error {
+	return c.GarbageCollectRefs(ctx)
+}
+
+// TaskHandlerGarbageCollectMetrics ..
+func (c *Controller) TaskHandlerGarbageCollectMetrics(ctx context.Context) error {
+	return c.GarbageCollectMetrics(ctx)
+}
+
+// Schedule ..
+func (c *Controller) Schedule(ctx context.Context, pull config.Pull, gc config.GarbageCollect) {
+	for tt, cfg := range map[TaskType]config.SchedulerConfig{
+		TaskTypePullProjectsFromWildcards:    config.SchedulerConfig(pull.ProjectsFromWildcards),
+		TaskTypePullEnvironmentsFromProjects: config.SchedulerConfig(pull.EnvironmentsFromProjects),
+		TaskTypePullRefsFromProjects:         config.SchedulerConfig(pull.RefsFromProjects),
+		TaskTypePullMetrics:                  config.SchedulerConfig(pull.Metrics),
+		TaskTypeGarbageCollectProjects:       config.SchedulerConfig(gc.Projects),
+		TaskTypeGarbageCollectEnvironments:   config.SchedulerConfig(gc.Environments),
+		TaskTypeGarbageCollectRefs:           config.SchedulerConfig(gc.Refs),
+		TaskTypeGarbageCollectMetrics:        config.SchedulerConfig(gc.Metrics),
+	} {
+		if cfg.OnInit {
+			c.ScheduleTask(ctx, tt)
+		}
+
+		if cfg.Scheduled {
+			c.ScheduleTaskWithTicker(ctx, tt, cfg.IntervalSeconds)
+		}
 	}
 }
 
-func schedulePullRefsFromPipeline(ctx context.Context, p config.Project) {
-	if !p.Pull.Refs.From.Pipelines.Enabled {
-		log.WithFields(log.Fields{
-			"project-name": p.Name,
-		}).Debug("pull refs from pipelines disabled, not scheduling")
-		return
-	}
-
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
-
-	if err := pullingQueue.Add(pullRefsFromPipelinesTask.WithArgs(ctx, p)); err != nil {
-		log.WithFields(log.Fields{
-			"project-name": p.Name,
-			"error":        err.Error(),
-		}).Error("scheduling 'refs from pipeline' pull")
+// ScheduleTask ..
+func (c *Controller) ScheduleTask(ctx context.Context, tt TaskType, args ...interface{}) {
+	task := c.TaskController.TaskMap.Get(string(tt))
+	msg := task.WithArgs(ctx, args...)
+	if err := c.TaskController.Queue.Add(msg); err != nil {
+		log.WithError(err).Warning("scheduling task")
 	}
 }
 
-func schedulePullEnvironmentsFromProject(ctx context.Context, p config.Project) {
-	if !p.Pull.Environments.Enabled {
-		log.WithFields(log.Fields{
-			"project-name": p.Name,
-		}).Debug("pull environments from project disabled, not scheduling")
+// ScheduleTaskWithTicker ..
+func (c *Controller) ScheduleTaskWithTicker(ctx context.Context, tt TaskType, intervalSeconds int) {
+	if intervalSeconds <= 0 {
+		log.WithField("task", tt).Warn("task scheduling misconfigured, currently disabled")
 		return
 	}
 
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
+	log.WithFields(log.Fields{
+		"task":             tt,
+		"interval_seconds": intervalSeconds,
+	}).Debug("task scheduled")
 
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
-
-	if err := pullingQueue.Add(pullEnvironmentsFromProjectTask.WithArgs(ctx, p)); err != nil {
-		log.WithFields(log.Fields{
-			"project-name": p.Name,
-			"error":        err.Error(),
-		}).Error("scheduling 'environments from project' pull")
-	}
-}
-
-func schedulePullEnvironmentMetrics(ctx context.Context, env schemas.Environment) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
-
-	if err := pullingQueue.Add(pullEnvironmentMetricsTask.WithArgs(ctx, env)); err != nil {
-		log.WithFields(log.Fields{
-			"project-name":     env.ProjectName,
-			"environment-id":   env.ID,
-			"environment-name": env.Name,
-			"error":            err.Error(),
-		}).Error("scheduling 'ref most recent pipeline metrics' pull")
-	}
-}
-
-func schedulePullRefsFromProject(ctx context.Context, p config.Project) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
-
-	if err := pullingQueue.Add(pullRefsFromProjectTask.WithArgs(ctx, p)); err != nil {
-		log.WithFields(log.Fields{
-			"project-name": p.Name,
-			"error":        err.Error(),
-		}).Error("scheduling 'refs from project' pull")
-	}
-}
-
-func schedulePullRefMetrics(ctx context.Context, ref schemas.Ref) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
-
-	if err := pullingQueue.Add(pullRefMetricsTask.WithArgs(ctx, ref)); err != nil {
-		log.WithFields(log.Fields{
-			"project-name": ref.ProjectName,
-			"ref-name":     ref.Name,
-			"error":        err.Error(),
-		}).Error("scheduling 'ref most recent pipeline metrics' pull")
-	}
-}
-
-func scheduleGarbageCollectProjects(ctx context.Context) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
-
-	if err := pullingQueue.Add(garbageCollectProjectsTask.WithArgs(ctx)); err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Error("scheduling 'projects garbage collection' task")
-	}
-}
-
-func scheduleGarbageCollectEnvironments(ctx context.Context) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
-
-	if err := pullingQueue.Add(garbageCollectEnvironmentsTask.WithArgs(ctx)); err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Error("scheduling 'environments garbage collection' task")
-	}
-}
-
-func scheduleGarbageCollectRefs(ctx context.Context) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
-
-	if err := pullingQueue.Add(garbageCollectRefsTask.WithArgs(ctx)); err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Error("scheduling 'refs garbage collection' task")
-	}
-}
-
-func scheduleGarbageCollectMetrics(ctx context.Context) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	if pullingQueue == nil {
-		log.Warn("uninitialized pulling queue, cannot schedule")
-		return
-	}
-
-	if err := pullingQueue.Add(garbageCollectMetricsTask.WithArgs(ctx)); err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Error("scheduling 'metrics garbage collection' task")
-	}
+	go func(ctx context.Context) {
+		ticker := time.NewTicker(time.Duration(intervalSeconds) * time.Second)
+		for {
+			select {
+			case <-ctx.Done():
+				log.WithField("task", tt).Info("scheduling of task stopped")
+				return
+			case <-ticker.C:
+				switch tt {
+				default:
+					c.ScheduleTask(ctx, tt)
+				}
+			}
+		}
+	}(ctx)
 }

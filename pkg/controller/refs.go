@@ -9,28 +9,27 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func getRefs(
+// GetRefs ..
+func (c *Controller) GetRefs(
 	projectName string,
 	filterRegexp string,
 	maxAgeSeconds uint,
 	fetchMergeRequestsPipelinesRefs bool,
 	fetchMergeRequestsPipelinesRefsInitLimit int) (map[string]schemas.RefKind, error) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
 
-	branches, err := gitlabClient.GetProjectBranches(projectName, filterRegexp, maxAgeSeconds)
+	branches, err := c.Gitlab.GetProjectBranches(projectName, filterRegexp, maxAgeSeconds)
 	if err != nil {
 		return nil, err
 	}
 
-	tags, err := gitlabClient.GetProjectTags(projectName, filterRegexp, maxAgeSeconds)
+	tags, err := c.Gitlab.GetProjectTags(projectName, filterRegexp, maxAgeSeconds)
 	if err != nil {
 		return nil, err
 	}
 
 	mergeRequests := []string{}
 	if fetchMergeRequestsPipelinesRefs {
-		mergeRequests, err = gitlabClient.GetProjectMergeRequestsPipelines(projectName, fetchMergeRequestsPipelinesRefsInitLimit, maxAgeSeconds)
+		mergeRequests, err = c.Gitlab.GetProjectMergeRequestsPipelines(projectName, fetchMergeRequestsPipelinesRefsInitLimit, maxAgeSeconds)
 		if err != nil {
 			return nil, err
 		}
@@ -53,16 +52,14 @@ func getRefs(
 	return foundRefs, nil
 }
 
-func pullRefsFromProject(p config.Project) error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	gp, err := gitlabClient.GetProject(p.Name)
+// PullRefsFromProject ..
+func (c *Controller) PullRefsFromProject(ctx context.Context, p config.Project) error {
+	gp, err := c.Gitlab.GetProject(p.Name)
 	if err != nil {
 		return err
 	}
 
-	refs, err := getRefs(
+	refs, err := c.GetRefs(
 		p.Name,
 		p.Pull.Refs.Regexp,
 		p.Pull.Refs.MaxAgeSeconds,
@@ -88,7 +85,7 @@ func pullRefsFromProject(p config.Project) error {
 			p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp,
 		)
 
-		refExists, err := store.RefExists(ref.Key())
+		refExists, err := c.Store.RefExists(ref.Key())
 		if err != nil {
 			return err
 		}
@@ -100,38 +97,36 @@ func pullRefsFromProject(p config.Project) error {
 				"ref-kind":     ref.Kind,
 			}).Info("discovered new ref")
 
-			if err = store.SetRef(ref); err != nil {
+			if err = c.Store.SetRef(ref); err != nil {
 				return err
 			}
 
-			go schedulePullRefMetrics(context.Background(), ref)
+			c.ScheduleTask(ctx, TaskTypePullRefMetrics, ref)
 		}
 	}
 	return nil
 }
 
-func pullRefsFromPipelines(p config.Project) error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
+// PullRefsFromPipelines ..
+func (c *Controller) PullRefsFromPipelines(ctx context.Context, p config.Project) error {
 	log.WithFields(log.Fields{
 		"init-operation": true,
 		"project-name":   p.Name,
 	}).Debug("fetching project")
 
-	gp, err := gitlabClient.GetProject(p.Name)
+	gp, err := c.Gitlab.GetProject(p.Name)
 	if err != nil {
 		return err
 	}
 
-	refs, err := gitlabClient.GetRefsFromPipelines(p, strings.Join(gp.TagList, ","))
+	refs, err := c.Gitlab.GetRefsFromPipelines(p, strings.Join(gp.TagList, ","))
 	if err != nil {
 		return err
 	}
 
 	// Immediately trigger a pull of the ref
 	for _, ref := range refs {
-		refExists, err := store.RefExists(ref.Key())
+		refExists, err := c.Store.RefExists(ref.Key())
 		if err != nil {
 			return err
 		}
@@ -143,11 +138,11 @@ func pullRefsFromPipelines(p config.Project) error {
 				"ref-kind":     ref.Kind,
 			}).Info("discovered new ref from pipelines")
 
-			if err = store.SetRef(ref); err != nil {
+			if err = c.Store.SetRef(ref); err != nil {
 				return err
 			}
 
-			go schedulePullRefMetrics(context.Background(), ref)
+			c.ScheduleTask(ctx, TaskTypePullRefMetrics, ref)
 		}
 	}
 	return nil

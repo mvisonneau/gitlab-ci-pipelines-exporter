@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -12,27 +13,12 @@ import (
 )
 
 func TestGarbageCollectProjects(t *testing.T) {
-	resetGlobalValues()
-
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
-
-	mux.HandleFunc("/api/v4/groups/wc/projects",
-		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1, "path_with_namespace": "wc/p3", "jobs_enabled": true}]`)
-		})
-
 	p1 := config.NewProject("cfg/p1")
 	p2 := config.NewProject("cfg/p2")
 	p3 := config.NewProject("wc/p3")
 	p4 := config.NewProject("wc/p4")
 
-	store.SetProject(p1)
-	store.SetProject(p2)
-	store.SetProject(p3)
-	store.SetProject(p4)
-
-	cfg = config.Config{
+	c, mux, srv := newTestController(config.Config{
 		Projects: []config.Project{p1},
 		Wildcards: config.Wildcards{
 			config.Wildcard{
@@ -42,10 +28,21 @@ func TestGarbageCollectProjects(t *testing.T) {
 				},
 			},
 		},
-	}
+	})
+	defer srv.Close()
 
-	assert.NoError(t, garbageCollectProjects())
-	storedProjects, err := store.Projects()
+	mux.HandleFunc("/api/v4/groups/wc/projects",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"id":1, "path_with_namespace": "wc/p3", "jobs_enabled": true}]`)
+		})
+
+	c.Store.SetProject(p1)
+	c.Store.SetProject(p2)
+	c.Store.SetProject(p3)
+	c.Store.SetProject(p4)
+
+	assert.NoError(t, c.GarbageCollectProjects(context.Background()))
+	storedProjects, err := c.Store.Projects()
 	assert.NoError(t, err)
 
 	expectedProjects := config.Projects{
@@ -56,9 +53,8 @@ func TestGarbageCollectProjects(t *testing.T) {
 }
 
 func TestGarbageCollectEnvironments(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/p2/environments",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -72,13 +68,13 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 	envp2dev := schemas.Environment{ProjectName: "p2", Name: "dev"}
 	envp2main := schemas.Environment{ProjectName: "p2", Name: "main"}
 
-	store.SetProject(p2)
-	store.SetEnvironment(envp1main)
-	store.SetEnvironment(envp2dev)
-	store.SetEnvironment(envp2main)
+	c.Store.SetProject(p2)
+	c.Store.SetEnvironment(envp1main)
+	c.Store.SetEnvironment(envp2dev)
+	c.Store.SetEnvironment(envp2main)
 
-	assert.NoError(t, garbageCollectEnvironments())
-	storedEnvironments, err := store.Environments()
+	assert.NoError(t, c.GarbageCollectEnvironments(context.Background()))
+	storedEnvironments, err := c.Store.Environments()
 	assert.NoError(t, err)
 
 	expectedEnvironments := schemas.Environments{
@@ -92,9 +88,8 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 }
 
 func TestGarbageCollectRefs(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/p2/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -115,14 +110,14 @@ func TestGarbageCollectRefs(t *testing.T) {
 	pr2dev := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "dev"}
 	pr2main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "main"}
 
-	store.SetProject(p2)
-	store.SetRef(pr1dev)
-	store.SetRef(pr1main)
-	store.SetRef(pr2dev)
-	store.SetRef(pr2main)
+	c.Store.SetProject(p2)
+	c.Store.SetRef(pr1dev)
+	c.Store.SetRef(pr1main)
+	c.Store.SetRef(pr2dev)
+	c.Store.SetRef(pr2main)
 
-	assert.NoError(t, garbageCollectRefs())
-	storedRefs, err := store.Refs()
+	assert.NoError(t, c.GarbageCollectRefs(context.Background()))
+	storedRefs, err := c.Store.Refs()
 	assert.NoError(t, err)
 
 	newPR2main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "main"}
@@ -139,7 +134,8 @@ func TestGarbageCollectRefs(t *testing.T) {
 }
 
 func TestGarbageCollectMetrics(t *testing.T) {
-	resetGlobalValues()
+	c, _, srv := newTestController(config.Config{})
+	srv.Close()
 
 	ref1 := schemas.Ref{
 		ProjectName:               "p1",
@@ -156,16 +152,16 @@ func TestGarbageCollectMetrics(t *testing.T) {
 	ref3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo"}}
 	ref4m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"ref": "bar"}}
 
-	store.SetRef(ref1)
-	store.SetMetric(ref1m1)
-	store.SetMetric(ref1m2)
-	store.SetMetric(ref1m3)
-	store.SetMetric(ref2m1)
-	store.SetMetric(ref3m1)
-	store.SetMetric(ref4m1)
+	c.Store.SetRef(ref1)
+	c.Store.SetMetric(ref1m1)
+	c.Store.SetMetric(ref1m2)
+	c.Store.SetMetric(ref1m3)
+	c.Store.SetMetric(ref2m1)
+	c.Store.SetMetric(ref3m1)
+	c.Store.SetMetric(ref4m1)
 
-	assert.NoError(t, garbageCollectMetrics())
-	storedMetrics, err := store.Metrics()
+	assert.NoError(t, c.GarbageCollectMetrics(context.Background()))
+	storedMetrics, err := c.Store.Metrics()
 	assert.NoError(t, err)
 
 	expectedMetrics := schemas.Metrics{

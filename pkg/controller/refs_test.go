@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -11,9 +12,8 @@ import (
 )
 
 func TestGetRefs(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +30,7 @@ func TestGetRefs(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"}]`)
 		})
 
-	foundRefs, err := getRefs("foo", "^keep", 0, true, 10)
+	foundRefs, err := c.GetRefs("foo", "^keep", 0, true, 10)
 	assert.NoError(t, err)
 
 	assert.Equal(t, foundRefs["keep/0.0.2"], schemas.RefKindTag)
@@ -40,9 +40,8 @@ func TestGetRefs(t *testing.T) {
 }
 
 func TestPullRefsFromProject(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -59,9 +58,9 @@ func TestPullRefsFromProject(t *testing.T) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	assert.NoError(t, pullRefsFromProject(config.NewProject("foo")))
+	assert.NoError(t, c.PullRefsFromProject(context.Background(), config.NewProject("foo")))
 
-	projectsRefs, _ := store.Refs()
+	projectsRefs, _ := c.Store.Refs()
 	expectedRefs := schemas.Refs{
 		"99908380": schemas.Ref{
 			Kind:                      schemas.RefKindBranch,
@@ -79,9 +78,8 @@ func TestPullRefsFromProject(t *testing.T) {
 }
 
 func TestPullRefsFromPipelines(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -101,9 +99,9 @@ func TestPullRefsFromPipelines(t *testing.T) {
 			}
 		})
 
-	assert.NoError(t, pullRefsFromPipelines(config.NewProject("foo")))
+	assert.NoError(t, c.PullRefsFromPipelines(context.Background(), config.NewProject("foo")))
 
-	projectsRefs, _ := store.Refs()
+	projectsRefs, _ := c.Store.Refs()
 	expectedRefs := schemas.Refs{
 		"964648533": schemas.Ref{
 			Kind:                      schemas.RefKindTag,

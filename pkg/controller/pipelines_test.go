@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPullRefMetricsSucceed(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +33,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 		})
 
 	// Metrics pull shall succeed
-	assert.NoError(t, pullRefMetrics(schemas.Ref{
+	assert.NoError(t, c.PullRefMetrics(schemas.Ref{
 		Kind:                         schemas.RefKindBranch,
 		ProjectName:                  "foo",
 		Name:                         "bar",
@@ -41,7 +41,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	}))
 
 	// Check if all the metrics exist
-	metrics, _ := store.Metrics()
+	metrics, _ := c.Store.Metrics()
 	labels := map[string]string{
 		"kind":      string(schemas.RefKindBranch),
 		"project":   "foo",
@@ -88,9 +88,8 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 }
 
 func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
-	resetGlobalValues()
-	mux, server := configureMockedGitlabClient()
-	defer server.Close()
+	c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +109,7 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 		})
 
 	// Metrics pull shall succeed
-	assert.NoError(t, pullRefMetrics(schemas.Ref{
+	assert.NoError(t, c.PullRefMetrics(schemas.Ref{
 		Kind:                         schemas.RefKindMergeRequest,
 		ProjectName:                  "foo",
 		Name:                         "1234",
@@ -119,7 +118,9 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 }
 
 func TestPullRefMetricsMergeRequestPipelineAlreadyLoaded(t *testing.T) {
-	resetGlobalValues()
+	c, _, srv := newTestController(config.Config{})
+	srv.Close()
+
 	ref := schemas.Ref{
 		Kind: schemas.RefKindMergeRequest,
 		LatestPipeline: schemas.Pipeline{
@@ -128,5 +129,5 @@ func TestPullRefMetricsMergeRequestPipelineAlreadyLoaded(t *testing.T) {
 		},
 	}
 
-	assert.NoError(t, pullRefMetrics(ref))
+	assert.NoError(t, c.PullRefMetrics(ref))
 }

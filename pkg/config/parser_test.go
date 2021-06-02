@@ -39,12 +39,12 @@ gitlab:
   health_url: https://gitlab.example.com/-/health
   enable_health_check: false
   enable_tls_verify: false
+  maximum_requests_per_second: 2
 
 redis:
   url: redis://popopo:1337
 
 pull:
-  maximum_gitlab_api_requests_per_second: 2
   projects_from_wildcards:
     on_init: false
     scheduled: false
@@ -146,10 +146,9 @@ wildcards:
 	xcfg.Gitlab.Token = "xrN14n9-ywvAFxxxxxx"
 	xcfg.Gitlab.EnableHealthCheck = false
 	xcfg.Gitlab.EnableTLSVerify = false
+	xcfg.Gitlab.MaximumRequestsPerSecond = 2
 
 	xcfg.Redis.URL = "redis://popopo:1337"
-
-	xcfg.Pull.MaximumGitLabAPIRequestsPerSecond = 2
 
 	xcfg.Pull.ProjectsFromWildcards.OnInit = false
 	xcfg.Pull.ProjectsFromWildcards.Scheduled = false

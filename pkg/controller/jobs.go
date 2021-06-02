@@ -8,46 +8,40 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func pullRefPipelineJobsMetrics(ref schemas.Ref) error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	jobs, err := gitlabClient.ListRefPipelineJobs(ref)
+// PullRefPipelineJobsMetrics ..
+func (c *Controller) PullRefPipelineJobsMetrics(ref schemas.Ref) error {
+	jobs, err := c.Gitlab.ListRefPipelineJobs(ref)
 	if err != nil {
 		return err
 	}
 
 	for _, job := range jobs {
-		processJobMetrics(ref, job)
+		c.ProcessJobMetrics(ref, job)
 	}
 
 	return nil
 }
 
-func pullRefMostRecentJobsMetrics(ref schemas.Ref) error {
+// PullRefMostRecentJobsMetrics ..
+func (c *Controller) PullRefMostRecentJobsMetrics(ref schemas.Ref) error {
 	if !ref.PullPipelineJobsEnabled {
 		return nil
 	}
 
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	jobs, err := gitlabClient.ListRefMostRecentJobs(ref)
+	jobs, err := c.Gitlab.ListRefMostRecentJobs(ref)
 	if err != nil {
 		return err
 	}
 
 	for _, job := range jobs {
-		processJobMetrics(ref, job)
+		c.ProcessJobMetrics(ref, job)
 	}
 
 	return nil
 }
 
-func processJobMetrics(ref schemas.Ref, job schemas.Job) {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
+// ProcessJobMetrics ..
+func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 	projectRefLogFields := log.Fields{
 		"project-name": ref.ProjectName,
 		"job-name":     job.Name,
@@ -75,7 +69,7 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 	}
 
 	// Refresh ref state from the store
-	if err := store.GetRef(&ref); err != nil {
+	if err := c.Store.GetRef(&ref); err != nil {
 		log.WithFields(projectRefLogFields).WithField("error", err.Error()).Error("getting ref from the store")
 		return
 	}
@@ -92,7 +86,7 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 		ref.LatestJobs = make(schemas.Jobs)
 	}
 	ref.LatestJobs[job.Name] = job
-	if err := store.SetRef(ref); err != nil {
+	if err := c.Store.SetRef(ref); err != nil {
 		log.WithFields(
 			projectRefLogFields,
 		).WithField("error", err.Error()).Error("writing ref in the store")
@@ -101,19 +95,19 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 
 	log.WithFields(projectRefLogFields).Debug("processing job metrics")
 
-	storeSetMetric(schemas.Metric{
+	storeSetMetric(c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobID,
 		Labels: labels,
 		Value:  float64(job.ID),
 	})
 
-	storeSetMetric(schemas.Metric{
+	storeSetMetric(c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobTimestamp,
 		Labels: labels,
 		Value:  job.Timestamp,
 	})
 
-	storeSetMetric(schemas.Metric{
+	storeSetMetric(c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobDurationSeconds,
 		Labels: labels,
 		Value:  job.DurationSeconds,
@@ -127,7 +121,7 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 	// If the metric does not exist yet, start with 0 instead of 1
 	// this could cause some false positives in prometheus
 	// when restarting the exporter otherwise
-	jobRunCountExists, err := store.MetricExists(jobRunCount.Key())
+	jobRunCountExists, err := c.Store.MetricExists(jobRunCount.Key())
 	if err != nil {
 		log.WithFields(
 			projectRefLogFields,
@@ -142,19 +136,20 @@ func processJobMetrics(ref schemas.Ref, job schemas.Job) {
 	lastJobTriggered := !jobTriggeredRegexp.MatchString(lastJob.Status)
 	jobTriggered := !jobTriggeredRegexp.MatchString(job.Status)
 	if jobRunCountExists && ((lastJob.ID != job.ID && jobTriggered) || (lastJob.ID == job.ID && jobTriggered && !lastJobTriggered)) {
-		storeGetMetric(&jobRunCount)
+		storeGetMetric(c.Store, &jobRunCount)
 		jobRunCount.Value++
 	}
 
-	storeSetMetric(jobRunCount)
+	storeSetMetric(c.Store, jobRunCount)
 
-	storeSetMetric(schemas.Metric{
+	storeSetMetric(c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobArtifactSizeBytes,
 		Labels: labels,
 		Value:  job.ArtifactSize,
 	})
 
 	emitStatusMetric(
+		c.Store,
 		schemas.MetricKindJobStatus,
 		labels,
 		statusesList[:],

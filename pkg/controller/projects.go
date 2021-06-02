@@ -7,17 +7,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func pullProjectsFromWildcard(w config.Wildcard) error {
-	cfgUpdateLock.RLock()
-	defer cfgUpdateLock.RUnlock()
-
-	foundProjects, err := gitlabClient.ListProjects(w)
+// PullProjectsFromWildcard ..
+func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wildcard) error {
+	foundProjects, err := c.Gitlab.ListProjects(w)
 	if err != nil {
 		return err
 	}
 
 	for _, p := range foundProjects {
-		projectExists, err := store.ProjectExists(p.Key())
+		projectExists, err := c.Store.ProjectExists(p.Key())
 		if err != nil {
 			return err
 		}
@@ -32,13 +30,13 @@ func pullProjectsFromWildcard(w config.Wildcard) error {
 				"project-name":                     p.Name,
 			}).Info("discovered new project")
 
-			if err := store.SetProject(p); err != nil {
+			if err := c.Store.SetProject(p); err != nil {
 				log.Errorf(err.Error())
 			}
 
-			go schedulePullRefsFromProject(context.Background(), p)
-			go schedulePullRefsFromPipeline(context.Background(), p)
-			go schedulePullEnvironmentsFromProject(context.Background(), p)
+			c.ScheduleTask(ctx, TaskTypePullRefsFromProject, p)
+			c.ScheduleTask(ctx, TaskTypePullRefsFromPipelines, p)
+			c.ScheduleTask(ctx, TaskTypePullEnvironmentsFromProject, p)
 		}
 	}
 

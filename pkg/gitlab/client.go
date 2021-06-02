@@ -24,16 +24,18 @@ type Client struct {
 		HTTPClient *http.Client
 	}
 
-	RateLimiter ratelimit.Limiter
+	RateLimiter       ratelimit.Limiter
+	EnableHealthCheck bool
 }
 
 // ClientConfig ..
 type ClientConfig struct {
-	URL              string
-	Token            string
-	UserAgentVersion string
-	DisableTLSVerify bool
-	ReadinessURL     string
+	URL               string
+	Token             string
+	UserAgentVersion  string
+	DisableTLSVerify  bool
+	ReadinessURL      string
+	EnableHealthCheck bool
 
 	RateLimiter ratelimit.Limiter
 }
