@@ -113,11 +113,13 @@ func (c *Controller) TaskHandlerPullProjectsFromWildcard(ctx context.Context, w 
 // TaskHandlerPullEnvironmentsFromProject ..
 func (c *Controller) TaskHandlerPullEnvironmentsFromProject(ctx context.Context, p config.Project) {
 	// On errors, we do not want to retry these tasks
-	if err := c.PullEnvironmentsFromProject(ctx, p); err != nil {
-		log.WithFields(log.Fields{
-			"project-name": p.Name,
-			"error":        err.Error(),
-		}).Warn("pulling environments from project")
+	if p.Pull.Environments.Enabled {
+		if err := c.PullEnvironmentsFromProject(ctx, p); err != nil {
+			log.WithFields(log.Fields{
+				"project-name": p.Name,
+				"error":        err.Error(),
+			}).Warn("pulling environments from project")
+		}
 	}
 }
 
