@@ -35,7 +35,6 @@ func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wild
 			}
 
 			c.ScheduleTask(ctx, TaskTypePullRefsFromProject, p)
-			c.ScheduleTask(ctx, TaskTypePullRefsFromPipelines, p)
 			c.ScheduleTask(ctx, TaskTypePullEnvironmentsFromProject, p)
 		}
 	}

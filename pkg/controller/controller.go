@@ -58,7 +58,6 @@ func (c *Controller) registerTasks() {
 		TaskTypePullProjectsFromWildcard:     c.TaskHandlerPullProjectsFromWildcard,
 		TaskTypePullProjectsFromWildcards:    c.TaskHandlerPullProjectsFromWildcards,
 		TaskTypePullRefMetrics:               c.TaskHandlerPullRefMetrics,
-		TaskTypePullRefsFromPipelines:        c.TaskHandlerPullRefsFromPipelines,
 		TaskTypePullRefsFromProject:          c.TaskHandlerPullRefsFromProject,
 		TaskTypePullRefsFromProjects:         c.TaskHandlerPullRefsFromProjects,
 	} {

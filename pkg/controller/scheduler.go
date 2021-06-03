@@ -48,9 +48,6 @@ const (
 	// TaskTypePullRefsFromProjects ..
 	TaskTypePullRefsFromProjects TaskType = "PullRefsFromProjects"
 
-	// TaskTypePullRefsFromPipelines ..
-	TaskTypePullRefsFromPipelines TaskType = "PullRefsFromPipelines"
-
 	// TaskTypePullRefMetrics ..
 	TaskTypePullRefMetrics TaskType = "PullRefMetrics"
 
@@ -145,17 +142,6 @@ func (c *Controller) TaskHandlerPullRefsFromProject(ctx context.Context, p schem
 			"project-name": p.Name,
 			"error":        err.Error(),
 		}).Warn("pulling refs from project")
-	}
-}
-
-// TaskHandlerPullRefsFromPipelines ..
-func (c *Controller) TaskHandlerPullRefsFromPipelines(ctx context.Context, p schemas.Project) {
-	// On errors, we do not want to retry these tasks
-	if err := c.PullRefsFromPipelines(ctx, p); err != nil {
-		log.WithFields(log.Fields{
-			"project-name": p.Name,
-			"error":        err.Error(),
-		}).Warn("pulling projects refs from pipelines")
 	}
 }
 
