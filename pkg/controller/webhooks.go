@@ -170,26 +170,11 @@ func (c *Controller) triggerEnvironmentMetricsPull(env schemas.Environment) {
 
 			if matches {
 				// As we do not get the environment ID within the deployment event, we need to query it back..
-				envs, err := c.Gitlab.GetProjectEnvironments(p.Name, p.Pull.Environments.Regexp)
-				if err != nil {
-					log.WithFields(logFields).WithError(err).Error("listing project envs from GitLab API")
+				if err = c.UpdateEnvironment(&env); err != nil {
+					log.WithFields(logFields).WithError(err).Error("updating event from GitLab API")
 					return
 				}
-
-				for envID, envName := range envs {
-					if envName == env.Name {
-						env.ID = envID
-						break
-					}
-				}
-
-				if env.ID != 0 {
-					if err = c.Store.SetEnvironment(env); err != nil {
-						log.WithFields(logFields).WithError(err).Error("writing environment in the store")
-						return
-					}
-					goto schedulePull
-				}
+				goto schedulePull
 			}
 		}
 

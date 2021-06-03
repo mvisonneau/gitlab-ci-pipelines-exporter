@@ -3,35 +3,29 @@ package controller
 import (
 	"context"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 )
 
 // PullEnvironmentsFromProject ..
-func (c *Controller) PullEnvironmentsFromProject(ctx context.Context, p config.Project) error {
-	envs, err := c.Gitlab.GetProjectEnvironments(p.Name, p.Pull.Environments.Regexp)
+func (c *Controller) PullEnvironmentsFromProject(ctx context.Context, p schemas.Project) (err error) {
+	var envs schemas.Environments
+	envs, err = c.Gitlab.GetProjectEnvironments(p)
 	if err != nil {
-		return err
+		return
 	}
 
-	for envID, envName := range envs {
-		env := schemas.Environment{
-			ProjectName: p.Name,
-			Name:        envName,
-			ID:          envID,
-
-			OutputSparseStatusMetrics: p.OutputSparseStatusMetrics,
-		}
-
-		envExists, err := c.Store.EnvironmentExists(env.Key())
+	for k := range envs {
+		var exists bool
+		exists, err = c.Store.EnvironmentExists(k)
 		if err != nil {
-			return err
+			return
 		}
 
-		if !envExists {
+		if !exists {
+			env := envs[k]
 			if err = c.UpdateEnvironment(&env); err != nil {
-				return err
+				return
 			}
 
 			log.WithFields(log.Fields{
@@ -43,7 +37,7 @@ func (c *Controller) PullEnvironmentsFromProject(ctx context.Context, p config.P
 			c.ScheduleTask(ctx, TaskTypePullEnvironmentMetrics, env)
 		}
 	}
-	return nil
+	return
 }
 
 // UpdateEnvironment ..

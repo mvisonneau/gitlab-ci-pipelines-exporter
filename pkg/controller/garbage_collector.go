@@ -65,8 +65,8 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 		return err
 	}
 
-	envProjects := make(map[string]string)
-	for k, env := range storedEnvironments {
+	envProjects := make(map[schemas.Project]bool)
+	for _, env := range storedEnvironments {
 		p := schemas.NewProject(env.ProjectName)
 
 		projectExists, err := c.Store.ProjectExists(p.Key())
@@ -76,15 +76,9 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 
 		// If the project does not exist anymore, delete the environment
 		if !projectExists {
-			if err = c.Store.DelEnvironment(k); err != nil {
+			if err = deleteEnv(c.Store, env, "non-existent-project"); err != nil {
 				return err
 			}
-
-			log.WithFields(log.Fields{
-				"project-name":     env.ProjectName,
-				"environment-name": env.Name,
-				"reason":           "non-existent-project",
-			}).Info("deleted environment from the store")
 			continue
 		}
 
@@ -92,23 +86,24 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 			return err
 		}
 
+		// If the environment is not configured to be pulled anymore, delete it
+		if !p.Pull.Environments.Enabled {
+			if err = deleteEnv(c.Store, env, "project-pull-environments-disabled"); err != nil {
+				return err
+			}
+			continue
+		}
+
 		// Store the project information to be able to refresh its environments
 		// from the API later on
-		envProjects[p.Name] = p.Pull.Environments.Regexp
+		envProjects[p] = true
 
 		// If the environment is not configured to be pulled anymore, delete it
 		re := regexp.MustCompile(p.Pull.Environments.Regexp)
-
 		if !re.MatchString(env.Name) {
-			if err = c.Store.DelEnvironment(k); err != nil {
+			if err = deleteEnv(c.Store, env, "environment-not-in-regexp"); err != nil {
 				return err
 			}
-
-			log.WithFields(log.Fields{
-				"project-name":     env.ProjectName,
-				"environment-name": env.Name,
-				"reason":           "environment-not-in-regexp",
-			}).Info("deleted environment from the store")
 			continue
 		}
 
@@ -128,18 +123,11 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 	}
 
 	// Refresh the environments from the API
-	existingEnvs := make(map[schemas.EnvironmentKey]struct{})
-	for projectName, envRegexp := range envProjects {
-		envs, err := c.Gitlab.GetProjectEnvironments(projectName, envRegexp)
+	existingEnvs := make(schemas.Environments)
+	for p := range envProjects {
+		existingEnvs, err = c.Gitlab.GetProjectEnvironments(p)
 		if err != nil {
 			return err
-		}
-
-		for _, envName := range envs {
-			existingEnvs[schemas.Environment{
-				ProjectName: projectName,
-				Name:        envName,
-			}.Key()] = struct{}{}
 		}
 	}
 
@@ -150,15 +138,9 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 
 	for k, env := range storedEnvironments {
 		if _, exists := existingEnvs[k]; !exists {
-			if err = c.Store.DelEnvironment(k); err != nil {
+			if err = deleteEnv(c.Store, env, "non-existent-environment"); err != nil {
 				return err
 			}
-
-			log.WithFields(log.Fields{
-				"project-name":     env.ProjectName,
-				"environment-name": env.Name,
-				"reason":           "non-existent-environment",
-			}).Info("deleted environment from the store")
 		}
 	}
 
@@ -254,21 +236,6 @@ func (c *Controller) GarbageCollectRefs(_ context.Context) error {
 	}
 
 	return nil
-}
-
-func deleteRef(s store.Store, ref schemas.Ref, reason string) (err error) {
-	if err = s.DelRef(ref.Key()); err != nil {
-		return
-	}
-
-	log.WithFields(log.Fields{
-		"project-name": ref.Project.Name,
-		"ref":          ref.Name,
-		"ref-kind":     ref.Kind,
-		"reason":       reason,
-	}).Info("deleted ref from the store")
-
-	return
 }
 
 // GarbageCollectMetrics ..
@@ -422,4 +389,33 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 	}
 
 	return nil
+}
+
+func deleteEnv(s store.Store, env schemas.Environment, reason string) (err error) {
+	if err = s.DelEnvironment(env.Key()); err != nil {
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"project-name":     env.ProjectName,
+		"environment-name": env.Name,
+		"reason":           reason,
+	}).Info("deleted environment from the store")
+
+	return
+}
+
+func deleteRef(s store.Store, ref schemas.Ref, reason string) (err error) {
+	if err = s.DelRef(ref.Key()); err != nil {
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"project-name": ref.Project.Name,
+		"ref":          ref.Name,
+		"ref-kind":     ref.Kind,
+		"reason":       reason,
+	}).Info("deleted ref from the store")
+
+	return
 }

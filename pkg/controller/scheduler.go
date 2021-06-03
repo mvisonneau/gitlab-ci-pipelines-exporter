@@ -111,7 +111,7 @@ func (c *Controller) TaskHandlerPullProjectsFromWildcard(ctx context.Context, w 
 }
 
 // TaskHandlerPullEnvironmentsFromProject ..
-func (c *Controller) TaskHandlerPullEnvironmentsFromProject(ctx context.Context, p config.Project) {
+func (c *Controller) TaskHandlerPullEnvironmentsFromProject(ctx context.Context, p schemas.Project) {
 	// On errors, we do not want to retry these tasks
 	if p.Pull.Environments.Enabled {
 		if err := c.PullEnvironmentsFromProject(ctx, p); err != nil {

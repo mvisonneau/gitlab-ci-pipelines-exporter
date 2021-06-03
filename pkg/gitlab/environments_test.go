@@ -38,16 +38,33 @@ func TestGetProjectEnvironments(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	envs, err := c.GetProjectEnvironments("foo", "^dev")
+	p := schemas.NewProject("foo")
+	p.Pull.Environments.Regexp = "^dev"
+
+	xenv := schemas.Environment{
+		ProjectName:               "foo",
+		Name:                      "dev",
+		ID:                        1337,
+		OutputSparseStatusMetrics: true,
+	}
+
+	xenvs := schemas.Environments{
+		xenv.Key(): xenv,
+	}
+
+	envs, err := c.GetProjectEnvironments(p)
 	assert.NoError(t, err)
-	assert.Equal(t, map[int]string{1337: "dev"}, envs)
+	assert.Equal(t, xenvs, envs)
 
 	// Test invalid project
-	_, err = c.GetProjectEnvironments("0", "")
+	p.Name = ""
+	_, err = c.GetProjectEnvironments(p)
 	assert.Error(t, err)
 
 	// Test invalid regexp
-	_, err = c.GetProjectEnvironments("1", "[")
+	p.Name = "foo"
+	p.Pull.Environments.Regexp = "["
+	_, err = c.GetProjectEnvironments(p)
 	assert.Error(t, err)
 }
 

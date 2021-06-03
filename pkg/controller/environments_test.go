@@ -47,7 +47,7 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 }`)
 		})
 
-	p := config.NewProject("foo")
+	p := schemas.NewProject("foo")
 	p.Pull.Environments.Regexp = "^prod"
 	assert.NoError(t, c.PullEnvironmentsFromProject(context.Background(), p))
 

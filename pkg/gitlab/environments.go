@@ -9,8 +9,11 @@ import (
 )
 
 // GetProjectEnvironments ..
-func (c *Client) GetProjectEnvironments(project, envRegexp string) (map[int]string, error) {
-	environments := map[int]string{}
+func (c *Client) GetProjectEnvironments(p schemas.Project) (
+	envs schemas.Environments,
+	err error,
+) {
+	envs = make(schemas.Environments)
 
 	options := &goGitlab.ListEnvironmentsOptions{
 		ListOptions: goGitlab.ListOptions{
@@ -19,21 +22,34 @@ func (c *Client) GetProjectEnvironments(project, envRegexp string) (map[int]stri
 		},
 	}
 
-	re, err := regexp.Compile(envRegexp)
+	re, err := regexp.Compile(p.Pull.Environments.Regexp)
 	if err != nil {
 		return nil, err
 	}
 
 	for {
 		c.rateLimit()
-		envs, resp, err := c.Environments.ListEnvironments(project, options)
+		var glenvs []*goGitlab.Environment
+		var resp *goGitlab.Response
+		glenvs, resp, err = c.Environments.ListEnvironments(p.Name, options)
 		if err != nil {
-			return environments, err
+			return
 		}
 
-		for _, env := range envs {
-			if re.MatchString(env.Name) {
-				environments[env.ID] = env.Name
+		for _, glenv := range glenvs {
+			if re.MatchString(glenv.Name) {
+				env := schemas.Environment{
+					ProjectName:               p.Name,
+					ID:                        glenv.ID,
+					Name:                      glenv.Name,
+					OutputSparseStatusMetrics: p.OutputSparseStatusMetrics,
+				}
+
+				if glenv.State == "available" {
+					env.Available = true
+				}
+
+				envs[env.Key()] = env
 			}
 		}
 
@@ -43,7 +59,7 @@ func (c *Client) GetProjectEnvironments(project, envRegexp string) (map[int]stri
 		options.Page = resp.NextPage
 	}
 
-	return environments, nil
+	return
 }
 
 // GetEnvironment ..

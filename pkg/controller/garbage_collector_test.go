@@ -62,6 +62,7 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 		})
 
 	p2 := schemas.NewProject("p2")
+	p2.Pull.Environments.Enabled = true
 	p2.Pull.Environments.Regexp = "^main$"
 
 	envp1main := schemas.Environment{ProjectName: "p1", Name: "main"}
