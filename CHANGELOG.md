@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- webhooks: added more details when processing wildcards
+
 ## [v0.5.0] - 2021-06-02
 
 **BREAKING CHANGES**
