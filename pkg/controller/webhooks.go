@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
@@ -14,11 +15,13 @@ import (
 
 func (c *Controller) processPipelineEvent(e goGitlab.PipelineEvent) {
 	var refKind schemas.RefKind
+	refName := e.ObjectAttributes.Ref
 
 	// TODO: Perhaps it would be nice to match upon the regexp to validate
 	// that it is actually a merge request ref
 	if e.MergeRequest.IID != 0 {
 		refKind = schemas.RefKindMergeRequest
+		refName = strconv.Itoa(e.MergeRequest.IID)
 	} else if e.ObjectAttributes.Tag {
 		refKind = schemas.RefKindTag
 	} else {
@@ -28,7 +31,7 @@ func (c *Controller) processPipelineEvent(e goGitlab.PipelineEvent) {
 	c.triggerRefMetricsPull(schemas.NewRef(
 		schemas.NewProject(e.Project.PathWithNamespace),
 		refKind,
-		e.ObjectAttributes.Ref,
+		refName,
 	))
 }
 
