@@ -69,7 +69,7 @@ type ProjectPullRefsTags struct {
 	Regexp string `default:".*" yaml:"regexp"`
 
 	// Only keep most 'n' recently updated tags
-	MostRecent uint `yaml:"most_recent"`
+	MostRecent uint `default:"0" yaml:"most_recent"`
 
 	// If the most recent pipeline for the tag was last updated at
 	// at time greater than this value the metrics won't be exported
@@ -85,7 +85,7 @@ type ProjectPullRefsMergeRequests struct {
 	Enabled bool `yaml:"enabled"`
 
 	// Only keep most 'n' recently updated merge requests
-	MostRecent uint `yaml:"most_recent"`
+	MostRecent uint `default:"0" yaml:"most_recent"`
 
 	// If the most recent pipeline for the merge request was last updated at
 	// at time greater than this value the metrics won't be exported

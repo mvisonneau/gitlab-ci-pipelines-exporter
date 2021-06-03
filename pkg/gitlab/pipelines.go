@@ -156,9 +156,11 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 	}
 
 	for {
-		pipelines, resp, err := c.GetProjectPipelines(p.Name, options)
+		var pipelines []*goGitlab.PipelineInfo
+		var resp *goGitlab.Response
+		pipelines, resp, err = c.GetProjectPipelines(p.Name, options)
 		if err != nil {
-			return nil, err
+			return
 		}
 
 		for _, pipeline := range pipelines {
@@ -173,7 +175,10 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 					}
 				}
 			} else {
-				log.WithField("ref", refName).Debug("discovered pipeline ref not matching regexp")
+				// It is quite verbose otherwise..
+				if refKind != schemas.RefKindMergeRequest {
+					log.WithField("ref", refName).Debug("discovered pipeline ref not matching regexp")
+				}
 				continue
 			}
 
@@ -206,7 +211,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 			if limitToMostRecent {
 				mostRecent--
 				if mostRecent <= 0 {
-					break
+					return
 				}
 			}
 		}
