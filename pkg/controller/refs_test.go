@@ -17,26 +17,36 @@ func TestGetRefs(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name":"keep/dev"},{"name":"keep/main"}]`)
+			fmt.Fprint(w, `[{"name":"dev"},{"name":"main"}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/repository/tags",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name":"keep/dev"},{"name":"keep/0.0.2"}]`)
+			fmt.Fprint(w, `[{"name":"0.0.1"},{"name":"v0.0.2"}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"}]`)
+			fmt.Fprint(w, `[{"ref":"refs/merge-requests/1234/head"}]`)
 		})
 
-	foundRefs, err := c.GetRefs("foo", "^keep", 0, true, 10)
+	p := schemas.NewProject("foo")
+	p.Pull.Refs.Branches.Regexp = `^m`
+	p.Pull.Refs.Tags.Regexp = `^v`
+	p.Pull.Refs.MergeRequests.Enabled = true
+
+	foundRefs, err := c.GetRefs(p)
 	assert.NoError(t, err)
 
-	assert.Equal(t, foundRefs["keep/0.0.2"], schemas.RefKindTag)
-	assert.Equal(t, foundRefs["keep/main"], schemas.RefKindBranch)
-	assert.Equal(t, foundRefs["refs/merge-requests/foo"], schemas.RefKindMergeRequest)
-	assert.Contains(t, []schemas.RefKind{schemas.RefKindTag, schemas.RefKindBranch}, foundRefs["keep/dev"])
+	ref1 := schemas.NewRef(p, schemas.RefKindBranch, "main")
+	ref2 := schemas.NewRef(p, schemas.RefKindTag, "v0.0.2")
+	ref3 := schemas.NewRef(p, schemas.RefKindMergeRequest, "1234")
+	expectedRefs := schemas.Refs{
+		ref1.Key(): ref1,
+		ref2.Key(): ref2,
+		ref3.Key(): ref3,
+	}
+	assert.Equal(t, expectedRefs, foundRefs)
 }
 
 func TestPullRefsFromProject(t *testing.T) {
@@ -58,22 +68,15 @@ func TestPullRefsFromProject(t *testing.T) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	assert.NoError(t, c.PullRefsFromProject(context.Background(), config.NewProject("foo")))
+	p1 := schemas.NewProject("foo")
+	assert.NoError(t, c.PullRefsFromProject(context.Background(), p1))
+
+	ref1 := schemas.NewRef(p1, schemas.RefKindBranch, "main")
+	expectedRefs := schemas.Refs{
+		ref1.Key(): ref1,
+	}
 
 	projectsRefs, _ := c.Store.Refs()
-	expectedRefs := schemas.Refs{
-		"99908380": schemas.Ref{
-			Kind:                      schemas.RefKindBranch,
-			ProjectName:               "foo",
-			Name:                      "main",
-			LatestJobs:                make(schemas.Jobs),
-			OutputSparseStatusMetrics: true,
-			PullPipelineJobsFromChildPipelinesEnabled:          true,
-			PullPipelineJobsRunnerDescriptionEnabled:           true,
-			PullPipelineVariablesRegexp:                        ".*",
-			PullPipelineJobsRunnerDescriptionAggregationRegexp: `shared-runners-manager-(\d*)\.gitlab\.com`,
-		},
-	}
 	assert.Equal(t, expectedRefs, projectsRefs)
 }
 
@@ -94,37 +97,24 @@ func TestPullRefsFromPipelines(t *testing.T) {
 			}
 
 			if scope, ok := r.URL.Query()["scope"]; ok && len(scope) == 1 && scope[0] == "tags" {
-				fmt.Fprint(w, `[{"id":2,"ref":"master"}]`)
+				fmt.Fprint(w, `[{"id":2,"ref":"v0.0.1"}]`)
 				return
 			}
 		})
 
-	assert.NoError(t, c.PullRefsFromPipelines(context.Background(), config.NewProject("foo")))
+	p1 := schemas.NewProject("foo")
+	p1.Pull.Refs.Branches.ExcludeDeleted = false
+	p1.Pull.Refs.Tags.ExcludeDeleted = false
+
+	assert.NoError(t, c.PullRefsFromPipelines(context.Background(), p1))
+
+	ref1 := schemas.NewRef(p1, schemas.RefKindBranch, "main")
+	ref2 := schemas.NewRef(p1, schemas.RefKindTag, "v0.0.1")
+	expectedRefs := schemas.Refs{
+		ref1.Key(): ref1,
+		ref2.Key(): ref2,
+	}
 
 	projectsRefs, _ := c.Store.Refs()
-	expectedRefs := schemas.Refs{
-		"964648533": schemas.Ref{
-			Kind:                      schemas.RefKindTag,
-			ProjectName:               "foo",
-			Name:                      "master",
-			LatestJobs:                make(schemas.Jobs),
-			OutputSparseStatusMetrics: true,
-			PullPipelineJobsFromChildPipelinesEnabled:          true,
-			PullPipelineJobsRunnerDescriptionEnabled:           true,
-			PullPipelineVariablesRegexp:                        ".*",
-			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
-		},
-		"99908380": schemas.Ref{
-			Kind:                      schemas.RefKindBranch,
-			ProjectName:               "foo",
-			Name:                      "main",
-			LatestJobs:                make(schemas.Jobs),
-			OutputSparseStatusMetrics: true,
-			PullPipelineJobsFromChildPipelinesEnabled:          true,
-			PullPipelineJobsRunnerDescriptionEnabled:           true,
-			PullPipelineVariablesRegexp:                        ".*",
-			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
-		},
-	}
 	assert.Equal(t, expectedRefs, projectsRefs)
 }

@@ -187,7 +187,7 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 	c.ProjectDefaults = _cfg.ProjectDefaults
 
 	for _, n := range _cfg.Projects {
-		p := Project{ProjectParameters: c.ProjectDefaults}
+		p := c.NewProject()
 		if err = n.Decode(&p); err != nil {
 			return
 		}
@@ -195,7 +195,7 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 	}
 
 	for _, n := range _cfg.Wildcards {
-		w := Wildcard{ProjectParameters: c.ProjectDefaults}
+		w := c.NewWildcard()
 		if err = n.Decode(&w); err != nil {
 			return
 		}
@@ -251,8 +251,13 @@ func New() (c Config) {
 }
 
 // NewProject returns a new project with the config default parameters
-func (c Config) NewProject(name string) (p Project) {
+func (c Config) NewProject() (p Project) {
 	p.ProjectParameters = c.ProjectDefaults
-	p.Name = name
+	return
+}
+
+// NewWildcard returns a new wildcard with the config default parameters
+func (c Config) NewWildcard() (w Wildcard) {
+	w.ProjectParameters = c.ProjectDefaults
 	return
 }

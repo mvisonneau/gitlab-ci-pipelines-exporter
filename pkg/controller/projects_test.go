@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,14 +20,14 @@ func TestPullProjectsFromWildcard(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo","jobs_enabled":false},{"id":2,"path_with_namespace":"bar","jobs_enabled":true}]`)
 		})
 
-	w := config.Wildcard{}
+	w := config.NewWildcard()
 	assert.NoError(t, c.PullProjectsFromWildcard(context.Background(), w))
 
 	projects, _ := c.Store.Projects()
-	expectedProjects := config.Projects{
-		"1996459178": config.Project{
-			Name: "bar",
-		},
+	p1 := schemas.NewProject("bar")
+
+	expectedProjects := schemas.Projects{
+		p1.Key(): p1,
 	}
 	assert.Equal(t, expectedProjects, projects)
 }

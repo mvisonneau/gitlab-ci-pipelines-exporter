@@ -6,10 +6,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWildcardKey(t *testing.T) {
-	w := Wildcard{
-		Search: "foo",
-	}
+func TestNewWildcard(t *testing.T) {
+	w := Wildcard{}
 
-	assert.Equal(t, WildcardKey("2203518986"), w.Key())
+	w.OutputSparseStatusMetrics = true
+
+	w.Pull.Environments.Regexp = `.*`
+
+	w.Pull.Refs.Branches.Enabled = true
+	w.Pull.Refs.Branches.Regexp = `^main|master$`
+	w.Pull.Refs.Branches.ExcludeDeleted = true
+
+	w.Pull.Refs.Tags.Enabled = true
+	w.Pull.Refs.Tags.Regexp = `.*`
+	w.Pull.Refs.Tags.ExcludeDeleted = true
+
+	w.Pull.Pipeline.Jobs.FromChildPipelines.Enabled = true
+	w.Pull.Pipeline.Jobs.RunnerDescription.Enabled = true
+	w.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `shared-runners-manager-(\d*)\.gitlab\.com`
+	w.Pull.Pipeline.Variables.Regexp = `.*`
+
+	assert.Equal(t, w, NewWildcard())
 }

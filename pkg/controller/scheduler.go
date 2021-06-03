@@ -138,7 +138,7 @@ func (c *Controller) TaskHandlerPullEnvironmentMetrics(env schemas.Environment) 
 }
 
 // TaskHandlerPullRefsFromProject ..
-func (c *Controller) TaskHandlerPullRefsFromProject(ctx context.Context, p config.Project) {
+func (c *Controller) TaskHandlerPullRefsFromProject(ctx context.Context, p schemas.Project) {
 	// On errors, we do not want to retry these tasks
 	if err := c.PullRefsFromProject(ctx, p); err != nil {
 		log.WithFields(log.Fields{
@@ -149,7 +149,7 @@ func (c *Controller) TaskHandlerPullRefsFromProject(ctx context.Context, p confi
 }
 
 // TaskHandlerPullRefsFromPipelines ..
-func (c *Controller) TaskHandlerPullRefsFromPipelines(ctx context.Context, p config.Project) {
+func (c *Controller) TaskHandlerPullRefsFromPipelines(ctx context.Context, p schemas.Project) {
 	// On errors, we do not want to retry these tasks
 	if err := c.PullRefsFromPipelines(ctx, p); err != nil {
 		log.WithFields(log.Fields{
@@ -164,7 +164,7 @@ func (c *Controller) TaskHandlerPullRefMetrics(ref schemas.Ref) {
 	// On errors, we do not want to retry these tasks
 	if err := c.PullRefMetrics(ref); err != nil {
 		log.WithFields(log.Fields{
-			"project-name": ref.ProjectName,
+			"project-name": ref.Project.Name,
 			"ref":          ref.Name,
 			"error":        err.Error(),
 		}).Warn("pulling ref metrics")
@@ -175,11 +175,11 @@ func (c *Controller) TaskHandlerPullRefMetrics(ref schemas.Ref) {
 func (c *Controller) TaskHandlerPullProjectsFromWildcards(ctx context.Context) {
 	log.WithFields(
 		log.Fields{
-			"wildcards-count": len(c.Wildcards),
+			"wildcards-count": len(c.Config.Wildcards),
 		},
 	).Info("scheduling projects from wildcards pull")
 
-	for _, w := range c.Wildcards {
+	for _, w := range c.Config.Wildcards {
 		c.ScheduleTask(ctx, TaskTypePullProjectsFromWildcard, w)
 	}
 }

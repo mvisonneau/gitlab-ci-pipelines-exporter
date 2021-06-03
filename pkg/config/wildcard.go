@@ -1,10 +1,6 @@
 package config
 
 import (
-	"fmt"
-	"hash/crc32"
-	"strconv"
-
 	"github.com/creasty/defaults"
 )
 
@@ -23,19 +19,11 @@ type Wildcard struct {
 type WildcardOwner struct {
 	Name             string `yaml:"name"`
 	Kind             string `yaml:"kind"`
-	IncludeSubgroups bool   `default:"false" yaml:"include_subgroups"`
+	IncludeSubgroups bool   `yaml:"include_subgroups"`
 }
 
 // Wildcards ..
 type Wildcards []Wildcard
-
-// WildcardKey ..
-type WildcardKey string
-
-// Key ..
-func (w Wildcard) Key() WildcardKey {
-	return WildcardKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(fmt.Sprintf("%v", w))))))
-}
 
 // NewWildcard returns a new wildcard with the default parameters
 func NewWildcard() (w Wildcard) {

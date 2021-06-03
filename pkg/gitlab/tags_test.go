@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,14 +25,27 @@ func TestGetProjectTags(t *testing.T) {
 			fmt.Fprint(w, `[{"name":"foo"},{"name":"bar"}]`)
 		})
 
-	tags, err := c.GetProjectTags("foo", "[", 0)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "error parsing regexp")
-	assert.Len(t, tags, 0)
+	p := schemas.NewProject("foo")
+	p.Pull.Refs.Tags.Regexp = `^f`
 
-	tags, err = c.GetProjectTags("foo", "^f", 0)
+	expectedRef := schemas.NewRef(p, schemas.RefKindTag, "foo")
+	refs, err := c.GetProjectTags(p)
 	assert.NoError(t, err)
-	assert.Equal(t, []string{"foo"}, tags)
+	assert.Len(t, refs, 1)
+	assert.Equal(t, schemas.Refs{
+		expectedRef.Key(): expectedRef,
+	}, refs)
+
+	// Test invalid project name
+	p.Name = "invalid"
+	_, err = c.GetProjectTags(p)
+	assert.Error(t, err)
+
+	// Test invalid regexp
+	p.Name = "foo"
+	p.Pull.Refs.Tags.Regexp = `[`
+	_, err = c.GetProjectTags(p)
+	assert.Error(t, err)
 }
 
 func TestGetProjectMostRecentTagCommit(t *testing.T) {

@@ -7,19 +7,35 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+**BREAKING CHANGES**
+
+The configuration syntax has evolved, you can refer to the [updated version of the doc](docs/configuration_syntax.md)
+
+- `pull.maximum_gitlab_api_requests_per_second` has moved to `gitlab.maximum_requests_per_second`
+- `project_defaults.pull.refs.*` has been redone in a hopefully more comprehensible fashion
+  - `project_defaults.pull.refs.(branches|tags|merge_requests).*` parameters can now be used to have a finer granularity
+    on the management of per-ref-kind settings
+  - `project_defaults.pull.refs.from.(pipelines|merge_requests)` is not natively managed as part of the per-ref-kind specific parameters
+- `project_defaults.pull.environments.name_regexp` has moved to `project_defaults.pull.environments.regexp`
+- `project_defaults.pull.environments.tags_regexp` was removed to avoid confusion
+
 ### Added
 
 - New metric `gitlab_ci_pipeline_queued_duration_seconds`
+- (en|dis)able pulling `branches` / `tags` / `merge_requests` on a global or per-project basis
+- Choose to export metrics for only the most 'n' recently updated refs pipelines
+- Choose to export metrics for refs with pipelines 'updated in the last x seconds'
+- Choose to export metrics for deleted `branches` or `tags`
 
 ### Changed
 
-- Replaced custom config mangement implementation with `creasty/defaults` and `go-playground/validator`
-- Rewrote the non-OOP approach used so far for the controller
+- Bumped all dependencies
+- Enhanced the function signatures for the ref objects management 
 - Fixed the error handling when comparing 2 refs which resulted into nil pointer dereferences
 - Fixed the pulling of merge-request based pipelines
-- Bumped all dependencies
 - Fixed unit tests on windows
-- environments: simplified the configuration by removing the tags regexp
+- Replaced custom config mangement implementation with `creasty/defaults` and `go-playground/validator`
+- Rewrote the non-OOP approach used so far for the controller
 
 ## [v0.4.9] - 2021-05-05
 

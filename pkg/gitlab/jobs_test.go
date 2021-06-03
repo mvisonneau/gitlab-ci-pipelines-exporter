@@ -15,9 +15,8 @@ func TestListRefPipelineJobs(t *testing.T) {
 	defer server.Close()
 
 	ref := schemas.Ref{
-		ProjectName: "foo",
-		Name:        "yay",
-		PullPipelineJobsFromChildPipelinesEnabled: true,
+		Project: schemas.NewProject("foo"),
+		Name:    "yay",
 	}
 
 	// Test with no most recent pipeline defined
@@ -68,7 +67,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 	}, jobs)
 
 	// Test invalid project id
-	ref.ProjectName = "bar"
+	ref.Project.Name = "bar"
 	_, err = c.ListRefPipelineJobs(ref)
 	assert.Error(t, err)
 }
@@ -136,8 +135,8 @@ func TestListRefMostRecentJobs(t *testing.T) {
 	defer server.Close()
 
 	ref := schemas.Ref{
-		ProjectName: "foo",
-		Name:        "yay",
+		Project: schemas.NewProject("foo"),
+		Name:    "yay",
 	}
 
 	jobs, err := c.ListRefMostRecentJobs(ref)
@@ -189,7 +188,7 @@ func TestListRefMostRecentJobs(t *testing.T) {
 	assert.Equal(t, 4, jobs[1].ID)
 
 	// Test invalid project id
-	ref.ProjectName = "bar"
+	ref.Project.Name = "bar"
 	_, err = c.ListRefMostRecentJobs(ref)
 	assert.Error(t, err)
 }

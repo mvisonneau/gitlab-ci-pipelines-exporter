@@ -11,11 +11,11 @@ import (
 
 // Store ..
 type Store interface {
-	SetProject(config.Project) error
-	DelProject(config.ProjectKey) error
-	GetProject(*config.Project) error
-	ProjectExists(config.ProjectKey) (bool, error)
-	Projects() (config.Projects, error)
+	SetProject(schemas.Project) error
+	DelProject(schemas.ProjectKey) error
+	GetProject(*schemas.Project) error
+	ProjectExists(schemas.ProjectKey) (bool, error)
+	Projects() (schemas.Projects, error)
 	ProjectsCount() (int64, error)
 
 	SetEnvironment(schemas.Environment) error
@@ -43,7 +43,7 @@ type Store interface {
 // NewLocalStore ..
 func NewLocalStore() Store {
 	return &Local{
-		projects:     make(config.Projects),
+		projects:     make(schemas.Projects),
 		environments: make(schemas.Environments),
 		refs:         make(schemas.Refs),
 		metrics:      make(schemas.Metrics),
@@ -59,10 +59,10 @@ func NewRedisStore(client *redis.Client) Store {
 }
 
 // New creates a new store and populates it with
-// provided []config.Project
+// provided []schemas.Project
 func New(
 	r *redis.Client,
-	projects []config.Project,
+	projects config.Projects,
 ) (s Store) {
 	if r != nil {
 		s = NewRedisStore(r)
@@ -72,7 +72,8 @@ func New(
 
 	// Load all the configured projects in the store
 	for _, p := range projects {
-		exists, err := s.ProjectExists(p.Key())
+		sp := schemas.Project{Project: p}
+		exists, err := s.ProjectExists(sp.Key())
 		if err != nil {
 			log.WithFields(log.Fields{
 				"project-name": p.Name,
@@ -81,7 +82,7 @@ func New(
 		}
 
 		if !exists {
-			if err = s.SetProject(p); err != nil {
+			if err = s.SetProject(sp); err != nil {
 				log.WithFields(log.Fields{
 					"project-name": p.Name,
 					"error":        err.Error(),

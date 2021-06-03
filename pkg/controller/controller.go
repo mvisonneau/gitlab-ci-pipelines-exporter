@@ -16,23 +16,16 @@ import (
 
 // Controller holds the necessary clients to run the app and handle requests
 type Controller struct {
+	Config         config.Config
 	Redis          *redis.Client
 	Gitlab         *gitlab.Client
 	Store          store.Store
 	TaskController TaskController
-
-	ProjectDefaults config.ProjectParameters
-	Projects        []config.Project
-	Wildcards       []config.Wildcard
-	Server          config.Server
 }
 
 // New creates a new controller
 func New(ctx context.Context, cfg config.Config, version string) (c Controller, err error) {
-	c.ProjectDefaults = cfg.ProjectDefaults
-	c.Projects = cfg.Projects
-	c.Wildcards = cfg.Wildcards
-	c.Server = cfg.Server
+	c.Config = cfg
 
 	if err = c.configureRedis(cfg.Redis.URL); err != nil {
 		return
@@ -41,7 +34,7 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 	c.TaskController = NewTaskController(c.Redis)
 	c.registerTasks()
 
-	c.Store = store.New(c.Redis, c.Projects)
+	c.Store = store.New(c.Redis, c.Config.Projects)
 
 	if err = c.configureGitlab(cfg.Gitlab, version); err != nil {
 		return
@@ -85,13 +78,12 @@ func (c *Controller) configureGitlab(cfg config.Gitlab, version string) (err err
 	}
 
 	c.Gitlab, err = gitlab.NewClient(gitlab.ClientConfig{
-		URL:               cfg.URL,
-		Token:             cfg.Token,
-		DisableTLSVerify:  !cfg.EnableTLSVerify,
-		UserAgentVersion:  version,
-		RateLimiter:       rl,
-		ReadinessURL:      cfg.HealthURL,
-		EnableHealthCheck: cfg.EnableHealthCheck,
+		URL:              cfg.URL,
+		Token:            cfg.Token,
+		DisableTLSVerify: !cfg.EnableTLSVerify,
+		UserAgentVersion: version,
+		RateLimiter:      rl,
+		ReadinessURL:     cfg.HealthURL,
 	})
 	return
 }

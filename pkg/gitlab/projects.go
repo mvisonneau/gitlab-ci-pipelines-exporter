@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
@@ -23,7 +24,7 @@ func (c *Client) GetProject(name string) (*goGitlab.Project, error) {
 }
 
 // ListProjects ..
-func (c *Client) ListProjects(w config.Wildcard) ([]config.Project, error) {
+func (c *Client) ListProjects(w config.Wildcard) ([]schemas.Project, error) {
 	logFields := log.Fields{
 		"wildcard-search":                  w.Search,
 		"wildcard-owner-kind":              w.Owner.Kind,
@@ -33,7 +34,7 @@ func (c *Client) ListProjects(w config.Wildcard) ([]config.Project, error) {
 	}
 	log.WithFields(logFields).Debug("listing all projects from wildcard")
 
-	var projects []config.Project
+	var projects []schemas.Project
 	listOptions := gitlab.ListOptions{
 		Page:    1,
 		PerPage: 100,
@@ -110,13 +111,9 @@ func (c *Client) ListProjects(w config.Wildcard) ([]config.Project, error) {
 				continue
 			}
 
-			projects = append(
-				projects,
-				config.Project{
-					ProjectParameters: w.ProjectParameters,
-					Name:              gp.PathWithNamespace,
-				},
-			)
+			p := schemas.NewProject(gp.PathWithNamespace)
+			p.ProjectParameters = w.ProjectParameters
+			projects = append(projects, p)
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {

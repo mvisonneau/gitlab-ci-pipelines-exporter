@@ -5,7 +5,6 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
@@ -20,12 +19,8 @@ func TestRedisProjectFunctions(t *testing.T) {
 
 	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
 
-	p := config.Project{
-		Name: "foo/bar",
-		ProjectParameters: config.ProjectParameters{
-			OutputSparseStatusMetrics: false,
-		},
-	}
+	p := schemas.NewProject("foo/bar")
+	p.OutputSparseStatusMetrics = false
 
 	// Set project
 	r.SetProject(p)
@@ -40,7 +35,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	assert.True(t, exists)
 
 	// GetProject should succeed
-	newProject := config.NewProject("foo/bar")
+	newProject := schemas.NewProject("foo/bar")
 	assert.NoError(t, r.GetProject(&newProject))
 	assert.Equal(t, p, newProject)
 
@@ -60,7 +55,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	assert.False(t, exists)
 
 	// GetProject should not update the var this time
-	newProject = config.NewProject("foo/bar")
+	newProject = schemas.NewProject("foo/bar")
 	assert.NoError(t, r.GetProject(&newProject))
 	assert.NotEqual(t, p, newProject)
 }
@@ -134,12 +129,13 @@ func TestRedisRefFunctions(t *testing.T) {
 
 	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
 
-	ref := schemas.Ref{
-		Kind:        schemas.RefKindBranch,
-		ProjectName: "foo/bar",
-		Name:        "sweet",
-		Topics:      "salty",
-	}
+	p := schemas.NewProject("foo/bar")
+	p.Topics = "salty"
+	ref := schemas.NewRef(
+		p,
+		schemas.RefKindBranch,
+		"sweet",
+	)
 
 	// Set project
 	r.SetRef(ref)
@@ -155,9 +151,9 @@ func TestRedisRefFunctions(t *testing.T) {
 
 	// GetRef should succeed
 	newRef := schemas.Ref{
-		Kind:        schemas.RefKindBranch,
-		ProjectName: "foo/bar",
-		Name:        "sweet",
+		Project: schemas.NewProject("foo/bar"),
+		Kind:    schemas.RefKindBranch,
+		Name:    "sweet",
 	}
 	assert.NoError(t, r.GetRef(&newRef))
 	assert.Equal(t, ref, newRef)
@@ -179,9 +175,9 @@ func TestRedisRefFunctions(t *testing.T) {
 
 	// GetRef should not update the var this time
 	newRef = schemas.Ref{
-		Kind:        schemas.RefKindBranch,
-		ProjectName: "foo/bar",
-		Name:        "sweet",
+		Kind:    schemas.RefKindBranch,
+		Project: schemas.NewProject("foo/bar"),
+		Name:    "sweet",
 	}
 	assert.NoError(t, r.GetRef(&newRef))
 	assert.NotEqual(t, ref, newRef)

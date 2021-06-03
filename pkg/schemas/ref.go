@@ -1,11 +1,17 @@
 package schemas
 
 import (
+	"fmt"
 	"hash/crc32"
+	"regexp"
 	"strconv"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 )
 
 const (
+	mergeRequestRegexp string = `^refs/merge-requests/(\d+)/head$`
+
 	// RefKindBranch refers to a branch
 	RefKindBranch RefKind = "branch"
 
@@ -23,19 +29,10 @@ type RefKind string
 // perform regular pulling operations
 type Ref struct {
 	Kind           RefKind
-	ProjectName    string
 	Name           string
-	Topics         string
+	Project        Project
 	LatestPipeline Pipeline
 	LatestJobs     Jobs
-
-	OutputSparseStatusMetrics                          bool
-	PullPipelineJobsEnabled                            bool
-	PullPipelineJobsFromChildPipelinesEnabled          bool
-	PullPipelineJobsRunnerDescriptionEnabled           bool
-	PullPipelineJobsRunnerDescriptionAggregationRegexp string
-	PullPipelineVariablesEnabled                       bool
-	PullPipelineVariablesRegexp                        string
 }
 
 // RefKey ..
@@ -43,7 +40,7 @@ type RefKey string
 
 // Key ..
 func (ref Ref) Key() RefKey {
-	return RefKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(string(ref.Kind) + ref.ProjectName + ref.Name)))))
+	return RefKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(string(ref.Kind) + ref.Project.Name + ref.Name)))))
 }
 
 // Refs allows us to keep track of all the Ref
@@ -59,33 +56,36 @@ func (refs Refs) Count() int {
 func (ref Ref) DefaultLabelsValues() map[string]string {
 	return map[string]string{
 		"kind":      string(ref.Kind),
-		"project":   ref.ProjectName,
+		"project":   ref.Project.Name,
 		"ref":       ref.Name,
-		"topics":    ref.Topics,
+		"topics":    ref.Project.Topics,
 		"variables": ref.LatestPipeline.Variables,
 	}
 }
 
-// NewRef is an helper which returns a new Ref pointer
+// NewRef is an helper which returns a new Ref
 func NewRef(
+	project Project,
 	kind RefKind,
-	projectName, name, topics string,
-	outputSparseStatusMetrics, pullPipelineJobsEnabled, pullPipelineJobsFromChildPipelinesEnabled, pullPipelineJobsRunnerDescriptionEnabled, pullPipelineVariablesEnabled bool,
-	pullPipelineVariablesRegexp, pullPipelineJobsRunnerDescriptionAggregationRegexp string,
+	name string,
 ) Ref {
 	return Ref{
-		Kind:        kind,
-		ProjectName: projectName,
-		Name:        name,
-		Topics:      topics,
-		LatestJobs:  make(Jobs),
-
-		OutputSparseStatusMetrics:                          outputSparseStatusMetrics,
-		PullPipelineJobsEnabled:                            pullPipelineJobsEnabled,
-		PullPipelineJobsFromChildPipelinesEnabled:          pullPipelineJobsFromChildPipelinesEnabled,
-		PullPipelineJobsRunnerDescriptionEnabled:           pullPipelineJobsRunnerDescriptionEnabled,
-		PullPipelineJobsRunnerDescriptionAggregationRegexp: pullPipelineJobsRunnerDescriptionAggregationRegexp,
-		PullPipelineVariablesEnabled:                       pullPipelineVariablesEnabled,
-		PullPipelineVariablesRegexp:                        pullPipelineVariablesRegexp,
+		Kind:       kind,
+		Name:       name,
+		Project:    project,
+		LatestJobs: make(Jobs),
 	}
+}
+
+// GetRefRegexp returns the expected regexp given a ProjectPullRefs config and a RefKind
+func GetRefRegexp(ppr config.ProjectPullRefs, rk RefKind) (re *regexp.Regexp, err error) {
+	switch rk {
+	case RefKindBranch:
+		return regexp.Compile(ppr.Branches.Regexp)
+	case RefKindTag:
+		return regexp.Compile(ppr.Tags.Regexp)
+	case RefKindMergeRequest:
+		return regexp.Compile(mergeRequestRegexp)
+	}
+	return nil, fmt.Errorf("invalid ref kind (%v)", rk)
 }

@@ -50,9 +50,14 @@ func TestNew(t *testing.T) {
 	c.ProjectDefaults.OutputSparseStatusMetrics = true
 
 	c.ProjectDefaults.Pull.Environments.Regexp = `.*`
-	c.ProjectDefaults.Pull.Refs.Regexp = `^(main|master)$`
-	c.ProjectDefaults.Pull.Refs.From.Pipelines.Depth = 50
-	c.ProjectDefaults.Pull.Refs.From.MergeRequests.Depth = 10
+
+	c.ProjectDefaults.Pull.Refs.Branches.Enabled = true
+	c.ProjectDefaults.Pull.Refs.Branches.Regexp = `^main|master$`
+	c.ProjectDefaults.Pull.Refs.Branches.ExcludeDeleted = true
+
+	c.ProjectDefaults.Pull.Refs.Tags.Enabled = true
+	c.ProjectDefaults.Pull.Refs.Tags.Regexp = `.*`
+	c.ProjectDefaults.Pull.Refs.Tags.ExcludeDeleted = true
 
 	c.ProjectDefaults.Pull.Pipeline.Jobs.FromChildPipelines.Enabled = true
 	c.ProjectDefaults.Pull.Pipeline.Jobs.RunnerDescription.Enabled = true

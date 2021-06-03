@@ -19,17 +19,17 @@ func TestPullRefPipelineJobsMetrics(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"created_at":"2016-08-11T11:28:34.085Z"},{"id":2,"created_at":"2016-08-11T11:28:34.085Z"}]`)
 		})
 
-	ref := schemas.Ref{
-		ProjectName: "foo",
-		Name:        "bar",
-		LatestPipeline: schemas.Pipeline{
-			ID: 1,
-		},
-	}
+	p := schemas.NewProject("foo")
+	p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled = false
+
+	ref := schemas.NewRef(p, schemas.RefKindBranch, "bar")
+	ref.LatestPipeline.ID = 1
 
 	assert.NoError(t, c.PullRefPipelineJobsMetrics(ref))
 	srv.Close()
 	assert.Error(t, c.PullRefPipelineJobsMetrics(ref))
+
+	// TODO: assert the results?
 }
 
 func TestPullRefMostRecentJobsMetrics(t *testing.T) {
@@ -42,8 +42,8 @@ func TestPullRefMostRecentJobsMetrics(t *testing.T) {
 		})
 
 	ref := schemas.Ref{
-		ProjectName: "foo",
-		Name:        "bar",
+		Project: schemas.NewProject("foo"),
+		Name:    "bar",
 		LatestJobs: schemas.Jobs{
 			"bar": {
 				ID: 1,
@@ -55,7 +55,7 @@ func TestPullRefMostRecentJobsMetrics(t *testing.T) {
 	assert.NoError(t, c.PullRefMostRecentJobsMetrics(ref))
 
 	// Enable FetchPipelineJobMetrics
-	ref.PullPipelineJobsEnabled = true
+	ref.Project.Pull.Pipeline.Jobs.Enabled = true
 	assert.NoError(t, c.PullRefMostRecentJobsMetrics(ref))
 	srv.Close()
 	assert.Error(t, c.PullRefMostRecentJobsMetrics(ref))
@@ -84,21 +84,15 @@ func TestProcessJobMetrics(t *testing.T) {
 		},
 	}
 
-	ref := schemas.Ref{
-		ProjectName: "foo/bar",
-		Topics:      "first,second",
-		Kind:        schemas.RefKindBranch,
-		Name:        "foo",
-		LatestPipeline: schemas.Pipeline{
-			ID:        1,
-			Variables: "none",
-		},
-		LatestJobs: schemas.Jobs{
-			"foo": oldJob,
-		},
-		OutputSparseStatusMetrics:                          true,
-		PullPipelineJobsRunnerDescriptionEnabled:           true,
-		PullPipelineJobsRunnerDescriptionAggregationRegexp: "foo-(.*)-bar",
+	p := schemas.NewProject("foo")
+	p.Topics = "first,second"
+	p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `foo-(.*)-bar`
+
+	ref := schemas.NewRef(p, schemas.RefKindBranch, "foo")
+	ref.LatestPipeline.ID = 1
+	ref.LatestPipeline.Variables = "none"
+	ref.LatestJobs = schemas.Jobs{
+		"foo": oldJob,
 	}
 
 	c.Store.SetRef(ref)
@@ -120,14 +114,14 @@ func TestProcessJobMetrics(t *testing.T) {
 	// Check if all the metrics exist
 	metrics, _ := c.Store.Metrics()
 	labels := map[string]string{
-		"project":            ref.ProjectName,
-		"topics":             ref.Topics,
+		"project":            ref.Project.Name,
+		"topics":             ref.Project.Topics,
 		"ref":                ref.Name,
 		"kind":               string(ref.Kind),
 		"variables":          ref.LatestPipeline.Variables,
 		"stage":              newJob.Stage,
 		"job_name":           newJob.Name,
-		"runner_description": ref.PullPipelineJobsRunnerDescriptionAggregationRegexp,
+		"runner_description": ref.Project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp,
 	}
 
 	lastJobRunID := schemas.Metric{

@@ -1,9 +1,6 @@
 package config
 
 import (
-	"hash/crc32"
-	"strconv"
-
 	"github.com/creasty/defaults"
 )
 
@@ -34,29 +31,65 @@ type ProjectPullEnvironments struct {
 
 // ProjectPullRefs ..
 type ProjectPullRefs struct {
-	// Regular expression to filter refs to fetch
-	Regexp string `default:"^(main|master)$" yaml:"regexp"`
+	// Configuration for pulling branches
+	Branches ProjectPullRefsBranches `yaml:"branches"`
 
-	// If the age of the most recent pipeline for the ref is greater than this value, the ref won't get exported
-	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
+	// Configuration for pulling tags
+	Tags ProjectPullRefsTags `yaml:"tags"`
 
-	// From handles ProjectPullRefsFromParameters configuration
-	From ProjectPullRefsFrom `yaml:"from"`
+	// Configuration for pulling merge requests
+	MergeRequests ProjectPullRefsMergeRequests `yaml:"merge_requests"`
 }
 
-// ProjectPullRefsFrom ..
-type ProjectPullRefsFrom struct {
-	// Pipelines defines whether or not to fetch refs from historical pipelines
-	Pipelines struct {
-		Enabled bool `default:"false" yaml:"enabled"`
-		Depth   uint `default:"50" yaml:"depth"`
-	} `yaml:"pipelines"`
+// ProjectPullRefsBranches ..
+type ProjectPullRefsBranches struct {
+	// Monitor pipelines related to project branches
+	Enabled bool `default:"true" yaml:"enabled"`
 
-	// MergeRequests defines whether or not to fetch refs from merge requests
-	MergeRequests struct {
-		Enabled bool `default:"false" yaml:"enabled"`
-		Depth   uint `default:"10" yaml:"depth"`
-	} `yaml:"merge_requests"`
+	// Filter for branches to include
+	Regexp string `default:"^main|master$" yaml:"regexp"`
+
+	// Only keep most 'n' recently updated branches
+	MostRecent uint `default:"0" yaml:"most_recent"`
+
+	// If the most recent pipeline for the branch was last updated at
+	// at time greater than this value the metrics won't be exported
+	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
+
+	// Export metrics for deleted branches
+	ExcludeDeleted bool `default:"true" yaml:"exclude_deleted"`
+}
+
+// ProjectPullRefsTags ..
+type ProjectPullRefsTags struct {
+	// Monitor pipelines related to project tags
+	Enabled bool `default:"true" yaml:"enabled"`
+
+	// Filter for tags to include
+	Regexp string `default:".*" yaml:"regexp"`
+
+	// Only keep most 'n' recently updated tags
+	MostRecent uint `yaml:"most_recent"`
+
+	// If the most recent pipeline for the tag was last updated at
+	// at time greater than this value the metrics won't be exported
+	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
+
+	// Export metrics for deleted tags
+	ExcludeDeleted bool `default:"true" yaml:"exclude_deleted"`
+}
+
+// ProjectPullRefsMergeRequests ..
+type ProjectPullRefsMergeRequests struct {
+	// Monitor pipelines related to project merge requests
+	Enabled bool `yaml:"enabled"`
+
+	// Only keep most 'n' recently updated merge requests
+	MostRecent uint `yaml:"most_recent"`
+
+	// If the most recent pipeline for the merge request was last updated at
+	// at time greater than this value the metrics won't be exported
+	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
 }
 
 // ProjectPullPipeline ..
@@ -110,16 +143,8 @@ type Project struct {
 	Name string `yaml:"name"`
 }
 
-// ProjectKey ..
-type ProjectKey string
-
-// Key ..
-func (p Project) Key() ProjectKey {
-	return ProjectKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(p.Name)))))
-}
-
 // Projects ..
-type Projects map[ProjectKey]Project
+type Projects []Project
 
 // NewProject returns a new project composed with the default parameters
 func NewProject(name string) (p Project) {

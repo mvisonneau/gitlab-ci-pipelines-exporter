@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/xanzy/go-gitlab"
 )
@@ -24,8 +24,8 @@ func TestGetRefPipeline(t *testing.T) {
 		})
 
 	ref := schemas.Ref{
-		ProjectName: "foo",
-		Name:        "yay",
+		Project: schemas.NewProject("foo"),
+		Name:    "yay",
 	}
 
 	pipeline, err := c.GetRefPipeline(ref, 1)
@@ -51,31 +51,11 @@ func TestGetProjectPipelines(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
-	pipelines, err := c.GetProjectPipelines("foo", &gitlab.ListProjectPipelinesOptions{
+	pipelines, _, err := c.GetProjectPipelines("foo", &gitlab.ListProjectPipelinesOptions{
 		Ref:   pointy.String("foo"),
 		Scope: pointy.String("bar"),
 	})
 
-	assert.NoError(t, err)
-	assert.Len(t, pipelines, 2)
-}
-
-func TestGetProjectMergeRequestsPipelines(t *testing.T) {
-	mux, server, c := getMockedClient()
-	defer server.Close()
-
-	mux.HandleFunc("/api/v4/projects/foo/pipelines",
-		func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, "GET", r.Method)
-			expectedQueryParams := url.Values{
-				"page":     []string{"1"},
-				"per_page": []string{"100"},
-			}
-			assert.Equal(t, expectedQueryParams, r.URL.Query())
-			fmt.Fprint(w, `[{"id":1,"ref":"refs/merge-requests/foo"},{"id":2,"ref":"refs/merge-requests/bar"},{"id":3,"ref":"yolo"}]`)
-		})
-
-	pipelines, err := c.GetProjectMergeRequestsPipelines("foo", 10, 0)
 	assert.NoError(t, err)
 	assert.Len(t, pipelines, 2)
 }
@@ -90,11 +70,12 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 			fmt.Fprint(w, `[{"key":"foo","value":"bar"},{"key":"bar","value":"baz"}]`)
 		})
 
+	p := schemas.NewProject("foo")
+	p.Pull.Pipeline.Variables.Enabled = true
+	p.Pull.Pipeline.Variables.Regexp = `[`
 	ref := schemas.Ref{
-		ProjectName:                  "foo",
-		Name:                         "yay",
-		PullPipelineVariablesEnabled: true,
-		PullPipelineVariablesRegexp:  "[",
+		Project: p,
+		Name:    "yay",
 	}
 
 	// Should return right away as MostRecentPipeline is not defined
@@ -113,7 +94,7 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	assert.Equal(t, "", variables)
 
 	// Should work
-	ref.PullPipelineVariablesRegexp = ".*"
+	ref.Project.Pull.Pipeline.Variables.Regexp = `.*`
 	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ref)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo:bar,bar:baz", variables)
@@ -122,6 +103,13 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 func TestGetRefsFromPipelines(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
+	log.SetLevel(log.TraceLevel)
+
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/branches"),
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `[{"name":"keep_main"}]`)
+			return
+		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -140,58 +128,46 @@ func TestGetRefsFromPipelines(t *testing.T) {
 				return
 			}
 
-			fmt.Fprint(w, `{"error": "undefined or unsupported scope"`)
+			fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"},{"id":3,"ref":"donotkeep_0.0.1"},{"id":4,"ref":"keep_0.0.2"},{"id":5,"ref":"refs/merge-requests/1234/head"}]`)
 		})
 
-	p := config.NewProject("foo")
-	p.Pull.Refs.Regexp = "[" // invalid regexp pattern
-	p.Pull.Refs.From.Pipelines.Enabled = true
-	p.Pull.Refs.From.Pipelines.Depth = 150
+	p := schemas.NewProject("foo")
 
-	refs, err := c.GetRefsFromPipelines(p, "")
+	// Branches
+	p.Pull.Refs.Branches.Regexp = `[` // invalid regexp pattern
+	refs, err := c.GetRefsFromPipelines(p, schemas.RefKindBranch)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
 	assert.Len(t, refs, 0)
 
-	p.Pull.Refs.Regexp = "^keep.*"
-	refs, err = c.GetRefsFromPipelines(p, "")
+	p.Pull.Refs.Branches.Regexp = "^keep.*"
+	refs, err = c.GetRefsFromPipelines(p, schemas.RefKindBranch)
 	assert.NoError(t, err)
 
-	expectedRefs := schemas.Refs{
-		"2231079763": schemas.Ref{
-			Kind:                      schemas.RefKindBranch,
-			ProjectName:               "foo",
-			Name:                      "keep_dev",
-			LatestJobs:                make(schemas.Jobs),
-			OutputSparseStatusMetrics: true,
-			PullPipelineJobsFromChildPipelinesEnabled:          true,
-			PullPipelineJobsRunnerDescriptionEnabled:           true,
-			PullPipelineVariablesRegexp:                        ".*",
-			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
-		},
-		"1035317703": schemas.Ref{
-			Kind:                      schemas.RefKindBranch,
-			ProjectName:               "foo",
-			Name:                      "keep_main",
-			LatestJobs:                make(schemas.Jobs),
-			OutputSparseStatusMetrics: true,
-			PullPipelineJobsFromChildPipelinesEnabled:          true,
-			PullPipelineJobsRunnerDescriptionEnabled:           true,
-			PullPipelineVariablesRegexp:                        ".*",
-			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
-		},
-		"1929034016": schemas.Ref{
-			Kind:                      schemas.RefKindTag,
-			ProjectName:               "foo",
-			Name:                      "keep_0.0.2",
-			LatestJobs:                make(schemas.Jobs),
-			OutputSparseStatusMetrics: true,
-			PullPipelineJobsFromChildPipelinesEnabled:          true,
-			PullPipelineJobsRunnerDescriptionEnabled:           true,
-			PullPipelineVariablesRegexp:                        ".*",
-			PullPipelineJobsRunnerDescriptionAggregationRegexp: "shared-runners-manager-(\\d*)\\.gitlab\\.com",
-		},
-	}
+	assert.Equal(t, schemas.Refs{
+		"1035317703": schemas.NewRef(p, schemas.RefKindBranch, "keep_main"),
+	}, refs)
 
-	assert.Equal(t, expectedRefs, refs)
+	// Tags
+	p.Pull.Refs.Tags.Regexp = `[` // invalid regexp pattern
+	refs, err = c.GetRefsFromPipelines(p, schemas.RefKindTag)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "error parsing regexp")
+	assert.Len(t, refs, 0)
+
+	p.Pull.Refs.Tags.Regexp = `^keep`
+	p.Pull.Refs.Tags.ExcludeDeleted = false
+	refs, err = c.GetRefsFromPipelines(p, schemas.RefKindTag)
+	assert.NoError(t, err)
+
+	assert.Equal(t, schemas.Refs{
+		"1929034016": schemas.NewRef(p, schemas.RefKindTag, "keep_0.0.2"),
+	}, refs)
+
+	// Merge requests
+	refs, err = c.GetRefsFromPipelines(p, schemas.RefKindMergeRequest)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.Refs{
+		"622996356": schemas.NewRef(p, schemas.RefKindMergeRequest, "1234"),
+	}, refs)
 }

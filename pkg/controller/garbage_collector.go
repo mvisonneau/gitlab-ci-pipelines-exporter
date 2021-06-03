@@ -2,10 +2,11 @@ package controller
 
 import (
 	"context"
+	"reflect"
 	"regexp"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -20,12 +21,13 @@ func (c *Controller) GarbageCollectProjects(_ context.Context) error {
 	}
 
 	// Loop through all configured projects
-	for _, p := range c.Projects {
+	for _, cp := range c.Config.Projects {
+		p := schemas.Project{Project: cp}
 		delete(storedProjects, p.Key())
 	}
 
 	// Loop through what can be found from the wildcards
-	for _, w := range c.Wildcards {
+	for _, w := range c.Config.Wildcards {
 		foundProjects, err := c.Gitlab.ListProjects(w)
 		if err != nil {
 			return err
@@ -65,9 +67,7 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 
 	envProjects := make(map[string]string)
 	for k, env := range storedEnvironments {
-		p := config.Project{
-			Name: env.ProjectName,
-		}
+		p := schemas.NewProject(env.ProjectName)
 
 		projectExists, err := c.Store.ProjectExists(p.Key())
 		if err != nil {
@@ -98,6 +98,7 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 
 		// If the environment is not configured to be pulled anymore, delete it
 		re := regexp.MustCompile(p.Pull.Environments.Regexp)
+
 		if !re.MatchString(env.Name) {
 			if err = c.Store.DelEnvironment(k); err != nil {
 				return err
@@ -174,135 +175,100 @@ func (c *Controller) GarbageCollectRefs(_ context.Context) error {
 		return err
 	}
 
-	refProjects := make(map[string]config.ProjectPullRefs)
-	for k, ref := range storedRefs {
-		p := config.Project{Name: ref.ProjectName}
-		projectExists, err := c.Store.ProjectExists(p.Key())
+	for _, ref := range storedRefs {
+		projectExists, err := c.Store.ProjectExists(ref.Project.Key())
 		if err != nil {
 			return err
 		}
 
 		// If the project does not exist anymore, delete the ref
 		if !projectExists {
-			if err = c.Store.DelRef(k); err != nil {
+			if err = deleteRef(c.Store, ref, "non-existent-project"); err != nil {
 				return err
 			}
-
-			log.WithFields(log.Fields{
-				"project-name": ref.ProjectName,
-				"ref":          ref.Name,
-				"reason":       "non-existent-project",
-			}).Info("deleted ref from the store")
 			continue
 		}
 
+		// If the ref is not configured to be pulled anymore, delete the ref
+		var re *regexp.Regexp
+		if re, err = schemas.GetRefRegexp(ref.Project.Pull.Refs, ref.Kind); err != nil {
+			if err = deleteRef(c.Store, ref, "invalid-ref-kind"); err != nil {
+				return err
+			}
+		}
+
+		if !re.MatchString(ref.Name) {
+			if err = deleteRef(c.Store, ref, "ref-not-matching-regexp"); err != nil {
+				return err
+			}
+		}
+
+		// Check if the latest configuration of the project in store matches the ref one
+		p := ref.Project
 		if err = c.Store.GetProject(&p); err != nil {
 			return err
 		}
 
-		// Store the project information to be able to refresh all refs
-		// from the API later on
-		refProjects[p.Name] = p.Pull.Refs
-
-		// If the ref is not configured to be pulled anymore, delete the ref
-		re := regexp.MustCompile(p.Pull.Refs.Regexp)
-		if !re.MatchString(ref.Name) {
-			if err = c.Store.DelRef(k); err != nil {
-				return err
-			}
-
-			log.WithFields(log.Fields{
-				"project-name": ref.ProjectName,
-				"ref":          ref.Name,
-				"reason":       "ref-not-in-regexp",
-			}).Info("deleted ref from the store")
-			continue
-		}
-
-		// Check if the latest configuration of the project in store matches the ref one
-		if ref.OutputSparseStatusMetrics != p.OutputSparseStatusMetrics ||
-			ref.PullPipelineJobsEnabled != p.Pull.Pipeline.Jobs.Enabled ||
-			ref.PullPipelineVariablesEnabled != p.Pull.Pipeline.Variables.Enabled ||
-			ref.PullPipelineVariablesRegexp != p.Pull.Pipeline.Variables.Regexp {
-			ref.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics
-			ref.PullPipelineJobsEnabled = p.Pull.Pipeline.Jobs.Enabled
-			ref.PullPipelineVariablesEnabled = p.Pull.Pipeline.Variables.Enabled
-			ref.PullPipelineVariablesRegexp = p.Pull.Pipeline.Variables.Regexp
+		if !reflect.DeepEqual(ref.Project, p) {
+			ref.Project = p
 			if err = c.Store.SetRef(ref); err != nil {
 				return err
 			}
 			log.WithFields(log.Fields{
-				"project-name": ref.ProjectName,
+				"project-name": ref.Project.Name,
 				"ref":          ref.Name,
 			}).Info("updated ref, associated project configuration was not in sync")
 		}
 	}
 
 	// Refresh the refs from the API
-	existingRefs := make(map[schemas.RefKey]struct{})
-	for projectName, projectPullRefs := range refProjects {
-		branches, err := c.Gitlab.GetProjectBranches(projectName, projectPullRefs.Regexp, projectPullRefs.MaxAgeSeconds)
+	projects, err := c.Store.Projects()
+	if err != nil {
+		return err
+	}
+
+	expectedRefs := make(map[schemas.RefKey]bool)
+	for _, p := range projects {
+		refs, err := c.GetRefs(p)
 		if err != nil {
 			return err
 		}
 
-		for _, branch := range branches {
-			existingRefs[schemas.Ref{
-				Kind:        schemas.RefKindBranch,
-				ProjectName: projectName,
-				Name:        branch,
-			}.Key()] = struct{}{}
-		}
-
-		tags, err := c.Gitlab.GetProjectTags(projectName, projectPullRefs.Regexp, projectPullRefs.MaxAgeSeconds)
-		if err != nil {
-			return err
-		}
-
-		for _, tag := range tags {
-			existingRefs[schemas.Ref{
-				Kind:        schemas.RefKindTag,
-				ProjectName: projectName,
-				Name:        tag,
-			}.Key()] = struct{}{}
-		}
-
-		if projectPullRefs.From.MergeRequests.Enabled {
-			mergeRequests, err := c.Gitlab.GetProjectMergeRequestsPipelines(projectName, int(projectPullRefs.From.MergeRequests.Depth), projectPullRefs.MaxAgeSeconds)
-			if err != nil {
-				return err
-			}
-
-			for _, mr := range mergeRequests {
-				existingRefs[schemas.Ref{
-					Kind:        schemas.RefKindMergeRequest,
-					ProjectName: projectName,
-					Name:        mr,
-				}.Key()] = struct{}{}
-			}
+		for _, ref := range refs {
+			expectedRefs[ref.Key()] = true
 		}
 	}
 
+	// Refresh the stored refs as we may have already removed some
 	storedRefs, err = c.Store.Refs()
 	if err != nil {
 		return err
 	}
 
 	for k, ref := range storedRefs {
-		if _, exists := existingRefs[k]; !exists {
-			if err = c.Store.DelRef(k); err != nil {
+		if _, expected := expectedRefs[k]; !expected {
+			if err = deleteRef(c.Store, ref, "not-expected"); err != nil {
 				return err
 			}
-
-			log.WithFields(log.Fields{
-				"project-name": ref.ProjectName,
-				"ref-name":     ref.Name,
-				"reason":       "non-existent-ref",
-			}).Info("deleted ref from the store")
 		}
 	}
 
 	return nil
+}
+
+func deleteRef(s store.Store, ref schemas.Ref, reason string) (err error) {
+	if err = s.DelRef(ref.Key()); err != nil {
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"project-name": ref.Project.Name,
+		"ref":          ref.Name,
+		"ref-kind":     ref.Kind,
+		"reason":       reason,
+	}).Info("deleted ref from the store")
+
+	return
 }
 
 // GarbageCollectMetrics ..
@@ -345,11 +311,11 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 		}
 
 		if metricLabelRefExists && !metricLabelEnvironmentExists {
-			refKey := schemas.Ref{
-				Kind:        schemas.RefKind(m.Labels["kind"]),
-				ProjectName: metricLabelProject,
-				Name:        metricLabelRef,
-			}.Key()
+			refKey := schemas.NewRef(
+				schemas.NewProject(metricLabelProject),
+				schemas.RefKind(m.Labels["kind"]),
+				metricLabelRef,
+			).Key()
 
 			ref, refExists := storedRefs[refKey]
 
@@ -376,7 +342,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 				schemas.MetricKindJobStatus,
 				schemas.MetricKindJobTimestamp:
 
-				if !ref.PullPipelineJobsEnabled {
+				if !ref.Project.Pull.Pipeline.Jobs.Enabled {
 					if err = c.Store.DelMetric(k); err != nil {
 						return err
 					}
@@ -397,7 +363,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 			case schemas.MetricKindJobStatus,
 				schemas.MetricKindStatus:
 
-				if ref.OutputSparseStatusMetrics && m.Value != 1 {
+				if ref.Project.OutputSparseStatusMetrics && m.Value != 1 {
 					if err = c.Store.DelMetric(k); err != nil {
 						return err
 					}

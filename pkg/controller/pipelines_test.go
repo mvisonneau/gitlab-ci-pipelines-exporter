@@ -33,12 +33,14 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 		})
 
 	// Metrics pull shall succeed
-	assert.NoError(t, c.PullRefMetrics(schemas.Ref{
-		Kind:                         schemas.RefKindBranch,
-		ProjectName:                  "foo",
-		Name:                         "bar",
-		PullPipelineVariablesEnabled: true,
-	}))
+	p := schemas.NewProject("foo")
+	p.Pull.Pipeline.Variables.Enabled = true
+
+	assert.NoError(t, c.PullRefMetrics(schemas.NewRef(
+		p,
+		schemas.RefKindBranch,
+		"bar",
+	)))
 
 	// Check if all the metrics exist
 	metrics, _ := c.Store.Metrics()
@@ -109,25 +111,12 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 		})
 
 	// Metrics pull shall succeed
-	assert.NoError(t, c.PullRefMetrics(schemas.Ref{
-		Kind:                         schemas.RefKindMergeRequest,
-		ProjectName:                  "foo",
-		Name:                         "1234",
-		PullPipelineVariablesEnabled: true,
-	}))
-}
+	p := schemas.NewProject("foo")
+	p.Pull.Pipeline.Variables.Enabled = true
 
-func TestPullRefMetricsMergeRequestPipelineAlreadyLoaded(t *testing.T) {
-	c, _, srv := newTestController(config.Config{})
-	srv.Close()
-
-	ref := schemas.Ref{
-		Kind: schemas.RefKindMergeRequest,
-		LatestPipeline: schemas.Pipeline{
-			ID:     1,
-			Status: "success",
-		},
-	}
-
-	assert.NoError(t, c.PullRefMetrics(ref))
+	assert.NoError(t, c.PullRefMetrics(schemas.NewRef(
+		p,
+		schemas.RefKindMergeRequest,
+		"1234",
+	)))
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/vmihailenco/msgpack/v5"
 )
@@ -24,7 +23,7 @@ type Redis struct {
 }
 
 // SetProject ..
-func (r *Redis) SetProject(p config.Project) error {
+func (r *Redis) SetProject(p schemas.Project) error {
 	marshalledProject, err := msgpack.Marshal(p)
 	if err != nil {
 		return err
@@ -35,13 +34,13 @@ func (r *Redis) SetProject(p config.Project) error {
 }
 
 // DelProject ..
-func (r *Redis) DelProject(k config.ProjectKey) error {
+func (r *Redis) DelProject(k schemas.ProjectKey) error {
 	_, err := r.HDel(r.ctx, redisProjectsKey, string(k)).Result()
 	return err
 }
 
 // GetProject ..
-func (r *Redis) GetProject(p *config.Project) error {
+func (r *Redis) GetProject(p *schemas.Project) error {
 	exists, err := r.ProjectExists(p.Key())
 	if err != nil {
 		return err
@@ -63,25 +62,25 @@ func (r *Redis) GetProject(p *config.Project) error {
 }
 
 // ProjectExists ..
-func (r *Redis) ProjectExists(k config.ProjectKey) (bool, error) {
+func (r *Redis) ProjectExists(k schemas.ProjectKey) (bool, error) {
 	return r.HExists(r.ctx, redisProjectsKey, string(k)).Result()
 }
 
 // Projects ..
-func (r *Redis) Projects() (config.Projects, error) {
-	projects := config.Projects{}
+func (r *Redis) Projects() (schemas.Projects, error) {
+	projects := schemas.Projects{}
 	marshalledProjects, err := r.HGetAll(r.ctx, redisProjectsKey).Result()
 	if err != nil {
 		return projects, err
 	}
 
 	for stringProjectKey, marshalledProject := range marshalledProjects {
-		p := config.Project{}
+		p := schemas.Project{}
 
 		if err = msgpack.Unmarshal([]byte(marshalledProject), &p); err != nil {
 			return projects, err
 		}
-		projects[config.ProjectKey(stringProjectKey)] = p
+		projects[schemas.ProjectKey(stringProjectKey)] = p
 	}
 
 	return projects, nil

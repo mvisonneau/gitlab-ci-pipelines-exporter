@@ -7,13 +7,11 @@ import (
 )
 
 func TestRefKey(t *testing.T) {
-	ref := Ref{
-		Kind:        RefKindBranch,
-		ProjectName: "foo/bar",
-		Name:        "baz",
-	}
-
-	assert.Equal(t, RefKey("1690074537"), ref.Key())
+	assert.Equal(t, RefKey("1690074537"), NewRef(
+		NewProject("foo/bar"),
+		RefKindBranch,
+		"baz",
+	).Key())
 }
 
 func TestRefsCount(t *testing.T) {
@@ -24,11 +22,12 @@ func TestRefsCount(t *testing.T) {
 }
 
 func TestRefDefaultLabelsValues(t *testing.T) {
+	p := NewProject("foo/bar")
+	p.Topics = "amazing,project"
 	ref := Ref{
-		Kind:        RefKindBranch,
-		ProjectName: "foo/bar",
-		Name:        "feature",
-		Topics:      "amazing,project",
+		Project: p,
+		Kind:    RefKindBranch,
+		Name:    "feature",
 		LatestPipeline: Pipeline{
 			Variables: "blah",
 		},
@@ -47,33 +46,26 @@ func TestRefDefaultLabelsValues(t *testing.T) {
 }
 
 func TestNewRef(t *testing.T) {
-	expectedValue := Ref{
-		Kind:        RefKindTag,
-		ProjectName: "foo/bar",
-		Name:        "v0.0.7",
-		Topics:      "bar,baz",
-		LatestJobs:  make(Jobs),
+	p := NewProject("foo/bar")
+	p.Topics = "bar,baz"
+	p.OutputSparseStatusMetrics = false
+	p.Pull.Pipeline.Jobs.Enabled = true
+	p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled = false
+	p.Pull.Pipeline.Jobs.RunnerDescription.Enabled = false
+	p.Pull.Pipeline.Variables.Enabled = true
+	p.Pull.Pipeline.Variables.Regexp = `.*`
+	p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `.*`
 
-		OutputSparseStatusMetrics:                          true,
-		PullPipelineJobsEnabled:                            true,
-		PullPipelineJobsFromChildPipelinesEnabled:          false,
-		PullPipelineJobsRunnerDescriptionEnabled:           false,
-		PullPipelineVariablesEnabled:                       true,
-		PullPipelineVariablesRegexp:                        ".*",
-		PullPipelineJobsRunnerDescriptionAggregationRegexp: ".*",
+	expectedValue := Ref{
+		Project:    p,
+		Kind:       RefKindTag,
+		Name:       "v0.0.7",
+		LatestJobs: make(Jobs),
 	}
 
 	assert.Equal(t, expectedValue, NewRef(
+		p,
 		RefKindTag,
-		"foo/bar",
 		"v0.0.7",
-		"bar,baz",
-		true,
-		true,
-		false,
-		false,
-		true,
-		".*",
-		".*",
 	))
 }

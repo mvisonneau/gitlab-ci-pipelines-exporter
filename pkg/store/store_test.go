@@ -5,14 +5,13 @@ import (
 	"testing"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewLocalStore(t *testing.T) {
 	expectedValue := &Local{
-		projects:     make(config.Projects),
+		projects:     make(schemas.Projects),
 		environments: make(schemas.Environments),
 		refs:         make(schemas.Refs),
 		metrics:      make(schemas.Metrics),

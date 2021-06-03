@@ -2,15 +2,18 @@ package gitlab
 
 import (
 	"regexp"
-	"time"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 // GetProjectBranches ..
-func (c *Client) GetProjectBranches(projectName, filterRegexp string, maxAgeSeconds uint) ([]string, error) {
-	var names []string
+func (c *Client) GetProjectBranches(p schemas.Project) (
+	refs schemas.Refs,
+	err error,
+) {
+	refs = make(schemas.Refs)
 
 	options := &goGitlab.ListBranchesOptions{
 		ListOptions: goGitlab.ListOptions{
@@ -19,42 +22,34 @@ func (c *Client) GetProjectBranches(projectName, filterRegexp string, maxAgeSeco
 		},
 	}
 
-	re, err := regexp.Compile(filterRegexp)
-	if err != nil {
-		return nil, err
+	var re *regexp.Regexp
+	if re, err = regexp.Compile(p.Pull.Refs.Branches.Regexp); err != nil {
+		return
 	}
 
 	for {
 		c.rateLimit()
-		branches, resp, err := c.Branches.ListBranches(projectName, options)
+		var branches []*goGitlab.Branch
+		var resp *goGitlab.Response
+		branches, resp, err = c.Branches.ListBranches(p.Name, options)
 		if err != nil {
-			return names, err
+			return
 		}
 
 		for _, branch := range branches {
 			if re.MatchString(branch.Name) {
-				if maxAgeSeconds > 0 && time.Now().Sub(*branch.Commit.AuthoredDate) > (time.Duration(maxAgeSeconds)*time.Second) {
-					log.WithFields(log.Fields{
-						"project-name":    projectName,
-						"branch":          branch.Name,
-						"regexp":          filterRegexp,
-						"max-age-seconds": maxAgeSeconds,
-						"authored-date":   *branch.Commit.AuthoredDate,
-					}).Debug("branch matching regexp but last authored at a date outside of the required timeframe, ignoring..")
-					continue
-				}
-				names = append(names, branch.Name)
+				ref := schemas.NewRef(p, schemas.RefKindBranch, branch.Name)
+				refs[ref.Key()] = ref
 			}
 		}
 
 		if resp.CurrentPage >= resp.TotalPages {
 			break
 		}
-
 		options.Page = resp.NextPage
 	}
 
-	return names, nil
+	return
 }
 
 // GetBranchLatestCommit ..

@@ -13,13 +13,13 @@ import (
 )
 
 func TestGarbageCollectProjects(t *testing.T) {
-	p1 := config.NewProject("cfg/p1")
-	p2 := config.NewProject("cfg/p2")
-	p3 := config.NewProject("wc/p3")
-	p4 := config.NewProject("wc/p4")
+	p1 := schemas.NewProject("cfg/p1")
+	p2 := schemas.NewProject("cfg/p2")
+	p3 := schemas.NewProject("wc/p3")
+	p4 := schemas.NewProject("wc/p4")
 
 	c, mux, srv := newTestController(config.Config{
-		Projects: []config.Project{p1},
+		Projects: []config.Project{p1.Project},
 		Wildcards: config.Wildcards{
 			config.Wildcard{
 				Owner: config.WildcardOwner{
@@ -45,7 +45,7 @@ func TestGarbageCollectProjects(t *testing.T) {
 	storedProjects, err := c.Store.Projects()
 	assert.NoError(t, err)
 
-	expectedProjects := config.Projects{
+	expectedProjects := schemas.Projects{
 		p1.Key(): p1,
 		p3.Key(): p3,
 	}
@@ -61,7 +61,7 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 			fmt.Fprint(w, `[{"name": "main"}]`)
 		})
 
-	p2 := config.NewProject("p2")
+	p2 := schemas.NewProject("p2")
 	p2.Pull.Environments.Regexp = "^main$"
 
 	envp1main := schemas.Environment{ProjectName: "p1", Name: "main"}
@@ -101,14 +101,14 @@ func TestGarbageCollectRefs(t *testing.T) {
 			fmt.Fprint(w, `[{"name": "main"}]`)
 		})
 
-	pr1dev := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p1", Name: "dev"}
-	pr1main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p1", Name: "main"}
+	pr1dev := schemas.NewRef(schemas.NewProject("p1"), schemas.RefKindBranch, "dev")
+	pr1main := schemas.NewRef(schemas.NewProject("p1"), schemas.RefKindBranch, "main")
 
-	p2 := config.NewProject("p2")
+	p2 := schemas.NewProject("p2")
 	p2.Pull.Environments.Regexp = "^main$"
 
-	pr2dev := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "dev"}
-	pr2main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "main"}
+	pr2dev := schemas.NewRef(p2, schemas.RefKindBranch, "dev")
+	pr2main := schemas.NewRef(p2, schemas.RefKindBranch, "main")
 
 	c.Store.SetProject(p2)
 	c.Store.SetRef(pr1dev)
@@ -120,15 +120,9 @@ func TestGarbageCollectRefs(t *testing.T) {
 	storedRefs, err := c.Store.Refs()
 	assert.NoError(t, err)
 
-	newPR2main := schemas.Ref{Kind: schemas.RefKindBranch, ProjectName: "p2", Name: "main"}
+	newPR2main := schemas.NewRef(p2, schemas.RefKindBranch, "main")
 	expectedRefs := schemas.Refs{
-		newPR2main.Key(): schemas.Ref{
-			Kind:                        schemas.RefKindBranch,
-			ProjectName:                 "p2",
-			Name:                        "main",
-			OutputSparseStatusMetrics:   true,
-			PullPipelineVariablesRegexp: ".*",
-		},
+		newPR2main.Key(): newPR2main,
 	}
 	assert.Equal(t, expectedRefs, storedRefs)
 }
@@ -137,20 +131,18 @@ func TestGarbageCollectMetrics(t *testing.T) {
 	c, _, srv := newTestController(config.Config{})
 	srv.Close()
 
-	ref1 := schemas.Ref{
-		ProjectName:               "p1",
-		Name:                      "foo",
-		OutputSparseStatusMetrics: true,
-		PullPipelineJobsEnabled:   true,
-	}
+	p1 := schemas.NewProject("p1")
+	p1.Pull.Pipeline.Jobs.Enabled = true
 
-	ref1m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p1", "ref": "foo"}}
-	ref1m2 := schemas.Metric{Kind: schemas.MetricKindStatus, Labels: prometheus.Labels{"project": "p1", "ref": "foo"}}
-	ref1m3 := schemas.Metric{Kind: schemas.MetricKindJobDurationSeconds, Labels: prometheus.Labels{"project": "p1", "ref": "foo"}}
+	ref1 := schemas.NewRef(p1, schemas.RefKindBranch, "foo")
 
-	ref2m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p2", "ref": "bar"}}
-	ref3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo"}}
-	ref4m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"ref": "bar"}}
+	ref1m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p1", "ref": "foo", "kind": "branch"}}
+	ref1m2 := schemas.Metric{Kind: schemas.MetricKindStatus, Labels: prometheus.Labels{"project": "p1", "ref": "foo", "kind": "branch"}}
+	ref1m3 := schemas.Metric{Kind: schemas.MetricKindJobDurationSeconds, Labels: prometheus.Labels{"project": "p1", "ref": "foo", "kind": "branch"}}
+
+	ref2m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p2", "ref": "bar", "kind": "branch"}}
+	ref3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo", "kind": "branch"}}
+	ref4m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"ref": "bar", "kind": "branch"}}
 
 	c.Store.SetRef(ref1)
 	c.Store.SetMetric(ref1m1)

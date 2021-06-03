@@ -18,20 +18,9 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 	}
 
 	logFields := log.Fields{
-		"project-name": ref.ProjectName,
+		"project-name": ref.Project.Name,
 		"ref":          ref.Name,
 		"ref-kind":     ref.Kind,
-	}
-
-	// TODO: Figure out if we want to have a similar approach for RefKindTag with
-	// an additional configuration parameter perhaps
-	if ref.Kind == schemas.RefKindMergeRequest && ref.LatestPipeline.ID != 0 {
-		switch ref.LatestPipeline.Status {
-		case "success", "failed", "canceled", "skipped":
-			// The pipeline will not evolve, lets not bother querying the API
-			log.WithFields(logFields).WithField("most-recent-pipeline-id", ref.LatestPipeline.ID).Debug("skipping finished merge-request pipeline")
-			return nil
-		}
 	}
 
 	// We need a different syntax if the ref is a merge-request
@@ -42,7 +31,7 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 		refName = ref.Name
 	}
 
-	pipelines, err := c.Gitlab.GetProjectPipelines(ref.ProjectName, &goGitlab.ListProjectPipelinesOptions{
+	pipelines, _, err := c.Gitlab.GetProjectPipelines(ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
 			PerPage: 1,
@@ -51,7 +40,7 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 		Ref: &refName,
 	})
 	if err != nil {
-		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.ProjectName, err)
+		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.Project.Name, err)
 	}
 
 	if len(pipelines) == 0 {
@@ -69,7 +58,7 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 		ref.LatestPipeline = pipeline
 
 		// fetch pipeline variables
-		if ref.PullPipelineVariablesEnabled {
+		if ref.Project.Pull.Pipeline.Variables.Enabled {
 			ref.LatestPipeline.Variables, err = c.Gitlab.GetRefPipelineVariablesAsConcatenatedString(ref)
 			if err != nil {
 				return err
@@ -112,7 +101,7 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 			ref.DefaultLabelsValues(),
 			statusesList[:],
 			pipeline.Status,
-			ref.OutputSparseStatusMetrics,
+			ref.Project.OutputSparseStatusMetrics,
 		)
 
 		storeSetMetric(c.Store, schemas.Metric{
@@ -133,7 +122,7 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 			Value:  pipeline.Timestamp,
 		})
 
-		if ref.PullPipelineJobsEnabled {
+		if ref.Project.Pull.Pipeline.Jobs.Enabled {
 			if err := c.PullRefPipelineJobsMetrics(ref); err != nil {
 				return err
 			}
@@ -141,7 +130,7 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 		return nil
 	}
 
-	if ref.PullPipelineJobsEnabled {
+	if ref.Project.Pull.Pipeline.Jobs.Enabled {
 		if err := c.PullRefMostRecentJobsMetrics(ref); err != nil {
 			return err
 		}

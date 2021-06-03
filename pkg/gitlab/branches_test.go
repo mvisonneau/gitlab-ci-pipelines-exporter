@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +14,7 @@ func TestGetProjectBranches(t *testing.T) {
 	mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/1/repository/branches"),
+	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/branches"),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, []string{"100"}, r.URL.Query()["per_page"])
@@ -37,17 +38,24 @@ func TestGetProjectBranches(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	branches, err := c.GetProjectBranches("1", "^(main)$", 0)
+	p := schemas.NewProject("foo")
+	expectedRef := schemas.NewRef(p, schemas.RefKindBranch, "main")
+	refs, err := c.GetProjectBranches(p)
 	assert.NoError(t, err)
-	assert.Len(t, branches, 1)
-	assert.Equal(t, "main", branches[0])
+	assert.Len(t, refs, 1)
+	assert.Equal(t, schemas.Refs{
+		expectedRef.Key(): expectedRef,
+	}, refs)
 
-	// Test invalid project id
-	_, err = c.GetProjectBranches("0", "", 0)
+	// Test invalid project name
+	p.Name = "invalid"
+	_, err = c.GetProjectBranches(p)
 	assert.Error(t, err)
 
 	// Test invalid regexp
-	_, err = c.GetProjectBranches("0", "[", 0)
+	p.Name = "foo"
+	p.Pull.Refs.Branches.Regexp = `[`
+	_, err = c.GetProjectBranches(p)
 	assert.Error(t, err)
 }
 

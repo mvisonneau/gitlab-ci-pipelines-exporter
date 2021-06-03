@@ -13,21 +13,21 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 	if ref.LatestPipeline == (schemas.Pipeline{}) {
 		log.WithFields(
 			log.Fields{
-				"project-name": ref.ProjectName,
+				"project-name": ref.Project.Name,
 				"ref":          ref.Name,
 			},
 		).Debug("most recent pipeline not defined, exiting..")
 		return
 	}
 
-	jobs, err = c.ListPipelineJobs(ref.ProjectName, ref.LatestPipeline.ID)
+	jobs, err = c.ListPipelineJobs(ref.Project.Name, ref.LatestPipeline.ID)
 	if err != nil {
 		return
 	}
 
-	if ref.PullPipelineJobsFromChildPipelinesEnabled {
+	if ref.Project.Pull.Pipeline.Jobs.FromChildPipelines.Enabled {
 		var childJobs []schemas.Job
-		childJobs, err = c.ListPipelineChildJobs(ref.ProjectName, ref.LatestPipeline.ID)
+		childJobs, err = c.ListPipelineChildJobs(ref.Project.Name, ref.LatestPipeline.ID)
 		if err != nil {
 			return
 		}
@@ -157,7 +157,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 	if len(ref.LatestJobs) == 0 {
 		log.WithFields(
 			log.Fields{
-				"project-name": ref.ProjectName,
+				"project-name": ref.Project.Name,
 				"ref":          ref.Name,
 			},
 		).Debug("no jobs are currently held in memory, exiting..")
@@ -182,7 +182,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 
 	for {
 		c.rateLimit()
-		foundJobs, resp, err = c.Jobs.ListProjectJobs(ref.ProjectName, options)
+		foundJobs, resp, err = c.Jobs.ListProjectJobs(ref.Project.Name, options)
 		if err != nil {
 			return
 		}
@@ -198,7 +198,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 			if len(jobsToRefresh) == 0 {
 				log.WithFields(
 					log.Fields{
-						"project-name": ref.ProjectName,
+						"project-name": ref.Project.Name,
 						"ref":          ref.Name,
 						"jobs-count":   len(ref.LatestJobs),
 					},
@@ -215,7 +215,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 
 			log.WithFields(
 				log.Fields{
-					"project-name":   ref.ProjectName,
+					"project-name":   ref.Project.Name,
 					"ref":            ref.Name,
 					"jobs-count":     resp.TotalItems,
 					"not-found-jobs": strings.Join(notFoundJobs, ","),

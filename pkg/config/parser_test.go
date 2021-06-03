@@ -87,15 +87,22 @@ project_defaults:
       enabled: true
       regexp: "^baz$"
     refs:
-      regexp: "^baz$"
-      max_age_seconds: 1
-      from:
-        pipelines:
-          enabled: true
-          depth: 1
-        merge_requests:
-          enabled: true
-          depth: 2
+      branches:
+        enabled: false
+        regexp: "^foo$"
+        most_recent: 1
+        max_age_seconds: 1
+        exclude_deleted: false
+      tags:
+        enabled: false
+        regexp: "^bar$"
+        most_recent: 2
+        max_age_seconds: 2
+        exclude_deleted: false
+      merge_requests:
+        enabled: true
+        most_recent: 3
+        max_age_seconds: 3
     pipeline:
       jobs:
         enabled: true
@@ -111,8 +118,9 @@ projects:
         enabled: false
         regexp: "^foo$"
       refs:
-        regexp: "^foo$"
-        max_age_seconds: 2
+        branches:
+          regexp: "^foo$"
+          max_age_seconds: 2
 
 wildcards:
   - owner:
@@ -125,8 +133,9 @@ wildcards:
         enabled: false
         regexp: "^foo$"
       refs:
-        regexp: "^yolo$"
-        max_age_seconds: 4
+        branches:
+          regexp: "^yolo$"
+          max_age_seconds: 4
 `
 
 	cfg, err := Parse(FormatYAML, []byte(yamlConfig))
@@ -187,12 +196,21 @@ wildcards:
 	xcfg.ProjectDefaults.Pull.Environments.Enabled = true
 	xcfg.ProjectDefaults.Pull.Environments.Regexp = `^baz$`
 
-	xcfg.ProjectDefaults.Pull.Refs.Regexp = `^baz$`
-	xcfg.ProjectDefaults.Pull.Refs.MaxAgeSeconds = 1
-	xcfg.ProjectDefaults.Pull.Refs.From.Pipelines.Enabled = true
-	xcfg.ProjectDefaults.Pull.Refs.From.Pipelines.Depth = 1
-	xcfg.ProjectDefaults.Pull.Refs.From.MergeRequests.Enabled = true
-	xcfg.ProjectDefaults.Pull.Refs.From.MergeRequests.Depth = 2
+	xcfg.ProjectDefaults.Pull.Refs.Branches.Enabled = false
+	xcfg.ProjectDefaults.Pull.Refs.Branches.Regexp = `^foo$`
+	xcfg.ProjectDefaults.Pull.Refs.Branches.MostRecent = 1
+	xcfg.ProjectDefaults.Pull.Refs.Branches.MaxAgeSeconds = 1
+	xcfg.ProjectDefaults.Pull.Refs.Branches.ExcludeDeleted = false
+
+	xcfg.ProjectDefaults.Pull.Refs.Tags.Enabled = false
+	xcfg.ProjectDefaults.Pull.Refs.Tags.Regexp = `^bar$`
+	xcfg.ProjectDefaults.Pull.Refs.Tags.MostRecent = 2
+	xcfg.ProjectDefaults.Pull.Refs.Tags.MaxAgeSeconds = 2
+	xcfg.ProjectDefaults.Pull.Refs.Tags.ExcludeDeleted = false
+
+	xcfg.ProjectDefaults.Pull.Refs.MergeRequests.Enabled = true
+	xcfg.ProjectDefaults.Pull.Refs.MergeRequests.MostRecent = 3
+	xcfg.ProjectDefaults.Pull.Refs.MergeRequests.MaxAgeSeconds = 3
 
 	xcfg.ProjectDefaults.Pull.Pipeline.Jobs.Enabled = true
 	xcfg.ProjectDefaults.Pull.Pipeline.Variables.Enabled = true
@@ -206,8 +224,8 @@ wildcards:
 
 	p2.Pull.Environments.Enabled = false
 	p2.Pull.Environments.Regexp = `^foo$`
-	p2.Pull.Refs.Regexp = `^foo$`
-	p2.Pull.Refs.MaxAgeSeconds = 2
+	p2.Pull.Refs.Branches.Regexp = `^foo$`
+	p2.Pull.Refs.Branches.MaxAgeSeconds = 2
 
 	xcfg.Projects = []Project{p1, p2}
 
@@ -219,8 +237,8 @@ wildcards:
 	w1.Owner.Kind = "group"
 	w1.Pull.Environments.Enabled = false
 	w1.Pull.Environments.Regexp = `^foo$`
-	w1.Pull.Refs.Regexp = `^yolo$`
-	w1.Pull.Refs.MaxAgeSeconds = 4
+	w1.Pull.Refs.Branches.Regexp = `^yolo$`
+	w1.Pull.Refs.Branches.MaxAgeSeconds = 4
 
 	xcfg.Wildcards = []Wildcard{w1}
 

@@ -15,7 +15,7 @@ import (
 // HealthCheckHandler ..
 func (c *Controller) HealthCheckHandler() (h healthcheck.Handler) {
 	h = healthcheck.NewHandler()
-	if c.Gitlab.EnableHealthCheck {
+	if c.Config.Gitlab.EnableHealthCheck {
 		h.AddReadinessCheck("gitlab-reachable", c.Gitlab.ReadinessCheck())
 	} else {
 		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
@@ -34,7 +34,7 @@ func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 	registry.ExportMetrics(metrics)
 	promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		Registry:          registry,
-		EnableOpenMetrics: c.Server.Metrics.EnableOpenmetricsEncoding,
+		EnableOpenMetrics: c.Config.Server.Metrics.EnableOpenmetricsEncoding,
 	}).ServeHTTP(w, r)
 }
 
@@ -46,7 +46,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.WithFields(logFields).Debug("webhook request")
 
-	if r.Header.Get("X-Gitlab-Token") != c.Server.Webhook.SecretToken {
+	if r.Header.Get("X-Gitlab-Token") != c.Config.Server.Webhook.SecretToken {
 		log.WithFields(logFields).Debug("invalid token provided for a webhook request")
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprint(w, "{\"error\": \"invalid token\"")

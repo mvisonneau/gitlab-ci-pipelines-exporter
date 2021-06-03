@@ -197,39 +197,60 @@ project_defaults:
 
       # Filter out by name environments to include
       # (optional, default: ".*")
-      name_regexp: ".*"
+      regexp: ".*"
 
     refs:
-      # Filter refs (branches/tags only) to include
-      # (optional, default: "^main|master$" -- main or master branch)
-      regexp: "^main|master$"
+      branches:
+        # Monitor pipelines related to project branches 
+        enabled: true
 
-      # If the age of the most recent commit for the ref is greater than
-      # this value, the ref won't get exported (optional, default: 0 (disabled))
-      # nb: when used in conjuction of pull.from.(pipelines|merge_requests).enabled = true, the creation date
-      # of the pipeline is taken in account, not the age of the commit
-      max_age_seconds: 0
+        # Filter for branches to include
+        # (optional, default: "^main|master$" -- main/master branches)
+        regexp: "^main|master$"
+        
+        # Only keep most 'n' recently updated branches
+        # (optional, default: 0 -- disabled/keep every branch matching the regexp)"
+        most_recent: 0
 
-      from:
-        pipelines:
-          # Whether to trigger a discovery of the projects refs
-          # from the most recent project pipelines when the
-          # project is configured/discovered (optional, default: false)
-          # This flag is useful if you want/need to obtain pipelines
-          # metrics of deleted refs
-          enabled: false
+        # If the age of the most recently updated pipeline for the branch is greater than
+        # this value, the pipeline metrics won't get exported (optional, default: 0 (disabled))
+        max_age_seconds: 0
 
-          # Maximum number of pipelines to analyze per project
-          # to search for refs on init (optional, default: 100)
-          depth: 100
+        # If set to false, it will continue to export metrics for the branch even
+        # if it has been deleted (optional, default: true)
+        exclude_deleted: true
 
-        merge_requests:
-          # Fetch merge request pipelines refs (optional, default: false)
-          enabled: false
+      tags:
+        # Monitor pipelines related to project tags
+        enabled: false
 
-          # Maximum number for merge requests pipelines to
-          # attempt fetch on each project ref discovery (optional, default: 1)
-          depth: 1
+        # Filter for tags to include
+        # (optional, default: ".*" -- all tags)
+        regexp: ".*"
+
+        # Only keep most 'n' recently updated tags
+        # (optional, default: 0 -- disabled/keep every tag matching the regexp)"
+        most_recent: 0
+
+        # If the age of the most recently updated pipeline for the tag is greater than
+        # this value, the pipeline metrics won't get exported (optional, default: 0 (disabled))
+        max_age_seconds: 0
+
+        # If set to false, it will continue to export metrics for the tag even
+        # if it has been deleted (optional, default: true)
+        exclude_deleted: true
+
+      merge_requests:
+        # Monitor pipelines related to project merge requests
+        enabled: false
+
+        # Only keep most 'n' recently updated merge requests
+        # (optional, default: 0 -- disabled/keep every merge request)
+        most_recent: 0
+
+        # If the age of the most recently updated pipeline for the merge request is greater than
+        # this value, the pipeline metrics won't get exported (optional, default: 0 (disabled))
+        max_age_seconds: 0
 
     pipeline:
       jobs:
@@ -276,39 +297,60 @@ projects:
 
         # Filter out by name environments to include
         # (optional, default: ".*")
-        name_regexp: ".*"
+        regexp: ".*"
 
       refs:
-        # Filter refs (branches/tags only) to include
-        # (optional, default: "^main|master$" -- main or master branch)
-        regexp: "^main|master$"
+        branches:
+          # Monitor pipelines related to project branches 
+          enabled: true
 
-        # If the age of the most recent commit for the ref is greater than
-        # this value, the ref won't get exported (optional, default: 0 (disabled))
-        # nb: when used in conjuction of pull.from.(pipelines|merge_requests).enabled = true, the creation date
-        # of the pipeline is taken in account, not the age of the commit
-        max_age_seconds: 0
+          # Filter for branches to include
+          # (optional, default: "^main|master$" -- main/master branches)
+          regexp: "^main|master$"
+          
+          # Only keep most 'n' recently updated branches
+          # (optional, default: 0 -- disabled/keep every branch matching the regexp)"
+          most_recent: 0
 
-        from:
-          pipelines:
-            # Whether to trigger a discovery of the projects refs
-            # from the most recent project pipelines when the
-            # project is configured/discovered (optional, default: false)
-            # This flag is useful if you want/need to obtain pipelines
-            # metrics of deleted refs
-            enabled: false
+          # If the age of the most recently updated pipeline for the branch is greater than
+          # this value, the pipeline metrics won't get exported (optional, default: 0 (disabled))
+          max_age_seconds: 0
 
-            # Maximum number of pipelines to analyze per project
-            # to search for refs on init (optional, default: 100)
-            depth: 100
+          # If set to false, it will continue to export metrics for the branch even
+          # if it has been deleted (optional, default: true)
+          exclude_deleted: true
 
-          merge_requests:
-            # Fetch merge request pipelines refs (optional, default: false)
-            enabled: false
+        tags:
+          # Monitor pipelines related to project tags
+          enabled: false
 
-            # Maximum number for merge requests pipelines to
-            # attempt fetch on each project ref discovery (optional, default: 1)
-            depth: 1
+          # Filter for tags to include
+          # (optional, default: ".*" -- all tags)
+          regexp: ".*"
+
+          # Only keep most 'n' recently updated tags
+          # (optional, default: 0 -- disabled/keep every tag matching the regexp)"
+          most_recent: 0
+
+          # If the age of the most recently updated pipeline for the tag is greater than
+          # this value, the pipeline metrics won't get exported (optional, default: 0 (disabled))
+          max_age_seconds: 0
+
+          # If set to false, it will continue to export metrics for the tag even
+          # if it has been deleted (optional, default: true)
+          exclude_deleted: true
+
+        merge_requests:
+          # Monitor pipelines related to project merge requests
+          enabled: false
+
+          # Only keep most 'n' recently updated merge requests
+          # (optional, default: 0 -- disabled/keep every merge request)
+          most_recent: 0
+
+          # If the age of the most recently updated pipeline for the merge request is greater than
+          # this value, the pipeline metrics won't get exported (optional, default: 0 (disabled))
+          max_age_seconds: 0
 
       pipeline:
         jobs:
@@ -371,39 +413,60 @@ wildcards:
 
         # Filter out by name environments to include
         # (optional, default: ".*")
-        name_regexp: ".*"
+        regexp: ".*"
 
       refs:
-        # Filter refs (branches/tags only) to include
-        # (optional, default: "^main|master$" -- main or master branch)
-        regexp: "^main|master$"
+        branches:
+          # Monitor pipelines related to project branches 
+          enabled: true
 
-        # If the age of the most recent commit for the ref is greater than
-        # this value, the ref won't get exported (optional, default: 0 (disabled))
-        # nb: when used in conjuction of pull.from.(pipelines|merge_requests).enabled = true, the creation date
-        # of the pipeline is taken in account, not the age of the commit
-        max_age_seconds: 0
+          # Filter for branches to include
+          # (optional, default: "^main|master$" -- main/master branches)
+          regexp: "^main|master$"
+          
+          # Only keep most 'n' recently updated branches
+          # (optional, default: 0 -- disabled/keep every branch matching the regexp)"
+          most_recent: 0
 
-        from:
-          pipelines:
-            # Whether to trigger a discovery of the projects refs
-            # from the most recent project pipelines when the
-            # project is configured/discovered (optional, default: false)
-            # This flag is useful if you want/need to obtain pipelines
-            # metrics of deleted refs
-            enabled: false
+          # If the age of the most recently updated pipeline for the branch is greater than
+          # this value, the pipeline metrics won't get exported (optional, default: 0 (disabled))
+          max_age_seconds: 0
 
-            # Maximum number of pipelines to analyze per project
-            # to search for refs on init (optional, default: 100, min: 1, max: 100)
-            depth: 100
+          # If set to false, it will continue to export metrics for the branch even
+          # if it has been deleted (optional, default: true)
+          exclude_deleted: true
 
-          merge_requests:
-            # Fetch merge request pipelines refs (optional, default: false)
-            enabled: false
+        tags:
+          # Monitor pipelines related to project tags
+          enabled: false
 
-            # Maximum number for merge requests pipelines to
-            # attempt fetch on each project ref discovery (optional, default: 1)
-            depth: 1
+          # Filter for tags to include
+          # (optional, default: ".*" -- all tags)
+          regexp: ".*"
+
+          # Only keep most 'n' recently updated tags
+          # (optional, default: 0 -- disabled/keep every tag matching the regexp)"
+          most_recent: 0
+
+          # If the age of the most recently updated pipeline for the tag is greater than
+          # this value, the pipeline metrics won't get exported (optional, default: 0 (disabled))
+          max_age_seconds: 0
+
+          # If set to false, it will continue to export metrics for the tag even
+          # if it has been deleted (optional, default: true)
+          exclude_deleted: true
+
+        merge_requests:
+          # Monitor pipelines related to project merge requests
+          enabled: false
+
+          # Only keep most 'n' recently updated merge requests
+          # (optional, default: 0 -- disabled/keep every merge request)
+          most_recent: 0
+
+          # If the age of the most recently updated pipeline for the merge request is greater than
+          # this value, the pipeline metrics won't get exported (optional, default: 0 (disabled))
+          max_age_seconds: 0
 
       pipeline:
         jobs:

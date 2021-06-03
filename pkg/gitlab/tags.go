@@ -2,15 +2,17 @@ package gitlab
 
 import (
 	"regexp"
-	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
 // GetProjectTags ..
-func (c *Client) GetProjectTags(projectName, filterRegexp string, maxAgeSeconds uint) ([]string, error) {
-	var names []string
+func (c *Client) GetProjectTags(p schemas.Project) (
+	refs schemas.Refs,
+	err error,
+) {
+	refs = make(schemas.Refs)
 
 	options := &goGitlab.ListTagsOptions{
 		ListOptions: goGitlab.ListOptions{
@@ -19,31 +21,24 @@ func (c *Client) GetProjectTags(projectName, filterRegexp string, maxAgeSeconds 
 		},
 	}
 
-	re, err := regexp.Compile(filterRegexp)
-	if err != nil {
-		return nil, err
+	var re *regexp.Regexp
+	if re, err = regexp.Compile(p.Pull.Refs.Tags.Regexp); err != nil {
+		return
 	}
 
 	for {
 		c.rateLimit()
-		tags, resp, err := c.Tags.ListTags(projectName, options)
+		var tags []*goGitlab.Tag
+		var resp *goGitlab.Response
+		tags, resp, err = c.Tags.ListTags(p.Name, options)
 		if err != nil {
-			return names, err
+			return
 		}
 
 		for _, tag := range tags {
 			if re.MatchString(tag.Name) {
-				if maxAgeSeconds > 0 && time.Now().Sub(*tag.Commit.AuthoredDate) > (time.Duration(maxAgeSeconds)*time.Second) {
-					log.WithFields(log.Fields{
-						"project-name":    projectName,
-						"tag":             tag.Name,
-						"regexp":          filterRegexp,
-						"max-age-seconds": maxAgeSeconds,
-						"authored-date":   *tag.Commit.AuthoredDate,
-					}).Debug("tag matching regexp but last authored at a date outside of the required timeframe, ignoring..")
-					continue
-				}
-				names = append(names, tag.Name)
+				ref := schemas.NewRef(p, schemas.RefKindTag, tag.Name)
+				refs[ref.Key()] = ref
 			}
 		}
 
@@ -53,7 +48,7 @@ func (c *Client) GetProjectTags(projectName, filterRegexp string, maxAgeSeconds 
 		options.Page = resp.NextPage
 	}
 
-	return names, nil
+	return
 }
 
 // GetProjectMostRecentTagCommit ..

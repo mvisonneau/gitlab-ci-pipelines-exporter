@@ -24,7 +24,7 @@ func (c *Controller) PullRefPipelineJobsMetrics(ref schemas.Ref) error {
 
 // PullRefMostRecentJobsMetrics ..
 func (c *Controller) PullRefMostRecentJobsMetrics(ref schemas.Ref) error {
-	if !ref.PullPipelineJobsEnabled {
+	if !ref.Project.Pull.Pipeline.Jobs.Enabled {
 		return nil
 	}
 
@@ -43,7 +43,7 @@ func (c *Controller) PullRefMostRecentJobsMetrics(ref schemas.Ref) error {
 // ProcessJobMetrics ..
 func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 	projectRefLogFields := log.Fields{
-		"project-name": ref.ProjectName,
+		"project-name": ref.Project.Name,
 		"job-name":     job.Name,
 		"job-id":       job.ID,
 	}
@@ -52,14 +52,14 @@ func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
 
-	if ref.PullPipelineJobsRunnerDescriptionEnabled {
-		re, err := regexp.Compile(ref.PullPipelineJobsRunnerDescriptionAggregationRegexp)
+	if ref.Project.Pull.Pipeline.Jobs.RunnerDescription.Enabled {
+		re, err := regexp.Compile(ref.Project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp)
 		if err != nil {
 			log.WithFields(projectRefLogFields).WithField("error", err.Error()).Error("invalid job runner description aggregation regexp")
 		}
 
 		if re.MatchString(job.Runner.Description) {
-			labels["runner_description"] = ref.PullPipelineJobsRunnerDescriptionAggregationRegexp
+			labels["runner_description"] = ref.Project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp
 		} else {
 			labels["runner_description"] = job.Runner.Description
 		}
@@ -154,6 +154,6 @@ func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 		labels,
 		statusesList[:],
 		job.Status,
-		ref.OutputSparseStatusMetrics,
+		ref.Project.OutputSparseStatusMetrics,
 	)
 }

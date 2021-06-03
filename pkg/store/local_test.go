@@ -3,19 +3,14 @@ package store
 import (
 	"testing"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLocalProjectFunctions(t *testing.T) {
-	p := config.Project{
-		Name: "foo/bar",
-		ProjectParameters: config.ProjectParameters{
-			OutputSparseStatusMetrics: false,
-		},
-	}
+	p := schemas.NewProject("foo/bar")
+	p.OutputSparseStatusMetrics = false
 
 	l := NewLocalStore()
 	l.SetProject(p)
@@ -32,7 +27,7 @@ func TestLocalProjectFunctions(t *testing.T) {
 	assert.True(t, exists)
 
 	// GetProject should succeed
-	newProject := config.NewProject("foo/bar")
+	newProject := schemas.NewProject("foo/bar")
 	assert.NoError(t, l.GetProject(&newProject))
 	assert.Equal(t, p, newProject)
 
@@ -52,7 +47,7 @@ func TestLocalProjectFunctions(t *testing.T) {
 	assert.False(t, exists)
 
 	// GetProject should not update the var this time
-	newProject = config.NewProject("foo/bar")
+	newProject = schemas.NewProject("foo/bar")
 	assert.NoError(t, l.GetProject(&newProject))
 	assert.NotEqual(t, p, newProject)
 }
@@ -108,6 +103,62 @@ func TestLocalEnvironmentFunctions(t *testing.T) {
 	}
 	assert.NoError(t, l.GetEnvironment(&newEnvironment))
 	assert.NotEqual(t, environment, newEnvironment)
+}
+
+func TestLocalRefFunctions(t *testing.T) {
+	p := schemas.NewProject("foo/bar")
+	p.Topics = "salty"
+	ref := schemas.NewRef(
+		p,
+		schemas.RefKindBranch,
+		"sweet",
+	)
+
+	// Set project
+	l := NewLocalStore()
+	l.SetRef(ref)
+	projectsRefs, err := l.Refs()
+	assert.NoError(t, err)
+	assert.Contains(t, projectsRefs, ref.Key())
+	assert.Equal(t, ref, projectsRefs[ref.Key()])
+
+	// Ref exists
+	exists, err := l.RefExists(ref.Key())
+	assert.NoError(t, err)
+	assert.True(t, exists)
+
+	// GetRef should succeed
+	newRef := schemas.Ref{
+		Project: schemas.NewProject("foo/bar"),
+		Kind:    schemas.RefKindBranch,
+		Name:    "sweet",
+	}
+	assert.NoError(t, l.GetRef(&newRef))
+	assert.Equal(t, ref, newRef)
+
+	// Count
+	count, err := l.RefsCount()
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), count)
+
+	// Delete Ref
+	l.DelRef(ref.Key())
+	projectsRefs, err = l.Refs()
+	assert.NoError(t, err)
+	assert.NotContains(t, projectsRefs, ref.Key())
+
+	exists, err = l.RefExists(ref.Key())
+	assert.NoError(t, err)
+	assert.False(t, exists)
+
+	// GetRef should not update the var this time
+	newRef = schemas.Ref{
+		Kind:    schemas.RefKindBranch,
+		Project: schemas.NewProject("foo/bar"),
+		Name:    "sweet",
+	}
+	assert.NoError(t, l.GetRef(&newRef))
+	assert.NotEqual(t, ref, newRef)
 }
 
 func TestLocalMetricFunctions(t *testing.T) {

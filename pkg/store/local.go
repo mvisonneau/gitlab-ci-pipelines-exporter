@@ -3,13 +3,12 @@ package store
 import (
 	"sync"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // Local ..
 type Local struct {
-	projects      config.Projects
+	projects      schemas.Projects
 	projectsMutex sync.RWMutex
 
 	environments      schemas.Environments
@@ -23,7 +22,7 @@ type Local struct {
 }
 
 // SetProject ..
-func (l *Local) SetProject(p config.Project) error {
+func (l *Local) SetProject(p schemas.Project) error {
 	l.projectsMutex.Lock()
 	defer l.projectsMutex.Unlock()
 
@@ -32,7 +31,7 @@ func (l *Local) SetProject(p config.Project) error {
 }
 
 // DelProject ..
-func (l *Local) DelProject(k config.ProjectKey) error {
+func (l *Local) DelProject(k schemas.ProjectKey) error {
 	l.projectsMutex.Lock()
 	defer l.projectsMutex.Unlock()
 
@@ -41,7 +40,7 @@ func (l *Local) DelProject(k config.ProjectKey) error {
 }
 
 // GetProject ..
-func (l *Local) GetProject(p *config.Project) error {
+func (l *Local) GetProject(p *schemas.Project) error {
 	exists, err := l.ProjectExists(p.Key())
 	if err != nil {
 		return err
@@ -57,7 +56,7 @@ func (l *Local) GetProject(p *config.Project) error {
 }
 
 // ProjectExists ..
-func (l *Local) ProjectExists(k config.ProjectKey) (bool, error) {
+func (l *Local) ProjectExists(k schemas.ProjectKey) (bool, error) {
 	l.projectsMutex.RLock()
 	defer l.projectsMutex.RUnlock()
 
@@ -66,8 +65,8 @@ func (l *Local) ProjectExists(k config.ProjectKey) (bool, error) {
 }
 
 // Projects ..
-func (l *Local) Projects() (projects config.Projects, err error) {
-	projects = make(config.Projects)
+func (l *Local) Projects() (projects schemas.Projects, err error) {
+	projects = make(schemas.Projects)
 	l.projectsMutex.RLock()
 	defer l.projectsMutex.RUnlock()
 
