@@ -102,5 +102,5 @@ func GetMergeRequestIIDFromRefName(refName string) (string, error) {
 			return matches[2], nil
 		}
 	}
-	return "", fmt.Errorf("unable to extract the merge-request ID from the ref (%s)", refName)
+	return refName, fmt.Errorf("unable to extract the merge-request ID from the ref (%s)", refName)
 }

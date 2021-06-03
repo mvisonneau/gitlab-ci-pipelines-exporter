@@ -189,7 +189,8 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 
 		for _, job := range foundJobs {
 			if _, ok := jobsToRefresh[job.Name]; ok {
-				if ref.Name == job.Ref {
+				jobRefName, _ := schemas.GetMergeRequestIIDFromRefName(job.Ref)
+				if ref.Name == jobRefName {
 					jobs = append(jobs, schemas.NewJob(*job))
 					delete(jobsToRefresh, job.Name)
 				}

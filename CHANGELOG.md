@@ -42,6 +42,7 @@ log:
 
 - Bumped all dependencies
 - Enhanced the function signatures for the ref objects management 
+- Fixed a bug causing the jobs metrics pull to fail on ref.Kind=RefKindMergeRequest
 - Fixed the error handling when comparing 2 refs which resulted into nil pointer dereferences
 - Fixed the pulling of merge-request based pipelines
 - Fixed unit tests on windows
