@@ -22,6 +22,7 @@ The configuration syntax has evolved, you can refer to the [updated version of t
 ### Added
 
 - New metric `gitlab_ci_pipeline_queued_duration_seconds`
+- New metric `gitlab_ci_pipeline_job_queued_duration_seconds`
 - (en|dis)able pulling `branches` / `tags` / `merge_requests` on a global or per-project basis
 - Choose to export metrics for only the most 'n' recently updated refs pipelines
 - Choose to export metrics for refs with pipelines 'updated in the last x seconds'

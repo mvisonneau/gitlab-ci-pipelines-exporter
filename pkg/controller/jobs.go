@@ -93,7 +93,7 @@ func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 		return
 	}
 
-	log.WithFields(projectRefLogFields).Debug("processing job metrics")
+	log.WithFields(projectRefLogFields).Trace("processing job metrics")
 
 	storeSetMetric(c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobID,
@@ -111,6 +111,12 @@ func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 		Kind:   schemas.MetricKindJobDurationSeconds,
 		Labels: labels,
 		Value:  job.DurationSeconds,
+	})
+
+	storeSetMetric(c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindJobQueuedDurationSeconds,
+		Labels: labels,
+		Value:  job.QueuedDurationSeconds,
 	})
 
 	jobRunCount := schemas.Metric{

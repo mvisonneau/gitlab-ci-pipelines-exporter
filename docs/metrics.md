@@ -14,17 +14,18 @@
 | `gitlab_ci_environment_information` | Information about the environment | [project], [environment], [environment_id], [external_url], [kind], [ref], [latest_commit_short_id], [current_commit_short_id], [available], [username] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_pipeline_coverage` | Coverage of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_duration_seconds` | Duration in seconds of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
-| `gitlab_ci_pipeline_queued_duration_seconds` | Duration in seconds the most recent pipeline has been queued before starting | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_id` | ID of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_job_artifact_size_bytes` | Artifact size in bytes (sum of all of them) of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_job_duration_seconds` | Duration in seconds of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_job_id` | ID of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
+| `gitlab_ci_pipeline_job_queued_duration_seconds` | Duration in seconds the most recent job has been queued before starting | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_job_run_count` | Number of executions of a job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_job_status` | Status of the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name], [status] | `project_defaults.pull.pipeline.jobs.enabled` |
 | `gitlab_ci_pipeline_job_timestamp` | Creation date timestamp of the the most recent job | [project], [topics], [ref], [runner_description], [kind], [variables], [stage], [job_name] | `project_defaults.pull.pipeline.jobs.enabled` |
+| `gitlab_ci_pipeline_queued_duration_seconds` | Duration in seconds the most recent pipeline has been queued before starting | [project], [topics], [ref], [kind], [variables] | *available by default* |
+| `gitlab_ci_pipeline_run_count` | Number of executions of a pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_status` | Status of the most recent pipeline | [project], [topics], [ref], [kind], [variables], [status] | *available by default* |
 | `gitlab_ci_pipeline_timestamp` | Timestamp of the last update of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
-| `gitlab_ci_pipeline_run_count` | Number of executions of a pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 
 ## Labels
 

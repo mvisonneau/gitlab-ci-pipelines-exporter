@@ -176,6 +176,17 @@ func NewCollectorJobID() prometheus.Collector {
 	)
 }
 
+// NewCollectorJobQueuedDurationSeconds returns a new collector for the gitlab_ci_pipeline_job_queued_duration_seconds metric
+func NewCollectorJobQueuedDurationSeconds() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_job_queued_duration_seconds",
+			Help: "Duration in seconds the most recent job has been queued before starting",
+		},
+		append(defaultLabels, jobLabels...),
+	)
+}
+
 // NewCollectorJobRunCount returns a new collector for the gitlab_ci_pipeline_job_run_count metric
 func NewCollectorJobRunCount() prometheus.Collector {
 	return prometheus.NewCounterVec(

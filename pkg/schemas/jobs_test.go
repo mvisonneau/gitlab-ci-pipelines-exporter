@@ -10,10 +10,13 @@ import (
 
 func TestNewJob(t *testing.T) {
 	createdAt := time.Date(2020, 10, 1, 13, 5, 5, 0, time.UTC)
+	startedAt := time.Date(2020, 10, 1, 13, 5, 35, 0, time.UTC)
+
 	gitlabJob := goGitlab.Job{
 		ID:        2,
 		Name:      "foo",
 		CreatedAt: &createdAt,
+		StartedAt: &startedAt,
 		Duration:  15,
 		Status:    "failed",
 		Stage:     "🚀",
@@ -42,13 +45,14 @@ func TestNewJob(t *testing.T) {
 	}
 
 	expectedJob := Job{
-		ID:              2,
-		Name:            "foo",
-		Stage:           "🚀",
-		Timestamp:       1.601557505e+09,
-		DurationSeconds: 15,
-		Status:          "failed",
-		ArtifactSize:    150,
+		ID:                    2,
+		Name:                  "foo",
+		Stage:                 "🚀",
+		Timestamp:             1.601557505e+09,
+		DurationSeconds:       15,
+		QueuedDurationSeconds: 30,
+		Status:                "failed",
+		ArtifactSize:          150,
 
 		Runner: Runner{
 			Description: "xxx",
