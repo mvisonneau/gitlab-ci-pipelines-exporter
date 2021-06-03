@@ -44,7 +44,7 @@ func (c *Client) GetProjectPipelines(projectName string, options *goGitlab.ListP
 		fields["scope"] = *options.Scope
 	}
 
-	log.WithFields(fields).Debug("listing project pipelines")
+	log.WithFields(fields).Trace("listing project pipelines")
 
 	c.rateLimit()
 	pipelines, resp, err := c.Pipelines.ListProjectPipelines(projectName, options)
