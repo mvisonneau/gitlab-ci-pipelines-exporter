@@ -204,14 +204,14 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 					"project-name": ref.Project.Name,
 					"ref":          ref.Name,
 					"ref-kind":     ref.Kind,
-				}).Info("found ref")
+				}).Trace("found ref")
 				refs[ref.Key()] = ref
-			}
 
-			if limitToMostRecent {
-				mostRecent--
-				if mostRecent <= 0 {
-					return
+				if limitToMostRecent {
+					mostRecent--
+					if mostRecent <= 0 {
+						return
+					}
 				}
 			}
 		}
