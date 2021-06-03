@@ -168,10 +168,8 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 			refName := pipeline.Ref
 			if re.MatchString(refName) {
 				if refKind == schemas.RefKindMergeRequest {
-					if matches := re.FindStringSubmatch(refName); len(matches) == 2 {
-						refName = matches[1]
-					} else {
-						log.WithField("ref", refName).Warn("unable to extract the merge-request ID from the ref")
+					if refName, err = schemas.GetMergeRequestIIDFromRefName(refName); err != nil {
+						log.WithField("ref", refName).WithError(err).Warn()
 						continue
 					}
 				}

@@ -69,3 +69,16 @@ func TestNewRef(t *testing.T) {
 		"v0.0.7",
 	))
 }
+
+func TestGetMergeRequestIIDFromRefName(t *testing.T) {
+	name, err := GetMergeRequestIIDFromRefName("1234")
+	assert.NoError(t, err)
+	assert.Equal(t, "1234", name)
+
+	name, err = GetMergeRequestIIDFromRefName("refs/merge-requests/5678/head")
+	assert.NoError(t, err)
+	assert.Equal(t, "5678", name)
+
+	_, err = GetMergeRequestIIDFromRefName("x")
+	assert.Error(t, err)
+}
