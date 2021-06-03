@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   gitlab-ci-pipelines-exporter:
-    image: docker.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.4.9
+    image: docker.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.0
     # You can comment out the image name and use the following statement
     # to build the image against the current version of the repository
     # build: ../..
