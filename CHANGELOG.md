@@ -9,23 +9,24 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 **BREAKING CHANGES**
 
-The configuration syntax has evolved, you can refer to the [updated version of the doc](docs/configuration_syntax.md)
+- The configuration syntax has evolved, you can refer to the [updated version of the doc](docs/configuration_syntax.md)
+  - `pull.maximum_gitlab_api_requests_per_second` has moved to `gitlab.maximum_requests_per_second`
+  - `project_defaults.pull.refs.*` has been redone in a hopefully more comprehensible fashion
+    - `project_defaults.pull.refs.(branches|tags|merge_requests).*` parameters can now be used to have a finer granularity
+      on the management of per-ref-kind settings
+    - `project_defaults.pull.refs.from.(pipelines|merge_requests)` is not natively managed as part of the per-ref-kind specific parameters
+  - `project_defaults.pull.environments.name_regexp` has moved to `project_defaults.pull.environments.regexp`
+  - `project_defaults.pull.environments.tags_regexp` was removed to avoid confusion
 
-- `pull.maximum_gitlab_api_requests_per_second` has moved to `gitlab.maximum_requests_per_second`
-- `project_defaults.pull.refs.*` has been redone in a hopefully more comprehensible fashion
-  - `project_defaults.pull.refs.(branches|tags|merge_requests).*` parameters can now be used to have a finer granularity
-    on the management of per-ref-kind settings
-  - `project_defaults.pull.refs.from.(pipelines|merge_requests)` is not natively managed as part of the per-ref-kind specific parameters
-- `project_defaults.pull.environments.name_regexp` has moved to `project_defaults.pull.environments.regexp`
-- `project_defaults.pull.environments.tags_regexp` was removed to avoid confusion
-
-Logging configuration now has to be done as part of the config file instead of CLI flags: 
+- Logging configuration now has to be done as part of the config file instead of CLI flags: 
 
 ```yaml
 log:
   level: info
   format: text
 ```
+
+- By default, when exporting metrics for `environments`, stopped ones will not be considered any more.
 
 ### Added
 
@@ -35,6 +36,7 @@ log:
 - Choose to export metrics for only the most 'n' recently updated refs pipelines
 - Choose to export metrics for refs with pipelines 'updated in the last x seconds'
 - Choose to export metrics for deleted `branches` or `tags`
+- Choose to export metrics for available `environments` only
 
 ### Changed
 

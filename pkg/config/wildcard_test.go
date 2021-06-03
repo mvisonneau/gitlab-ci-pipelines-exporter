@@ -12,6 +12,7 @@ func TestNewWildcard(t *testing.T) {
 	w.OutputSparseStatusMetrics = true
 
 	w.Pull.Environments.Regexp = `.*`
+	w.Pull.Environments.ExcludeStopped = true
 
 	w.Pull.Refs.Branches.Enabled = true
 	w.Pull.Refs.Branches.Regexp = `^main|master$`

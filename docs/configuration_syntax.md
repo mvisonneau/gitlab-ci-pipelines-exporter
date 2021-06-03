@@ -211,6 +211,10 @@ project_defaults:
       # (optional, default: ".*")
       regexp: ".*"
 
+      # Do not export metrics for stopped environments
+      # (optional, default: true)
+      exclude_stopped: true
+
     refs:
       branches:
         # Monitor pipelines related to project branches 
@@ -310,6 +314,10 @@ projects:
         # Filter out by name environments to include
         # (optional, default: ".*")
         regexp: ".*"
+
+        # Do not export metrics for stopped environments
+        # (optional, default: true)
+        exclude_stopped: true
 
       refs:
         branches:
@@ -426,6 +434,10 @@ wildcards:
         # Filter out by name environments to include
         # (optional, default: ".*")
         regexp: ".*"
+
+        # Do not export metrics for stopped environments
+        # (optional, default: true)
+        exclude_stopped: true
 
       refs:
         branches:

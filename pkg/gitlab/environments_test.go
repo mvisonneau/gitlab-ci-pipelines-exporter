@@ -25,8 +25,13 @@ func TestGetProjectEnvironments(t *testing.T) {
 			w.Header().Add("X-Page", strconv.Itoa(currentPage))
 			w.Header().Add("X-Next-Page", strconv.Itoa(currentPage+1))
 
+			if scope, ok := r.URL.Query()["states"]; ok && len(scope) == 1 && scope[0] == "available" {
+				fmt.Fprint(w, `[{"id":1338,"name":"main"}]`)
+				return
+			}
+
 			if currentPage == 1 {
-				fmt.Fprint(w, `[{"name":"main"},{"id":1337,"name":"dev"}]`)
+				fmt.Fprint(w, `[{"id":1338,"name":"main"},{"id":1337,"name":"dev"}]`)
 				return
 			}
 
@@ -40,6 +45,7 @@ func TestGetProjectEnvironments(t *testing.T) {
 
 	p := schemas.NewProject("foo")
 	p.Pull.Environments.Regexp = "^dev"
+	p.Pull.Environments.ExcludeStopped = false
 
 	xenv := schemas.Environment{
 		ProjectName:               "foo",
@@ -66,6 +72,24 @@ func TestGetProjectEnvironments(t *testing.T) {
 	p.Pull.Environments.Regexp = "["
 	_, err = c.GetProjectEnvironments(p)
 	assert.Error(t, err)
+
+	// Test exclude stopped
+	xenv = schemas.Environment{
+		ProjectName:               "foo",
+		Name:                      "main",
+		ID:                        1338,
+		OutputSparseStatusMetrics: true,
+	}
+
+	xenvs = schemas.Environments{
+		xenv.Key(): xenv,
+	}
+
+	p.Pull.Environments.Regexp = ".*"
+	p.Pull.Environments.ExcludeStopped = true
+	envs, err = c.GetProjectEnvironments(p)
+	assert.NoError(t, err)
+	assert.Equal(t, xenvs, envs)
 }
 
 func TestGetEnvironment(t *testing.T) {

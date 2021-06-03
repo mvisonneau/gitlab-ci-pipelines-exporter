@@ -27,6 +27,9 @@ type ProjectPullEnvironments struct {
 
 	// Regular expression to filter environments to fetch by their names
 	Regexp string `default:".*" yaml:"regexp"`
+
+	// Prevent exporting metrics for stopped environments
+	ExcludeStopped bool `default:"true" yaml:"exclude_stopped"`
 }
 
 // ProjectPullRefs ..
@@ -56,7 +59,7 @@ type ProjectPullRefsBranches struct {
 	// at time greater than this value the metrics won't be exported
 	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
 
-	// Export metrics for deleted branches
+	// Prevent exporting metrics for deleted branches
 	ExcludeDeleted bool `default:"true" yaml:"exclude_deleted"`
 }
 
@@ -75,7 +78,7 @@ type ProjectPullRefsTags struct {
 	// at time greater than this value the metrics won't be exported
 	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
 
-	// Export metrics for deleted tags
+	// Prevent exporting metrics for deleted tags
 	ExcludeDeleted bool `default:"true" yaml:"exclude_deleted"`
 }
 

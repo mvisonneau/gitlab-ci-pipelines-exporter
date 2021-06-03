@@ -53,6 +53,7 @@ func TestNew(t *testing.T) {
 	c.ProjectDefaults.OutputSparseStatusMetrics = true
 
 	c.ProjectDefaults.Pull.Environments.Regexp = `.*`
+	c.ProjectDefaults.Pull.Environments.ExcludeStopped = true
 
 	c.ProjectDefaults.Pull.Refs.Branches.Enabled = true
 	c.ProjectDefaults.Pull.Refs.Branches.Regexp = `^main|master$`

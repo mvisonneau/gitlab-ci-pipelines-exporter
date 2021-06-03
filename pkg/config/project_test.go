@@ -14,6 +14,7 @@ func TestNewProject(t *testing.T) {
 	p.OutputSparseStatusMetrics = true
 
 	p.Pull.Environments.Regexp = `.*`
+	p.Pull.Environments.ExcludeStopped = true
 
 	p.Pull.Refs.Branches.Enabled = true
 	p.Pull.Refs.Branches.Regexp = `^main|master$`

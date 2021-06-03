@@ -22,6 +22,10 @@ func (c *Client) GetProjectEnvironments(p schemas.Project) (
 		},
 	}
 
+	if p.Pull.Environments.ExcludeStopped {
+		options.States = goGitlab.String("available")
+	}
+
 	re, err := regexp.Compile(p.Pull.Environments.Regexp)
 	if err != nil {
 		return nil, err
