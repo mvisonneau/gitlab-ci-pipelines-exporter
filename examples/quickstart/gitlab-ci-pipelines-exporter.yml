@@ -1,3 +1,7 @@
+---
+log:
+  level: debug
+
 gitlab:
   url: https://gitlab.com
   token: <your_token>

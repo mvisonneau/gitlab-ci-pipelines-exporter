@@ -10,6 +10,9 @@ import (
 func TestNew(t *testing.T) {
 	c := Config{}
 
+	c.Log.Level = "info"
+	c.Log.Format = "text"
+
 	c.Server.ListenAddress = ":8080"
 	c.Server.Metrics.Enabled = true
 

@@ -21,6 +21,10 @@ func TestParseInvalidYaml(t *testing.T) {
 func TestParseValidYaml(t *testing.T) {
 	yamlConfig := `
 ---
+log:
+  level: trace
+  format: json
+
 server:
   enable_pprof: true
   listen_address: :1025
@@ -142,6 +146,10 @@ wildcards:
 	assert.NoError(t, err)
 
 	xcfg := New()
+
+	xcfg.Log.Level = "trace"
+	xcfg.Log.Format = "json"
+
 	xcfg.Server.EnablePprof = true
 	xcfg.Server.ListenAddress = ":1025"
 	xcfg.Server.Metrics.Enabled = false

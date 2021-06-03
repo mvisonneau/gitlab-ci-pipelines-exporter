@@ -9,7 +9,6 @@ services:
       - 8080:8080
     environment:
       GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter.yml
-      GCPE_LOG_LEVEL: debug
     volumes:
       - type: bind
         source: ./gitlab-ci-pipelines-exporter.yml

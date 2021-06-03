@@ -1,6 +1,18 @@
 # GitLab CI Pipelines Exporter - Configuration syntax
 
 ```yaml
+# Log configuration
+log:
+  # Set the logging level
+  # allowed values: trace, debug, info, warning, error, fatal or panic
+  # (optional, default: info)
+  level: info
+
+  # Set the logging format
+  # allowed values: text or json
+  # (optional, default: text)
+  format: text
+
 # Exporter HTTP servers configuration
 server:
   # [address:port] to make the process listen

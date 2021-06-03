@@ -265,12 +265,10 @@ COMMANDS:
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --config file, -c file        config file (default: "~/.gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
-   --redis-url url               redis url for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) [$GCPE_REDIS_URL]
-   --gitlab-token token          GitLab API access token (can be used to override the value set in the config file) [$GCPE_GITLAB_TOKEN]
-   --webhook-secret-token token  token used to authenticate legitimate requests (can be used to override the value set in the config file) [$GCPE_WEBHOOK_SECRET_TOKEN]
-   --log-level level             log level (debug,info,warn,fatal,panic) (default: "info") [$GCPE_LOG_LEVEL]
-   --log-format format           log format (json,text) (default: "text") [$GCPE_LOG_FORMAT]
+   --config file, -c file        config file (default: "./gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
+   --redis-url url               redis url for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) (overrides config file parameter) [$GCPE_REDIS_URL]
+   --gitlab-token token          GitLab API access token (overrides config file parameter) [$GCPE_GITLAB_TOKEN]
+   --webhook-secret-token token  token used to authenticate legitimate requests (overrides config file parameter) [$GCPE_WEBHOOK_SECRET_TOKEN]
    --help, -h                    show help (default: false)
 ```
 

@@ -37,29 +37,17 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 		&cli.StringFlag{
 			Name:    "redis-url",
 			EnvVars: []string{"GCPE_REDIS_URL"},
-			Usage:   "redis `url` for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value])",
+			Usage:   "redis `url` for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) (overrides config file parameter)",
 		},
 		&cli.StringFlag{
 			Name:    "gitlab-token",
 			EnvVars: []string{"GCPE_GITLAB_TOKEN"},
-			Usage:   "GitLab API access `token` (can be used to override the value set in the config file)",
+			Usage:   "GitLab API access `token` (overrides config file parameter)",
 		},
 		&cli.StringFlag{
 			Name:    "webhook-secret-token",
 			EnvVars: []string{"GCPE_WEBHOOK_SECRET_TOKEN"},
-			Usage:   "`token` used to authenticate legitimate requests (can be used to override the value set in the config file)",
-		},
-		&cli.StringFlag{
-			Name:    "log-level",
-			EnvVars: []string{"GCPE_LOG_LEVEL"},
-			Usage:   "log `level` (debug,info,warn,fatal,panic)",
-			Value:   "info",
-		},
-		&cli.StringFlag{
-			Name:    "log-format",
-			EnvVars: []string{"GCPE_LOG_FORMAT"},
-			Usage:   "log `format` (json,text)",
-			Value:   "text",
+			Usage:   "`token` used to authenticate legitimate requests (overrides config file parameter)",
 		},
 	}
 

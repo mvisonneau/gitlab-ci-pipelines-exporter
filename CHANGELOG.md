@@ -19,6 +19,14 @@ The configuration syntax has evolved, you can refer to the [updated version of t
 - `project_defaults.pull.environments.name_regexp` has moved to `project_defaults.pull.environments.regexp`
 - `project_defaults.pull.environments.tags_regexp` was removed to avoid confusion
 
+Logging configuration now has to be done as part of the config file instead of CLI flags: 
+
+```yaml
+log:
+  level: info
+  format: text
+```
+
 ### Added
 
 - New metric `gitlab_ci_pipeline_queued_duration_seconds`

@@ -18,7 +18,6 @@ services:
       - redis
     environment:
       GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter.yml
-      GCPE_LOG_LEVEL: debug
     volumes:
       - type: bind
         source: ./gitlab-ci-pipelines-exporter.yml

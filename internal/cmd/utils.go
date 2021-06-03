@@ -34,8 +34,8 @@ func configure(ctx *cli.Context) (cfg config.Config, err error) {
 
 	// Configure logger
 	if err = logger.Configure(logger.Config{
-		Level:  ctx.String("log-level"),
-		Format: ctx.String("log-format"),
+		Level:  cfg.Log.Level,
+		Format: cfg.Log.Format,
 	}); err != nil {
 		return
 	}

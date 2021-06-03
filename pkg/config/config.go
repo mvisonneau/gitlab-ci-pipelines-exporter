@@ -13,6 +13,9 @@ var validate *validator.Validate
 
 // Config represents all the parameters required for the app to be configured properly
 type Config struct {
+	// Log configuration for the exporter
+	Log Log `yaml:"log" validate:"dive"`
+
 	// Server related configuration
 	Server Server `yaml:"server" validate:"dive"`
 
@@ -36,6 +39,15 @@ type Config struct {
 
 	// List of wildcards to search projects from
 	Wildcards []Wildcard `validate:"unique,at-least-1-project-or-wildcard,dive" yaml:"wildcards"`
+}
+
+// Log holds runtime logging configuration
+type Log struct {
+	// Log level
+	Level string `default:"info" validate:"required,oneof=trace debug info warning error fatal panic"`
+
+	// Log format
+	Format string `default:"text" validate:"oneof=text json"`
 }
 
 // Server ..
@@ -162,6 +174,7 @@ type GarbageCollect struct {
 // custom logic
 func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 	type localConfig struct {
+		Log             Log               `yaml:"log"`
 		Server          Server            `yaml:"server"`
 		Gitlab          Gitlab            `yaml:"gitlab"`
 		Redis           Redis             `yaml:"redis"`
@@ -179,6 +192,7 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 		return
 	}
 
+	c.Log = _cfg.Log
 	c.Server = _cfg.Server
 	c.Gitlab = _cfg.Gitlab
 	c.Redis = _cfg.Redis
