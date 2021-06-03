@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 
+	"github.com/imdario/mergo"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 	log "github.com/sirupsen/logrus"
@@ -125,8 +126,12 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 	// Refresh the environments from the API
 	existingEnvs := make(schemas.Environments)
 	for p := range envProjects {
-		existingEnvs, err = c.Gitlab.GetProjectEnvironments(p)
+		projectEnvs, err := c.Gitlab.GetProjectEnvironments(p)
 		if err != nil {
+			return err
+		}
+
+		if err = mergo.Merge(&existingEnvs, projectEnvs); err != nil {
 			return err
 		}
 	}
