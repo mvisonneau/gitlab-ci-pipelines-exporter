@@ -218,6 +218,7 @@ project_defaults:
     refs:
       branches:
         # Monitor pipelines related to project branches 
+        # (optional, default: true)
         enabled: true
 
         # Filter for branches to include
@@ -238,7 +239,8 @@ project_defaults:
 
       tags:
         # Monitor pipelines related to project tags
-        enabled: false
+        # (optional, default: true)
+        enabled: true
 
         # Filter for tags to include
         # (optional, default: ".*" -- all tags)
@@ -258,6 +260,7 @@ project_defaults:
 
       merge_requests:
         # Monitor pipelines related to project merge requests
+        # (optional, default: false)
         enabled: false
 
         # Only keep most 'n' recently updated merge requests
@@ -322,6 +325,7 @@ projects:
       refs:
         branches:
           # Monitor pipelines related to project branches 
+          # (optional, default: true)
           enabled: true
 
           # Filter for branches to include
@@ -342,7 +346,8 @@ projects:
 
         tags:
           # Monitor pipelines related to project tags
-          enabled: false
+          # (optional, default: true)
+          enabled: true
 
           # Filter for tags to include
           # (optional, default: ".*" -- all tags)
@@ -362,6 +367,7 @@ projects:
 
         merge_requests:
           # Monitor pipelines related to project merge requests
+          # (optional, default: false)
           enabled: false
 
           # Only keep most 'n' recently updated merge requests
@@ -442,6 +448,7 @@ wildcards:
       refs:
         branches:
           # Monitor pipelines related to project branches 
+          # (optional, default: true)
           enabled: true
 
           # Filter for branches to include
@@ -462,7 +469,8 @@ wildcards:
 
         tags:
           # Monitor pipelines related to project tags
-          enabled: false
+          # (optional, default: true)
+          enabled: true
 
           # Filter for tags to include
           # (optional, default: ".*" -- all tags)
@@ -482,6 +490,7 @@ wildcards:
 
         merge_requests:
           # Monitor pipelines related to project merge requests
+          # (optional, default: false)
           enabled: false
 
           # Only keep most 'n' recently updated merge requests
