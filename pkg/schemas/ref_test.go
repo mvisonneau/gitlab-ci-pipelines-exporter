@@ -79,6 +79,11 @@ func TestGetMergeRequestIIDFromRefName(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "5678", name)
 
-	_, err = GetMergeRequestIIDFromRefName("x")
+	name, err = GetMergeRequestIIDFromRefName("20.0.1")
 	assert.Error(t, err)
+	assert.Equal(t, "20.0.1", name)
+
+	name, err = GetMergeRequestIIDFromRefName("x")
+	assert.Error(t, err)
+	assert.Equal(t, "x", name)
 }

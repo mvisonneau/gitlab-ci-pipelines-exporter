@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	mergeRequestRegexp string = `^(\d+)|refs/merge-requests/(\d+)/head$`
+	mergeRequestRegexp string = `^((\d+)|refs/merge-requests/(\d+)/head)$`
 
 	// RefKindBranch refers to a branch
 	RefKindBranch RefKind = "branch"
@@ -93,13 +93,13 @@ func GetRefRegexp(ppr config.ProjectPullRefs, rk RefKind) (re *regexp.Regexp, er
 // GetMergeRequestIIDFromRefName parse a refName to extract a merge request IID
 func GetMergeRequestIIDFromRefName(refName string) (string, error) {
 	re := regexp.MustCompile(mergeRequestRegexp)
-	if matches := re.FindStringSubmatch(refName); len(matches) == 3 {
-		if len(matches[1]) > 0 {
-			return matches[1], nil
-		}
-
+	if matches := re.FindStringSubmatch(refName); len(matches) == 4 {
 		if len(matches[2]) > 0 {
 			return matches[2], nil
+		}
+
+		if len(matches[3]) > 0 {
+			return matches[3], nil
 		}
 	}
 	return refName, fmt.Errorf("unable to extract the merge-request ID from the ref (%s)", refName)
