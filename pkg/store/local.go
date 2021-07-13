@@ -298,7 +298,7 @@ func (l *Local) isTaskAlreadyQueued(tt schemas.TaskType, uniqueID string) bool {
 	return false
 }
 
-// Queue registers that we are queueing the task
+// QueueTask registers that we are queueing the task
 func (l *Local) QueueTask(tt schemas.TaskType, uniqueID string) (bool, error) {
 	if !l.isTaskAlreadyQueued(tt, uniqueID) {
 		l.tasksMutex.Lock()
@@ -309,7 +309,7 @@ func (l *Local) QueueTask(tt schemas.TaskType, uniqueID string) (bool, error) {
 	return false, nil
 }
 
-// Unqueue removes the task from the tracker
+// UnqueueTask removes the task from the tracker
 func (l *Local) UnqueueTask(tt schemas.TaskType, uniqueID string) error {
 	if l.isTaskAlreadyQueued(tt, uniqueID) {
 		l.tasksMutex.Lock()

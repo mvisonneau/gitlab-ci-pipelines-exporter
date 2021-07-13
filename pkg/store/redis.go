@@ -300,12 +300,12 @@ func (r *Redis) MetricsCount() (int64, error) {
 	return r.HLen(r.ctx, redisMetricsKey).Result()
 }
 
-// Queue registers that we are queueing the task
+// QueueTask registers that we are queueing the task
 func (r *Redis) QueueTask(tt schemas.TaskType, uniqueID string) (bool, error) {
 	return r.SetNX(r.ctx, fmt.Sprintf("%v%s", tt, uniqueID), nil, 0).Result()
 }
 
-// Unqueue removes the task from the tracker
+// UnqueueTask removes the task from the tracker
 func (r *Redis) UnqueueTask(tt schemas.TaskType, uniqueID string) (err error) {
 	_, err = r.Del(r.ctx, fmt.Sprintf("%v%s", tt, uniqueID)).Result()
 	return
