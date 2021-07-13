@@ -60,7 +60,7 @@ func (c *Controller) triggerRefMetricsPull(ref schemas.Ref) {
 
 		// Perhaps the project is discoverable through a wildcard
 		if !projectExists && len(c.Config.Wildcards) > 0 {
-			for _, w := range c.Config.Wildcards {
+			for id, w := range c.Config.Wildcards {
 				// If in all our wildcards we have one which can potentially match the project ref
 				// received, we trigger a scan
 				matches, err := isRefMatchingWilcard(w, ref)
@@ -70,7 +70,7 @@ func (c *Controller) triggerRefMetricsPull(ref schemas.Ref) {
 				}
 
 				if matches {
-					c.ScheduleTask(context.TODO(), TaskTypePullProjectsFromWildcard, w)
+					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProjectsFromWildcard, strconv.Itoa(id), strconv.Itoa(id), w)
 					log.WithFields(logFields).Info("project ref not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
 				} else {
 					log.WithFields(logFields).Debug("project ref not matching wildcard, skipping..")
@@ -111,7 +111,7 @@ schedulePull:
 	log.WithFields(logFields).Info("received a pipeline webhook from GitLab for a ref, triggering metrics pull")
 	// TODO: When all the metrics will be sent over the webhook, we might be able to avoid redoing a pull
 	// eg: 'coverage' is not in the pipeline payload yet, neither is 'artifacts' in the job one
-	c.ScheduleTask(context.TODO(), TaskTypePullRefMetrics, ref)
+	c.ScheduleTask(context.TODO(), schemas.TaskTypePullRefMetrics, string(ref.Key()), ref)
 }
 
 func (c *Controller) processDeploymentEvent(e goGitlab.DeploymentEvent) {
@@ -144,7 +144,7 @@ func (c *Controller) triggerEnvironmentMetricsPull(env schemas.Environment) {
 
 		// Perhaps the project is discoverable through a wildcard
 		if !projectExists && len(c.Config.Wildcards) > 0 {
-			for _, w := range c.Config.Wildcards {
+			for id, w := range c.Config.Wildcards {
 				// If in all our wildcards we have one which can potentially match the env
 				// received, we trigger a scan
 				matches, err := isEnvMatchingWilcard(w, env)
@@ -154,7 +154,7 @@ func (c *Controller) triggerEnvironmentMetricsPull(env schemas.Environment) {
 				}
 
 				if matches {
-					c.ScheduleTask(context.TODO(), TaskTypePullProjectsFromWildcard, w)
+					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProjectsFromWildcard, strconv.Itoa(id), strconv.Itoa(id), w)
 					log.WithFields(logFields).Info("project environment not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
 				} else {
 					log.WithFields(logFields).Debug("project ref not matching wildcard, skipping..")
@@ -198,7 +198,7 @@ func (c *Controller) triggerEnvironmentMetricsPull(env schemas.Environment) {
 
 schedulePull:
 	log.WithFields(logFields).Info("received a deployment webhook from GitLab for an environment, triggering metrics pull")
-	c.ScheduleTask(context.TODO(), TaskTypePullEnvironmentMetrics, env)
+	c.ScheduleTask(context.TODO(), schemas.TaskTypePullEnvironmentMetrics, string(env.Key()), env)
 }
 
 func isRefMatchingProjectPullRefs(pprs config.ProjectPullRefs, ref schemas.Ref) (matches bool, err error) {

@@ -11,6 +11,7 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 )
 
@@ -46,25 +47,35 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 }
 
 func (c *Controller) registerTasks() {
-	for n, h := range map[TaskType]interface{}{
-		TaskTypeGarbageCollectEnvironments:   c.TaskHandlerGarbageCollectEnvironments,
-		TaskTypeGarbageCollectMetrics:        c.TaskHandlerGarbageCollectMetrics,
-		TaskTypeGarbageCollectProjects:       c.TaskHandlerGarbageCollectProjects,
-		TaskTypeGarbageCollectRefs:           c.TaskHandlerGarbageCollectRefs,
-		TaskTypePullEnvironmentMetrics:       c.TaskHandlerPullEnvironmentMetrics,
-		TaskTypePullEnvironmentsFromProject:  c.TaskHandlerPullEnvironmentsFromProject,
-		TaskTypePullEnvironmentsFromProjects: c.TaskHandlerPullEnvironmentsFromProjects,
-		TaskTypePullMetrics:                  c.TaskHandlerPullMetrics,
-		TaskTypePullProjectsFromWildcard:     c.TaskHandlerPullProjectsFromWildcard,
-		TaskTypePullProjectsFromWildcards:    c.TaskHandlerPullProjectsFromWildcards,
-		TaskTypePullRefMetrics:               c.TaskHandlerPullRefMetrics,
-		TaskTypePullRefsFromProject:          c.TaskHandlerPullRefsFromProject,
-		TaskTypePullRefsFromProjects:         c.TaskHandlerPullRefsFromProjects,
+	for n, h := range map[schemas.TaskType]interface{}{
+		schemas.TaskTypeGarbageCollectEnvironments:   c.TaskHandlerGarbageCollectEnvironments,
+		schemas.TaskTypeGarbageCollectMetrics:        c.TaskHandlerGarbageCollectMetrics,
+		schemas.TaskTypeGarbageCollectProjects:       c.TaskHandlerGarbageCollectProjects,
+		schemas.TaskTypeGarbageCollectRefs:           c.TaskHandlerGarbageCollectRefs,
+		schemas.TaskTypePullEnvironmentMetrics:       c.TaskHandlerPullEnvironmentMetrics,
+		schemas.TaskTypePullEnvironmentsFromProject:  c.TaskHandlerPullEnvironmentsFromProject,
+		schemas.TaskTypePullEnvironmentsFromProjects: c.TaskHandlerPullEnvironmentsFromProjects,
+		schemas.TaskTypePullMetrics:                  c.TaskHandlerPullMetrics,
+		schemas.TaskTypePullProjectsFromWildcard:     c.TaskHandlerPullProjectsFromWildcard,
+		schemas.TaskTypePullProjectsFromWildcards:    c.TaskHandlerPullProjectsFromWildcards,
+		schemas.TaskTypePullRefMetrics:               c.TaskHandlerPullRefMetrics,
+		schemas.TaskTypePullRefsFromProject:          c.TaskHandlerPullRefsFromProject,
+		schemas.TaskTypePullRefsFromProjects:         c.TaskHandlerPullRefsFromProjects,
 	} {
 		_, _ = c.TaskController.TaskMap.Register(&taskq.TaskOptions{
-			Name:    string(n),
-			Handler: h,
+			Name:       string(n),
+			Handler:    h,
+			RetryLimit: 1,
 		})
+	}
+}
+
+func (c *Controller) unqueueTask(tt schemas.TaskType, uniqueID string) {
+	if err := c.Store.UnqueueTask(tt, uniqueID); err != nil {
+		log.WithFields(log.Fields{
+			"task_type":      tt,
+			"task_unique_id": uniqueID,
+		}).WithError(err).Warn("unqueuing task")
 	}
 }
 

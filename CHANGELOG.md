@@ -9,6 +9,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Changed
 
+- fixed a goroutines/memory leak introduced in `0.5.0` which can occur when attempting to process more tasks than the ratelimit permits
 - webhooks: added more details when processing wildcards
 
 ## [v0.5.0] - 2021-06-02

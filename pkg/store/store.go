@@ -38,6 +38,11 @@ type Store interface {
 	MetricExists(schemas.MetricKey) (bool, error)
 	Metrics() (schemas.Metrics, error)
 	MetricsCount() (int64, error)
+
+	// Helpers to keep track of currently queued tasks and avoid scheduling them
+	// twice at the risk of ending up with loads of dangling goroutines being locked
+	QueueTask(schemas.TaskType, string) (bool, error)
+	UnqueueTask(schemas.TaskType, string) error
 }
 
 // NewLocalStore ..

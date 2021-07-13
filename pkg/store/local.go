@@ -19,6 +19,9 @@ type Local struct {
 
 	metrics      schemas.Metrics
 	metricsMutex sync.RWMutex
+
+	tasks      schemas.Tasks
+	tasksMutex sync.Mutex
 }
 
 // SetProject ..
@@ -271,4 +274,47 @@ func (l *Local) MetricsCount() (int64, error) {
 	defer l.metricsMutex.RUnlock()
 
 	return int64(len(l.metrics)), nil
+}
+
+// isTaskAlreadyQueued assess if a task is already queued or not
+func (l *Local) isTaskAlreadyQueued(tt schemas.TaskType, uniqueID string) bool {
+	l.tasksMutex.Lock()
+	defer l.tasksMutex.Unlock()
+
+	if l.tasks == nil {
+		l.tasks = make(map[schemas.TaskType]map[string]interface{})
+	}
+
+	taskTypeQueue, ok := l.tasks[tt]
+	if !ok {
+		l.tasks[tt] = make(map[string]interface{})
+		return false
+	}
+
+	if _, alreadyQueued := taskTypeQueue[uniqueID]; alreadyQueued {
+		return true
+	}
+
+	return false
+}
+
+// Queue registers that we are queueing the task
+func (l *Local) QueueTask(tt schemas.TaskType, uniqueID string) (bool, error) {
+	if !l.isTaskAlreadyQueued(tt, uniqueID) {
+		l.tasksMutex.Lock()
+		defer l.tasksMutex.Unlock()
+		l.tasks[tt][uniqueID] = nil
+		return true, nil
+	}
+	return false, nil
+}
+
+// Unqueue removes the task from the tracker
+func (l *Local) UnqueueTask(tt schemas.TaskType, uniqueID string) error {
+	if l.isTaskAlreadyQueued(tt, uniqueID) {
+		l.tasksMutex.Lock()
+		defer l.tasksMutex.Unlock()
+		delete(l.tasks[tt], uniqueID)
+	}
+	return nil
 }

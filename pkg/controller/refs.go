@@ -98,7 +98,7 @@ func (c *Controller) PullRefsFromProject(ctx context.Context, p schemas.Project)
 				return err
 			}
 
-			c.ScheduleTask(ctx, TaskTypePullRefMetrics, ref)
+			c.ScheduleTask(ctx, schemas.TaskTypePullRefMetrics, string(ref.Key()), ref)
 		}
 	}
 	return nil

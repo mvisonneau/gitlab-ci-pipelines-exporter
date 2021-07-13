@@ -34,7 +34,7 @@ func (c *Controller) PullEnvironmentsFromProject(ctx context.Context, p schemas.
 				"environment-name": env.Name,
 			}).Info("discovered new environment")
 
-			c.ScheduleTask(ctx, TaskTypePullEnvironmentMetrics, env)
+			c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentMetrics, string(env.Key()), env)
 		}
 	}
 	return

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -34,8 +35,8 @@ func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wild
 				log.Errorf(err.Error())
 			}
 
-			c.ScheduleTask(ctx, TaskTypePullRefsFromProject, p)
-			c.ScheduleTask(ctx, TaskTypePullEnvironmentsFromProject, p)
+			c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(p.Key()), p)
+			c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentsFromProject, string(p.Key()), p)
 		}
 	}
 
