@@ -24,4 +24,4 @@ USER 65534
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/gitlab-ci-pipelines-exporter"]
-CMD [""]
+CMD ["run"]
