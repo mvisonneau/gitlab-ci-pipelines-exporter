@@ -43,6 +43,7 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 
 	// Start the scheduler
 	c.Schedule(ctx, cfg.Pull, cfg.GarbageCollect)
+
 	return
 }
 

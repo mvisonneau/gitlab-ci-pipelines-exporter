@@ -6,7 +6,7 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/internal/cli"
 )
 
-var version = ""
+var version = "devel"
 
 func main() {
 	cli.Run(version, os.Args)

@@ -219,6 +219,16 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 	return
 }
 
+// ToYAML ..
+func (c Config) ToYAML() string {
+	c.Gitlab.Token = "*******"
+	b, err := yaml.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
+}
+
 // Validate will throw an error if the Config parameters are whether incomplete or incorrects
 func (c Config) Validate() error {
 	if validate == nil {

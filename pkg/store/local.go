@@ -20,8 +20,9 @@ type Local struct {
 	metrics      schemas.Metrics
 	metricsMutex sync.RWMutex
 
-	tasks      schemas.Tasks
-	tasksMutex sync.Mutex
+	tasks              schemas.Tasks
+	tasksMutex         sync.RWMutex
+	executedTasksCount uint64
 }
 
 // SetProject ..
@@ -315,6 +316,26 @@ func (l *Local) UnqueueTask(tt schemas.TaskType, uniqueID string) error {
 		l.tasksMutex.Lock()
 		defer l.tasksMutex.Unlock()
 		delete(l.tasks[tt], uniqueID)
+		l.executedTasksCount++
 	}
 	return nil
+}
+
+// CurrentlyQueuedTasksCount ..
+func (l *Local) CurrentlyQueuedTasksCount() (count uint64, err error) {
+	l.tasksMutex.RLock()
+	defer l.tasksMutex.RUnlock()
+
+	for _, t := range l.tasks {
+		count += uint64(len(t))
+	}
+
+	return
+}
+
+// ExecutedTasksCount ..
+func (l *Local) ExecutedTasksCount() (uint64, error) {
+	l.tasksMutex.RLock()
+	defer l.tasksMutex.RUnlock()
+	return l.executedTasksCount, nil
 }

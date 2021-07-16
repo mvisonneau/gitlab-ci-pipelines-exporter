@@ -3,7 +3,11 @@ module github.com/mvisonneau/gitlab-ci-pipelines-exporter
 go 1.16
 
 require (
+	github.com/alecthomas/chroma v0.9.2
 	github.com/alicebob/miniredis/v2 v2.15.1
+	github.com/charmbracelet/bubbles v0.8.0
+	github.com/charmbracelet/bubbletea v0.14.1
+	github.com/charmbracelet/lipgloss v0.3.0
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/creasty/defaults v1.5.1
 	github.com/go-playground/validator/v10 v10.7.0
@@ -18,8 +22,10 @@ require (
 	github.com/imdario/mergo v0.3.12
 	github.com/klauspost/compress v1.12.3 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/muesli/termenv v0.9.0
 	github.com/mvisonneau/go-helpers v0.0.1
 	github.com/openlyinc/pointy v1.1.2
+	github.com/paulbellamy/ratecounter v0.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
@@ -29,6 +35,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.4
 	github.com/vmihailenco/taskq/v3 v3.2.4
 	github.com/xanzy/go-gitlab v0.50.1
+	github.com/xeonx/timeago v1.0.0-rc4
 	go.uber.org/ratelimit v0.2.0
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
@@ -39,4 +46,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
 
-replace github.com/vmihailenco/taskq/v3 => github.com/mvisonneau/taskq/v3 v3.2.4-0.20210712150957-0533f0c347b7
+replace (
+	github.com/vmihailenco/taskq/v3 => github.com/mvisonneau/taskq/v3 v3.2.4-0.20210712150957-0533f0c347b7
+	github.com/xanzy/go-gitlab v0.50.1 => github.com/mvisonneau/go-gitlab v0.20.2-0.20210713152017-e61123733123
+)

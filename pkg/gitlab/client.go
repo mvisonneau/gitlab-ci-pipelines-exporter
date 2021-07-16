@@ -8,6 +8,7 @@ import (
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
+	"github.com/paulbellamy/ratecounter"
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -24,7 +25,9 @@ type Client struct {
 		HTTPClient *http.Client
 	}
 
-	RateLimiter ratelimit.Limiter
+	RateLimiter     ratelimit.Limiter
+	RateCounter     *ratecounter.RateCounter
+	RequestsCounter uint64
 }
 
 // ClientConfig ..
@@ -78,6 +81,7 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 			URL:        cfg.ReadinessURL,
 			HTTPClient: readinessCheckHTTPClient,
 		},
+		RateCounter: ratecounter.NewRateCounter(time.Second),
 	}, nil
 }
 
@@ -99,4 +103,8 @@ func (c *Client) ReadinessCheck() healthcheck.Check {
 
 func (c *Client) rateLimit() {
 	ratelimit.Take(c.RateLimiter)
+
+	// Used for monitoring purposes
+	c.RateCounter.Incr(1)
+	c.RequestsCounter++
 }

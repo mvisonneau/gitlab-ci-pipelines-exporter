@@ -10,11 +10,12 @@ import (
 )
 
 const (
-	redisProjectsKey     string = `projects`
-	redisEnvironmentsKey string = `environments`
-	redisRefsKey         string = `refs`
-	redisMetricsKey      string = `metrics`
-	redisTasksKey        string = `tasks`
+	redisProjectsKey           string = `projects`
+	redisEnvironmentsKey       string = `environments`
+	redisRefsKey               string = `refs`
+	redisMetricsKey            string = `metrics`
+	redisTasksKey              string = `tasks`
+	redisTasksExecutedCountKey string = `tasksExecutedCount`
 )
 
 // Redis ..
@@ -307,6 +308,26 @@ func (r *Redis) QueueTask(tt schemas.TaskType, uniqueID string) (bool, error) {
 
 // UnqueueTask removes the task from the tracker
 func (r *Redis) UnqueueTask(tt schemas.TaskType, uniqueID string) (err error) {
-	_, err = r.Del(r.ctx, fmt.Sprintf("%v%s", tt, uniqueID)).Result()
+	var matched int64
+	matched, err = r.Del(r.ctx, fmt.Sprintf("%v%s", tt, uniqueID)).Result()
+	if err != nil {
+		return
+	}
+
+	if matched > 0 {
+		_, err = r.Incr(r.ctx, redisTasksExecutedCountKey).Result()
+	}
 	return
+}
+
+// CurrentlyQueuedTasksCount ..
+func (r *Redis) CurrentlyQueuedTasksCount() (uint64, error) {
+	len, err := r.HLen(r.ctx, redisTasksKey).Result()
+	return uint64(len), err
+}
+
+// ExecutedTasksCount ..
+func (r *Redis) ExecutedTasksCount() (uint64, error) {
+	len, err := r.HLen(r.ctx, redisTasksKey).Result()
+	return uint64(len), err
 }

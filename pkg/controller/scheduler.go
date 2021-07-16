@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/taskq/v3"
@@ -18,9 +19,10 @@ const bufferSize = 1000
 
 // TaskController holds task related clients
 type TaskController struct {
-	Factory taskq.Factory
-	Queue   taskq.Queue
-	TaskMap *taskq.TaskMap
+	Factory                  taskq.Factory
+	Queue                    taskq.Queue
+	TaskMap                  *taskq.TaskMap
+	TaskSchedulingMonitoring map[schemas.TaskType]*monitor.TaskSchedulingStatus
 }
 
 // NewTaskController initializes and returns a new TaskController object
@@ -61,6 +63,8 @@ func NewTaskController(r *redis.Client) (t TaskController) {
 			log.WithError(err).Fatal("starting consuming the task queue")
 		}
 	}
+
+	t.TaskSchedulingMonitoring = make(map[schemas.TaskType]*monitor.TaskSchedulingStatus)
 
 	return
 }
@@ -132,6 +136,7 @@ func (c *Controller) TaskHandlerPullRefMetrics(ref schemas.Ref) {
 // TaskHandlerPullProjectsFromWildcards ..
 func (c *Controller) TaskHandlerPullProjectsFromWildcards(ctx context.Context) {
 	defer c.unqueueTask(schemas.TaskTypePullProjectsFromWildcards, "_")
+	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypePullProjectsFromWildcards)
 
 	log.WithFields(
 		log.Fields{
@@ -147,6 +152,7 @@ func (c *Controller) TaskHandlerPullProjectsFromWildcards(ctx context.Context) {
 // TaskHandlerPullEnvironmentsFromProjects ..
 func (c *Controller) TaskHandlerPullEnvironmentsFromProjects(ctx context.Context) {
 	defer c.unqueueTask(schemas.TaskTypePullEnvironmentsFromProjects, "_")
+	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypePullEnvironmentsFromProjects)
 
 	projectsCount, err := c.Store.ProjectsCount()
 	if err != nil {
@@ -172,6 +178,7 @@ func (c *Controller) TaskHandlerPullEnvironmentsFromProjects(ctx context.Context
 // TaskHandlerPullRefsFromProjects ..
 func (c *Controller) TaskHandlerPullRefsFromProjects(ctx context.Context) {
 	defer c.unqueueTask(schemas.TaskTypePullRefsFromProjects, "_")
+	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypePullRefsFromProjects)
 
 	projectsCount, err := c.Store.ProjectsCount()
 	if err != nil {
@@ -197,6 +204,7 @@ func (c *Controller) TaskHandlerPullRefsFromProjects(ctx context.Context) {
 // TaskHandlerPullMetrics ..
 func (c *Controller) TaskHandlerPullMetrics(ctx context.Context) {
 	defer c.unqueueTask(schemas.TaskTypePullMetrics, "_")
+	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypePullMetrics)
 
 	refsCount, err := c.Store.RefsCount()
 	if err != nil {
@@ -239,24 +247,32 @@ func (c *Controller) TaskHandlerPullMetrics(ctx context.Context) {
 // TaskHandlerGarbageCollectProjects ..
 func (c *Controller) TaskHandlerGarbageCollectProjects(ctx context.Context) error {
 	defer c.unqueueTask(schemas.TaskTypeGarbageCollectProjects, "_")
+	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypeGarbageCollectProjects)
+
 	return c.GarbageCollectProjects(ctx)
 }
 
 // TaskHandlerGarbageCollectEnvironments ..
 func (c *Controller) TaskHandlerGarbageCollectEnvironments(ctx context.Context) error {
 	defer c.unqueueTask(schemas.TaskTypeGarbageCollectEnvironments, "_")
+	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypeGarbageCollectEnvironments)
+
 	return c.GarbageCollectEnvironments(ctx)
 }
 
 // TaskHandlerGarbageCollectRefs ..
 func (c *Controller) TaskHandlerGarbageCollectRefs(ctx context.Context) error {
 	defer c.unqueueTask(schemas.TaskTypeGarbageCollectRefs, "_")
+	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypeGarbageCollectRefs)
+
 	return c.GarbageCollectRefs(ctx)
 }
 
 // TaskHandlerGarbageCollectMetrics ..
 func (c *Controller) TaskHandlerGarbageCollectMetrics(ctx context.Context) error {
 	defer c.unqueueTask(schemas.TaskTypeGarbageCollectMetrics, "_")
+	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypeGarbageCollectMetrics)
+
 	return c.GarbageCollectMetrics(ctx)
 }
 
@@ -332,6 +348,8 @@ func (c *Controller) ScheduleTaskWithTicker(ctx context.Context, tt schemas.Task
 		"interval_seconds": intervalSeconds,
 	}).Debug("task scheduled")
 
+	c.TaskController.monitorNextTaskScheduling(tt, intervalSeconds)
+
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Duration(intervalSeconds) * time.Second)
 		for {
@@ -343,8 +361,23 @@ func (c *Controller) ScheduleTaskWithTicker(ctx context.Context, tt schemas.Task
 				switch tt {
 				default:
 					c.ScheduleTask(ctx, tt, "_")
+					c.TaskController.monitorNextTaskScheduling(tt, intervalSeconds)
 				}
 			}
 		}
 	}(ctx)
+}
+
+func (tc *TaskController) monitorNextTaskScheduling(tt schemas.TaskType, duration int) {
+	if _, ok := tc.TaskSchedulingMonitoring[tt]; !ok {
+		tc.TaskSchedulingMonitoring[tt] = &monitor.TaskSchedulingStatus{}
+	}
+	tc.TaskSchedulingMonitoring[tt].Next = time.Now().Add(time.Duration(duration) * time.Second)
+}
+
+func (tc *TaskController) monitorLastTaskScheduling(tt schemas.TaskType) {
+	if _, ok := tc.TaskSchedulingMonitoring[tt]; !ok {
+		tc.TaskSchedulingMonitoring[tt] = &monitor.TaskSchedulingStatus{}
+	}
+	tc.TaskSchedulingMonitoring[tt].Last = time.Now()
 }

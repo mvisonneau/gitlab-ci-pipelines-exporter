@@ -51,7 +51,18 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 		},
 	}
 
-	app.Action = cmd.ExecWrapper(cmd.Run)
+	app.Commands = cli.CommandsByName{
+		{
+			Name:   "run",
+			Usage:  "start the exporter",
+			Action: cmd.ExecWrapper(cmd.Run),
+		},
+		{
+			Name:   "monitor",
+			Usage:  "display information about the currently running exporter",
+			Action: cmd.ExecWrapper(cmd.Monitor),
+		},
+	}
 
 	app.Metadata = map[string]interface{}{
 		"startTime": start,

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
+	"github.com/paulbellamy/ratecounter"
 	"github.com/stretchr/testify/assert"
 	goGitlab "github.com/xanzy/go-gitlab"
 )
@@ -27,6 +28,7 @@ func getMockedClient() (*http.ServeMux, *httptest.Server, *Client) {
 	c := &Client{
 		Client:      gc,
 		RateLimiter: ratelimit.NewLocalLimiter(100),
+		RateCounter: ratecounter.NewRateCounter(time.Second),
 	}
 
 	return mux, server, c

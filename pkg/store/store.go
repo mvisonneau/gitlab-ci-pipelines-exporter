@@ -43,6 +43,8 @@ type Store interface {
 	// twice at the risk of ending up with loads of dangling goroutines being locked
 	QueueTask(schemas.TaskType, string) (bool, error)
 	UnqueueTask(schemas.TaskType, string) error
+	CurrentlyQueuedTasksCount() (uint64, error)
+	ExecutedTasksCount() (uint64, error)
 }
 
 // NewLocalStore ..
