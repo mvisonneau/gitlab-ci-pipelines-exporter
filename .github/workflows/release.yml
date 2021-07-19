@@ -60,7 +60,7 @@ jobs:
       - name: Install goreleaser
         uses: goreleaser/goreleaser-action@v2
         with:
-          version: v0.159.0
+          version: v0.173.2
           install-only: true
       
       - name: Run goreleaser
