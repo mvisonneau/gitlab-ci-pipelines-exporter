@@ -41,14 +41,17 @@ func NewServer(
 
 // ServeUNIX ..
 func ServeUNIX(r *Server) {
-	if r.cfg.Global.InternalMonitoringListenerAddress == nil {
+	if r.cfg.Global.InternalMonitoringListenerAddress == nil ||
+		r.cfg.Global.InternalMonitoringListenerAddress.Scheme == "" ||
+		r.cfg.Global.InternalMonitoringListenerAddress.Host == "" {
 		log.Info("internal monitoring listener address not set")
-	} else {
-		log.WithFields(log.Fields{
-			"scheme": r.cfg.Global.InternalMonitoringListenerAddress.Scheme,
-			"host":   r.cfg.Global.InternalMonitoringListenerAddress.Host,
-		}).Info("internal monitoring listener set")
+		return
 	}
+
+	log.WithFields(log.Fields{
+		"scheme": r.cfg.Global.InternalMonitoringListenerAddress.Scheme,
+		"host":   r.cfg.Global.InternalMonitoringListenerAddress.Host,
+	}).Info("internal monitoring listener set")
 
 	s := rpc.NewServer()
 	if err := s.Register(r); err != nil {

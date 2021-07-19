@@ -11,6 +11,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - Updated default metrics garbage collection intervals from 5 to 10m
 - monitor: correctly sanitize the config output
+- fixed an issue introduced in v0.5.1 causing the exporter to fail when the monitoring listener address was not defined
 
 ## [v0.5.1] - 2021-07-19
 
