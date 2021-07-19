@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -48,8 +49,6 @@ var (
 			Padding(0, 1).
 			Foreground(subtle).
 			String()
-
-	url = lipgloss.NewStyle().Foreground(special).Render
 
 	dataStyle = lipgloss.NewStyle().
 			MarginLeft(1).
@@ -135,13 +134,14 @@ func max(a, b int) int {
 }
 
 type model struct {
-	version    string
-	rpcClient  *rpc.Client
-	sub        chan monitor.Status
-	lastStatus *monitor.Status
-	vp         viewport.Model
-	progress   *progress.Model
-	tabID      int
+	version         string
+	listenerAddress *url.URL
+	rpcClient       *rpc.Client
+	sub             chan monitor.Status
+	lastStatus      *monitor.Status
+	vp              viewport.Model
+	progress        *progress.Model
+	tabID           int
 }
 
 func (m *model) renderLastStatus() string {
@@ -213,19 +213,20 @@ func prettyTimeago(t time.Time) string {
 	return timeago.English.Format(t)
 }
 
-func newModel(version string) (m *model) {
-	rpcClient := rpc.NewClient()
+func newModel(version string, listenerAddress *url.URL) (m *model) {
+	rpcClient := rpc.NewClient(listenerAddress)
 	p, err := progress.NewModel(progress.WithScaledGradient("#80c904", "#ff9d5c"))
 	if err != nil {
 		panic(err)
 	}
 
 	m = &model{
-		version:   version,
-		sub:       make(chan monitor.Status),
-		vp:        viewport.Model{},
-		progress:  p,
-		rpcClient: rpcClient,
+		version:         version,
+		listenerAddress: listenerAddress,
+		sub:             make(chan monitor.Status),
+		vp:              viewport.Model{},
+		progress:        p,
+		rpcClient:       rpcClient,
 	}
 	return
 }
@@ -334,9 +335,9 @@ func (m model) generateActivity() tea.Cmd {
 }
 
 // Start ..
-func Start(version string) {
+func Start(version string, listenerAddress *url.URL) {
 	if err := tea.NewProgram(
-		newModel(version),
+		newModel(version, listenerAddress),
 		tea.WithAltScreen(),
 	).Start(); err != nil {
 		fmt.Println("Error running program:", err)

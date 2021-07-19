@@ -7,6 +7,15 @@ import (
 
 // Monitor ..
 func Monitor(ctx *cli.Context) (int, error) {
-	monitorUI.Start(ctx.App.Version)
+	cfg, err := parseGlobalFlags(ctx)
+	if err != nil {
+		return 1, err
+	}
+
+	monitorUI.Start(
+		ctx.App.Version,
+		cfg.InternalMonitoringListenerAddress,
+	)
+
 	return 0, nil
 }

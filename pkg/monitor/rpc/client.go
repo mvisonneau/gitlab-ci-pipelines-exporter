@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"net/rpc"
+	"net/url"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor"
 	log "github.com/sirupsen/logrus"
@@ -10,13 +11,16 @@ import (
 // Client ..
 type Client struct {
 	*rpc.Client
+	serverAddress *url.URL
 }
 
 // NewClient ..
-func NewClient() (c *Client) {
-	c = &Client{}
+func NewClient(serverAddress *url.URL) (c *Client) {
+	c = &Client{
+		serverAddress: serverAddress,
+	}
 	var err error
-	c.Client, err = rpc.Dial("unix", SockAddr)
+	c.Client, err = rpc.Dial(c.serverAddress.Scheme, c.serverAddress.Host)
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}

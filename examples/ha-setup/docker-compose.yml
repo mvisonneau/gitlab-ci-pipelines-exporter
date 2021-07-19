@@ -18,6 +18,7 @@ services:
       - redis
     environment:
       GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter.yml
+      GCPE_INTERNAL_MONITORING_LISTENER_ADDRESS: unix://.gcpe-monitor.sock
     volumes:
       - type: bind
         source: ./gitlab-ci-pipelines-exporter.yml

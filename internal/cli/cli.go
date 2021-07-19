@@ -28,26 +28,10 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 
 	app.Flags = cli.FlagsByName{
 		&cli.StringFlag{
-			Name:    "config",
-			Aliases: []string{"c"},
-			EnvVars: []string{"GCPE_CONFIG"},
-			Usage:   "config `file`",
-			Value:   "./gitlab-ci-pipelines-exporter.yml",
-		},
-		&cli.StringFlag{
-			Name:    "redis-url",
-			EnvVars: []string{"GCPE_REDIS_URL"},
-			Usage:   "redis `url` for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) (overrides config file parameter)",
-		},
-		&cli.StringFlag{
-			Name:    "gitlab-token",
-			EnvVars: []string{"GCPE_GITLAB_TOKEN"},
-			Usage:   "GitLab API access `token` (overrides config file parameter)",
-		},
-		&cli.StringFlag{
-			Name:    "webhook-secret-token",
-			EnvVars: []string{"GCPE_WEBHOOK_SECRET_TOKEN"},
-			Usage:   "`token` used to authenticate legitimate requests (overrides config file parameter)",
+			Name:    "internal-monitoring-listener-address",
+			Aliases: []string{"m"},
+			EnvVars: []string{"GCPE_INTERNAL_MONITORING_LISTENER_ADDRESS"},
+			Usage:   "internal monitoring listener address",
 		},
 	}
 
@@ -56,6 +40,30 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 			Name:   "run",
 			Usage:  "start the exporter",
 			Action: cmd.ExecWrapper(cmd.Run),
+			Flags: cli.FlagsByName{
+				&cli.StringFlag{
+					Name:    "config",
+					Aliases: []string{"c"},
+					EnvVars: []string{"GCPE_CONFIG"},
+					Usage:   "config `file`",
+					Value:   "./gitlab-ci-pipelines-exporter.yml",
+				},
+				&cli.StringFlag{
+					Name:    "redis-url",
+					EnvVars: []string{"GCPE_REDIS_URL"},
+					Usage:   "redis `url` for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) (overrides config file parameter)",
+				},
+				&cli.StringFlag{
+					Name:    "gitlab-token",
+					EnvVars: []string{"GCPE_GITLAB_TOKEN"},
+					Usage:   "GitLab API access `token` (overrides config file parameter)",
+				},
+				&cli.StringFlag{
+					Name:    "webhook-secret-token",
+					EnvVars: []string{"GCPE_WEBHOOK_SECRET_TOKEN"},
+					Usage:   "`token` used to authenticate legitimate requests (overrides config file parameter)",
+				},
+			},
 		},
 		{
 			Name:   "monitor",

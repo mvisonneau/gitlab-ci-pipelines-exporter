@@ -3,6 +3,7 @@ package rpc
 import (
 	"net"
 	"net/rpc"
+	"net/url"
 	"os"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
@@ -15,6 +16,7 @@ import (
 
 // Server ..
 type Server struct {
+	listenAddress            *url.URL
 	gitlabClient             *gitlab.Client
 	cfg                      config.Config
 	store                    store.Store
@@ -39,18 +41,35 @@ func NewServer(
 
 // ServeUNIX ..
 func ServeUNIX(r *Server) {
+	if r.cfg.Global.InternalMonitoringListenerAddress == nil {
+		log.Info("internal monitoring listener address not set")
+	} else {
+		log.WithFields(log.Fields{
+			"scheme": r.cfg.Global.InternalMonitoringListenerAddress.Scheme,
+			"host":   r.cfg.Global.InternalMonitoringListenerAddress.Host,
+		}).Info("internal monitoring listener set")
+	}
+
 	s := rpc.NewServer()
 	if err := s.Register(r); err != nil {
 		log.WithError(err).Fatal()
 	}
 
-	if _, err := os.Stat(SockAddr); err == nil {
-		if err := os.Remove(SockAddr); err != nil {
-			log.WithError(err).Fatal()
+	if r.cfg.Global.InternalMonitoringListenerAddress.Scheme == "unix" {
+		if _, err := os.Stat(r.cfg.Global.InternalMonitoringListenerAddress.Host); err == nil {
+			if err := os.Remove(r.cfg.Global.InternalMonitoringListenerAddress.Host); err != nil {
+				log.WithError(err).Fatal()
+			}
 		}
+
+		defer func(path string) {
+			if err := os.Remove(path); err != nil {
+				log.WithError(err).Fatal()
+			}
+		}(r.cfg.Global.InternalMonitoringListenerAddress.Host)
 	}
 
-	l, err := net.Listen("unix", SockAddr)
+	l, err := net.Listen(r.cfg.Global.InternalMonitoringListenerAddress.Scheme, r.cfg.Global.InternalMonitoringListenerAddress.Host)
 	if err != nil {
 		log.WithError(err).Fatal()
 	}

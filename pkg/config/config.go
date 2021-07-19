@@ -13,6 +13,9 @@ var validate *validator.Validate
 
 // Config represents all the parameters required for the app to be configured properly
 type Config struct {
+	// Global ..
+	Global Global `yaml:",omitempty"`
+
 	// Log configuration for the exporter
 	Log Log `yaml:"log" validate:"dive"`
 
@@ -221,6 +224,7 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 
 // ToYAML ..
 func (c Config) ToYAML() string {
+	c.Global = Global{}
 	c.Gitlab.Token = "*******"
 	b, err := yaml.Marshal(c)
 	if err != nil {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	stdlibLog "log"
+	"net/url"
 	"os"
 	"time"
 
@@ -22,6 +23,11 @@ func configure(ctx *cli.Context) (cfg config.Config, err error) {
 	assertStringVariableDefined(ctx, "config")
 
 	cfg, err = config.ParseFile(ctx.String("config"))
+	if err != nil {
+		return
+	}
+
+	cfg.Global, err = parseGlobalFlags(ctx)
 	if err != nil {
 		return
 	}
@@ -60,6 +66,11 @@ func configure(ctx *cli.Context) (cfg config.Config, err error) {
 	log.WithFields(config.SchedulerConfig(cfg.GarbageCollect.Refs).Log()).Info("garbage collect refs")
 	log.WithFields(config.SchedulerConfig(cfg.GarbageCollect.Metrics).Log()).Info("garbage collect metrics")
 
+	return
+}
+
+func parseGlobalFlags(ctx *cli.Context) (cfg config.Global, err error) {
+	cfg.InternalMonitoringListenerAddress, err = url.Parse(ctx.String("internal-monitoring-listener-address"))
 	return
 }
 
