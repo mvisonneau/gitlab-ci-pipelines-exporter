@@ -48,7 +48,7 @@ func TestNew(t *testing.T) {
 	c.GarbageCollect.Refs.IntervalSeconds = 1800
 
 	c.GarbageCollect.Metrics.Scheduled = true
-	c.GarbageCollect.Metrics.IntervalSeconds = 300
+	c.GarbageCollect.Metrics.IntervalSeconds = 600
 
 	c.ProjectDefaults.OutputSparseStatusMetrics = true
 
