@@ -4,6 +4,13 @@
 
 | Metric name | Description | Labels | Configuration |
 |---|---|---|---|
+| `gcpe_currently_queued_tasks_count` | Number of tasks in the queue || *available by default* |
+| `gcpe_environments_count` | Number of GitLab environments being exported || *available by default* |
+| `gcpe_executed_tasks_count` | Number of tasks executed || *available by default* |
+| `gcpe_gitlab_api_requests_count` | GitLab API requests count || *available by default* |
+| `gcpe_metrics_count` | Number of GitLab pipelines metrics being exported || *available by default* |
+| `gcpe_projects_count` | Number of GitLab projects being exported || *available by default* |
+| `gcpe_refs_count` | Number of GitLab refs being exported || *available by default* |
 | `gitlab_ci_environment_behind_commits_count` | Number of commits the environment is behind given its last deployment | [project], [environment] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_environment_behind_duration_seconds` | Duration in seconds the environment is behind the most recent commit given its last deployment | [project], [environment] | `project_defaults.pull.environments.enabled` |
 | `gitlab_ci_environment_deployment_count` |Number of deployments for an environment | [project], [environment] | `project_defaults.pull.environments.enabled` |

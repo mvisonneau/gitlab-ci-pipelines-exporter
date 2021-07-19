@@ -31,7 +31,15 @@ func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Error(err.Error())
 	}
 
+	if err := registry.ExportInternalMetrics(
+		c.Gitlab,
+		c.Store,
+	); err != nil {
+		log.WithError(err).Warn()
+	}
+
 	registry.ExportMetrics(metrics)
+
 	promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 		Registry:          registry,
 		EnableOpenMetrics: c.Config.Server.Metrics.EnableOpenmetricsEncoding,

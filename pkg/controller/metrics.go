@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 	"github.com/prometheus/client_golang/prometheus"
@@ -13,6 +14,16 @@ import (
 // Registry wraps a pointer of prometheus.Registry
 type Registry struct {
 	*prometheus.Registry
+
+	InternalCollectors struct {
+		CurrentlyQueuedTasksCount prometheus.Collector
+		EnvironmentsCount         prometheus.Collector
+		ExecutedTasksCount        prometheus.Collector
+		GitLabAPIRequestsCount    prometheus.Collector
+		MetricsCount              prometheus.Collector
+		ProjectsCount             prometheus.Collector
+		RefsCount                 prometheus.Collector
+	}
 
 	Collectors RegistryCollectors
 }
@@ -50,11 +61,86 @@ func NewRegistry() *Registry {
 		},
 	}
 
+	r.RegisterInternalCollectors()
+
 	if err := r.RegisterCollectors(); err != nil {
 		log.Fatal(err)
 	}
 
 	return r
+}
+
+// RegisterInternalCollectors declare our internal collectors to the registry
+func (r *Registry) RegisterInternalCollectors() {
+	r.InternalCollectors.CurrentlyQueuedTasksCount = NewInternalCollectorCurrentlyQueuedTasksCount()
+	r.InternalCollectors.EnvironmentsCount = NewInternalCollectorEnvironmentsCount()
+	r.InternalCollectors.ExecutedTasksCount = NewInternalCollectorExecutedTasksCount()
+	r.InternalCollectors.GitLabAPIRequestsCount = NewInternalCollectorGitLabAPIRequestsCount()
+	r.InternalCollectors.MetricsCount = NewInternalCollectorMetricsCount()
+	r.InternalCollectors.ProjectsCount = NewInternalCollectorProjectsCount()
+	r.InternalCollectors.RefsCount = NewInternalCollectorRefsCount()
+
+	_ = r.Register(r.InternalCollectors.CurrentlyQueuedTasksCount)
+	_ = r.Register(r.InternalCollectors.EnvironmentsCount)
+	_ = r.Register(r.InternalCollectors.ExecutedTasksCount)
+	_ = r.Register(r.InternalCollectors.GitLabAPIRequestsCount)
+	_ = r.Register(r.InternalCollectors.MetricsCount)
+	_ = r.Register(r.InternalCollectors.ProjectsCount)
+	_ = r.Register(r.InternalCollectors.RefsCount)
+}
+
+// ExportInternalMetrics ..
+func (r *Registry) ExportInternalMetrics(
+	g *gitlab.Client,
+	s store.Store,
+) (err error) {
+	var (
+		currentlyQueuedTasks uint64
+		environmentsCount    int64
+		executedTasksCount   uint64
+		metricsCount         int64
+		projectsCount        int64
+		refsCount            int64
+	)
+
+	currentlyQueuedTasks, err = s.CurrentlyQueuedTasksCount()
+	if err != nil {
+		return
+	}
+
+	executedTasksCount, err = s.ExecutedTasksCount()
+	if err != nil {
+		return
+	}
+
+	projectsCount, err = s.ProjectsCount()
+	if err != nil {
+		return
+	}
+
+	environmentsCount, err = s.EnvironmentsCount()
+	if err != nil {
+		return
+	}
+
+	refsCount, err = s.RefsCount()
+	if err != nil {
+		return
+	}
+
+	metricsCount, err = s.MetricsCount()
+	if err != nil {
+		return
+	}
+
+	r.InternalCollectors.CurrentlyQueuedTasksCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(currentlyQueuedTasks))
+	r.InternalCollectors.EnvironmentsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(environmentsCount))
+	r.InternalCollectors.ExecutedTasksCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(executedTasksCount))
+	r.InternalCollectors.GitLabAPIRequestsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(g.RequestsCounter))
+	r.InternalCollectors.MetricsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(metricsCount))
+	r.InternalCollectors.ProjectsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(projectsCount))
+	r.InternalCollectors.RefsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(refsCount))
+	return
 }
 
 // RegisterCollectors add all our metrics to the registry

@@ -11,6 +11,83 @@ var (
 	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"}
 )
 
+// NewInternalCollectorCurrentlyQueuedTasksCount returns a new collector for the gcpe_currently_queued_tasks_count metric
+func NewInternalCollectorCurrentlyQueuedTasksCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_currently_queued_tasks_count",
+			Help: "Number of tasks in the queue",
+		},
+		[]string{},
+	)
+}
+
+// NewInternalCollectorEnvironmentsCount returns a new collector for the gcpe_environments_count metric
+func NewInternalCollectorEnvironmentsCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_environments_count",
+			Help: "Number of GitLab environments being exported",
+		},
+		[]string{},
+	)
+}
+
+// NewInternalCollectorExecutedTasksCount returns a new collector for the gcpe_executed_tasks_count metric
+func NewInternalCollectorExecutedTasksCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_executed_tasks_count",
+			Help: "Number of tasks executed",
+		},
+		[]string{},
+	)
+}
+
+// NewInternalCollectorGitLabAPIRequestsCount returns a new collector for the gcpe_gitlab_api_requests_count metric
+func NewInternalCollectorGitLabAPIRequestsCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_gitlab_api_requests_count",
+			Help: "GitLab API requests count",
+		},
+		[]string{},
+	)
+}
+
+// NewInternalCollectorMetricsCount returns a new collector for the gcpe_metrics_count metric
+func NewInternalCollectorMetricsCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_metrics_count",
+			Help: "Number of GitLab pipelines metrics being exported",
+		},
+		[]string{},
+	)
+}
+
+// NewInternalCollectorProjectsCount returns a new collector for the gcpe_projects_count metric
+func NewInternalCollectorProjectsCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_projects_count",
+			Help: "Number of GitLab projects being exported",
+		},
+		[]string{},
+	)
+}
+
+// NewInternalCollectorRefsCount returns a new collector for the gcpe_refs_count metric
+func NewInternalCollectorRefsCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_refs_count",
+			Help: "Number of GitLab refs being exported",
+		},
+		[]string{},
+	)
+}
+
 // NewCollectorCoverage returns a new collector for the gitlab_ci_pipeline_coverage metric
 func NewCollectorCoverage() prometheus.Collector {
 	return prometheus.NewGaugeVec(

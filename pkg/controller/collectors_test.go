@@ -9,6 +9,13 @@ import (
 
 func TestNewCollectorFunctions(t *testing.T) {
 	for _, f := range [](func() prometheus.Collector){
+		NewInternalCollectorCurrentlyQueuedTasksCount,
+		NewInternalCollectorEnvironmentsCount,
+		NewInternalCollectorExecutedTasksCount,
+		NewInternalCollectorGitLabAPIRequestsCount,
+		NewInternalCollectorMetricsCount,
+		NewInternalCollectorProjectsCount,
+		NewInternalCollectorRefsCount,
 		NewCollectorCoverage,
 		NewCollectorDurationSeconds,
 		NewCollectorEnvironmentBehindCommitsCount,

@@ -10,6 +10,14 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Added
 
 - New monitoring CLI to retrieve information about the exporter
+- New internal metrics about exporter's health:
+  - `gcpe_currently_queued_tasks_count` - Number of tasks in the queue
+  - `gcpe_environments_count` - Number of GitLab environments being exported
+  - `gcpe_executed_tasks_count` - Number of tasks executed
+  - `gcpe_gitlab_api_requests_count` - GitLab API requests count
+  - `gcpe_metrics_count` - Number of GitLab pipelines metrics being exported
+  - `gcpe_projects_count` - Number of GitLab projects being exported
+  - `gcpe_refs_count` - Number of GitLab refs being exported
 
 ### Changed
 
