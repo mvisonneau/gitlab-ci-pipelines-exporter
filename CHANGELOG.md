@@ -10,6 +10,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Changed
 
 - Updated default metrics garbage collection intervals from 5 to 10m
+- monitor: correctly sanitize the config output
 
 ## [v0.5.1] - 2021-07-19
 

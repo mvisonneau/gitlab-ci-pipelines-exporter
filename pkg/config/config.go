@@ -225,9 +225,8 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 // ToYAML ..
 func (c Config) ToYAML() string {
 	c.Global = Global{}
+	c.Server.Webhook.SecretToken = "*******"
 	c.Gitlab.Token = "*******"
-	c.Gitlab.URL = "https://gitlab.com"
-	c.Gitlab.HealthURL = "https://gitlab.com/-/health"
 	b, err := yaml.Marshal(c)
 	if err != nil {
 		panic(err)
