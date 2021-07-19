@@ -169,7 +169,7 @@ type GarbageCollect struct {
 	Metrics struct {
 		OnInit          bool `default:"false" yaml:"on_init"`
 		Scheduled       bool `default:"true" yaml:"scheduled"`
-		IntervalSeconds int  `default:"300" validate:"gte=1" yaml:"interval_seconds"`
+		IntervalSeconds int  `default:"600" validate:"gte=1" yaml:"interval_seconds"`
 	} `yaml:"metrics"`
 }
 

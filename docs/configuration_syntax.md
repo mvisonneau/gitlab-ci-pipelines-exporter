@@ -20,12 +20,12 @@ server:
   listen_address: :8080
   
   # Enable profiling pages
-  # at /debug/pprof (optional, default: false)
   enable_pprof: false
   
   metrics:
     # Enable /metrics endpoint (optional, default: true)
     enabled: true
+  # at /debug/pprof (optional, default: false)
 
     # Enable OpenMetrics content encoding in
     # prometheus HTTP handler (optional, default: false)
@@ -190,8 +190,8 @@ garbage_collect:
     scheduled: true
 
     # Interval in seconds to garbage collect metrics
-    # (optional, default: 300)
-    interval_seconds: 300
+    # (optional, default: 600)
+    interval_seconds: 600
 
 # Default settings which can be overridden at the project
 # or wildcard level (optional)

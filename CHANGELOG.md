@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- Updated default metrics garbage collection intervals from 5 to 10m
+
 ## [v0.5.1] - 2021-07-19
 
 ### Added
