@@ -272,6 +272,37 @@ GLOBAL OPTIONS:
    --help, -h                    show help (default: false)
 ```
 
+## Monitor / Troubleshoot
+
+![monitor_cli_example](/docs/images/monitor_cli_example.gif)
+
+If you need to dig into your exporter's internal, you can leverage the internal CLI monitoring endpoint. This will get you insights about the following:
+- Live telemetry regarding:
+  - GitLab API requests
+  - Tasks buffer usage
+  - Projects count and schedules
+  - Environments count and schedules
+  - Refs count and schedules
+  - Metrics count and schedules
+- **Parsed configuration details**
+
+To use it, you have to start your exporter with the following flag `--internal-monitoring-listener-address`, `-m` or the `GCPE_INTERNAL_MONITORING_LISTENER_ADDRESS` env variable.
+
+You can whether use a TCP or UNIX socket eg:
+
+```
+~$ gitlab-ci-pipelines-exporter -m 'unix://gcpe-monitor.sock' run
+~$ gitlab-ci-pipelines-exporter -m 'tcp://127.0.0.1:9000' run
+```
+
+To use the monitor CLI, you need to be able to access the monitoring socket and reuse the same flag:
+
+```
+export GCPE_INTERNAL_MONITORING_LISTENER_ADDRESS='unix://gcpe-monitor.sock'
+~$ gitlab-ci-pipelines-exporter run &
+~$ gitlab-ci-pipelines-exporter monitor
+```
+
 ## Develop / Test
 
 If you use docker, you can easily get started using :

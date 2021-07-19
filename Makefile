@@ -69,9 +69,9 @@ release: ## Build & release the binaries (stable)
 prerelease: setup ## Build & prerelease the binaries (edge)
 	@\
 		REPOSITORY=$(REPOSITORY) \
-    	NAME=$(NAME) \
-    	GITHUB_TOKEN=$(GITHUB_TOKEN) \
-    	.github/prerelease.sh
+		NAME=$(NAME) \
+		GITHUB_TOKEN=$(GITHUB_TOKEN) \
+		.github/prerelease.sh
 
 .PHONY: clean
 clean: ## Remove binary if it exists
