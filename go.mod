@@ -12,7 +12,7 @@ require (
 	github.com/containerd/console v1.0.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/creasty/defaults v1.5.1
-	github.com/go-playground/validator/v10 v10.7.0
+	github.com/go-playground/validator/v10 v10.8.0
 	github.com/go-redis/redis/v8 v8.11.0
 	github.com/go-redis/redis_rate/v9 v9.1.1
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -24,7 +24,6 @@ require (
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/imdario/mergo v0.3.12
 	github.com/klauspost/compress v1.13.1 // indirect
-	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.9.0
 	github.com/mvisonneau/go-helpers v0.0.1
@@ -43,10 +42,8 @@ require (
 	github.com/xanzy/go-gitlab v0.50.1
 	github.com/xeonx/timeago v1.0.0-rc4
 	go.uber.org/ratelimit v0.2.0
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914 // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	golang.org/x/time v0.0.0-20210611083556-38a9dc6acbc6 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
