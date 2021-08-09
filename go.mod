@@ -13,7 +13,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/creasty/defaults v1.5.1
 	github.com/go-playground/validator/v10 v10.8.0
-	github.com/go-redis/redis/v8 v8.11.1
+	github.com/go-redis/redis/v8 v8.11.2
 	github.com/go-redis/redis_rate/v9 v9.1.1
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
