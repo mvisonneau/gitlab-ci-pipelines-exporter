@@ -39,7 +39,7 @@ require (
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/vmihailenco/msgpack/v5 v5.3.4
 	github.com/vmihailenco/taskq/v3 v3.2.4
-	github.com/xanzy/go-gitlab v0.50.2
+	github.com/xanzy/go-gitlab v0.50.3
 	github.com/xeonx/timeago v1.0.0-rc4
 	go.uber.org/ratelimit v0.2.0
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
