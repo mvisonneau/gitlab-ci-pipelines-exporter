@@ -93,11 +93,19 @@ func (c *Client) ReadinessCheck() healthcheck.Check {
 		}
 
 		resp, err := c.Readiness.HTTPClient.Get(c.Readiness.URL)
+		if err != nil {
+			return err
+		}
+
+		if resp == nil {
+			return fmt.Errorf("HTTP error: empty response")
+		}
+
 		if err == nil && resp.StatusCode != 200 {
 			return fmt.Errorf("HTTP error: %d", resp.StatusCode)
 		}
 
-		return err
+		return nil
 	}
 }
 
