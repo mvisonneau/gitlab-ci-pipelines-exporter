@@ -7,6 +7,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.5.2] - 2021-08-25
 ### Changed
 
 - Updated default metrics garbage collection intervals from 5 to 10m
@@ -590,7 +591,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.2...HEAD
+[v0.5.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.2
 [v0.5.1]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.1
 [v0.5.0]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.0
 [v0.4.9]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.4.9
