@@ -45,7 +45,7 @@ dockers:
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64'
     ids: [gitlab-ci-pipelines-exporter]
     goarch: amd64
-    use_buildx: true
+    use: buildx
     build_flag_templates:
       - --platform=linux/amd64
       - --label=org.opencontainers.image.title={{ .ProjectName }}
@@ -62,7 +62,7 @@ dockers:
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8'
     ids: [gitlab-ci-pipelines-exporter]
     goarch: arm64
-    use_buildx: true
+    use: buildx
     build_flag_templates:
       - --platform=linux/arm64/v8
       - --label=org.opencontainers.image.title={{ .ProjectName }}
