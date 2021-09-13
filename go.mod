@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/chroma v0.9.2
 	github.com/alicebob/miniredis/v2 v2.15.1
 	github.com/charmbracelet/bubbles v0.8.0
-	github.com/charmbracelet/bubbletea v0.14.1
+	github.com/charmbracelet/bubbletea v0.15.0
 	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/creasty/defaults v1.5.2
 	github.com/go-playground/validator/v10 v10.9.0
