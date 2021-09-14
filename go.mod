@@ -24,7 +24,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/vmihailenco/msgpack/v5 v5.3.4
-	github.com/vmihailenco/taskq/v3 v3.2.4
+	github.com/vmihailenco/taskq/v3 v3.2.5
 	github.com/xanzy/go-gitlab v0.50.4
 	github.com/xeonx/timeago v1.0.0-rc4
 	go.uber.org/ratelimit v0.2.0
