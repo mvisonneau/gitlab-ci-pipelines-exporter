@@ -7,13 +7,11 @@ export GO111MODULE=on
 
 .PHONY: setup
 setup: ## Install required libraries/tools for build tasks
-	@command -v cover 2>&1 >/dev/null       || GO111MODULE=off go get -u -v golang.org/x/tools/cmd/cover
-	@command -v gofumpt 2>&1 >/dev/null     || GO111MODULE=off go get -u -v mvdan.cc/gofumpt
-	@command -v gosec 2>&1 >/dev/null       || GO111MODULE=off go get -u -v github.com/securego/gosec/cmd/gosec
-	@command -v goveralls 2>&1 >/dev/null   || GO111MODULE=off go get -u -v github.com/mattn/goveralls
-	@command -v ineffassign 2>&1 >/dev/null || GO111MODULE=off go get -u -v github.com/gordonklaus/ineffassign
-	@command -v misspell 2>&1 >/dev/null    || GO111MODULE=off go get -u -v github.com/client9/misspell/cmd/misspell
-	@command -v revive 2>&1 >/dev/null      || GO111MODULE=off go get -u -v github.com/mgechev/revive
+	@command -v gofumpt 2>&1 >/dev/null     || go install mvdan.cc/gofumpt@v0.1.1
+	@command -v gosec 2>&1 >/dev/null       || go install github.com/securego/gosec/cmd/gosec@v2.8.1
+	@command -v ineffassign 2>&1 >/dev/null || go install github.com/gordonklaus/ineffassign@v0.0.0-20210914165742-4cc7213b9bc8
+	@command -v misspell 2>&1 >/dev/null    || go install github.com/client9/misspell/cmd/misspell@v0.3.4
+	@command -v revive 2>&1 >/dev/null      || go install github.com/mgechev/revive@v1.1.1
 
 .PHONY: fmt
 fmt: setup ## Format source code
