@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/alecthomas/chroma v0.9.2
 	github.com/alicebob/miniredis/v2 v2.15.1
-	github.com/charmbracelet/bubbles v0.8.0
+	github.com/charmbracelet/bubbles v0.9.0
 	github.com/charmbracelet/bubbletea v0.15.0
 	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/creasty/defaults v1.5.2
@@ -38,6 +38,7 @@ require (
 	github.com/bsm/redislock v0.7.1 // indirect
 	github.com/capnm/sysinfo v0.0.0-20130621111458-5909a53897f3 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/charmbracelet/harmonica v0.1.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
@@ -53,10 +54,10 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/klauspost/compress v1.13.5 // indirect
+	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/mattn/go-isatty v0.0.13 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect

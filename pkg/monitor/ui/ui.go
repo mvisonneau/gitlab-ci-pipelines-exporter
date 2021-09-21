@@ -152,7 +152,7 @@ func (m *model) renderLastStatus() string {
 	gitlabAPIUsage := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" GitLab API usage        ",
-		m.progress.View(m.lastStatus.GitLabAPIUsage),
+		m.progress.ViewAs(m.lastStatus.GitLabAPIUsage),
 		"\n",
 	)
 
@@ -166,7 +166,7 @@ func (m *model) renderLastStatus() string {
 	tasksBufferUsage := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" Tasks buffer usage      ",
-		m.progress.View(m.lastStatus.TasksBufferUsage),
+		m.progress.ViewAs(m.lastStatus.TasksBufferUsage),
 		"\n",
 	)
 
@@ -215,17 +215,14 @@ func prettyTimeago(t time.Time) string {
 
 func newModel(version string, listenerAddress *url.URL) (m *model) {
 	rpcClient := rpc.NewClient(listenerAddress)
-	p, err := progress.NewModel(progress.WithScaledGradient("#80c904", "#ff9d5c"))
-	if err != nil {
-		panic(err)
-	}
+	p := progress.NewModel(progress.WithScaledGradient("#80c904", "#ff9d5c"))
 
 	m = &model{
 		version:         version,
 		listenerAddress: listenerAddress,
 		sub:             make(chan monitor.Status),
 		vp:              viewport.Model{},
-		progress:        p,
+		progress:        &p,
 		rpcClient:       rpcClient,
 	}
 	return
