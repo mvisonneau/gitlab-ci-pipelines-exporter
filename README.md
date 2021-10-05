@@ -151,7 +151,7 @@ EOF
    -v $(pwd)/config.yml:/etc/config.yml \
    -p 8080:8080 \
    mvisonneau/gitlab-ci-pipelines-exporter:latest \
-   --config /etc/config.yml
+   run --config /etc/config.yml
 ```
 
 You should then be able to see the following logs
