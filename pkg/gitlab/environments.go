@@ -57,7 +57,7 @@ func (c *Client) GetProjectEnvironments(p schemas.Project) (
 			}
 		}
 
-		if resp.CurrentPage >= resp.TotalPages {
+		if resp.CurrentPage >= resp.NextPage {
 			break
 		}
 		options.Page = resp.NextPage

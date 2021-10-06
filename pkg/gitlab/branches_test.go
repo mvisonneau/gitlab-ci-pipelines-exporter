@@ -20,10 +20,13 @@ func TestGetProjectBranches(t *testing.T) {
 			assert.Equal(t, []string{"100"}, r.URL.Query()["per_page"])
 			currentPage, err := strconv.Atoi(r.URL.Query()["page"][0])
 			assert.NoError(t, err)
+			nextPage := currentPage + 1
+			if currentPage == 2 {
+				nextPage = currentPage
+			}
 
-			w.Header().Add("X-Total-Pages", "2")
 			w.Header().Add("X-Page", strconv.Itoa(currentPage))
-			w.Header().Add("X-Next-Page", strconv.Itoa(currentPage+1))
+			w.Header().Add("X-Next-Page", strconv.Itoa(nextPage))
 
 			if currentPage == 1 {
 				fmt.Fprint(w, `[{"name":"main"},{"name":"dev"}]`)

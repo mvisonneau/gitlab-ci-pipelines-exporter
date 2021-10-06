@@ -20,10 +20,13 @@ func TestGetProjectEnvironments(t *testing.T) {
 			assert.Equal(t, []string{"100"}, r.URL.Query()["per_page"])
 			currentPage, err := strconv.Atoi(r.URL.Query()["page"][0])
 			assert.NoError(t, err)
+			nextPage := currentPage + 1
+			if currentPage == 2 {
+				nextPage = currentPage
+			}
 
-			w.Header().Add("X-Total-Pages", "2")
 			w.Header().Add("X-Page", strconv.Itoa(currentPage))
-			w.Header().Add("X-Next-Page", strconv.Itoa(currentPage+1))
+			w.Header().Add("X-Next-Page", strconv.Itoa(nextPage))
 
 			if scope, ok := r.URL.Query()["states"]; ok && len(scope) == 1 && scope[0] == "available" {
 				fmt.Fprint(w, `[{"id":1338,"name":"main"}]`)

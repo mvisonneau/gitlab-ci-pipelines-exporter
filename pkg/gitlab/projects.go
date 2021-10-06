@@ -116,7 +116,7 @@ func (c *Client) ListProjects(w config.Wildcard) ([]schemas.Project, error) {
 			projects = append(projects, p)
 		}
 
-		if resp.CurrentPage >= resp.TotalPages {
+		if resp.CurrentPage >= resp.NextPage {
 			break
 		}
 
