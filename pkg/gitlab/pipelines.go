@@ -215,7 +215,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 			}
 		}
 
-		if resp.CurrentPage >= resp.TotalPages {
+		if resp.CurrentPage >= resp.NextPage {
 			break
 		}
 		options.Page = resp.NextPage

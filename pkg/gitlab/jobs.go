@@ -61,7 +61,7 @@ func (c *Client) ListPipelineJobs(projectName string, pipelineID int) (jobs []sc
 			jobs = append(jobs, schemas.NewJob(*job))
 		}
 
-		if resp.CurrentPage >= resp.TotalPages {
+		if resp.CurrentPage >= resp.NextPage {
 			log.WithFields(
 				log.Fields{
 					"project-name": projectName,
@@ -98,7 +98,7 @@ func (c *Client) ListPipelineBridges(projectName string, pipelineID int) (bridge
 
 		bridges = append(bridges, foundBridges...)
 
-		if resp.CurrentPage >= resp.TotalPages {
+		if resp.CurrentPage >= resp.NextPage {
 			log.WithFields(
 				log.Fields{
 					"project-name":  projectName,
@@ -208,7 +208,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 			}
 		}
 
-		if resp.CurrentPage >= resp.TotalPages {
+		if resp.CurrentPage >= resp.NextPage {
 			var notFoundJobs []string
 			for k := range jobsToRefresh {
 				notFoundJobs = append(notFoundJobs, k)

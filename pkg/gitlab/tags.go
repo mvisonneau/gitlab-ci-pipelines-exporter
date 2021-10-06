@@ -42,7 +42,7 @@ func (c *Client) GetProjectTags(p schemas.Project) (
 			}
 		}
 
-		if resp.CurrentPage >= resp.TotalPages {
+		if resp.CurrentPage >= resp.NextPage {
 			break
 		}
 		options.Page = resp.NextPage
@@ -78,7 +78,7 @@ func (c *Client) GetProjectMostRecentTagCommit(projectName, filterRegexp string)
 			}
 		}
 
-		if resp.CurrentPage >= resp.TotalPages {
+		if resp.CurrentPage >= resp.NextPage {
 			break
 		}
 		options.Page = resp.NextPage
