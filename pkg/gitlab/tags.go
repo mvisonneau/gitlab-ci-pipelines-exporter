@@ -34,6 +34,7 @@ func (c *Client) GetProjectTags(p schemas.Project) (
 		if err != nil {
 			return
 		}
+		c.requestsRemaining(resp)
 
 		for _, tag := range tags {
 			if re.MatchString(tag.Name) {
@@ -71,6 +72,7 @@ func (c *Client) GetProjectMostRecentTagCommit(projectName, filterRegexp string)
 		if err != nil {
 			return "", 0, err
 		}
+		c.requestsRemaining(resp)
 
 		for _, tag := range tags {
 			if re.MatchString(tag.Name) {

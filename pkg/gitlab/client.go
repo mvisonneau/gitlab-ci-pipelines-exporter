@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	strconv "strconv"
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
@@ -25,9 +26,11 @@ type Client struct {
 		HTTPClient *http.Client
 	}
 
-	RateLimiter     ratelimit.Limiter
-	RateCounter     *ratecounter.RateCounter
-	RequestsCounter uint64
+	RateLimiter       ratelimit.Limiter
+	RateCounter       *ratecounter.RateCounter
+	RequestsCounter   uint64
+	RequestsLimit     int
+	RequestsRemaining int
 }
 
 // ClientConfig ..
@@ -61,7 +64,7 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 		goGitlab.WithoutRetries(),
 	}
 
-	gc, err := goGitlab.NewClient(cfg.Token, opts...)
+	gc, err := goGitlab.NewOAuthClient(cfg.Token, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,8 +114,18 @@ func (c *Client) ReadinessCheck() healthcheck.Check {
 
 func (c *Client) rateLimit() {
 	ratelimit.Take(c.RateLimiter)
-
 	// Used for monitoring purposes
 	c.RateCounter.Incr(1)
 	c.RequestsCounter++
+}
+
+func (c *Client) requestsRemaining(response *goGitlab.Response) {
+	remaining := response.Header.Get("ratelimit-remaining")
+	if remaining != "" {
+		c.RequestsRemaining, _ = strconv.Atoi(remaining)
+	}
+	limit := response.Header.Get("ratelimit-limit")
+	if limit != "" {
+		c.RequestsLimit, _ = strconv.Atoi(limit)
+	}
 }

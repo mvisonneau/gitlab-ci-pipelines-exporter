@@ -104,6 +104,13 @@ func (r *Server) Status(_ string, reply *monitor.Status) (err error) {
 
 	s.GitLabAPIRequestsCount = r.gitlabClient.RequestsCounter
 
+	s.GitLabAPIRateLimit = float64(r.gitlabClient.RequestsRemaining) / float64(r.gitlabClient.RequestsLimit)
+	if s.GitLabAPIRateLimit > 1 {
+		s.GitLabAPIRateLimit = 1
+	}
+
+	s.GitLabAPILimitRemaining = r.gitlabClient.RequestsRemaining
+
 	var queuedTasks uint64
 	queuedTasks, err = r.store.CurrentlyQueuedTasksCount()
 	if err != nil {

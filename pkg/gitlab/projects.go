@@ -19,7 +19,9 @@ func (c *Client) GetProject(name string) (*goGitlab.Project, error) {
 	}).Debug("reading project")
 
 	c.rateLimit()
-	p, _, err := c.Projects.GetProject(name, &goGitlab.GetProjectOptions{})
+	p, resp, err := c.Projects.GetProject(name, &goGitlab.GetProjectOptions{})
+	c.requestsRemaining(resp)
+
 	return p, err
 }
 
@@ -92,6 +94,7 @@ func (c *Client) ListProjects(w config.Wildcard) ([]schemas.Project, error) {
 		if err != nil {
 			return projects, fmt.Errorf("unable to list projects with search pattern '%s' from the GitLab API : %v", w.Search, err.Error())
 		}
+		c.requestsRemaining(resp)
 
 		// Copy relevant settings from wildcard into created project
 		for _, gp := range gps {

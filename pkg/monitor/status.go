@@ -4,14 +4,16 @@ import "time"
 
 // Status ..
 type Status struct {
-	GitLabAPIUsage         float64 // ok
-	GitLabAPIRequestsCount uint64
-	TasksBufferUsage       float64 // ok
-	TasksExecutedCount     uint64  // ok
-	Projects               EntityStatus
-	Refs                   EntityStatus
-	Envs                   EntityStatus
-	Metrics                EntityStatus
+	GitLabAPIUsage          float64 // ok
+	GitLabAPIRequestsCount  uint64
+	GitLabAPIRateLimit      float64 // ok
+	GitLabAPILimitRemaining int
+	TasksBufferUsage        float64 // ok
+	TasksExecutedCount      uint64  // ok
+	Projects                EntityStatus
+	Refs                    EntityStatus
+	Envs                    EntityStatus
+	Metrics                 EntityStatus
 }
 
 // EntityStatus ..

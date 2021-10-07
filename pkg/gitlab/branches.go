@@ -35,6 +35,7 @@ func (c *Client) GetProjectBranches(p schemas.Project) (
 		if err != nil {
 			return
 		}
+		c.requestsRemaining(resp)
 
 		for _, branch := range branches {
 			if re.MatchString(branch.Name) {
@@ -60,10 +61,11 @@ func (c *Client) GetBranchLatestCommit(project, branch string) (string, float64,
 	}).Debug("reading project branch")
 
 	c.rateLimit()
-	b, _, err := c.Branches.GetBranch(project, branch, nil)
+	b, resp, err := c.Branches.GetBranch(project, branch, nil)
 	if err != nil {
 		return "", 0, err
 	}
+	c.requestsRemaining(resp)
 
 	return b.Commit.ShortID, float64(b.Commit.CommittedDate.Unix()), nil
 }
