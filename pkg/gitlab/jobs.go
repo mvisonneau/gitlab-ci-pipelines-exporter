@@ -39,7 +39,7 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 }
 
 // ListPipelineJobs ..
-func (c *Client) ListPipelineJobs(projectName string, pipelineID int) (jobs []schemas.Job, err error) {
+func (c *Client) ListPipelineJobs(projectName interface{}, pipelineID int) (jobs []schemas.Job, err error) {
 	var foundJobs []*goGitlab.Job
 	var resp *goGitlab.Response
 
@@ -78,7 +78,7 @@ func (c *Client) ListPipelineJobs(projectName string, pipelineID int) (jobs []sc
 }
 
 // ListPipelineBridges ..
-func (c *Client) ListPipelineBridges(projectName string, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
+func (c *Client) ListPipelineBridges(projectName interface{}, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
 	var foundBridges []*goGitlab.Bridge
 	var resp *goGitlab.Response
 
@@ -116,18 +116,23 @@ func (c *Client) ListPipelineBridges(projectName string, pipelineID int) (bridge
 
 // ListPipelineChildJobs ..
 func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int) (jobs []schemas.Job, err error) {
-	pipelineIDs := []int{parentPipelineID}
+	type piplineDef struct {
+		projectName interface{}
+		pipelineID  int
+	}
+
+	pipelines := []piplineDef{{projectName, parentPipelineID}}
 
 	for {
-		if len(pipelineIDs) == 0 {
+		if len(pipelines) == 0 {
 			return
 		}
 
-		pipelineID := pipelineIDs[len(pipelineIDs)-1]
-		pipelineIDs = pipelineIDs[:len(pipelineIDs)-1]
+		pipeline := pipelines[len(pipelines)-1]
+		pipelines = pipelines[:len(pipelines)-1]
 
 		var foundBridges []*goGitlab.Bridge
-		foundBridges, err = c.ListPipelineBridges(projectName, pipelineID)
+		foundBridges, err = c.ListPipelineBridges(pipeline.projectName, pipeline.pipelineID)
 		if err != nil {
 			return
 		}
@@ -140,9 +145,9 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 				continue
 			}
 
-			pipelineIDs = append(pipelineIDs, foundBridge.DownstreamPipeline.ID)
+			pipelines = append(pipelines, piplineDef{foundBridge.DownstreamPipeline.ProjectID, foundBridge.DownstreamPipeline.ID})
 			var foundJobs []schemas.Job
-			foundJobs, err = c.ListPipelineJobs(projectName, foundBridge.DownstreamPipeline.ID)
+			foundJobs, err = c.ListPipelineJobs(foundBridge.DownstreamPipeline.ProjectID, foundBridge.DownstreamPipeline.ID)
 			if err != nil {
 				return
 			}
