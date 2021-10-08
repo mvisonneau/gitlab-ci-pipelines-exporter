@@ -14,11 +14,12 @@ import (
 // GetRefPipeline ..
 func (c *Client) GetRefPipeline(ref schemas.Ref, pipelineID int) (p schemas.Pipeline, err error) {
 	c.rateLimit()
-	var gp *goGitlab.Pipeline
-	gp, _, err = c.Pipelines.GetPipeline(ref.Project.Name, pipelineID)
+	gp, resp, err := c.Pipelines.GetPipeline(ref.Project.Name, pipelineID)
 	if err != nil || gp == nil {
 		return schemas.Pipeline{}, fmt.Errorf("could not read content of pipeline %s - %s | %s", ref.Project.Name, ref.Name, err.Error())
 	}
+	c.requestsRemaining(resp)
+
 	return schemas.NewPipeline(*gp), nil
 }
 
@@ -52,6 +53,7 @@ func (c *Client) GetProjectPipelines(projectName string, options *goGitlab.ListP
 	if err != nil {
 		return nil, resp, fmt.Errorf("error listing project pipelines for project %s: %s", projectName, err.Error())
 	}
+	c.requestsRemaining(resp)
 
 	return pipelines, resp, nil
 }
@@ -82,10 +84,11 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (s
 	}
 
 	c.rateLimit()
-	variables, _, err := c.Pipelines.GetPipelineVariables(ref.Project.Name, ref.LatestPipeline.ID)
+	variables, resp, err := c.Pipelines.GetPipelineVariables(ref.Project.Name, ref.LatestPipeline.ID)
 	if err != nil {
 		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", ref.LatestPipeline.ID, err.Error())
 	}
+	c.requestsRemaining(resp)
 
 	var keptVariables []string
 	if len(variables) > 0 {

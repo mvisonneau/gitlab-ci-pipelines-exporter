@@ -39,6 +39,7 @@ func (c *Client) GetProjectEnvironments(p schemas.Project) (
 		if err != nil {
 			return
 		}
+		c.requestsRemaining(resp)
 
 		for _, glenv := range glenvs {
 			if re.MatchString(glenv.Name) {
@@ -74,10 +75,11 @@ func (c *Client) GetEnvironment(project string, environmentID int) (schemas.Envi
 	}
 
 	c.rateLimit()
-	e, _, err := c.Environments.GetEnvironment(project, environmentID, nil)
+	e, resp, err := c.Environments.GetEnvironment(project, environmentID, nil)
 	if err != nil || e == nil {
 		return environment, err
 	}
+	c.requestsRemaining(resp)
 
 	environment.Name = e.Name
 	environment.ExternalURL = e.ExternalURL

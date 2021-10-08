@@ -56,6 +56,7 @@ func (c *Client) ListPipelineJobs(projectName string, pipelineID int) (jobs []sc
 		if err != nil {
 			return
 		}
+		c.requestsRemaining(resp)
 
 		for _, job := range foundJobs {
 			jobs = append(jobs, schemas.NewJob(*job))
@@ -95,6 +96,7 @@ func (c *Client) ListPipelineBridges(projectName string, pipelineID int) (bridge
 		if err != nil {
 			return
 		}
+		c.requestsRemaining(resp)
 
 		bridges = append(bridges, foundBridges...)
 
@@ -186,6 +188,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 		if err != nil {
 			return
 		}
+		c.requestsRemaining(resp)
 
 		for _, job := range foundJobs {
 			if _, ok := jobsToRefresh[job.Name]; ok {

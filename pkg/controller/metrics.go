@@ -16,13 +16,15 @@ type Registry struct {
 	*prometheus.Registry
 
 	InternalCollectors struct {
-		CurrentlyQueuedTasksCount prometheus.Collector
-		EnvironmentsCount         prometheus.Collector
-		ExecutedTasksCount        prometheus.Collector
-		GitLabAPIRequestsCount    prometheus.Collector
-		MetricsCount              prometheus.Collector
-		ProjectsCount             prometheus.Collector
-		RefsCount                 prometheus.Collector
+		CurrentlyQueuedTasksCount  prometheus.Collector
+		EnvironmentsCount          prometheus.Collector
+		ExecutedTasksCount         prometheus.Collector
+		GitLabAPIRequestsCount     prometheus.Collector
+		GitlabAPIRequestsRemaining prometheus.Collector
+		GitlabAPIRequestsLimit     prometheus.Collector
+		MetricsCount               prometheus.Collector
+		ProjectsCount              prometheus.Collector
+		RefsCount                  prometheus.Collector
 	}
 
 	Collectors RegistryCollectors
@@ -76,6 +78,8 @@ func (r *Registry) RegisterInternalCollectors() {
 	r.InternalCollectors.EnvironmentsCount = NewInternalCollectorEnvironmentsCount()
 	r.InternalCollectors.ExecutedTasksCount = NewInternalCollectorExecutedTasksCount()
 	r.InternalCollectors.GitLabAPIRequestsCount = NewInternalCollectorGitLabAPIRequestsCount()
+	r.InternalCollectors.GitlabAPIRequestsRemaining = NewInternalCollectorGitLabAPIRequestsRemaining()
+	r.InternalCollectors.GitlabAPIRequestsLimit = NewInternalCollectorGitLabAPIRequestsLimit()
 	r.InternalCollectors.MetricsCount = NewInternalCollectorMetricsCount()
 	r.InternalCollectors.ProjectsCount = NewInternalCollectorProjectsCount()
 	r.InternalCollectors.RefsCount = NewInternalCollectorRefsCount()
@@ -84,6 +88,8 @@ func (r *Registry) RegisterInternalCollectors() {
 	_ = r.Register(r.InternalCollectors.EnvironmentsCount)
 	_ = r.Register(r.InternalCollectors.ExecutedTasksCount)
 	_ = r.Register(r.InternalCollectors.GitLabAPIRequestsCount)
+	_ = r.Register(r.InternalCollectors.GitlabAPIRequestsRemaining)
+	_ = r.Register(r.InternalCollectors.GitlabAPIRequestsLimit)
 	_ = r.Register(r.InternalCollectors.MetricsCount)
 	_ = r.Register(r.InternalCollectors.ProjectsCount)
 	_ = r.Register(r.InternalCollectors.RefsCount)
@@ -137,6 +143,8 @@ func (r *Registry) ExportInternalMetrics(
 	r.InternalCollectors.EnvironmentsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(environmentsCount))
 	r.InternalCollectors.ExecutedTasksCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(executedTasksCount))
 	r.InternalCollectors.GitLabAPIRequestsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(g.RequestsCounter))
+	r.InternalCollectors.GitlabAPIRequestsRemaining.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(g.RequestsRemaining))
+	r.InternalCollectors.GitlabAPIRequestsLimit.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(g.RequestsLimit))
 	r.InternalCollectors.MetricsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(metricsCount))
 	r.InternalCollectors.ProjectsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(projectsCount))
 	r.InternalCollectors.RefsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(refsCount))

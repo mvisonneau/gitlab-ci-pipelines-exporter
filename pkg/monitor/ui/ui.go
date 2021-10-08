@@ -163,6 +163,20 @@ func (m *model) renderLastStatus() string {
 		"\n",
 	)
 
+	gitlabAPIRateLimit := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		" GitLab API limit usage  ",
+		m.progress.ViewAs(m.lastStatus.GitLabAPIRateLimit),
+		"\n",
+	)
+
+	gitlabAPIRateLimitRemaining := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		" GitLab API limit requests remaining ",
+		dataStyle.SetString(strconv.Itoa(int(m.lastStatus.GitLabAPILimitRemaining))).String(),
+		"\n",
+	)
+
 	tasksBufferUsage := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" Tasks buffer usage      ",
@@ -181,6 +195,8 @@ func (m *model) renderLastStatus() string {
 		"",
 		gitlabAPIUsage,
 		gitlabAPIRequestsCount,
+		gitlabAPIRateLimit,
+		gitlabAPIRateLimitRemaining,
 		tasksBufferUsage,
 		tasksExecuted,
 		renderEntityStatus("Projects", m.lastStatus.Projects),

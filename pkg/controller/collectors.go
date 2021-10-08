@@ -55,6 +55,28 @@ func NewInternalCollectorGitLabAPIRequestsCount() prometheus.Collector {
 	)
 }
 
+// NewInternalCollectorGitLabAPIRequestsRemaining returns a new collector for the gcpe_gitlab_api_requests_remaining metric
+func NewInternalCollectorGitLabAPIRequestsRemaining() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_gitlab_api_requests_remaining",
+			Help: "GitLab API requests remaining in the api limit",
+		},
+		[]string{},
+	)
+}
+
+// NewInternalCollectorGitLabAPIRequestsLimit returns a new collector for the gcpe_gitlab_api_requests_limit metric
+func NewInternalCollectorGitLabAPIRequestsLimit() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_gitlab_api_requests_limit",
+			Help: "GitLab API requests available in the api limit",
+		},
+		[]string{},
+	)
+}
+
 // NewInternalCollectorMetricsCount returns a new collector for the gcpe_metrics_count metric
 func NewInternalCollectorMetricsCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(

@@ -8,6 +8,8 @@
 | `gcpe_environments_count` | Number of GitLab environments being exported || *available by default* |
 | `gcpe_executed_tasks_count` | Number of tasks executed || *available by default* |
 | `gcpe_gitlab_api_requests_count` | GitLab API requests count || *available by default* |
+| `gcpe_gitlab_api_requests_remaining` | GitLab API requests remaining in the API Limit || *available by default* |
+| `gcpe_gitlab_api_requests_limit` | GitLab API requests available in the API Limit || *available by default* |
 | `gcpe_metrics_count` | Number of GitLab pipelines metrics being exported || *available by default* |
 | `gcpe_projects_count` | Number of GitLab projects being exported || *available by default* |
 | `gcpe_refs_count` | Number of GitLab refs being exported || *available by default* |
