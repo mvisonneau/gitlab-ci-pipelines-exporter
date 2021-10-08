@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	strconv "strconv"
+	"strconv"
 	"time"
 
 	"github.com/heptiolabs/healthcheck"

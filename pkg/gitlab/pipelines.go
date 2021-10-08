@@ -14,7 +14,6 @@ import (
 // GetRefPipeline ..
 func (c *Client) GetRefPipeline(ref schemas.Ref, pipelineID int) (p schemas.Pipeline, err error) {
 	c.rateLimit()
-	var gp *goGitlab.Pipeline
 	gp, resp, err := c.Pipelines.GetPipeline(ref.Project.Name, pipelineID)
 	if err != nil || gp == nil {
 		return schemas.Pipeline{}, fmt.Errorf("could not read content of pipeline %s - %s | %s", ref.Project.Name, ref.Name, err.Error())
