@@ -57,7 +57,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("X-Gitlab-Token") != c.Config.Server.Webhook.SecretToken {
 		log.WithFields(logFields).Debug("invalid token provided for a webhook request")
 		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprint(w, "{\"error\": \"invalid token\"")
+		fmt.Fprint(w, "{\"error\": \"invalid token\"}")
 		return
 	}
 
