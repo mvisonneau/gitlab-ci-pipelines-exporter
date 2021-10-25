@@ -39,7 +39,7 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 }
 
 // ListPipelineJobs ..
-func (c *Client) ListPipelineJobs(projectName interface{}, pipelineID int) (jobs []schemas.Job, err error) {
+func (c *Client) ListPipelineJobs(projectNameOrID interface{}, pipelineID int) (jobs []schemas.Job, err error) {
 	var foundJobs []*goGitlab.Job
 	var resp *goGitlab.Response
 
@@ -52,7 +52,7 @@ func (c *Client) ListPipelineJobs(projectName interface{}, pipelineID int) (jobs
 
 	for {
 		c.rateLimit()
-		foundJobs, resp, err = c.Jobs.ListPipelineJobs(projectName, pipelineID, options)
+		foundJobs, resp, err = c.Jobs.ListPipelineJobs(projectNameOrID, pipelineID, options)
 		if err != nil {
 			return
 		}
@@ -64,7 +64,7 @@ func (c *Client) ListPipelineJobs(projectName interface{}, pipelineID int) (jobs
 		if resp.CurrentPage >= resp.NextPage {
 			log.WithFields(
 				log.Fields{
-					"project-name": projectName,
+					"project-name": projectNameOrID,
 					"pipeline-id":  pipelineID,
 					"jobs-count":   resp.TotalItems,
 				},
@@ -78,7 +78,7 @@ func (c *Client) ListPipelineJobs(projectName interface{}, pipelineID int) (jobs
 }
 
 // ListPipelineBridges ..
-func (c *Client) ListPipelineBridges(projectName interface{}, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
+func (c *Client) ListPipelineBridges(projectNameOrID interface{}, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
 	var foundBridges []*goGitlab.Bridge
 	var resp *goGitlab.Response
 
@@ -91,7 +91,7 @@ func (c *Client) ListPipelineBridges(projectName interface{}, pipelineID int) (b
 
 	for {
 		c.rateLimit()
-		foundBridges, resp, err = c.Jobs.ListPipelineBridges(projectName, pipelineID, options)
+		foundBridges, resp, err = c.Jobs.ListPipelineBridges(projectNameOrID, pipelineID, options)
 		if err != nil {
 			return
 		}
@@ -101,7 +101,7 @@ func (c *Client) ListPipelineBridges(projectName interface{}, pipelineID int) (b
 		if resp.CurrentPage >= resp.NextPage {
 			log.WithFields(
 				log.Fields{
-					"project-name":  projectName,
+					"project-name":  projectNameOrID,
 					"pipeline-id":   pipelineID,
 					"bridges-count": resp.TotalItems,
 				},
@@ -115,13 +115,13 @@ func (c *Client) ListPipelineBridges(projectName interface{}, pipelineID int) (b
 }
 
 // ListPipelineChildJobs ..
-func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int) (jobs []schemas.Job, err error) {
-	type piplineDef struct {
-		projectName interface{}
-		pipelineID  int
+func (c *Client) ListPipelineChildJobs(projectNameOrID string, parentPipelineID int) (jobs []schemas.Job, err error) {
+	type pipelineDef struct {
+		projectNameOrID interface{}
+		pipelineID      int
 	}
 
-	pipelines := []piplineDef{{projectName, parentPipelineID}}
+	pipelines := []pipelineDef{{projectNameOrID, parentPipelineID}}
 
 	for {
 		if len(pipelines) == 0 {
@@ -132,7 +132,7 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 		pipelines = pipelines[:len(pipelines)-1]
 
 		var foundBridges []*goGitlab.Bridge
-		foundBridges, err = c.ListPipelineBridges(pipeline.projectName, pipeline.pipelineID)
+		foundBridges, err = c.ListPipelineBridges(pipeline.projectNameOrID, pipeline.pipelineID)
 		if err != nil {
 			return
 		}
@@ -145,7 +145,7 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 				continue
 			}
 
-			pipelines = append(pipelines, piplineDef{foundBridge.DownstreamPipeline.ProjectID, foundBridge.DownstreamPipeline.ID})
+			pipelines = append(pipelines, pipelineDef{foundBridge.DownstreamPipeline.ProjectID, foundBridge.DownstreamPipeline.ID})
 			var foundJobs []schemas.Job
 			foundJobs, err = c.ListPipelineJobs(foundBridge.DownstreamPipeline.ProjectID, foundBridge.DownstreamPipeline.ID)
 			if err != nil {
