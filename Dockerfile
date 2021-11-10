@@ -11,7 +11,7 @@ apk add --no-cache ca-certificates
 # RELEASE CONTAINER
 ##
 
-FROM busybox:1.34.0-glibc
+FROM busybox:1.34.1-glibc
 
 WORKDIR /
 
