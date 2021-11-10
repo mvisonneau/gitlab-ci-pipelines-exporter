@@ -110,7 +110,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_job_run_count{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"})",
+          "expr": "count(gitlab_ci_pipeline_job_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"})",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -194,7 +194,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_job_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"} > 0) or vector(0)",
+          "expr": "count(gitlab_ci_pipeline_job_status{status=\"failed\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -273,7 +273,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "sum(increase(gitlab_ci_pipeline_job_run_count{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}[1h]))",
+          "expr": "sum(increase(gitlab_ci_pipeline_job_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}[1h]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -397,7 +397,7 @@
       "savedOverrides": [],
       "targets": [
         {
-          "expr": "(gitlab_ci_pipeline_job_status{status=\"success\", project=~\"$OWNER.*\", ref=~\"$REF\", job_name=~\"$JOB\"} * 1 > 0) or (gitlab_ci_pipeline_job_status{status=\"running\", project=~\"$OWNER.*\", ref=~\"$REF\", job_name=~\"$JOB\"} * 2 > 0) or (gitlab_ci_pipeline_job_status{status=~\"failed|canceled\", project=~\"$OWNER.*\", ref=~\"$REF\", job_name=~\"$JOB\"} * 3 > 0) or (gitlab_ci_pipeline_job_status{status!~\"success|running|failed|canceled\", project=~\"$OWNER.*\", ref=~\"$REF\", job_name=~\"$JOB\"} * 4 > 0)",
+          "expr": "(gitlab_ci_pipeline_job_status{status=\"success\", project=~\"($OWNER).*\", ref=~\"$REF\", job_name=~\"$JOB\"} * 1 > 0) or (gitlab_ci_pipeline_job_status{status=\"running\", project=~\"($OWNER).*\", ref=~\"$REF\", job_name=~\"$JOB\"} * 2 > 0) or (gitlab_ci_pipeline_job_status{status=~\"failed|canceled\", project=~\"($OWNER).*\", ref=~\"$REF\", job_name=~\"$JOB\"} * 3 > 0) or (gitlab_ci_pipeline_job_status{status!~\"success|running|failed|canceled\", project=~\"($OWNER).*\", ref=~\"$REF\", job_name=~\"$JOB\"} * 4 > 0)",
           "format": "time_series",
           "hide": false,
           "instant": true,
@@ -490,7 +490,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(time() - gitlab_ci_pipeline_job_timestamp{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"})",
+          "expr": "avg(time() - gitlab_ci_pipeline_job_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -573,7 +573,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_pipeline_job_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"})",
+          "expr": "avg(gitlab_ci_pipeline_job_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -595,21 +595,7 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {},
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+          "custom": {}
         },
         "overrides": []
       },
@@ -652,7 +638,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(increase(gitlab_ci_pipeline_job_run_count{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}[1m])) by (project, ref, job_name) / sum(increase(gitlab_ci_pipeline_job_run_count{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}[1m])) by (project, ref, job_name)",
+          "expr": "sum(increase(gitlab_ci_pipeline_job_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}[1m])) by (project, ref, job_name) / sum(increase(gitlab_ci_pipeline_job_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}[1m])) by (project, ref, job_name)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -922,7 +908,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "-max(time() - gitlab_ci_pipeline_job_timestamp{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) unless max(gitlab_ci_pipeline_job_status{status!~\"success\", project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) > 0",
+          "expr": "-max(time() - gitlab_ci_pipeline_job_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) unless max(gitlab_ci_pipeline_job_status{status!~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -932,7 +918,7 @@
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_job_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) unless (max(gitlab_ci_pipeline_job_status{status!~\"success\", project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) > 0)",
+          "expr": "max(gitlab_ci_pipeline_job_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) unless (max(gitlab_ci_pipeline_job_status{status!~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -942,7 +928,7 @@
           "refId": "C"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_job_id{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, kind, job_name) unless (max(gitlab_ci_pipeline_job_status{status!~\"success\", project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, kind, job_name) > 0)",
+          "expr": "max(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, kind, job_name) unless (max(gitlab_ci_pipeline_job_status{status!~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, kind, job_name) > 0)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1335,7 +1321,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "-max(time() - gitlab_ci_pipeline_job_timestamp{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) unless max(gitlab_ci_pipeline_job_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) > 0",
+          "expr": "-max(time() - gitlab_ci_pipeline_job_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) unless max(gitlab_ci_pipeline_job_status{status=~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1345,7 +1331,7 @@
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_job_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) unless (max(gitlab_ci_pipeline_job_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) > 0)",
+          "expr": "max(gitlab_ci_pipeline_job_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) unless (max(gitlab_ci_pipeline_job_status{status=~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, job_name, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1355,7 +1341,7 @@
           "refId": "C"
         },
         {
-          "expr": "(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"running\"}) by (project, ref, job_name, kind) * 2) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"failed\"}) by (project, ref, job_name, kind) * 3) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"canceled\"}) by (project, ref, job_name, kind) * 4) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"created\"}) by (project, ref, job_name, kind) * 5) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"waiting_for_resource\"}) by (project, ref, job_name, kind) * 6) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"preparing\"}) by (project, ref, job_name, kind) * 7) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"pending\"}) by (project, ref, job_name, kind) * 8) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"skipped\"}) by (project, ref, job_name, kind) * 9) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"manual\"}) by (project, ref, job_name, kind) * 10) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"scheduled\"}) by (project, ref, job_name, kind) * 11) > 0",
+          "expr": "(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"running\"}) by (project, ref, job_name, kind) * 2) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"failed\"}) by (project, ref, job_name, kind) * 3) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"canceled\"}) by (project, ref, job_name, kind) * 4) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"created\"}) by (project, ref, job_name, kind) * 5) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"waiting_for_resource\"}) by (project, ref, job_name, kind) * 6) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"preparing\"}) by (project, ref, job_name, kind) * 7) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"pending\"}) by (project, ref, job_name, kind) * 8) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"skipped\"}) by (project, ref, job_name, kind) * 9) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"manual\"}) by (project, ref, job_name, kind) * 10) > 0 or\n(max(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\", status=~\"scheduled\"}) by (project, ref, job_name, kind) * 11) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1365,7 +1351,7 @@
           "refId": "A"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_job_id{project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, kind, job_name) unless (max(gitlab_ci_pipeline_job_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, kind, job_name) > 0)",
+          "expr": "max(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, kind, job_name) unless (max(gitlab_ci_pipeline_job_status{status=~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB\"}) by (project, ref, kind, job_name) > 0)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1418,7 +1404,7 @@
       "type": "table"
     }
   ],
-  "refresh": "10s",
+  "refresh": "",
   "schemaVersion": 26,
   "style": "dark",
   "tags": [],
@@ -1488,7 +1474,7 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, project)",
+        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\"}, project)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1496,7 +1482,7 @@
         "multi": true,
         "name": "PROJECT",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, project)",
+        "query": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\"}, project)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1519,7 +1505,7 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$PROJECT\"}, ref)",
+        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, ref)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1527,7 +1513,7 @@
         "multi": true,
         "name": "REF",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id{project=~\"$PROJECT\"}, ref)",
+        "query": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, ref)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1550,7 +1536,7 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_job_id{project=~\"$PROJECT\", ref=~\"$REF\"}, job_name)",
+        "definition": "label_values(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}, job_name)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1558,7 +1544,7 @@
         "multi": true,
         "name": "JOB",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_job_id{project=~\"$PROJECT\", ref=~\"$REF\"}, job_name)",
+        "query": "label_values(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}, job_name)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1602,5 +1588,5 @@
   "timezone": "",
   "title": "GitLab CI jobs",
   "uid": "gitlab_ci_jobs",
-  "version": 1
+  "version": 2
 }
