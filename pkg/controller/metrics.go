@@ -199,7 +199,7 @@ func emitStatusMetric(s store.Store, metricKind schemas.MetricKind, labelValues 
 		}
 
 		if currentStatus == status {
-			statusMetric.Value = float64(statusCode)
+			statusMetric.Value = float64(statusCode + 1)
 		} else {
 			if sparseMetrics {
 				storeDelMetric(s, statusMetric)
