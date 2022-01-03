@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.19.2
 	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/creasty/defaults v1.5.2
-	github.com/go-playground/validator/v10 v10.9.0
+	github.com/go-playground/validator/v10 v10.10.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-redis/redis_rate/v9 v9.1.2
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
