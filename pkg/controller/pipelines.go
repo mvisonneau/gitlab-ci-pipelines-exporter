@@ -78,7 +78,7 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 			Labels: ref.DefaultLabelsValues(),
 		}
 		storeGetMetric(c.Store, &runCount)
-		if formerPipeline.ID != 0 {
+		if formerPipeline.ID != 0 && formerPipeline.ID != ref.LatestPipeline.ID {
 			runCount.Value++
 		}
 		storeSetMetric(c.Store, runCount)
