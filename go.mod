@@ -3,7 +3,7 @@ module github.com/mvisonneau/gitlab-ci-pipelines-exporter
 go 1.17
 
 require (
-	github.com/alecthomas/chroma v0.9.4
+	github.com/alecthomas/chroma v0.10.0
 	github.com/alicebob/miniredis/v2 v2.17.0
 	github.com/charmbracelet/bubbles v0.9.0
 	github.com/charmbracelet/bubbletea v0.19.3
