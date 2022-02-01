@@ -3,8 +3,6 @@ FILES         := $(shell git ls-files */*.go)
 REPOSITORY    := mvisonneau/$(NAME)
 .DEFAULT_GOAL := help
 
-export GO111MODULE=on
-
 .PHONY: setup
 setup: ## Install required libraries/tools for build tasks
 	@command -v gofumpt 2>&1 >/dev/null     || go install mvdan.cc/gofumpt@v0.1.1
@@ -90,7 +88,7 @@ dev-env: ## Build a local development environment using Docker
 		-v $(shell pwd):/go/src/github.com/mvisonneau/$(NAME) \
 		-w /go/src/github.com/mvisonneau/$(NAME) \
 		-p 8080:8080 \
-		golang:1.16 \
+		golang:1.17 \
 		/bin/bash -c 'make setup; make install; bash'
 
 .PHONY: is-git-dirty
