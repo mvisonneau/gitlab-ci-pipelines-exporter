@@ -14,7 +14,7 @@ require (
 	github.com/go-redis/redis_rate/v9 v9.1.2
 	github.com/heptiolabs/healthcheck v0.0.0-20180807145615-6ff867650f40
 	github.com/imdario/mergo v0.3.12
-	github.com/muesli/termenv v0.9.0
+	github.com/muesli/termenv v0.11.0
 	github.com/mvisonneau/go-helpers v0.0.1
 	github.com/openlyinc/pointy v1.1.2
 	github.com/paulbellamy/ratecounter v0.2.0
