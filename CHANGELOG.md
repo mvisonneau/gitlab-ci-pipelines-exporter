@@ -11,11 +11,18 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 - `linux/arm/v6` & `linux/arm/v7` binary & container image releases
 - `quay.io` container image releases
+- New internal metrics about exporter's health:
+  - `gcpe_gitlab_api_requests_remaining` -  GitLab API requests remaining in the API Limit
+  - `gcpe_gitlab_api_requests_limit` - GitLab API requests available in the API Limit
 
 ### Changed
 
 - Fixed an issue when running in cluster mode where tasks could hang when the exporter restarted.
+- Fixed a bug in some cases where pagination headers are not returned from GitLab's API
 - Upgraded most dependencies to their latest versions
+- fixed json syntax error in webhook error body
+- dashboards: fixed owner multiselect filters
+- fixed a bug on `gitlab_ci_pipeline_run_count` being incremented multiple times
 
 ## [v0.5.2] - 2021-08-25
 ### Changed
