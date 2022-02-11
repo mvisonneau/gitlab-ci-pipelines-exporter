@@ -315,7 +315,10 @@ func (c *Controller) ScheduleRedisSetKeepalive(ctx context.Context) {
 				log.Info("stopped redis keepalive")
 				return
 			case <-ticker.C:
-				c.Store.(*store.Redis).SetKeepalive(c.UUID.String(), time.Duration(10)*time.Second)
+				_, err := c.Store.(*store.Redis).SetKeepalive(c.UUID.String(), time.Duration(10)*time.Second)
+				if err != nil {
+					log.WithError(err).Fatal("setting keepalive")
+				}
 			}
 		}
 	}(ctx)

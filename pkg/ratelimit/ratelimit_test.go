@@ -15,7 +15,7 @@ import (
 func MeasureTakeDuration(l Limiter) int64 {
 	start := time.Now()
 	Take(l)
-	return int64(time.Now().Sub(start))
+	return int64(time.Since(start))
 }
 
 func TestLocalTake(t *testing.T) {
@@ -37,7 +37,7 @@ func TestRedisTake(t *testing.T) {
 		1,
 	)
 
-	assert.LessOrEqual(t, MeasureTakeDuration(l), int64(100*time.Millisecond))
+	assert.LessOrEqual(t, MeasureTakeDuration(l), int64(250*time.Millisecond))
 	assert.GreaterOrEqual(t, MeasureTakeDuration(l), int64(900*time.Millisecond))
 }
 

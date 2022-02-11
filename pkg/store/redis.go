@@ -308,12 +308,12 @@ func getRedisKeepaliveKey(processUUID string) string {
 	return fmt.Sprintf("%s:%s", redisKeepaliveKey, processUUID)
 }
 
-// Keepalive sets a key with an UUID corresponding to the currently running process
+// SetKeepalive sets a key with an UUID corresponding to the currently running process
 func (r *Redis) SetKeepalive(uuid string, ttl time.Duration) (bool, error) {
 	return r.SetNX(r.ctx, fmt.Sprintf("%s:%s", redisKeepaliveKey, uuid), nil, ttl).Result()
 }
 
-// Keepalive returns whether a keepalive exists or not for a particular UUID
+// KeepaliveExists returns whether a keepalive exists or not for a particular UUID
 func (r *Redis) KeepaliveExists(uuid string) (bool, error) {
 	exists, err := r.Exists(r.ctx, fmt.Sprintf("%s:%s", redisKeepaliveKey, uuid)).Result()
 	return exists == 1, err

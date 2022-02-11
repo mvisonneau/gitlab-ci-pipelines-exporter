@@ -1,7 +1,6 @@
 package store
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -13,21 +12,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var mr *miniredis.Miniredis
-
-func TestMain(m *testing.M) {
-	var err error
-	mr, err = miniredis.Run()
+func newTestRedisStore(t *testing.T) (mr *miniredis.Miniredis, r Store) {
+	mr, err := miniredis.Run()
 	if err != nil {
 		panic(err)
 	}
-	defer mr.Close()
 
-	os.Exit(m.Run())
+	t.Cleanup(func() {
+		mr.Close()
+	})
+
+	return mr, NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()})).(*Redis)
 }
 
 func TestRedisProjectFunctions(t *testing.T) {
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+	_, r := newTestRedisStore(t)
 
 	p := schemas.NewProject("foo/bar")
 	p.OutputSparseStatusMetrics = false
@@ -71,7 +70,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 }
 
 func TestRedisEnvironmentFunctions(t *testing.T) {
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+	_, r := newTestRedisStore(t)
 
 	environment := schemas.Environment{
 		ProjectName: "foo",
@@ -125,7 +124,7 @@ func TestRedisEnvironmentFunctions(t *testing.T) {
 }
 
 func TestRedisRefFunctions(t *testing.T) {
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+	_, r := newTestRedisStore(t)
 
 	p := schemas.NewProject("foo/bar")
 	p.Topics = "salty"
@@ -182,7 +181,7 @@ func TestRedisRefFunctions(t *testing.T) {
 }
 
 func TestRedisMetricFunctions(t *testing.T) {
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+	_, r := newTestRedisStore(t)
 
 	m := schemas.Metric{
 		Kind: schemas.MetricKindCoverage,
@@ -245,7 +244,7 @@ func TestGetRedisKeepaliveKey(t *testing.T) {
 }
 
 func TestRedisKeepalive(t *testing.T) {
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+	mr, r := newTestRedisStore(t)
 
 	uuidString := uuid.New().String()
 	resp, err := r.(*Redis).SetKeepalive(uuidString, time.Second)
@@ -263,11 +262,11 @@ func TestRedisKeepalive(t *testing.T) {
 }
 
 func TestGetRedisQueueKey(t *testing.T) {
-	assert.Equal(t, "tasks:GarbageCollectEnvironments:foo", getRedisQueueKey(schemas.TaskTypeGarbageCollectEnvironments, "foo"))
+	assert.Equal(t, "task:GarbageCollectEnvironments:foo", getRedisQueueKey(schemas.TaskTypeGarbageCollectEnvironments, "foo"))
 }
 
 func TestRedisQueueTask(t *testing.T) {
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+	mr, r := newTestRedisStore(t)
 
 	r.(*Redis).SetKeepalive("controller1", time.Second)
 	ok, err := r.QueueTask(schemas.TaskTypePullMetrics, "foo", "controller1")
@@ -287,7 +286,7 @@ func TestRedisQueueTask(t *testing.T) {
 }
 
 func TestRedisUnqueueTask(t *testing.T) {
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+	_, r := newTestRedisStore(t)
 
 	r.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
 	count, _ := r.ExecutedTasksCount()
@@ -299,7 +298,7 @@ func TestRedisUnqueueTask(t *testing.T) {
 }
 
 func TestRedisCurrentlyQueuedTasksCount(t *testing.T) {
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+	_, r := newTestRedisStore(t)
 
 	r.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
 	r.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
@@ -313,7 +312,7 @@ func TestRedisCurrentlyQueuedTasksCount(t *testing.T) {
 }
 
 func TestRedisExecutedTasksCount(t *testing.T) {
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+	_, r := newTestRedisStore(t)
 
 	r.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
 	r.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
