@@ -9,7 +9,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Added
 
-- `linux/arm/v7` binary & container image releases
+- `linux/arm/v6` & `linux/arm/v7` binary & container image releases
 - `quay.io` container image releases
 
 ### Changed

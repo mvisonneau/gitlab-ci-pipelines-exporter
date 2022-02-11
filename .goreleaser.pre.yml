@@ -15,6 +15,7 @@ builds:
       - amd64
       - arm
       - arm64
+    goarm: [6, 7]
     flags:
       - -trimpath
     ignore:
@@ -23,7 +24,7 @@ builds:
       - { goos: windows, goarch: arm }
 
 archives:
-  - name_template: '{{ .ProjectName }}_edge_{{ .Os }}_{{ .Arch }}'
+  - name_template: '{{ .ProjectName }}_edge_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     format_overrides:
       - goos: windows
         format: zip
@@ -61,14 +62,33 @@ dockers:
       - --label=org.opencontainers.image.licenses=Apache-2.0
 
   - image_templates:
-      - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8'
-      - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8'
-      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8'
+      - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64'
+      - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64'
+      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64'
     ids: [gitlab-ci-pipelines-exporter]
     goarch: arm64
     use: buildx
     build_flag_templates:
-      - --platform=linux/arm64/v8
+      - --platform=linux/arm64
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.description={{ .ProjectName }}
+      - --label=org.opencontainers.image.url=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
+      - --label=org.opencontainers.image.source=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=Apache-2.0
+
+  - image_templates:
+      - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv6'
+      - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv6'
+      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv6'
+    ids: [gitlab-ci-pipelines-exporter]
+    goarch: arm
+    goarm: 6
+    use: buildx
+    build_flag_templates:
+      - --platform=linux/arm/v6
       - --label=org.opencontainers.image.title={{ .ProjectName }}
       - --label=org.opencontainers.image.description={{ .ProjectName }}
       - --label=org.opencontainers.image.url=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
@@ -84,6 +104,7 @@ dockers:
       - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv7'
     ids: [gitlab-ci-pipelines-exporter]
     goarch: arm
+    goarm: 7
     use: buildx
     build_flag_templates:
       - --platform=linux/arm/v7
@@ -100,19 +121,22 @@ docker_manifests:
   - name_template: docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest
     image_templates:
       - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64
-      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8
+      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64
+      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv6
       - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv7
 
   - name_template: ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest
     image_templates:
       - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64
-      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8
+      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64
+      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv6
       - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv7
 
   - name_template: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest
     image_templates:
       - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-amd64
-      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64v8
+      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-arm64
+      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv6
       - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:latest-armv7
 
 signs:
