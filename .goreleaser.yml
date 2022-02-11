@@ -13,12 +13,14 @@ builds:
     goarch:
       - 386
       - amd64
+      - arm
       - arm64
     flags:
       - -trimpath
     ignore:
-      - goos: darwin
-        goarch: 386
+      - { goos: darwin, goarch: 386 }
+      - { goos: darwin, goarch: arm }
+      - { goos: windows, goarch: arm }
 
 archives:
   - name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
@@ -66,6 +68,7 @@ dockers:
   - image_templates:
       - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64'
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64'
+      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64'
     ids: [gitlab-ci-pipelines-exporter]
     goarch: amd64
     use: buildx
@@ -83,6 +86,7 @@ dockers:
   - image_templates:
       - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8'
       - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8'
+      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8'
     ids: [gitlab-ci-pipelines-exporter]
     goarch: arm64
     use: buildx
@@ -97,16 +101,42 @@ dockers:
       - --label=org.opencontainers.image.revision={{ .FullCommit }}
       - --label=org.opencontainers.image.licenses=Apache-2.0
 
+  - image_templates:
+      - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8'
+      - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8'
+      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7'
+    ids: [gitlab-ci-pipelines-exporter]
+    goarch: arm
+    use: buildx
+    build_flag_templates:
+      - --platform=linux/arm/v7
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.description={{ .ProjectName }}
+      - --label=org.opencontainers.image.url=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
+      - --label=org.opencontainers.image.source=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=Apache-2.0
+
 docker_manifests:
   - name_template: docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}
     image_templates:
       - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64
       - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8
+      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7
 
   - name_template: ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}
     image_templates:
       - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64
       - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8
+      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7
+
+  - name_template: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}
+    image_templates:
+      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64
+      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64v8
+      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7
 
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Tag }}_sha512sums.txt'
