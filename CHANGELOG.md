@@ -7,6 +7,10 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- Fixed an issue when running in cluster mode where tasks could hang when the exporter restarted.
+
 ## [v0.5.2] - 2021-08-25
 ### Changed
 

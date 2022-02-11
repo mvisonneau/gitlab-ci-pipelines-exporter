@@ -90,6 +90,7 @@ func Run(cliCtx *cli.Context) (int, error) {
 			"metrics-endpoint-enabled":     cfg.Server.Metrics.Enabled,
 			"webhook-endpoint-enabled":     cfg.Server.Webhook.Enabled,
 			"openmetrics-encoding-enabled": cfg.Server.Metrics.EnableOpenmetricsEncoding,
+			"controller-uuid":              c.UUID,
 		},
 	).Info("http server started")
 

@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
@@ -14,8 +16,9 @@ const (
 	redisEnvironmentsKey       string = `environments`
 	redisRefsKey               string = `refs`
 	redisMetricsKey            string = `metrics`
-	redisTasksKey              string = `tasks`
+	redisTaskKey               string = `task`
 	redisTasksExecutedCountKey string = `tasksExecutedCount`
+	redisKeepaliveKey          string = `keepalive`
 )
 
 // Redis ..
@@ -301,15 +304,67 @@ func (r *Redis) MetricsCount() (int64, error) {
 	return r.HLen(r.ctx, redisMetricsKey).Result()
 }
 
-// QueueTask registers that we are queueing the task
-func (r *Redis) QueueTask(tt schemas.TaskType, uniqueID string) (bool, error) {
-	return r.SetNX(r.ctx, fmt.Sprintf("%v%s", tt, uniqueID), nil, 0).Result()
+func getRedisKeepaliveKey(processUUID string) string {
+	return fmt.Sprintf("%s:%s", redisKeepaliveKey, processUUID)
+}
+
+// Keepalive sets a key with an UUID corresponding to the currently running process
+func (r *Redis) SetKeepalive(uuid string, ttl time.Duration) (bool, error) {
+	return r.SetNX(r.ctx, fmt.Sprintf("%s:%s", redisKeepaliveKey, uuid), nil, ttl).Result()
+}
+
+// Keepalive returns whether a keepalive exists or not for a particular UUID
+func (r *Redis) KeepaliveExists(uuid string) (bool, error) {
+	exists, err := r.Exists(r.ctx, fmt.Sprintf("%s:%s", redisKeepaliveKey, uuid)).Result()
+	return exists == 1, err
+}
+
+func getRedisQueueKey(tt schemas.TaskType, taskUUID string) string {
+	return fmt.Sprintf("%s:%v:%s", redisTaskKey, tt, taskUUID)
+}
+
+// QueueTask registers that we are queueing the task.
+// It returns true if it managed to schedule it, false if it was already scheduled.
+func (r *Redis) QueueTask(tt schemas.TaskType, taskUUID, processUUID string) (set bool, err error) {
+	k := getRedisQueueKey(tt, taskUUID)
+
+	// We attempt to set the key, if it already exists, we do not overwrite it
+	set, err = r.SetNX(r.ctx, k, processUUID, 0).Result()
+	if err != nil {
+		return
+	}
+
+	// If the key already exists, we want to check a couple of things
+	if !set {
+		// First, that the associated process UUID is the same as our current one
+		var tpuuid string
+		if tpuuid, err = r.Get(r.ctx, k).Result(); err != nil {
+			return
+		}
+
+		// If it is not the case, we assess that the one being associated with the task lock
+		// is still alive, otherwise we override the key and schedule the task
+		if tpuuid != processUUID {
+			var uuidIsAlive bool
+			if uuidIsAlive, err = r.KeepaliveExists(tpuuid); err != nil {
+				return
+			}
+
+			if !uuidIsAlive {
+				if _, err = r.Set(r.ctx, k, processUUID, 0).Result(); err != nil {
+					return
+				}
+				return true, nil
+			}
+		}
+	}
+	return
 }
 
 // UnqueueTask removes the task from the tracker
-func (r *Redis) UnqueueTask(tt schemas.TaskType, uniqueID string) (err error) {
+func (r *Redis) UnqueueTask(tt schemas.TaskType, taskUUID string) (err error) {
 	var matched int64
-	matched, err = r.Del(r.ctx, fmt.Sprintf("%v%s", tt, uniqueID)).Result()
+	matched, err = r.Del(r.ctx, getRedisQueueKey(tt, taskUUID)).Result()
 	if err != nil {
 		return
 	}
@@ -321,13 +376,22 @@ func (r *Redis) UnqueueTask(tt schemas.TaskType, uniqueID string) (err error) {
 }
 
 // CurrentlyQueuedTasksCount ..
-func (r *Redis) CurrentlyQueuedTasksCount() (uint64, error) {
-	len, err := r.HLen(r.ctx, redisTasksKey).Result()
-	return uint64(len), err
+func (r *Redis) CurrentlyQueuedTasksCount() (count uint64, err error) {
+	iter := r.Scan(r.ctx, 0, fmt.Sprintf("%s:*", redisTaskKey), 0).Iterator()
+	for iter.Next(r.ctx) {
+		count++
+	}
+	err = iter.Err()
+	return
 }
 
 // ExecutedTasksCount ..
 func (r *Redis) ExecutedTasksCount() (uint64, error) {
-	len, err := r.HLen(r.ctx, redisTasksKey).Result()
-	return uint64(len), err
+	countString, err := r.Get(r.ctx, redisTasksExecutedCountKey).Result()
+	if err != nil {
+		return 0, err
+	}
+
+	c, err := strconv.Atoi(countString)
+	return uint64(c), err
 }

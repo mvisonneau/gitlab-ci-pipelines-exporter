@@ -41,7 +41,7 @@ type Store interface {
 
 	// Helpers to keep track of currently queued tasks and avoid scheduling them
 	// twice at the risk of ending up with loads of dangling goroutines being locked
-	QueueTask(schemas.TaskType, string) (bool, error)
+	QueueTask(schemas.TaskType, string, string) (bool, error)
 	UnqueueTask(schemas.TaskType, string) error
 	CurrentlyQueuedTasksCount() (uint64, error)
 	ExecutedTasksCount() (uint64, error)

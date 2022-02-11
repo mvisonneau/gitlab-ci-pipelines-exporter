@@ -1,23 +1,33 @@
 package store
 
 import (
+	"os"
 	"testing"
+	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRedisProjectFunctions(t *testing.T) {
-	s, err := miniredis.Run()
+var mr *miniredis.Miniredis
+
+func TestMain(m *testing.M) {
+	var err error
+	mr, err = miniredis.Run()
 	if err != nil {
 		panic(err)
 	}
-	defer s.Close()
+	defer mr.Close()
 
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
+	os.Exit(m.Run())
+}
+
+func TestRedisProjectFunctions(t *testing.T) {
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
 
 	p := schemas.NewProject("foo/bar")
 	p.OutputSparseStatusMetrics = false
@@ -61,13 +71,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 }
 
 func TestRedisEnvironmentFunctions(t *testing.T) {
-	s, err := miniredis.Run()
-	if err != nil {
-		panic(err)
-	}
-	defer s.Close()
-
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
 
 	environment := schemas.Environment{
 		ProjectName: "foo",
@@ -121,13 +125,7 @@ func TestRedisEnvironmentFunctions(t *testing.T) {
 }
 
 func TestRedisRefFunctions(t *testing.T) {
-	s, err := miniredis.Run()
-	if err != nil {
-		panic(err)
-	}
-	defer s.Close()
-
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
 
 	p := schemas.NewProject("foo/bar")
 	p.Topics = "salty"
@@ -184,13 +182,7 @@ func TestRedisRefFunctions(t *testing.T) {
 }
 
 func TestRedisMetricFunctions(t *testing.T) {
-	s, err := miniredis.Run()
-	if err != nil {
-		panic(err)
-	}
-	defer s.Close()
-
-	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: s.Addr()}))
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
 
 	m := schemas.Metric{
 		Kind: schemas.MetricKindCoverage,
@@ -246,4 +238,88 @@ func TestRedisMetricFunctions(t *testing.T) {
 	}
 	assert.NoError(t, r.GetMetric(&newMetric))
 	assert.NotEqual(t, m, newMetric)
+}
+
+func TestGetRedisKeepaliveKey(t *testing.T) {
+	assert.Equal(t, "keepalive:foo", getRedisKeepaliveKey("foo"))
+}
+
+func TestRedisKeepalive(t *testing.T) {
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+
+	uuidString := uuid.New().String()
+	resp, err := r.(*Redis).SetKeepalive(uuidString, time.Second)
+	assert.True(t, resp)
+	assert.NoError(t, err)
+
+	resp, err = r.(*Redis).KeepaliveExists(uuidString)
+	assert.True(t, resp)
+	assert.NoError(t, err)
+
+	mr.FastForward(2 * time.Second)
+	resp, err = r.(*Redis).KeepaliveExists(uuidString)
+	assert.False(t, resp)
+	assert.NoError(t, err)
+}
+
+func TestGetRedisQueueKey(t *testing.T) {
+	assert.Equal(t, "tasks:GarbageCollectEnvironments:foo", getRedisQueueKey(schemas.TaskTypeGarbageCollectEnvironments, "foo"))
+}
+
+func TestRedisQueueTask(t *testing.T) {
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+
+	r.(*Redis).SetKeepalive("controller1", time.Second)
+	ok, err := r.QueueTask(schemas.TaskTypePullMetrics, "foo", "controller1")
+	assert.True(t, ok)
+	assert.NoError(t, err)
+
+	// The keepalive of controller1 not being expired, we should not requeue the task
+	ok, err = r.QueueTask(schemas.TaskTypePullMetrics, "foo", "controller2")
+	assert.False(t, ok)
+	assert.NoError(t, err)
+
+	// The keepalive of controller1 being expired, we should requeue the task
+	mr.FastForward(2 * time.Second)
+	ok, err = r.QueueTask(schemas.TaskTypePullMetrics, "foo", "controller2")
+	assert.True(t, ok)
+	assert.NoError(t, err)
+}
+
+func TestRedisUnqueueTask(t *testing.T) {
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+
+	r.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
+	count, _ := r.ExecutedTasksCount()
+	assert.Equal(t, uint64(0), count)
+
+	assert.NoError(t, r.UnqueueTask(schemas.TaskTypePullMetrics, "foo"))
+	count, _ = r.ExecutedTasksCount()
+	assert.Equal(t, uint64(1), count)
+}
+
+func TestRedisCurrentlyQueuedTasksCount(t *testing.T) {
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+
+	r.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
+	r.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
+	r.QueueTask(schemas.TaskTypePullMetrics, "baz", "")
+
+	count, _ := r.CurrentlyQueuedTasksCount()
+	assert.Equal(t, uint64(3), count)
+	r.UnqueueTask(schemas.TaskTypePullMetrics, "foo")
+	count, _ = r.CurrentlyQueuedTasksCount()
+	assert.Equal(t, uint64(2), count)
+}
+
+func TestRedisExecutedTasksCount(t *testing.T) {
+	r := NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
+
+	r.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
+	r.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
+	r.UnqueueTask(schemas.TaskTypePullMetrics, "foo")
+	r.UnqueueTask(schemas.TaskTypePullMetrics, "foo")
+
+	count, _ := r.ExecutedTasksCount()
+	assert.Equal(t, uint64(1), count)
 }

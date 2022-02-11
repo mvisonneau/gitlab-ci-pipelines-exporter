@@ -219,3 +219,51 @@ func TestLocalMetricFunctions(t *testing.T) {
 	assert.NoError(t, l.GetMetric(&newMetric))
 	assert.NotEqual(t, m, newMetric)
 }
+
+func TestLocalQueueTask(t *testing.T) {
+	l := NewLocalStore()
+	ok, err := l.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
+	assert.True(t, ok)
+	assert.NoError(t, err)
+
+	ok, err = l.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
+	assert.False(t, ok)
+	assert.NoError(t, err)
+
+	l.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
+	ok, err = l.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
+	assert.False(t, ok)
+	assert.NoError(t, err)
+}
+
+func TestLocalUnqueueTask(t *testing.T) {
+	l := NewLocalStore()
+	l.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
+	assert.Equal(t, uint64(0), l.(*Local).executedTasksCount)
+	assert.NoError(t, l.UnqueueTask(schemas.TaskTypePullMetrics, "foo"))
+	assert.Equal(t, uint64(1), l.(*Local).executedTasksCount)
+}
+
+func TestLocalCurrentlyQueuedTasksCount(t *testing.T) {
+	l := NewLocalStore()
+	l.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
+	l.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
+	l.QueueTask(schemas.TaskTypePullMetrics, "baz", "")
+
+	count, _ := l.CurrentlyQueuedTasksCount()
+	assert.Equal(t, uint64(3), count)
+	l.UnqueueTask(schemas.TaskTypePullMetrics, "foo")
+	count, _ = l.CurrentlyQueuedTasksCount()
+	assert.Equal(t, uint64(2), count)
+}
+
+func TestLocalExecutedTasksCount(t *testing.T) {
+	l := NewLocalStore()
+	l.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
+	l.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
+	l.UnqueueTask(schemas.TaskTypePullMetrics, "foo")
+	l.UnqueueTask(schemas.TaskTypePullMetrics, "foo")
+
+	count, _ := l.ExecutedTasksCount()
+	assert.Equal(t, uint64(1), count)
+}

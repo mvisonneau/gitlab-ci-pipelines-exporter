@@ -45,10 +45,7 @@ func (l *Local) DelProject(k schemas.ProjectKey) error {
 
 // GetProject ..
 func (l *Local) GetProject(p *schemas.Project) error {
-	exists, err := l.ProjectExists(p.Key())
-	if err != nil {
-		return err
-	}
+	exists, _ := l.ProjectExists(p.Key())
 
 	if exists {
 		l.projectsMutex.RLock()
@@ -108,10 +105,7 @@ func (l *Local) DelEnvironment(k schemas.EnvironmentKey) error {
 
 // GetEnvironment ..
 func (l *Local) GetEnvironment(environment *schemas.Environment) error {
-	exists, err := l.EnvironmentExists(environment.Key())
-	if err != nil {
-		return err
-	}
+	exists, _ := l.EnvironmentExists(environment.Key())
 
 	if exists {
 		l.environmentsMutex.RLock()
@@ -171,10 +165,7 @@ func (l *Local) DelRef(k schemas.RefKey) error {
 
 // GetRef ..
 func (l *Local) GetRef(ref *schemas.Ref) error {
-	exists, err := l.RefExists(ref.Key())
-	if err != nil {
-		return err
-	}
+	exists, _ := l.RefExists(ref.Key())
 
 	if exists {
 		l.refsMutex.RLock()
@@ -234,10 +225,7 @@ func (l *Local) DelMetric(k schemas.MetricKey) error {
 
 // GetMetric ..
 func (l *Local) GetMetric(m *schemas.Metric) error {
-	exists, err := l.MetricExists(m.Key())
-	if err != nil {
-		return err
-	}
+	exists, _ := l.MetricExists(m.Key())
 
 	if exists {
 		l.metricsMutex.RLock()
@@ -299,8 +287,9 @@ func (l *Local) isTaskAlreadyQueued(tt schemas.TaskType, uniqueID string) bool {
 	return false
 }
 
-// QueueTask registers that we are queueing the task
-func (l *Local) QueueTask(tt schemas.TaskType, uniqueID string) (bool, error) {
+// QueueTask registers that we are queueing the task.
+// It returns true if it managed to schedule it, false if it was already scheduled.
+func (l *Local) QueueTask(tt schemas.TaskType, uniqueID, _ string) (bool, error) {
 	if !l.isTaskAlreadyQueued(tt, uniqueID) {
 		l.tasksMutex.Lock()
 		defer l.tasksMutex.Unlock()

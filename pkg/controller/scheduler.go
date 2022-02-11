@@ -9,6 +9,7 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/taskq/v3"
 	"github.com/vmihailenco/taskq/v3/memqueue"
@@ -295,7 +296,29 @@ func (c *Controller) Schedule(ctx context.Context, pull config.Pull, gc config.G
 		if cfg.Scheduled {
 			c.ScheduleTaskWithTicker(ctx, tt, cfg.IntervalSeconds)
 		}
+
+		if c.Redis != nil {
+			c.ScheduleRedisSetKeepalive(ctx)
+		}
 	}
+}
+
+// ScheduleRedisSetKeepalive will ensure that whilst the process is running,
+// a key is periodically updated within Redis to let other instances know this
+// one is alive and processing tasks.
+func (c *Controller) ScheduleRedisSetKeepalive(ctx context.Context) {
+	go func(ctx context.Context) {
+		ticker := time.NewTicker(time.Duration(5) * time.Second)
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info("stopped redis keepalive")
+				return
+			case <-ticker.C:
+				c.Store.(*store.Redis).SetKeepalive(c.UUID.String(), time.Duration(10)*time.Second)
+			}
+		}
+	}(ctx)
 }
 
 // ScheduleTask ..
@@ -318,7 +341,7 @@ func (c *Controller) ScheduleTask(ctx context.Context, tt schemas.TaskType, uniq
 		return
 	}
 
-	queued, err := c.Store.QueueTask(tt, uniqueID)
+	queued, err := c.Store.QueueTask(tt, uniqueID, c.UUID.String())
 	if err != nil {
 		log.WithFields(logFields).Warn("unable to declare the queueing, skipping scheduling of task..")
 		return

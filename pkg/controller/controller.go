@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/taskq/v3"
@@ -22,11 +23,16 @@ type Controller struct {
 	Gitlab         *gitlab.Client
 	Store          store.Store
 	TaskController TaskController
+
+	// UUID is used to identify this controller/process amongst others when
+	// the exporter is running in cluster mode, leveraging Redis.
+	UUID uuid.UUID
 }
 
 // New creates a new controller
 func New(ctx context.Context, cfg config.Config, version string) (c Controller, err error) {
 	c.Config = cfg
+	c.UUID = uuid.New()
 
 	if err = c.configureRedis(cfg.Redis.URL); err != nil {
 		return
