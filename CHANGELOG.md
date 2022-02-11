@@ -7,6 +7,12 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Changed
+
+- Fixed a config issue preventing the arm deb/rpm packages to be released correctly
+
+## [v0.5.3] - 2022-02-11
+
 ### Added
 
 - `linux/arm/v6` & `linux/arm/v7` binary & container image releases
@@ -608,7 +614,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.3...HEAD
+[v0.5.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.3
 [v0.5.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.2
 [v0.5.1]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.1
 [v0.5.0]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.0

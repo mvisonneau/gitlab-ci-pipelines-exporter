@@ -35,7 +35,7 @@ nfpms:
     license: &license Apache-2.0
     homepage: &homepage https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
     vendor: *author
-    file_name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
+    file_name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     formats:
       - deb
       - rpm

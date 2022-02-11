@@ -41,7 +41,7 @@ If you want to quickly try them out with your own data, have a look into the [ex
 ### Go
 
 ```bash
-~$ go get -u github.com/mvisonneau/gitlab-ci-pipelines-exporter/cmd/gitlab-ci-pipelines-exporter
+~$ go install github.com/mvisonneau/gitlab-ci-pipelines-exporter/cmd/gitlab-ci-pipelines-exporter@latest
 ```
 
 ### Snapcraft

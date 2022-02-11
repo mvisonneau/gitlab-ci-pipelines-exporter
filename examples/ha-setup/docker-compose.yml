@@ -2,14 +2,14 @@
 version: '3.8'
 services:
   redis:
-    image: docker.io/bitnami/redis:6.2
+    image: quay.io/bitnami/redis:6.2
     ports:
       - 6379:6379
     environment:
       ALLOW_EMPTY_PASSWORD: 'yes'
 
   gitlab-ci-pipelines-exporter-1: &gitlab-ci-pipelines-exporter
-    image: docker.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.2
+    image: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.3
     # You can comment out the image name and use the following statement
     # to build the image against the current version of the repository
     #build: ../..
