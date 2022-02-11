@@ -22,5 +22,4 @@ func Take(l Limiter) {
 			},
 		).Debug("throttled GitLab requests")
 	}
-	return
 }
