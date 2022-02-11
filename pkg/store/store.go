@@ -17,21 +17,18 @@ type Store interface {
 	ProjectExists(schemas.ProjectKey) (bool, error)
 	Projects() (schemas.Projects, error)
 	ProjectsCount() (int64, error)
-
 	SetEnvironment(schemas.Environment) error
 	DelEnvironment(schemas.EnvironmentKey) error
 	GetEnvironment(*schemas.Environment) error
 	EnvironmentExists(schemas.EnvironmentKey) (bool, error)
 	Environments() (schemas.Environments, error)
 	EnvironmentsCount() (int64, error)
-
 	SetRef(schemas.Ref) error
 	DelRef(schemas.RefKey) error
 	GetRef(*schemas.Ref) error
 	RefExists(schemas.RefKey) (bool, error)
 	Refs() (schemas.Refs, error)
 	RefsCount() (int64, error)
-
 	SetMetric(schemas.Metric) error
 	DelMetric(schemas.MetricKey) error
 	GetMetric(*schemas.Metric) error

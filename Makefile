@@ -5,11 +5,11 @@ REPOSITORY    := mvisonneau/$(NAME)
 
 .PHONY: setup
 setup: ## Install required libraries/tools for build tasks
-	@command -v gofumpt 2>&1 >/dev/null     || go install mvdan.cc/gofumpt@v0.1.1
-	@command -v gosec 2>&1 >/dev/null       || go install github.com/securego/gosec/v2/cmd/gosec@v2.8.1
+	@command -v gofumpt 2>&1 >/dev/null     || go install mvdan.cc/gofumpt@v0.2.1
+	@command -v gosec 2>&1 >/dev/null       || go install github.com/securego/gosec/v2/cmd/gosec@v2.9.6
 	@command -v ineffassign 2>&1 >/dev/null || go install github.com/gordonklaus/ineffassign@v0.0.0-20210914165742-4cc7213b9bc8
 	@command -v misspell 2>&1 >/dev/null    || go install github.com/client9/misspell/cmd/misspell@v0.3.4
-	@command -v revive 2>&1 >/dev/null      || go install github.com/mgechev/revive@v1.1.1
+	@command -v revive 2>&1 >/dev/null      || go install github.com/mgechev/revive@v1.1.3
 
 .PHONY: fmt
 fmt: setup ## Format source code
