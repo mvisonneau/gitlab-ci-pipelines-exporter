@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/chroma v0.10.0
 	github.com/alicebob/miniredis/v2 v2.17.0
 	github.com/charmbracelet/bubbles v0.10.2
-	github.com/charmbracelet/bubbletea v0.19.3
+	github.com/charmbracelet/bubbletea v0.20.0
 	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/creasty/defaults v1.5.2
 	github.com/go-playground/validator/v10 v10.10.0
@@ -15,7 +15,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb
 	github.com/imdario/mergo v0.3.12
-	github.com/muesli/termenv v0.11.0
+	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739
 	github.com/mvisonneau/go-helpers v0.0.1
 	github.com/openlyinc/pointy v1.1.2
 	github.com/paulbellamy/ratecounter v0.2.0
