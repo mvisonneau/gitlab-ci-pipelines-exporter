@@ -71,6 +71,12 @@ If you want to quickly try them out with your own data, have a look into the [ex
 ~$ scoop install gitlab-ci-pipelines-exporter
 ```
 
+### NixOS
+
+```
+~$ nix-env -iA nixos.prometheus-gitlab-ci-pipelines-exporter
+```
+
 ### Binaries, DEB and RPM packages
 
 Have a look onto the [latest release page](https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/releases/latest) to pick your flavor and version. Here is an helper to fetch the most recent one:
