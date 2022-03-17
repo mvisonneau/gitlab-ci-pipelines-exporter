@@ -5,15 +5,14 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
-	"github.com/vmihailenco/taskq/v3"
-
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/vmihailenco/taskq/v3"
 )
 
 // Controller holds the necessary clients to run the app and handle requests
@@ -88,6 +87,7 @@ func (c *Controller) unqueueTask(tt schemas.TaskType, uniqueID string) {
 
 func (c *Controller) configureGitlab(cfg config.Gitlab, version string) (err error) {
 	var rl ratelimit.Limiter
+
 	if c.Redis != nil {
 		rl = ratelimit.NewRedisLimiter(context.Background(), c.Redis, cfg.MaximumRequestsPerSecond)
 	} else {
@@ -106,18 +106,25 @@ func (c *Controller) configureGitlab(cfg config.Gitlab, version string) (err err
 }
 
 func (c *Controller) configureRedis(url string) (err error) {
-	if len(url) > 0 {
-		log.Info("redis url configured, initializing connection..")
-		var opt *redis.Options
-		if opt, err = redis.ParseURL(url); err != nil {
-			return
-		}
-
-		c.Redis = redis.NewClient(opt)
-		if _, err := c.Redis.Ping(context.Background()).Result(); err != nil {
-			return errors.Wrap(err, "connecting to redis")
-		}
-		log.Info("connected to redis")
+	if len(url) <= 0 {
+		log.Debug("redis url is not configured, skipping configuration & using local driver")
+		return
 	}
+
+	log.Info("redis url configured, initializing connection..")
+
+	var opt *redis.Options
+	if opt, err = redis.ParseURL(url); err != nil {
+		return
+	}
+
+	c.Redis = redis.NewClient(opt)
+
+	if _, err := c.Redis.Ping(context.Background()).Result(); err != nil {
+		return errors.Wrap(err, "connecting to redis")
+	}
+
+	log.Info("connected to redis")
+
 	return
 }
