@@ -184,7 +184,7 @@ func emitStatusMetric(s store.Store, metricKind schemas.MetricKind, labelValues 
 	// Moved into separate function to reduce cyclomatic complexity
 	// List of available statuses from the API spec
 	// ref: https://docs.gitlab.com/ee/api/jobs.html#list-pipeline-jobs
-	for _, currentStatus := range statuses {
+	for statusCode, currentStatus := range statuses {
 		var value float64
 		statusLabels := make(map[string]string)
 		for k, v := range labelValues {
@@ -199,7 +199,7 @@ func emitStatusMetric(s store.Store, metricKind schemas.MetricKind, labelValues 
 		}
 
 		if currentStatus == status {
-			statusMetric.Value = 1
+			statusMetric.Value = float64(statusCode + 1)
 		} else {
 			if sparseMetrics {
 				storeDelMetric(s, statusMetric)

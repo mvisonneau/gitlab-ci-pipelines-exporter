@@ -8,7 +8,7 @@ var (
 	statusLabels                 = []string{"status"}
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "username"}
-	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"}
+	statusesList                 = [...]string{"success", "manual", "canceled", "skipped", "failed", "created", "waiting_for_resource", "preparing", "pending", "scheduled", "running"}
 )
 
 // NewInternalCollectorCurrentlyQueuedTasksCount returns a new collector for the gcpe_currently_queued_tasks_count metric
