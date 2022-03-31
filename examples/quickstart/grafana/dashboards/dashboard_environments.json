@@ -927,7 +927,7 @@
                   {
                     "targetBlank": true,
                     "title": "View environment #${__value.numeric}",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/-/environments/${__value.numeric}"
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project:raw}/-/environments/${__value.numeric}"
                   }
                 ]
               },
@@ -1179,7 +1179,7 @@
                   {
                     "targetBlank": true,
                     "title": "View job #${__value.numeric}",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/-/jobs/${__value.numeric}"
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project:raw}/-/jobs/${__value.numeric}"
                   }
                 ]
               },
@@ -1280,7 +1280,7 @@
                   {
                     "targetBlank": true,
                     "title": "View commit ${__value.text} details",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.Project}/-/commit/${__value.text}"
+                    "url": "https://${GITLAB_HOST}/${__data.fields.Project:raw}/-/commit/${__value.text}"
                   }
                 ]
               }
@@ -1298,7 +1298,7 @@
                   {
                     "targetBlank": true,
                     "title": "Compare commits on GitLab",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.Project}/-/compare/${__data.fields[\"Deployed commit\"]}...${__data.fields[\"Latest commit\"]}"
+                    "url": "https://${GITLAB_HOST}/${__data.fields.Project:raw}/-/compare/${__data.fields[\"Deployed commit\"]}...${__data.fields[\"Latest commit\"]}"
                   }
                 ]
               }
