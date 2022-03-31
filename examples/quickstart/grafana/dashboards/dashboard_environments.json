@@ -1283,6 +1283,10 @@
                     "url": "https://${GITLAB_HOST}/${__data.fields.Project:raw}/-/commit/${__value.text}"
                   }
                 ]
+              },
+              {
+                "id": "unit",
+                "value": "string"
               }
             ]
           },
