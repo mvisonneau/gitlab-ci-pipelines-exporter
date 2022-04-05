@@ -20,13 +20,13 @@ server:
   listen_address: :8080
   
   # Enable profiling pages
+  # at /debug/pprof (optional, default: false)
   enable_pprof: false
   
   metrics:
     # Enable /metrics endpoint (optional, default: true)
     enabled: true
-  # at /debug/pprof (optional, default: false)
-
+  
     # Enable OpenMetrics content encoding in
     # prometheus HTTP handler (optional, default: false)
     # see: https://godoc.org/github.com/prometheus/client_golang/prometheus/promhttp#HandlerOpts
