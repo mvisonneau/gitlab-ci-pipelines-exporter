@@ -75,7 +75,7 @@ func (c *Client) ListProjects(w config.Wildcard) ([]schemas.Project, error) {
 				&gitlab.ListGroupProjectsOptions{
 					Archived:         &w.Archived,
 					WithShared:       pointy.Bool(false),
-					IncludeSubgroups: &w.Owner.IncludeSubgroups,
+					IncludeSubGroups: &w.Owner.IncludeSubgroups,
 					ListOptions:      listOptions,
 					Search:           &w.Search,
 				},
