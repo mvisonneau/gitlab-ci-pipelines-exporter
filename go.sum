@@ -360,8 +360,8 @@ github.com/vmihailenco/msgpack/v5 v5.3.5 h1:5gO0H1iULLWGhs2H5tbAHIZTV8/cYafcFOr9
 github.com/vmihailenco/msgpack/v5 v5.3.5/go.mod h1:7xyJ9e+0+9SaZT0Wt1RGleJXzli6Q/V5KbhBonMG9jc=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/xanzy/go-gitlab v0.61.0 h1:sPeRduwe8/8z32nw/5ogQ8f5GP1X096azK4VEq4d5qI=
-github.com/xanzy/go-gitlab v0.61.0/go.mod h1:F0QEXwmqiBUxCgJm8fE9S+1veX4XC9Z4cfaAbqwk4YM=
+github.com/xanzy/go-gitlab v0.62.0 h1:D3WuIK1UJ7JPSiYI077PQaU5dcPEshpimCSP07Do1aQ=
+github.com/xanzy/go-gitlab v0.62.0/go.mod h1:F0QEXwmqiBUxCgJm8fE9S+1veX4XC9Z4cfaAbqwk4YM=
 github.com/xeonx/timeago v1.0.0-rc4 h1:9rRzv48GlJC0vm+iBpLcWAr8YbETyN9Vij+7h2ammz4=
 github.com/xeonx/timeago v1.0.0-rc4/go.mod h1:qDLrYEFynLO7y5Ho7w3GwgtYgpy5UfhcXIIQvMKVDkA=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
