@@ -11,10 +11,11 @@ import (
 )
 
 func TestGetProjectEnvironments(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/environments"),
+	mux.HandleFunc(
+		"/api/v4/projects/foo/environments",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, []string{"100"}, r.URL.Query()["per_page"])
@@ -30,21 +31,26 @@ func TestGetProjectEnvironments(t *testing.T) {
 
 			if scope, ok := r.URL.Query()["states"]; ok && len(scope) == 1 && scope[0] == "available" {
 				fmt.Fprint(w, `[{"id":1338,"name":"main"}]`)
+
 				return
 			}
 
 			if currentPage == 1 {
 				fmt.Fprint(w, `[{"id":1338,"name":"main"},{"id":1337,"name":"dev"}]`)
+
 				return
 			}
 
 			fmt.Fprint(w, `[]`)
-		})
+		},
+	)
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/0/environments"),
+	mux.HandleFunc(
+		"/api/v4/projects/0/environments",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
-		})
+		},
+	)
 
 	p := schemas.NewProject("foo")
 	p.Pull.Environments.Regexp = "^dev"
@@ -61,19 +67,19 @@ func TestGetProjectEnvironments(t *testing.T) {
 		xenv.Key(): xenv,
 	}
 
-	envs, err := c.GetProjectEnvironments(p)
+	envs, err := c.GetProjectEnvironments(ctx, p)
 	assert.NoError(t, err)
 	assert.Equal(t, xenvs, envs)
 
 	// Test invalid project
 	p.Name = ""
-	_, err = c.GetProjectEnvironments(p)
+	_, err = c.GetProjectEnvironments(ctx, p)
 	assert.Error(t, err)
 
 	// Test invalid regexp
 	p.Name = "foo"
 	p.Pull.Environments.Regexp = "["
-	_, err = c.GetProjectEnvironments(p)
+	_, err = c.GetProjectEnvironments(ctx, p)
 	assert.Error(t, err)
 
 	// Test exclude stopped
@@ -90,13 +96,13 @@ func TestGetProjectEnvironments(t *testing.T) {
 
 	p.Pull.Environments.Regexp = ".*"
 	p.Pull.Environments.ExcludeStopped = true
-	envs, err = c.GetProjectEnvironments(p)
+	envs, err = c.GetProjectEnvironments(ctx, p)
 	assert.NoError(t, err)
 	assert.Equal(t, xenvs, envs)
 }
 
 func TestGetEnvironment(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/environments/1",
@@ -127,7 +133,7 @@ func TestGetEnvironment(t *testing.T) {
 }`)
 		})
 
-	e, err := c.GetEnvironment("foo", 1)
+	e, err := c.GetEnvironment(ctx, "foo", 1)
 	assert.NoError(t, err)
 	assert.NotNil(t, e)
 

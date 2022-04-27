@@ -25,11 +25,10 @@ func (e Environment) Key() EnvironmentKey {
 	return EnvironmentKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(e.ProjectName + e.Name)))))
 }
 
-// Environments allows us to keep track of all the Environment
-// objects we have discovered
+// Environments allows us to keep track of all the Environment objects we have discovered.
 type Environments map[EnvironmentKey]Environment
 
-// Count returns the amount of environments in the map
+// Count returns the amount of environments in the map.
 func (envs Environments) Count() int {
 	return len(envs)
 }

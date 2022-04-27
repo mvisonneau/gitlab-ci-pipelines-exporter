@@ -11,7 +11,7 @@ import (
 
 var validate *validator.Validate
 
-// Config represents all the parameters required for the app to be configured properly
+// Config represents all the parameters required for the app to be configured properly.
 type Config struct {
 	// Global ..
 	Global Global `yaml:",omitempty"`
@@ -44,7 +44,7 @@ type Config struct {
 	Wildcards []Wildcard `validate:"unique,at-least-1-project-or-wildcard,dive" yaml:"wildcards"`
 }
 
-// Log holds runtime logging configuration
+// Log holds runtime logging configuration.
 type Log struct {
 	// Log level
 	Level string `default:"info" validate:"required,oneof=trace debug info warning error fatal panic"`
@@ -173,8 +173,7 @@ type GarbageCollect struct {
 	} `yaml:"metrics"`
 }
 
-// UnmarshalYAML allows us to correctly hydrate our configuration using some
-// custom logic
+// UnmarshalYAML allows us to correctly hydrate our configuration using some custom logic.
 func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 	type localConfig struct {
 		Log             Log               `yaml:"log"`
@@ -191,6 +190,7 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 
 	_cfg := localConfig{}
 	defaults.MustSet(&_cfg)
+
 	if err = v.Decode(&_cfg); err != nil {
 		return
 	}
@@ -208,6 +208,7 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 		if err = n.Decode(&p); err != nil {
 			return
 		}
+
 		c.Projects = append(c.Projects, p)
 	}
 
@@ -216,6 +217,7 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 		if err = n.Decode(&w); err != nil {
 			return
 		}
+
 		c.Wildcards = append(c.Wildcards, w)
 	}
 
@@ -227,19 +229,22 @@ func (c Config) ToYAML() string {
 	c.Global = Global{}
 	c.Server.Webhook.SecretToken = "*******"
 	c.Gitlab.Token = "*******"
+
 	b, err := yaml.Marshal(c)
 	if err != nil {
 		panic(err)
 	}
+
 	return string(b)
 }
 
-// Validate will throw an error if the Config parameters are whether incomplete or incorrects
+// Validate will throw an error if the Config parameters are whether incomplete or incorrects.
 func (c Config) Validate() error {
 	if validate == nil {
 		validate = validator.New()
 		_ = validate.RegisterValidation("at-least-1-project-or-wildcard", ValidateAtLeastOneProjectOrWildcard)
 	}
+
 	return validate.Struct(c)
 }
 
@@ -250,7 +255,7 @@ type SchedulerConfig struct {
 	IntervalSeconds int
 }
 
-// Log returns some logging fields to showcase the configuration to the enduser
+// Log returns some logging fields to showcase the configuration to the enduser.
 func (sc SchedulerConfig) Log() log.Fields {
 	onInit, scheduled := "no", "no"
 	if sc.OnInit {
@@ -268,25 +273,28 @@ func (sc SchedulerConfig) Log() log.Fields {
 }
 
 // ValidateAtLeastOneProjectOrWildcard implements validator.Func
-// assess that we have at least one projet or wildcard configured
+// assess that we have at least one projet or wildcard configured.
 func ValidateAtLeastOneProjectOrWildcard(v validator.FieldLevel) bool {
 	return v.Parent().FieldByName("Projects").Len() > 0 || v.Parent().FieldByName("Wildcards").Len() > 0
 }
 
-// New returns a new config with the default parameters
+// New returns a new config with the default parameters.
 func New() (c Config) {
 	defaults.MustSet(&c)
+
 	return
 }
 
-// NewProject returns a new project with the config default parameters
+// NewProject returns a new project with the config default parameters.
 func (c Config) NewProject() (p Project) {
 	p.ProjectParameters = c.ProjectDefaults
+
 	return
 }
 
-// NewWildcard returns a new wildcard with the config default parameters
+// NewWildcard returns a new wildcard with the config default parameters.
 func (c Config) NewWildcard() (w Wildcard) {
 	w.ProjectParameters = c.ProjectDefaults
+
 	return
 }

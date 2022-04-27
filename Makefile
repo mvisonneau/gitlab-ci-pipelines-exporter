@@ -5,43 +5,16 @@ REPOSITORY    := mvisonneau/$(NAME)
 
 .PHONY: setup
 setup: ## Install required libraries/tools for build tasks
-	@command -v gofumpt 2>&1 >/dev/null     || go install mvdan.cc/gofumpt@v0.2.1
-	@command -v gosec 2>&1 >/dev/null       || go install github.com/securego/gosec/v2/cmd/gosec@v2.9.6
-	@command -v ineffassign 2>&1 >/dev/null || go install github.com/gordonklaus/ineffassign@v0.0.0-20210914165742-4cc7213b9bc8
-	@command -v misspell 2>&1 >/dev/null    || go install github.com/client9/misspell/cmd/misspell@v0.3.4
-	@command -v revive 2>&1 >/dev/null      || go install github.com/mgechev/revive@v1.1.3
+	@command -v gofumpt 2>&1 >/dev/null       || go install mvdan.cc/gofumpt@v0.3.1
+	@command -v golangci-lint 2>&1 >/dev/null || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
 
 .PHONY: fmt
 fmt: setup ## Format source code
 	gofumpt -w $(FILES)
 
 .PHONY: lint
-lint: revive vet gofumpt ineffassign misspell gosec ## Run all lint related tests against the codebase
-
-.PHONY: revive
-revive: setup ## Test code syntax with revive
-	revive -config .revive.toml $(FILES)
-
-.PHONY: vet
-vet: ## Test code syntax with go vet
-	go vet ./...
-
-.PHONY: gofumpt
-gofumpt: setup ## Test code syntax with gofumpt
-	gofumpt -d $(FILES) > gofumpt.out
-	@if [ -s gofumpt.out ]; then cat gofumpt.out; rm gofumpt.out; exit 1; else rm gofumpt.out; fi
-
-.PHONY: ineffassign
-ineffassign: setup ## Test code syntax for ineffassign
-	ineffassign ./...
-
-.PHONY: misspell
-misspell: setup ## Test code with misspell
-	misspell -error $(FILES)
-
-.PHONY: gosec
-gosec: setup ## Test code for security vulnerabilities
-	gosec ./...
+lint: setup ## Run all lint related tests upon the codebase
+	golangci-lint run -v --fast
 
 .PHONY: test
 test: ## Run the tests against the codebase
@@ -88,7 +61,7 @@ dev-env: ## Build a local development environment using Docker
 		-v $(shell pwd):/go/src/github.com/mvisonneau/$(NAME) \
 		-w /go/src/github.com/mvisonneau/$(NAME) \
 		-p 8080:8080 \
-		golang:1.17 \
+		golang:1.18 \
 		/bin/bash -c 'make setup; make install; bash'
 
 .PHONY: is-git-dirty
@@ -96,6 +69,19 @@ is-git-dirty: ## Tests if git is in a dirty state
 	@git status --porcelain
 	@test $(shell git status --porcelain | grep -c .) -eq 0
 
+.PHONY: man-pages
+man-pages: ## Generates man pages
+	rm -rf helpers/manpages
+	mkdir -p helpers/manpages
+	go run ./cmd/tools/man | gzip -c -9 >helpers/manpages/$(NAME).1.gz
+
+.PHONY: autocomplete-scripts
+autocomplete-scripts: ## Download CLI autocompletion scripts
+	rm -rf helpers/autocomplete
+	mkdir -p helpers/autocomplete
+	curl -sL https://raw.githubusercontent.com/urfave/cli/v2.5.0/autocomplete/bash_autocomplete > helpers/autocomplete/bash
+	curl -sL https://raw.githubusercontent.com/urfave/cli/v2.5.0/autocomplete/zsh_autocomplete > helpers/autocomplete/zsh
+	
 .PHONY: all
 all: lint test build coverage ## Test, builds and ship package for all supported platforms
 

@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"context"
 	"strings"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
@@ -9,7 +10,7 @@ import (
 )
 
 // ListRefPipelineJobs ..
-func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err error) {
+func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs []schemas.Job, err error) {
 	if ref.LatestPipeline == (schemas.Pipeline{}) {
 		log.WithFields(
 			log.Fields{
@@ -17,17 +18,19 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 				"ref":          ref.Name,
 			},
 		).Debug("most recent pipeline not defined, exiting..")
+
 		return
 	}
 
-	jobs, err = c.ListPipelineJobs(ref.Project.Name, ref.LatestPipeline.ID)
+	jobs, err = c.ListPipelineJobs(ctx, ref.Project.Name, ref.LatestPipeline.ID)
 	if err != nil {
 		return
 	}
 
 	if ref.Project.Pull.Pipeline.Jobs.FromChildPipelines.Enabled {
 		var childJobs []schemas.Job
-		childJobs, err = c.ListPipelineChildJobs(ref.Project.Name, ref.LatestPipeline.ID)
+
+		childJobs, err = c.ListPipelineChildJobs(ctx, ref.Project.Name, ref.LatestPipeline.ID)
 		if err != nil {
 			return
 		}
@@ -39,9 +42,11 @@ func (c *Client) ListRefPipelineJobs(ref schemas.Ref) (jobs []schemas.Job, err e
 }
 
 // ListPipelineJobs ..
-func (c *Client) ListPipelineJobs(projectName string, pipelineID int) (jobs []schemas.Job, err error) {
-	var foundJobs []*goGitlab.Job
-	var resp *goGitlab.Response
+func (c *Client) ListPipelineJobs(ctx context.Context, projectName string, pipelineID int) (jobs []schemas.Job, err error) {
+	var (
+		foundJobs []*goGitlab.Job
+		resp      *goGitlab.Response
+	)
 
 	options := &goGitlab.ListJobsOptions{
 		ListOptions: goGitlab.ListOptions{
@@ -51,11 +56,13 @@ func (c *Client) ListPipelineJobs(projectName string, pipelineID int) (jobs []sc
 	}
 
 	for {
-		c.rateLimit()
-		foundJobs, resp, err = c.Jobs.ListPipelineJobs(projectName, pipelineID, options)
+		c.rateLimit(ctx)
+
+		foundJobs, resp, err = c.Jobs.ListPipelineJobs(projectName, pipelineID, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}
+
 		c.requestsRemaining(resp)
 
 		for _, job := range foundJobs {
@@ -70,18 +77,22 @@ func (c *Client) ListPipelineJobs(projectName string, pipelineID int) (jobs []sc
 					"jobs-count":   resp.TotalItems,
 				},
 			).Debug("found pipeline jobs")
+
 			break
 		}
 
 		options.Page = resp.NextPage
 	}
+
 	return
 }
 
 // ListPipelineBridges ..
-func (c *Client) ListPipelineBridges(projectName string, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
-	var foundBridges []*goGitlab.Bridge
-	var resp *goGitlab.Response
+func (c *Client) ListPipelineBridges(ctx context.Context, projectName string, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
+	var (
+		foundBridges []*goGitlab.Bridge
+		resp         *goGitlab.Response
+	)
 
 	options := &goGitlab.ListJobsOptions{
 		ListOptions: goGitlab.ListOptions{
@@ -91,11 +102,13 @@ func (c *Client) ListPipelineBridges(projectName string, pipelineID int) (bridge
 	}
 
 	for {
-		c.rateLimit()
-		foundBridges, resp, err = c.Jobs.ListPipelineBridges(projectName, pipelineID, options)
+		c.rateLimit(ctx)
+
+		foundBridges, resp, err = c.Jobs.ListPipelineBridges(projectName, pipelineID, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}
+
 		c.requestsRemaining(resp)
 
 		bridges = append(bridges, foundBridges...)
@@ -108,16 +121,18 @@ func (c *Client) ListPipelineBridges(projectName string, pipelineID int) (bridge
 					"bridges-count": resp.TotalItems,
 				},
 			).Debug("found pipeline bridges")
+
 			break
 		}
 
 		options.Page = resp.NextPage
 	}
+
 	return
 }
 
 // ListPipelineChildJobs ..
-func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int) (jobs []schemas.Job, err error) {
+func (c *Client) ListPipelineChildJobs(ctx context.Context, projectName string, parentPipelineID int) (jobs []schemas.Job, err error) {
 	pipelineIDs := []int{parentPipelineID}
 
 	for {
@@ -129,7 +144,8 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 		pipelineIDs = pipelineIDs[:len(pipelineIDs)-1]
 
 		var foundBridges []*goGitlab.Bridge
-		foundBridges, err = c.ListPipelineBridges(projectName, pipelineID)
+
+		foundBridges, err = c.ListPipelineBridges(ctx, projectName, pipelineID)
 		if err != nil {
 			return
 		}
@@ -143,8 +159,10 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 			}
 
 			pipelineIDs = append(pipelineIDs, foundBridge.DownstreamPipeline.ID)
+
 			var foundJobs []schemas.Job
-			foundJobs, err = c.ListPipelineJobs(projectName, foundBridge.DownstreamPipeline.ID)
+
+			foundJobs, err = c.ListPipelineJobs(ctx, projectName, foundBridge.DownstreamPipeline.ID)
 			if err != nil {
 				return
 			}
@@ -155,7 +173,7 @@ func (c *Client) ListPipelineChildJobs(projectName string, parentPipelineID int)
 }
 
 // ListRefMostRecentJobs ..
-func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err error) {
+func (c *Client) ListRefMostRecentJobs(ctx context.Context, ref schemas.Ref) (jobs []schemas.Job, err error) {
 	if len(ref.LatestJobs) == 0 {
 		log.WithFields(
 			log.Fields{
@@ -163,6 +181,7 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 				"ref":          ref.Name,
 			},
 		).Debug("no jobs are currently held in memory, exiting..")
+
 		return
 	}
 
@@ -172,8 +191,10 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 		jobsToRefresh[k] = v
 	}
 
-	var foundJobs []*goGitlab.Job
-	var resp *goGitlab.Response
+	var (
+		foundJobs []*goGitlab.Job
+		resp      *goGitlab.Response
+	)
 
 	options := &goGitlab.ListJobsOptions{
 		ListOptions: goGitlab.ListOptions{
@@ -183,11 +204,13 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 	}
 
 	for {
-		c.rateLimit()
-		foundJobs, resp, err = c.Jobs.ListProjectJobs(ref.Project.Name, options)
+		c.rateLimit(ctx)
+
+		foundJobs, resp, err = c.Jobs.ListProjectJobs(ref.Project.Name, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}
+
 		c.requestsRemaining(resp)
 
 		for _, job := range foundJobs {
@@ -207,12 +230,14 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 						"jobs-count":   len(ref.LatestJobs),
 					},
 				).Debug("found all jobs to refresh")
+
 				return
 			}
 		}
 
 		if resp.CurrentPage >= resp.NextPage {
 			var notFoundJobs []string
+
 			for k := range jobsToRefresh {
 				notFoundJobs = append(notFoundJobs, k)
 			}
@@ -225,10 +250,12 @@ func (c *Client) ListRefMostRecentJobs(ref schemas.Ref) (jobs []schemas.Job, err
 					"not-found-jobs": strings.Join(notFoundJobs, ","),
 				},
 			).Warn("found some ref jobs but did not manage to refresh all jobs which were in memory")
+
 			break
 		}
 
 		options.Page = resp.NextPage
 	}
+
 	return
 }

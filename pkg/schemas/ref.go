@@ -12,21 +12,21 @@ import (
 const (
 	mergeRequestRegexp string = `^((\d+)|refs/merge-requests/(\d+)/head)$`
 
-	// RefKindBranch refers to a branch
+	// RefKindBranch refers to a branch.
 	RefKindBranch RefKind = "branch"
 
-	// RefKindTag refers to a tag
+	// RefKindTag refers to a tag.
 	RefKindTag RefKind = "tag"
 
-	// RefKindMergeRequest refers to a tag
+	// RefKindMergeRequest refers to a tag.
 	RefKindMergeRequest RefKind = "merge-request"
 )
 
-// RefKind is used to determine the kind of the ref
+// RefKind is used to determine the kind of the ref.
 type RefKind string
 
 // Ref is what we will use a metrics entity on which we will
-// perform regular pulling operations
+// perform regular pulling operations.
 type Ref struct {
 	Kind           RefKind
 	Name           string
@@ -44,10 +44,10 @@ func (ref Ref) Key() RefKey {
 }
 
 // Refs allows us to keep track of all the Ref
-// we have configured/discovered
+// we have configured/discovered.
 type Refs map[RefKey]Ref
 
-// Count returns the amount of projects refs in the map
+// Count returns the amount of projects refs in the map.
 func (refs Refs) Count() int {
 	return len(refs)
 }
@@ -63,7 +63,7 @@ func (ref Ref) DefaultLabelsValues() map[string]string {
 	}
 }
 
-// NewRef is an helper which returns a new Ref
+// NewRef is an helper which returns a new Ref.
 func NewRef(
 	project Project,
 	kind RefKind,
@@ -77,7 +77,7 @@ func NewRef(
 	}
 }
 
-// GetRefRegexp returns the expected regexp given a ProjectPullRefs config and a RefKind
+// GetRefRegexp returns the expected regexp given a ProjectPullRefs config and a RefKind.
 func GetRefRegexp(ppr config.ProjectPullRefs, rk RefKind) (re *regexp.Regexp, err error) {
 	switch rk {
 	case RefKindBranch:
@@ -87,10 +87,11 @@ func GetRefRegexp(ppr config.ProjectPullRefs, rk RefKind) (re *regexp.Regexp, er
 	case RefKindMergeRequest:
 		return regexp.Compile(mergeRequestRegexp)
 	}
+
 	return nil, fmt.Errorf("invalid ref kind (%v)", rk)
 }
 
-// GetMergeRequestIIDFromRefName parse a refName to extract a merge request IID
+// GetMergeRequestIIDFromRefName parse a refName to extract a merge request IID.
 func GetMergeRequestIIDFromRefName(refName string) (string, error) {
 	re := regexp.MustCompile(mergeRequestRegexp)
 	if matches := re.FindStringSubmatch(refName); len(matches) == 4 {
@@ -102,5 +103,6 @@ func GetMergeRequestIIDFromRefName(refName string) (string, error) {
 			return matches[3], nil
 		}
 	}
+
 	return refName, fmt.Errorf("unable to extract the merge-request ID from the ref (%s)", refName)
 }

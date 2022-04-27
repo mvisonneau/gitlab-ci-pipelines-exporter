@@ -15,7 +15,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// Run launches the exporter
+// Run launches the exporter.
 func Run(cliCtx *cli.Context) (int, error) {
 	cfg, err := configure(cliCtx)
 	if err != nil {
@@ -54,7 +54,7 @@ func Run(cliCtx *cli.Context) (int, error) {
 	}
 
 	// health endpoints
-	health := c.HealthCheckHandler()
+	health := c.HealthCheckHandler(ctx)
 	mux.HandleFunc("/health/live", health.LiveEndpoint)
 	mux.HandleFunc("/health/ready", health.ReadyEndpoint)
 
@@ -106,5 +106,6 @@ func Run(cliCtx *cli.Context) (int, error) {
 	}
 
 	log.Info("stopped!")
+
 	return 0, nil
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetCommitCountBetweenRefs(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/repository/compare",
@@ -23,11 +23,11 @@ func TestGetCommitCountBetweenRefs(t *testing.T) {
 			fmt.Fprint(w, `{`)
 		})
 
-	commitCount, err := c.GetCommitCountBetweenRefs("foo", "bar", "baz")
+	commitCount, err := c.GetCommitCountBetweenRefs(ctx, "foo", "bar", "baz")
 	assert.NoError(t, err)
 	assert.Equal(t, 3, commitCount)
 
-	commitCount, err = c.GetCommitCountBetweenRefs("bar", "", "")
+	commitCount, err = c.GetCommitCountBetweenRefs(ctx, "bar", "", "")
 	assert.Error(t, err)
 	assert.Equal(t, 0, commitCount)
 }

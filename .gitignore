@@ -1,4 +1,5 @@
 dist
+helpers
 vendor
 **/*.tgz
 /gitlab-ci-pipelines-exporter.yml

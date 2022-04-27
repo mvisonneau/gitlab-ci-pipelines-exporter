@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"context"
+
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 	log "github.com/sirupsen/logrus"
@@ -13,8 +15,8 @@ func metricLogFields(m schemas.Metric) log.Fields {
 	}
 }
 
-func storeGetMetric(s store.Store, m *schemas.Metric) {
-	if err := s.GetMetric(m); err != nil {
+func storeGetMetric(ctx context.Context, s store.Store, m *schemas.Metric) {
+	if err := s.GetMetric(ctx, m); err != nil {
 		log.WithFields(
 			metricLogFields(*m),
 		).WithField(
@@ -23,8 +25,8 @@ func storeGetMetric(s store.Store, m *schemas.Metric) {
 	}
 }
 
-func storeSetMetric(s store.Store, m schemas.Metric) {
-	if err := s.SetMetric(m); err != nil {
+func storeSetMetric(ctx context.Context, s store.Store, m schemas.Metric) {
+	if err := s.SetMetric(ctx, m); err != nil {
 		log.WithFields(
 			metricLogFields(m),
 		).WithField(
@@ -33,8 +35,8 @@ func storeSetMetric(s store.Store, m schemas.Metric) {
 	}
 }
 
-func storeDelMetric(s store.Store, m schemas.Metric) {
-	if err := s.DelMetric(m.Key()); err != nil {
+func storeDelMetric(ctx context.Context, s store.Store, m schemas.Metric) {
+	if err := s.DelMetric(ctx, m.Key()); err != nil {
 		log.WithFields(
 			metricLogFields(m),
 		).WithField(

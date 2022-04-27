@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"context"
 	"net"
 	"net/rpc"
 	"net/url"
@@ -36,6 +37,7 @@ func NewServer(
 		store:                    st,
 		taskSchedulingMonitoring: tsm,
 	}
+
 	return
 }
 
@@ -45,6 +47,7 @@ func ServeUNIX(r *Server) {
 		r.cfg.Global.InternalMonitoringListenerAddress.Scheme == "" ||
 		r.cfg.Global.InternalMonitoringListenerAddress.Host == "" {
 		log.Info("internal monitoring listener address not set")
+
 		return
 	}
 
@@ -83,6 +86,7 @@ func ServeUNIX(r *Server) {
 		if err != nil {
 			log.WithError(err).Fatal()
 		}
+
 		go s.ServeConn(conn)
 	}
 }
@@ -90,11 +94,13 @@ func ServeUNIX(r *Server) {
 // Config ..
 func (r *Server) Config(_ string, reply *string) error {
 	*reply = r.cfg.ToYAML()
+
 	return nil
 }
 
 // Status ..
 func (r *Server) Status(_ string, reply *monitor.Status) (err error) {
+	ctx := context.Background()
 	s := monitor.Status{}
 
 	s.GitLabAPIUsage = float64(r.gitlabClient.RateCounter.Rate()) / float64(r.cfg.Gitlab.MaximumRequestsPerSecond)
@@ -112,33 +118,35 @@ func (r *Server) Status(_ string, reply *monitor.Status) (err error) {
 	s.GitLabAPILimitRemaining = r.gitlabClient.RequestsRemaining
 
 	var queuedTasks uint64
-	queuedTasks, err = r.store.CurrentlyQueuedTasksCount()
+
+	queuedTasks, err = r.store.CurrentlyQueuedTasksCount(ctx)
 	if err != nil {
 		return
 	}
 
 	s.TasksBufferUsage = float64(queuedTasks) / 1000
-	s.TasksExecutedCount, err = r.store.ExecutedTasksCount()
+
+	s.TasksExecutedCount, err = r.store.ExecutedTasksCount(ctx)
 	if err != nil {
 		return
 	}
 
-	s.Projects.Count, err = r.store.ProjectsCount()
+	s.Projects.Count, err = r.store.ProjectsCount(ctx)
 	if err != nil {
 		return
 	}
 
-	s.Envs.Count, err = r.store.EnvironmentsCount()
+	s.Envs.Count, err = r.store.EnvironmentsCount(ctx)
 	if err != nil {
 		return
 	}
 
-	s.Refs.Count, err = r.store.RefsCount()
+	s.Refs.Count, err = r.store.RefsCount(ctx)
 	if err != nil {
 		return
 	}
 
-	s.Metrics.Count, err = r.store.MetricsCount()
+	s.Metrics.Count, err = r.store.MetricsCount(ctx)
 	if err != nil {
 		return
 	}
@@ -184,5 +192,6 @@ func (r *Server) Status(_ string, reply *monitor.Status) (err error) {
 	}
 
 	*reply = s
+
 	return nil
 }

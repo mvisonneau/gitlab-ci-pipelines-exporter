@@ -12,7 +12,7 @@ import (
 )
 
 func TestWebhookHandler(t *testing.T) {
-	c, _, srv := newTestController(config.Config{
+	_, c, _, srv := newTestController(config.Config{
 		Server: config.Server{
 			Webhook: config.ServerWebhook{
 				Enabled:     true,

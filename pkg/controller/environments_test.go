@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -12,7 +11,7 @@ import (
 )
 
 func TestPullEnvironmentsFromProject(t *testing.T) {
-	c, mux, srv := newTestController(config.Config{})
+	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/environments"),
@@ -49,9 +48,9 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 
 	p := schemas.NewProject("foo")
 	p.Pull.Environments.Regexp = "^prod"
-	assert.NoError(t, c.PullEnvironmentsFromProject(context.Background(), p))
+	assert.NoError(t, c.PullEnvironmentsFromProject(ctx, p))
 
-	storedEnvironments, _ := c.Store.Environments()
+	storedEnvironments, _ := c.Store.Environments(ctx)
 	expectedEnvironments := schemas.Environments{
 		"54146361": schemas.Environment{
 			ProjectName: "foo",
@@ -76,7 +75,7 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 }
 
 func TestPullEnvironmentMetricsSucceed(t *testing.T) {
-	c, mux, srv := newTestController(config.Config{})
+	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/environments/1",
@@ -124,10 +123,10 @@ func TestPullEnvironmentMetricsSucceed(t *testing.T) {
 	}
 
 	// Metrics pull shall succeed
-	assert.NoError(t, c.PullEnvironmentMetrics(env))
+	assert.NoError(t, c.PullEnvironmentMetrics(ctx, env))
 
 	// Check if all the metrics exist
-	metrics, _ := c.Store.Metrics()
+	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
 		"project":     "foo",
 		"environment": "prod",

@@ -13,9 +13,11 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-func (c *Controller) processPipelineEvent(e goGitlab.PipelineEvent) {
-	var refKind schemas.RefKind
-	refName := e.ObjectAttributes.Ref
+func (c *Controller) processPipelineEvent(ctx context.Context, e goGitlab.PipelineEvent) {
+	var (
+		refKind schemas.RefKind
+		refName = e.ObjectAttributes.Ref
+	)
 
 	// TODO: Perhaps it would be nice to match upon the regexp to validate
 	// that it is actually a merge request ref
@@ -28,23 +30,24 @@ func (c *Controller) processPipelineEvent(e goGitlab.PipelineEvent) {
 		refKind = schemas.RefKindBranch
 	}
 
-	c.triggerRefMetricsPull(schemas.NewRef(
+	c.triggerRefMetricsPull(ctx, schemas.NewRef(
 		schemas.NewProject(e.Project.PathWithNamespace),
 		refKind,
 		refName,
 	))
 }
 
-func (c *Controller) triggerRefMetricsPull(ref schemas.Ref) {
+func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref) {
 	logFields := log.Fields{
 		"project-name": ref.Project.Name,
 		"ref":          ref.Name,
 		"ref-kind":     ref.Kind,
 	}
 
-	refExists, err := c.Store.RefExists(ref.Key())
+	refExists, err := c.Store.RefExists(ctx, ref.Key())
 	if err != nil {
 		log.WithFields(logFields).WithError(err).Error("reading ref from the store")
+
 		return
 	}
 
@@ -52,9 +55,10 @@ func (c *Controller) triggerRefMetricsPull(ref schemas.Ref) {
 	if !refExists {
 		p := schemas.NewProject(ref.Project.Name)
 
-		projectExists, err := c.Store.ProjectExists(p.Key())
+		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 		if err != nil {
 			log.WithFields(logFields).WithError(err).Error("reading project from the store")
+
 			return
 		}
 
@@ -66,6 +70,7 @@ func (c *Controller) triggerRefMetricsPull(ref schemas.Ref) {
 				matches, err := isRefMatchingWilcard(w, ref)
 				if err != nil {
 					log.WithError(err).Warn("checking if the ref matches the wildcard config")
+
 					continue
 				}
 
@@ -76,34 +81,42 @@ func (c *Controller) triggerRefMetricsPull(ref schemas.Ref) {
 					log.WithFields(logFields).Debug("project ref not matching wildcard, skipping..")
 				}
 			}
+
 			log.WithFields(logFields).Info("done looking up for wildcards matching the project ref")
+
 			return
 		}
 
 		if projectExists {
 			// If the project exists, we check that the ref matches it's configuration
-			if err := c.Store.GetProject(&p); err != nil {
+			if err := c.Store.GetProject(ctx, &p); err != nil {
 				log.WithFields(logFields).WithError(err).Error("reading project from the store")
+
 				return
 			}
 
 			matches, err := isRefMatchingProjectPullRefs(p.Pull.Refs, ref)
 			if err != nil {
 				log.WithError(err).Error("checking if the ref matches the project config")
+
 				return
 			}
 
 			if matches {
 				ref.Project = p
-				if err = c.Store.SetRef(ref); err != nil {
+
+				if err = c.Store.SetRef(ctx, ref); err != nil {
 					log.WithFields(logFields).WithError(err).Error("writing ref in the store")
+
 					return
 				}
+
 				goto schedulePull
 			}
 		}
 
 		log.WithFields(logFields).Info("ref not configured in the exporter, ignoring pipeline webhook")
+
 		return
 	}
 
@@ -114,31 +127,36 @@ schedulePull:
 	c.ScheduleTask(context.TODO(), schemas.TaskTypePullRefMetrics, string(ref.Key()), ref)
 }
 
-func (c *Controller) processDeploymentEvent(e goGitlab.DeploymentEvent) {
-	c.triggerEnvironmentMetricsPull(schemas.Environment{
-		ProjectName: e.Project.PathWithNamespace,
-		Name:        e.Environment,
-	})
+func (c *Controller) processDeploymentEvent(ctx context.Context, e goGitlab.DeploymentEvent) {
+	c.triggerEnvironmentMetricsPull(
+		ctx,
+		schemas.Environment{
+			ProjectName: e.Project.PathWithNamespace,
+			Name:        e.Environment,
+		},
+	)
 }
 
-func (c *Controller) triggerEnvironmentMetricsPull(env schemas.Environment) {
+func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env schemas.Environment) {
 	logFields := log.Fields{
 		"project-name":     env.ProjectName,
 		"environment-name": env.Name,
 	}
 
-	envExists, err := c.Store.EnvironmentExists(env.Key())
+	envExists, err := c.Store.EnvironmentExists(ctx, env.Key())
 	if err != nil {
 		log.WithFields(logFields).WithError(err).Error("reading environment from the store")
+
 		return
 	}
 
 	if !envExists {
 		p := schemas.NewProject(env.ProjectName)
 
-		projectExists, err := c.Store.ProjectExists(p.Key())
+		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 		if err != nil {
 			log.WithFields(logFields).WithError(err).Error("reading project from the store")
+
 			return
 		}
 
@@ -150,55 +168,62 @@ func (c *Controller) triggerEnvironmentMetricsPull(env schemas.Environment) {
 				matches, err := isEnvMatchingWilcard(w, env)
 				if err != nil {
 					log.WithError(err).Warn("checking if the env matches the wildcard config")
+
 					continue
 				}
 
 				if matches {
-					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProjectsFromWildcard, strconv.Itoa(id), strconv.Itoa(id), w)
+					c.ScheduleTask(ctx, schemas.TaskTypePullProjectsFromWildcard, strconv.Itoa(id), strconv.Itoa(id), w)
 					log.WithFields(logFields).Info("project environment not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
 				} else {
 					log.WithFields(logFields).Debug("project ref not matching wildcard, skipping..")
 				}
 			}
+
 			log.WithFields(logFields).Info("done looking up for wildcards matching the project ref")
+
 			return
 		}
 
 		if projectExists {
-			if err := c.Store.GetProject(&p); err != nil {
+			if err := c.Store.GetProject(ctx, &p); err != nil {
 				log.WithFields(logFields).WithError(err).Error("reading project from the store")
 			}
 
 			matches, err := isEnvMatchingProjectPullEnvironments(p.Pull.Environments, env)
 			if err != nil {
 				log.WithError(err).Error("checking if the env matches the project config")
+
 				return
 			}
 
 			if matches {
 				// As we do not get the environment ID within the deployment event, we need to query it back..
-				if err = c.UpdateEnvironment(&env); err != nil {
+				if err = c.UpdateEnvironment(ctx, &env); err != nil {
 					log.WithFields(logFields).WithError(err).Error("updating event from GitLab API")
+
 					return
 				}
+
 				goto schedulePull
 			}
 		}
 
 		log.WithFields(logFields).Info("environment not configured in the exporter, ignoring deployment webhook")
+
 		return
 	}
 
 	// Need to refresh the env from the store in order to get at least it's ID
 	if env.ID == 0 {
-		if err = c.Store.GetEnvironment(&env); err != nil {
+		if err = c.Store.GetEnvironment(ctx, &env); err != nil {
 			log.WithFields(logFields).WithError(err).Error("reading environment from the store")
 		}
 	}
 
 schedulePull:
 	log.WithFields(logFields).Info("received a deployment webhook from GitLab for an environment, triggering metrics pull")
-	c.ScheduleTask(context.TODO(), schemas.TaskTypePullEnvironmentMetrics, string(env.Key()), env)
+	c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentMetrics, string(env.Key()), env)
 }
 
 func isRefMatchingProjectPullRefs(pprs config.ProjectPullRefs, ref schemas.Ref) (matches bool, err error) {
@@ -222,9 +247,11 @@ func isRefMatchingProjectPullRefs(pprs config.ProjectPullRefs, ref schemas.Ref) 
 
 	// Then we check if it matches the regexp
 	var re *regexp.Regexp
+
 	if re, err = schemas.GetRefRegexp(pprs, ref.Kind); err != nil {
 		return
 	}
+
 	return re.MatchString(ref.Name), nil
 }
 
@@ -236,9 +263,11 @@ func isEnvMatchingProjectPullEnvironments(ppe config.ProjectPullEnvironments, en
 
 	// Then we check if it matches the regexp
 	var re *regexp.Regexp
+
 	if re, err = regexp.Compile(ppe.Regexp); err != nil {
 		return
 	}
+
 	return re.MatchString(env.Name), nil
 }
 

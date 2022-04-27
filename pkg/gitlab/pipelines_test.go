@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetRefPipeline(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
@@ -28,14 +28,14 @@ func TestGetRefPipeline(t *testing.T) {
 		Name:    "yay",
 	}
 
-	pipeline, err := c.GetRefPipeline(ref, 1)
+	pipeline, err := c.GetRefPipeline(ctx, ref, 1)
 	assert.NoError(t, err)
 	assert.NotNil(t, pipeline)
 	assert.Equal(t, 1, pipeline.ID)
 }
 
 func TestGetProjectPipelines(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/pipelines"),
@@ -51,7 +51,7 @@ func TestGetProjectPipelines(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
-	pipelines, _, err := c.GetProjectPipelines("foo", &gitlab.ListProjectPipelinesOptions{
+	pipelines, _, err := c.GetProjectPipelines(ctx, "foo", &gitlab.ListProjectPipelinesOptions{
 		Ref:   pointy.String("foo"),
 		Scope: pointy.String("bar"),
 	})
@@ -61,7 +61,7 @@ func TestGetProjectPipelines(t *testing.T) {
 }
 
 func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
@@ -79,7 +79,7 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	}
 
 	// Should return right away as MostRecentPipeline is not defined
-	variables, err := c.GetRefPipelineVariablesAsConcatenatedString(ref)
+	variables, err := c.GetRefPipelineVariablesAsConcatenatedString(ctx, ref)
 	assert.NoError(t, err)
 	assert.Equal(t, "", variables)
 
@@ -88,26 +88,27 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	}
 
 	// Should fail as we have an invalid regexp pattern
-	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ref)
+	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ctx, ref)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "the provided filter regex for pipeline variables is invalid")
 	assert.Equal(t, "", variables)
 
 	// Should work
 	ref.Project.Pull.Pipeline.Variables.Regexp = `.*`
-	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ref)
+	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ctx, ref)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo:bar,bar:baz", variables)
 }
 
 func TestGetRefsFromPipelines(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 	log.SetLevel(log.TraceLevel)
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/branches"),
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"name":"keep_main"}]`)
+
 			return
 		})
 
@@ -120,11 +121,13 @@ func TestGetRefsFromPipelines(t *testing.T) {
 
 			if scope, ok := urlValues["scope"]; ok && len(scope) == 1 && scope[0] == "branches" {
 				fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"}]`)
+
 				return
 			}
 
 			if scope, ok := urlValues["scope"]; ok && len(scope) == 1 && scope[0] == "tags" {
 				fmt.Fprint(w, `[{"id":3,"ref":"donotkeep_0.0.1"},{"id":4,"ref":"keep_0.0.2"}]`)
+
 				return
 			}
 
@@ -135,13 +138,13 @@ func TestGetRefsFromPipelines(t *testing.T) {
 
 	// Branches
 	p.Pull.Refs.Branches.Regexp = `[` // invalid regexp pattern
-	refs, err := c.GetRefsFromPipelines(p, schemas.RefKindBranch)
+	refs, err := c.GetRefsFromPipelines(ctx, p, schemas.RefKindBranch)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
 	assert.Len(t, refs, 0)
 
 	p.Pull.Refs.Branches.Regexp = "^keep.*"
-	refs, err = c.GetRefsFromPipelines(p, schemas.RefKindBranch)
+	refs, err = c.GetRefsFromPipelines(ctx, p, schemas.RefKindBranch)
 	assert.NoError(t, err)
 
 	assert.Equal(t, schemas.Refs{
@@ -150,14 +153,14 @@ func TestGetRefsFromPipelines(t *testing.T) {
 
 	// Tags
 	p.Pull.Refs.Tags.Regexp = `[` // invalid regexp pattern
-	refs, err = c.GetRefsFromPipelines(p, schemas.RefKindTag)
+	refs, err = c.GetRefsFromPipelines(ctx, p, schemas.RefKindTag)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error parsing regexp")
 	assert.Len(t, refs, 0)
 
 	p.Pull.Refs.Tags.Regexp = `^keep`
 	p.Pull.Refs.Tags.ExcludeDeleted = false
-	refs, err = c.GetRefsFromPipelines(p, schemas.RefKindTag)
+	refs, err = c.GetRefsFromPipelines(ctx, p, schemas.RefKindTag)
 	assert.NoError(t, err)
 
 	assert.Equal(t, schemas.Refs{
@@ -165,7 +168,7 @@ func TestGetRefsFromPipelines(t *testing.T) {
 	}, refs)
 
 	// Merge requests
-	refs, err = c.GetRefsFromPipelines(p, schemas.RefKindMergeRequest)
+	refs, err = c.GetRefsFromPipelines(ctx, p, schemas.RefKindMergeRequest)
 	assert.NoError(t, err)
 	assert.Equal(t, schemas.Refs{
 		"622996356": schemas.NewRef(p, schemas.RefKindMergeRequest, "1234"),

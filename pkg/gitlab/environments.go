@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"context"
 	"regexp"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
@@ -9,7 +10,7 @@ import (
 )
 
 // GetProjectEnvironments ..
-func (c *Client) GetProjectEnvironments(p schemas.Project) (
+func (c *Client) GetProjectEnvironments(ctx context.Context, p schemas.Project) (
 	envs schemas.Environments,
 	err error,
 ) {
@@ -32,13 +33,18 @@ func (c *Client) GetProjectEnvironments(p schemas.Project) (
 	}
 
 	for {
-		c.rateLimit()
-		var glenvs []*goGitlab.Environment
-		var resp *goGitlab.Response
-		glenvs, resp, err = c.Environments.ListEnvironments(p.Name, options)
+		c.rateLimit(ctx)
+
+		var (
+			glenvs []*goGitlab.Environment
+			resp   *goGitlab.Response
+		)
+
+		glenvs, resp, err = c.Environments.ListEnvironments(p.Name, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}
+
 		c.requestsRemaining(resp)
 
 		for _, glenv := range glenvs {
@@ -61,6 +67,7 @@ func (c *Client) GetProjectEnvironments(p schemas.Project) (
 		if resp.CurrentPage >= resp.NextPage {
 			break
 		}
+
 		options.Page = resp.NextPage
 	}
 
@@ -68,17 +75,31 @@ func (c *Client) GetProjectEnvironments(p schemas.Project) (
 }
 
 // GetEnvironment ..
-func (c *Client) GetEnvironment(project string, environmentID int) (schemas.Environment, error) {
-	environment := schemas.Environment{
+func (c *Client) GetEnvironment(
+	ctx context.Context,
+	project string,
+	environmentID int,
+) (
+	environment schemas.Environment,
+	err error,
+) {
+	environment = schemas.Environment{
 		ProjectName: project,
 		ID:          environmentID,
 	}
 
-	c.rateLimit()
-	e, resp, err := c.Environments.GetEnvironment(project, environmentID, nil)
+	c.rateLimit(ctx)
+
+	var (
+		e    *goGitlab.Environment
+		resp *goGitlab.Response
+	)
+
+	e, resp, err = c.Environments.GetEnvironment(project, environmentID, goGitlab.WithContext(ctx))
 	if err != nil || e == nil {
-		return environment, err
+		return
 	}
+
 	c.requestsRemaining(resp)
 
 	environment.Name = e.Name
@@ -88,35 +109,37 @@ func (c *Client) GetEnvironment(project string, environmentID int) (schemas.Envi
 		environment.Available = true
 	}
 
-	if e.LastDeployment != nil {
-		if e.LastDeployment.Deployable.Tag {
-			environment.LatestDeployment.RefKind = schemas.RefKindTag
-		} else {
-			environment.LatestDeployment.RefKind = schemas.RefKindBranch
-		}
-
-		environment.LatestDeployment.RefName = e.LastDeployment.Ref
-		environment.LatestDeployment.JobID = e.LastDeployment.Deployable.ID
-		environment.LatestDeployment.DurationSeconds = e.LastDeployment.Deployable.Duration
-		environment.LatestDeployment.Status = e.LastDeployment.Deployable.Status
-
-		if e.LastDeployment.Deployable.User != nil {
-			environment.LatestDeployment.Username = e.LastDeployment.Deployable.User.Username
-		}
-
-		if e.LastDeployment.Deployable.Commit != nil {
-			environment.LatestDeployment.CommitShortID = e.LastDeployment.Deployable.Commit.ShortID
-		}
-
-		if e.LastDeployment.CreatedAt != nil {
-			environment.LatestDeployment.Timestamp = float64(e.LastDeployment.CreatedAt.Unix())
-		}
-	} else {
+	if e.LastDeployment == nil {
 		log.WithFields(log.Fields{
 			"project-name":     project,
 			"environment-name": e.Name,
 		}).Warn("no deployments found for the environment")
+
+		return
 	}
 
-	return environment, nil
+	if e.LastDeployment.Deployable.Tag {
+		environment.LatestDeployment.RefKind = schemas.RefKindTag
+	} else {
+		environment.LatestDeployment.RefKind = schemas.RefKindBranch
+	}
+
+	environment.LatestDeployment.RefName = e.LastDeployment.Ref
+	environment.LatestDeployment.JobID = e.LastDeployment.Deployable.ID
+	environment.LatestDeployment.DurationSeconds = e.LastDeployment.Deployable.Duration
+	environment.LatestDeployment.Status = e.LastDeployment.Deployable.Status
+
+	if e.LastDeployment.Deployable.User != nil {
+		environment.LatestDeployment.Username = e.LastDeployment.Deployable.User.Username
+	}
+
+	if e.LastDeployment.Deployable.Commit != nil {
+		environment.LatestDeployment.CommitShortID = e.LastDeployment.Deployable.Commit.ShortID
+	}
+
+	if e.LastDeployment.CreatedAt != nil {
+		environment.LatestDeployment.Timestamp = float64(e.LastDeployment.CreatedAt.Unix())
+	}
+
+	return
 }

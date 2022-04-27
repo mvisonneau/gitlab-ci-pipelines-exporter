@@ -32,40 +32,40 @@ func TestRedisProjectFunctions(t *testing.T) {
 	p.OutputSparseStatusMetrics = false
 
 	// Set project
-	r.SetProject(p)
-	projects, err := r.Projects()
+	r.SetProject(testCtx, p)
+	projects, err := r.Projects(testCtx)
 	assert.NoError(t, err)
 	assert.Contains(t, projects, p.Key())
 	assert.Equal(t, p, projects[p.Key()])
 
 	// Project exists
-	exists, err := r.ProjectExists(p.Key())
+	exists, err := r.ProjectExists(testCtx, p.Key())
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
 	// GetProject should succeed
 	newProject := schemas.NewProject("foo/bar")
-	assert.NoError(t, r.GetProject(&newProject))
+	assert.NoError(t, r.GetProject(testCtx, &newProject))
 	assert.Equal(t, p, newProject)
 
 	// Count
-	count, err := r.ProjectsCount()
+	count, err := r.ProjectsCount(testCtx)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), count)
 
 	// Delete project
-	r.DelProject(p.Key())
-	projects, err = r.Projects()
+	r.DelProject(testCtx, p.Key())
+	projects, err = r.Projects(testCtx)
 	assert.NoError(t, err)
 	assert.NotContains(t, projects, p.Key())
 
-	exists, err = r.ProjectExists(p.Key())
+	exists, err = r.ProjectExists(testCtx, p.Key())
 	assert.NoError(t, err)
 	assert.False(t, exists)
 
 	// GetProject should not update the var this time
 	newProject = schemas.NewProject("foo/bar")
-	assert.NoError(t, r.GetProject(&newProject))
+	assert.NoError(t, r.GetProject(testCtx, &newProject))
 	assert.NotEqual(t, p, newProject)
 }
 
@@ -79,15 +79,15 @@ func TestRedisEnvironmentFunctions(t *testing.T) {
 	}
 
 	// Set project
-	r.SetEnvironment(environment)
-	environments, err := r.Environments()
+	r.SetEnvironment(testCtx, environment)
+	environments, err := r.Environments(testCtx)
 	assert.NoError(t, err)
 	assert.Contains(t, environments, environment.Key())
 	assert.Equal(t, environment.ProjectName, environments[environment.Key()].ProjectName)
 	assert.Equal(t, environment.ID, environments[environment.Key()].ID)
 
 	// Environment exists
-	exists, err := r.EnvironmentExists(environment.Key())
+	exists, err := r.EnvironmentExists(testCtx, environment.Key())
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
@@ -96,21 +96,21 @@ func TestRedisEnvironmentFunctions(t *testing.T) {
 		ProjectName: "foo",
 		ID:          1,
 	}
-	assert.NoError(t, r.GetEnvironment(&newEnvironment))
+	assert.NoError(t, r.GetEnvironment(testCtx, &newEnvironment))
 	assert.Equal(t, environment.ExternalURL, newEnvironment.ExternalURL)
 
 	// Count
-	count, err := r.EnvironmentsCount()
+	count, err := r.EnvironmentsCount(testCtx)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), count)
 
 	// Delete Environment
-	r.DelEnvironment(environment.Key())
-	environments, err = r.Environments()
+	r.DelEnvironment(testCtx, environment.Key())
+	environments, err = r.Environments(testCtx)
 	assert.NoError(t, err)
 	assert.NotContains(t, environments, environment.Key())
 
-	exists, err = r.EnvironmentExists(environment.Key())
+	exists, err = r.EnvironmentExists(testCtx, environment.Key())
 	assert.NoError(t, err)
 	assert.False(t, exists)
 
@@ -119,7 +119,7 @@ func TestRedisEnvironmentFunctions(t *testing.T) {
 		ProjectName: "foo",
 		ID:          1,
 	}
-	assert.NoError(t, r.GetEnvironment(&newEnvironment))
+	assert.NoError(t, r.GetEnvironment(testCtx, &newEnvironment))
 	assert.NotEqual(t, environment, newEnvironment)
 }
 
@@ -135,14 +135,14 @@ func TestRedisRefFunctions(t *testing.T) {
 	)
 
 	// Set project
-	r.SetRef(ref)
-	projectsRefs, err := r.Refs()
+	r.SetRef(testCtx, ref)
+	projectsRefs, err := r.Refs(testCtx)
 	assert.NoError(t, err)
 	assert.Contains(t, projectsRefs, ref.Key())
 	assert.Equal(t, ref, projectsRefs[ref.Key()])
 
 	// Ref exists
-	exists, err := r.RefExists(ref.Key())
+	exists, err := r.RefExists(testCtx, ref.Key())
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
@@ -152,21 +152,21 @@ func TestRedisRefFunctions(t *testing.T) {
 		Kind:    schemas.RefKindBranch,
 		Name:    "sweet",
 	}
-	assert.NoError(t, r.GetRef(&newRef))
+	assert.NoError(t, r.GetRef(testCtx, &newRef))
 	assert.Equal(t, ref, newRef)
 
 	// Count
-	count, err := r.RefsCount()
+	count, err := r.RefsCount(testCtx)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), count)
 
 	// Delete Ref
-	r.DelRef(ref.Key())
-	projectsRefs, err = r.Refs()
+	r.DelRef(testCtx, ref.Key())
+	projectsRefs, err = r.Refs(testCtx)
 	assert.NoError(t, err)
 	assert.NotContains(t, projectsRefs, ref.Key())
 
-	exists, err = r.RefExists(ref.Key())
+	exists, err = r.RefExists(testCtx, ref.Key())
 	assert.NoError(t, err)
 	assert.False(t, exists)
 
@@ -176,7 +176,7 @@ func TestRedisRefFunctions(t *testing.T) {
 		Project: schemas.NewProject("foo/bar"),
 		Name:    "sweet",
 	}
-	assert.NoError(t, r.GetRef(&newRef))
+	assert.NoError(t, r.GetRef(testCtx, &newRef))
 	assert.NotEqual(t, ref, newRef)
 }
 
@@ -192,14 +192,14 @@ func TestRedisMetricFunctions(t *testing.T) {
 	}
 
 	// Set metric
-	r.SetMetric(m)
-	metrics, err := r.Metrics()
+	r.SetMetric(testCtx, m)
+	metrics, err := r.Metrics(testCtx)
 	assert.NoError(t, err)
 	assert.Contains(t, metrics, m.Key())
 	assert.Equal(t, m, metrics[m.Key()])
 
 	// Metric exists
-	exists, err := r.MetricExists(m.Key())
+	exists, err := r.MetricExists(testCtx, m.Key())
 	assert.NoError(t, err)
 	assert.True(t, exists)
 
@@ -210,21 +210,21 @@ func TestRedisMetricFunctions(t *testing.T) {
 			"foo": "bar",
 		},
 	}
-	assert.NoError(t, r.GetMetric(&newMetric))
+	assert.NoError(t, r.GetMetric(testCtx, &newMetric))
 	assert.Equal(t, m, newMetric)
 
 	// Count
-	count, err := r.MetricsCount()
+	count, err := r.MetricsCount(testCtx)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), count)
 
 	// Delete Metric
-	r.DelMetric(m.Key())
-	metrics, err = r.Metrics()
+	r.DelMetric(testCtx, m.Key())
+	metrics, err = r.Metrics(testCtx)
 	assert.NoError(t, err)
 	assert.NotContains(t, metrics, m.Key())
 
-	exists, err = r.MetricExists(m.Key())
+	exists, err = r.MetricExists(testCtx, m.Key())
 	assert.NoError(t, err)
 	assert.False(t, exists)
 
@@ -235,28 +235,25 @@ func TestRedisMetricFunctions(t *testing.T) {
 			"foo": "bar",
 		},
 	}
-	assert.NoError(t, r.GetMetric(&newMetric))
+	assert.NoError(t, r.GetMetric(testCtx, &newMetric))
 	assert.NotEqual(t, m, newMetric)
-}
-
-func TestGetRedisKeepaliveKey(t *testing.T) {
-	assert.Equal(t, "keepalive:foo", getRedisKeepaliveKey("foo"))
 }
 
 func TestRedisKeepalive(t *testing.T) {
 	mr, r := newTestRedisStore(t)
 
 	uuidString := uuid.New().String()
-	resp, err := r.(*Redis).SetKeepalive(uuidString, time.Second)
+	resp, err := r.(*Redis).SetKeepalive(testCtx, uuidString, time.Second)
 	assert.True(t, resp)
 	assert.NoError(t, err)
 
-	resp, err = r.(*Redis).KeepaliveExists(uuidString)
+	resp, err = r.(*Redis).KeepaliveExists(testCtx, uuidString)
 	assert.True(t, resp)
 	assert.NoError(t, err)
 
 	mr.FastForward(2 * time.Second)
-	resp, err = r.(*Redis).KeepaliveExists(uuidString)
+
+	resp, err = r.(*Redis).KeepaliveExists(testCtx, uuidString)
 	assert.False(t, resp)
 	assert.NoError(t, err)
 }
@@ -268,19 +265,21 @@ func TestGetRedisQueueKey(t *testing.T) {
 func TestRedisQueueTask(t *testing.T) {
 	mr, r := newTestRedisStore(t)
 
-	r.(*Redis).SetKeepalive("controller1", time.Second)
-	ok, err := r.QueueTask(schemas.TaskTypePullMetrics, "foo", "controller1")
+	r.(*Redis).SetKeepalive(testCtx, "controller1", time.Second)
+
+	ok, err := r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "controller1")
 	assert.True(t, ok)
 	assert.NoError(t, err)
 
 	// The keepalive of controller1 not being expired, we should not requeue the task
-	ok, err = r.QueueTask(schemas.TaskTypePullMetrics, "foo", "controller2")
+	ok, err = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "controller2")
 	assert.False(t, ok)
 	assert.NoError(t, err)
 
 	// The keepalive of controller1 being expired, we should requeue the task
 	mr.FastForward(2 * time.Second)
-	ok, err = r.QueueTask(schemas.TaskTypePullMetrics, "foo", "controller2")
+
+	ok, err = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "controller2")
 	assert.True(t, ok)
 	assert.NoError(t, err)
 }
@@ -288,37 +287,37 @@ func TestRedisQueueTask(t *testing.T) {
 func TestRedisUnqueueTask(t *testing.T) {
 	_, r := newTestRedisStore(t)
 
-	r.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
-	count, _ := r.ExecutedTasksCount()
+	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
+	count, _ := r.ExecutedTasksCount(testCtx)
 	assert.Equal(t, uint64(0), count)
 
-	assert.NoError(t, r.UnqueueTask(schemas.TaskTypePullMetrics, "foo"))
-	count, _ = r.ExecutedTasksCount()
+	assert.NoError(t, r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo"))
+	count, _ = r.ExecutedTasksCount(testCtx)
 	assert.Equal(t, uint64(1), count)
 }
 
 func TestRedisCurrentlyQueuedTasksCount(t *testing.T) {
 	_, r := newTestRedisStore(t)
 
-	r.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
-	r.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
-	r.QueueTask(schemas.TaskTypePullMetrics, "baz", "")
+	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
+	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "bar", "")
+	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "baz", "")
 
-	count, _ := r.CurrentlyQueuedTasksCount()
+	count, _ := r.CurrentlyQueuedTasksCount(testCtx)
 	assert.Equal(t, uint64(3), count)
-	r.UnqueueTask(schemas.TaskTypePullMetrics, "foo")
-	count, _ = r.CurrentlyQueuedTasksCount()
+	r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	count, _ = r.CurrentlyQueuedTasksCount(testCtx)
 	assert.Equal(t, uint64(2), count)
 }
 
 func TestRedisExecutedTasksCount(t *testing.T) {
 	_, r := newTestRedisStore(t)
 
-	r.QueueTask(schemas.TaskTypePullMetrics, "foo", "")
-	r.QueueTask(schemas.TaskTypePullMetrics, "bar", "")
-	r.UnqueueTask(schemas.TaskTypePullMetrics, "foo")
-	r.UnqueueTask(schemas.TaskTypePullMetrics, "foo")
+	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
+	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "bar", "")
+	r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
 
-	count, _ := r.ExecutedTasksCount()
+	count, _ := r.ExecutedTasksCount(testCtx)
 	assert.Equal(t, uint64(1), count)
 }

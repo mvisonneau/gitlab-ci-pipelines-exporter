@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -12,7 +11,7 @@ import (
 )
 
 func TestPullProjectsFromWildcard(t *testing.T) {
-	c, mux, srv := newTestController(config.Config{})
+	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects",
@@ -21,9 +20,9 @@ func TestPullProjectsFromWildcard(t *testing.T) {
 		})
 
 	w := config.NewWildcard()
-	assert.NoError(t, c.PullProjectsFromWildcard(context.Background(), w))
+	assert.NoError(t, c.PullProjectsFromWildcard(ctx, w))
 
-	projects, _ := c.Store.Projects()
+	projects, _ := c.Store.Projects(ctx)
 	p1 := schemas.NewProject("bar")
 
 	expectedProjects := schemas.Projects{

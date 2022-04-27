@@ -18,7 +18,7 @@ func TestGarbageCollectProjects(t *testing.T) {
 	p3 := schemas.NewProject("wc/p3")
 	p4 := schemas.NewProject("wc/p4")
 
-	c, mux, srv := newTestController(config.Config{
+	ctx, c, mux, srv := newTestController(config.Config{
 		Projects: []config.Project{p1.Project},
 		Wildcards: config.Wildcards{
 			config.Wildcard{
@@ -36,13 +36,13 @@ func TestGarbageCollectProjects(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1, "path_with_namespace": "wc/p3", "jobs_enabled": true}]`)
 		})
 
-	c.Store.SetProject(p1)
-	c.Store.SetProject(p2)
-	c.Store.SetProject(p3)
-	c.Store.SetProject(p4)
+	c.Store.SetProject(ctx, p1)
+	c.Store.SetProject(ctx, p2)
+	c.Store.SetProject(ctx, p3)
+	c.Store.SetProject(ctx, p4)
 
 	assert.NoError(t, c.GarbageCollectProjects(context.Background()))
-	storedProjects, err := c.Store.Projects()
+	storedProjects, err := c.Store.Projects(ctx)
 	assert.NoError(t, err)
 
 	expectedProjects := schemas.Projects{
@@ -53,7 +53,7 @@ func TestGarbageCollectProjects(t *testing.T) {
 }
 
 func TestGarbageCollectEnvironments(t *testing.T) {
-	c, mux, srv := newTestController(config.Config{})
+	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/p2/environments",
@@ -69,13 +69,13 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 	envp2dev := schemas.Environment{ProjectName: "p2", Name: "dev"}
 	envp2main := schemas.Environment{ProjectName: "p2", Name: "main"}
 
-	c.Store.SetProject(p2)
-	c.Store.SetEnvironment(envp1main)
-	c.Store.SetEnvironment(envp2dev)
-	c.Store.SetEnvironment(envp2main)
+	c.Store.SetProject(ctx, p2)
+	c.Store.SetEnvironment(ctx, envp1main)
+	c.Store.SetEnvironment(ctx, envp2dev)
+	c.Store.SetEnvironment(ctx, envp2main)
 
 	assert.NoError(t, c.GarbageCollectEnvironments(context.Background()))
-	storedEnvironments, err := c.Store.Environments()
+	storedEnvironments, err := c.Store.Environments(ctx)
 	assert.NoError(t, err)
 
 	expectedEnvironments := schemas.Environments{
@@ -89,7 +89,7 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 }
 
 func TestGarbageCollectRefs(t *testing.T) {
-	c, mux, srv := newTestController(config.Config{})
+	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/p2/repository/branches",
@@ -111,14 +111,14 @@ func TestGarbageCollectRefs(t *testing.T) {
 	pr2dev := schemas.NewRef(p2, schemas.RefKindBranch, "dev")
 	pr2main := schemas.NewRef(p2, schemas.RefKindBranch, "main")
 
-	c.Store.SetProject(p2)
-	c.Store.SetRef(pr1dev)
-	c.Store.SetRef(pr1main)
-	c.Store.SetRef(pr2dev)
-	c.Store.SetRef(pr2main)
+	c.Store.SetProject(ctx, p2)
+	c.Store.SetRef(ctx, pr1dev)
+	c.Store.SetRef(ctx, pr1main)
+	c.Store.SetRef(ctx, pr2dev)
+	c.Store.SetRef(ctx, pr2main)
 
 	assert.NoError(t, c.GarbageCollectRefs(context.Background()))
-	storedRefs, err := c.Store.Refs()
+	storedRefs, err := c.Store.Refs(ctx)
 	assert.NoError(t, err)
 
 	newPR2main := schemas.NewRef(p2, schemas.RefKindBranch, "main")
@@ -129,7 +129,7 @@ func TestGarbageCollectRefs(t *testing.T) {
 }
 
 func TestGarbageCollectMetrics(t *testing.T) {
-	c, _, srv := newTestController(config.Config{})
+	ctx, c, _, srv := newTestController(config.Config{})
 	srv.Close()
 
 	p1 := schemas.NewProject("p1")
@@ -145,16 +145,16 @@ func TestGarbageCollectMetrics(t *testing.T) {
 	ref3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo", "kind": "branch"}}
 	ref4m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"ref": "bar", "kind": "branch"}}
 
-	c.Store.SetRef(ref1)
-	c.Store.SetMetric(ref1m1)
-	c.Store.SetMetric(ref1m2)
-	c.Store.SetMetric(ref1m3)
-	c.Store.SetMetric(ref2m1)
-	c.Store.SetMetric(ref3m1)
-	c.Store.SetMetric(ref4m1)
+	c.Store.SetRef(ctx, ref1)
+	c.Store.SetMetric(ctx, ref1m1)
+	c.Store.SetMetric(ctx, ref1m2)
+	c.Store.SetMetric(ctx, ref1m3)
+	c.Store.SetMetric(ctx, ref2m1)
+	c.Store.SetMetric(ctx, ref3m1)
+	c.Store.SetMetric(ctx, ref4m1)
 
 	assert.NoError(t, c.GarbageCollectMetrics(context.Background()))
-	storedMetrics, err := c.Store.Metrics()
+	storedMetrics, err := c.Store.Metrics(ctx)
 	assert.NoError(t, err)
 
 	expectedMetrics := schemas.Metrics{

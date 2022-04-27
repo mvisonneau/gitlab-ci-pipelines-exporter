@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -13,8 +14,8 @@ import (
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
-// Mocking helpers
-func getMockedClient() (*http.ServeMux, *httptest.Server, *Client) {
+// Mocking helpers.
+func getMockedClient() (context.Context, *http.ServeMux, *httptest.Server, *Client) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
@@ -31,7 +32,7 @@ func getMockedClient() (*http.ServeMux, *httptest.Server, *Client) {
 		RateCounter: ratecounter.NewRateCounter(time.Second),
 	}
 
-	return mux, server, c
+	return context.Background(), mux, server, c
 }
 
 func TestNewHTTPClient(t *testing.T) {
@@ -60,24 +61,30 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestReadinessCheck(t *testing.T) {
-	mux, server, c := getMockedClient()
-	mux.HandleFunc(fmt.Sprintf("/200"),
+	ctx, mux, server, c := getMockedClient()
+	mux.HandleFunc(
+		"/200",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			w.WriteHeader(http.StatusOK)
-		})
-	mux.HandleFunc(fmt.Sprintf("/500"),
+		},
+	)
+	mux.HandleFunc(
+		"/500",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
-		})
+		},
+	)
 
-	readinessCheck := c.ReadinessCheck()
+	readinessCheck := c.ReadinessCheck(ctx)
 	assert.Error(t, readinessCheck())
 
 	c.Readiness.HTTPClient = NewHTTPClient(false)
 	c.Readiness.URL = fmt.Sprintf("%s/200", server.URL)
+
 	assert.NoError(t, readinessCheck())
 
 	c.Readiness.URL = fmt.Sprintf("%s/500", server.URL)
+
 	assert.Error(t, readinessCheck())
 }

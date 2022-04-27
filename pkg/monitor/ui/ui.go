@@ -15,17 +15,10 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/muesli/termenv"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/rpc"
 	log "github.com/sirupsen/logrus"
 	"github.com/xeonx/timeago"
-)
-
-var (
-	color   = termenv.ColorProfile().Color
-	keyword = termenv.Style{}.Foreground(color("204")).Background(color("235")).Styled
-	help    = termenv.Style{}.Foreground(color("241")).Styled
 )
 
 type tab string
@@ -43,12 +36,6 @@ var tabs = [...]tab{
 var (
 	subtle    = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
 	highlight = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
-	special   = lipgloss.AdaptiveColor{Light: "#43BF6D", Dark: "#73F59F"}
-	divider   = lipgloss.NewStyle().
-			SetString("•").
-			Padding(0, 1).
-			Foreground(subtle).
-			String()
 
 	dataStyle = lipgloss.NewStyle().
 			MarginLeft(1).
@@ -58,7 +45,7 @@ var (
 			Foreground(lipgloss.Color("#000000")).
 			Background(lipgloss.Color("#a9a9a9"))
 
-	// Tabs
+	// Tabs.
 
 	activeTabBorder = lipgloss.Border{
 		Top:         "─",
@@ -94,13 +81,13 @@ var (
 		BorderLeft(false).
 		BorderRight(false)
 
-	// List
+	// List.
 
 	entityStyle = lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder(), true, false, false, false).
 			BorderForeground(subtle)
 
-	// Status Bar
+	// Status Bar.
 
 	statusStyle = lipgloss.NewStyle().
 			Inherit(statusBarStyle).
@@ -122,7 +109,7 @@ var (
 	versionStyle = statusNugget.Copy().
 			Background(lipgloss.Color("#0062cc"))
 
-	// Page
+	// Page.
 	docStyle = lipgloss.NewStyle()
 )
 
@@ -130,6 +117,7 @@ func max(a, b int) int {
 	if a > b {
 		return a
 	}
+
 	return b
 }
 
@@ -226,6 +214,7 @@ func prettyTimeago(t time.Time) string {
 	if t.IsZero() {
 		return "N/A"
 	}
+
 	return timeago.English.Format(t)
 }
 
@@ -241,6 +230,7 @@ func newModel(version string, listenerAddress *url.URL) (m *model) {
 		progress:        &p,
 		rpcClient:       rpcClient,
 	}
+
 	return
 }
 
@@ -258,6 +248,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.vp.Height = msg.Height - 4
 		m.progress.Width = msg.Width - 27
 		m.setPaneContent()
+
 		return m, nil
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -268,16 +259,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.tabID--
 				m.setPaneContent()
 			}
+
 			return m, nil
 		case tea.KeyRight:
 			if m.tabID < len(tabs)-1 {
 				m.tabID++
 				m.setPaneContent()
 			}
+
 			return m, nil
 		case tea.KeyUp, tea.KeyDown, tea.KeyPgDown, tea.KeyPgUp:
 			vp, cmd := m.vp.Update(msg)
 			m.vp = vp
+
 			return m, cmd
 		}
 	case monitor.Status:
@@ -285,6 +279,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.tabID == 0 {
 			m.vp.SetContent(m.renderLastStatus())
 		}
+
 		return m, waitForActivity(m.sub)
 	}
 
@@ -300,6 +295,7 @@ func (m model) View() string {
 		for tabID, t := range tabs {
 			if m.tabID == tabID {
 				renderedTabs = append(renderedTabs, activeTab.Render(string(t)))
+
 				continue
 			}
 			renderedTabs = append(renderedTabs, inactiveTab.Render(string(t)))
@@ -311,12 +307,12 @@ func (m model) View() string {
 		doc.WriteString(row + "\n")
 	}
 
-	// PANE
+	// Pane.
 	{
 		doc.WriteString(m.vp.View() + "\n")
 	}
 
-	// Status bar
+	// Status bar.
 	{
 		bar := lipgloss.JoinHorizontal(lipgloss.Top,
 			statusStyle.Render("github.com/mvisonneau/gitlab-ci-pipelines-exporter"),
@@ -364,7 +360,9 @@ func (m *model) setPaneContent() {
 		m.vp.SetContent(m.renderLastStatus())
 	case tabConfig:
 		var b bytes.Buffer
+
 		foo := bufio.NewWriter(&b)
+
 		if err := chromaQuick.Highlight(foo, m.rpcClient.Config(), "yaml", "terminal16m", "monokai"); err != nil {
 			log.WithError(err).Fatal()
 		}

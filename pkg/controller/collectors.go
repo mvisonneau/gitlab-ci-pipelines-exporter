@@ -11,7 +11,7 @@ var (
 	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"}
 )
 
-// NewInternalCollectorCurrentlyQueuedTasksCount returns a new collector for the gcpe_currently_queued_tasks_count metric
+// NewInternalCollectorCurrentlyQueuedTasksCount returns a new collector for the gcpe_currently_queued_tasks_count metric.
 func NewInternalCollectorCurrentlyQueuedTasksCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -22,7 +22,7 @@ func NewInternalCollectorCurrentlyQueuedTasksCount() prometheus.Collector {
 	)
 }
 
-// NewInternalCollectorEnvironmentsCount returns a new collector for the gcpe_environments_count metric
+// NewInternalCollectorEnvironmentsCount returns a new collector for the gcpe_environments_count metric.
 func NewInternalCollectorEnvironmentsCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -33,7 +33,7 @@ func NewInternalCollectorEnvironmentsCount() prometheus.Collector {
 	)
 }
 
-// NewInternalCollectorExecutedTasksCount returns a new collector for the gcpe_executed_tasks_count metric
+// NewInternalCollectorExecutedTasksCount returns a new collector for the gcpe_executed_tasks_count metric.
 func NewInternalCollectorExecutedTasksCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -44,7 +44,7 @@ func NewInternalCollectorExecutedTasksCount() prometheus.Collector {
 	)
 }
 
-// NewInternalCollectorGitLabAPIRequestsCount returns a new collector for the gcpe_gitlab_api_requests_count metric
+// NewInternalCollectorGitLabAPIRequestsCount returns a new collector for the gcpe_gitlab_api_requests_count metric.
 func NewInternalCollectorGitLabAPIRequestsCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -55,7 +55,7 @@ func NewInternalCollectorGitLabAPIRequestsCount() prometheus.Collector {
 	)
 }
 
-// NewInternalCollectorGitLabAPIRequestsRemaining returns a new collector for the gcpe_gitlab_api_requests_remaining metric
+// NewInternalCollectorGitLabAPIRequestsRemaining returns a new collector for the gcpe_gitlab_api_requests_remaining metric.
 func NewInternalCollectorGitLabAPIRequestsRemaining() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -66,7 +66,7 @@ func NewInternalCollectorGitLabAPIRequestsRemaining() prometheus.Collector {
 	)
 }
 
-// NewInternalCollectorGitLabAPIRequestsLimit returns a new collector for the gcpe_gitlab_api_requests_limit metric
+// NewInternalCollectorGitLabAPIRequestsLimit returns a new collector for the gcpe_gitlab_api_requests_limit metric.
 func NewInternalCollectorGitLabAPIRequestsLimit() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -77,7 +77,7 @@ func NewInternalCollectorGitLabAPIRequestsLimit() prometheus.Collector {
 	)
 }
 
-// NewInternalCollectorMetricsCount returns a new collector for the gcpe_metrics_count metric
+// NewInternalCollectorMetricsCount returns a new collector for the gcpe_metrics_count metric.
 func NewInternalCollectorMetricsCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -88,7 +88,7 @@ func NewInternalCollectorMetricsCount() prometheus.Collector {
 	)
 }
 
-// NewInternalCollectorProjectsCount returns a new collector for the gcpe_projects_count metric
+// NewInternalCollectorProjectsCount returns a new collector for the gcpe_projects_count metric.
 func NewInternalCollectorProjectsCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -99,7 +99,7 @@ func NewInternalCollectorProjectsCount() prometheus.Collector {
 	)
 }
 
-// NewInternalCollectorRefsCount returns a new collector for the gcpe_refs_count metric
+// NewInternalCollectorRefsCount returns a new collector for the gcpe_refs_count metric.
 func NewInternalCollectorRefsCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -110,7 +110,7 @@ func NewInternalCollectorRefsCount() prometheus.Collector {
 	)
 }
 
-// NewCollectorCoverage returns a new collector for the gitlab_ci_pipeline_coverage metric
+// NewCollectorCoverage returns a new collector for the gitlab_ci_pipeline_coverage metric.
 func NewCollectorCoverage() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -121,7 +121,7 @@ func NewCollectorCoverage() prometheus.Collector {
 	)
 }
 
-// NewCollectorDurationSeconds returns a new collector for the gitlab_ci_pipeline_duration_seconds metric
+// NewCollectorDurationSeconds returns a new collector for the gitlab_ci_pipeline_duration_seconds metric.
 func NewCollectorDurationSeconds() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -132,7 +132,7 @@ func NewCollectorDurationSeconds() prometheus.Collector {
 	)
 }
 
-// NewCollectorQueuedDurationSeconds returns a new collector for the gitlab_ci_pipeline_queued_duration_seconds metric
+// NewCollectorQueuedDurationSeconds returns a new collector for the gitlab_ci_pipeline_queued_duration_seconds metric.
 func NewCollectorQueuedDurationSeconds() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -143,7 +143,7 @@ func NewCollectorQueuedDurationSeconds() prometheus.Collector {
 	)
 }
 
-// NewCollectorEnvironmentBehindCommitsCount returns a new collector for the gitlab_ci_environment_behind_commits_count metric
+// NewCollectorEnvironmentBehindCommitsCount returns a new collector for the gitlab_ci_environment_behind_commits_count metric.
 func NewCollectorEnvironmentBehindCommitsCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -154,7 +154,7 @@ func NewCollectorEnvironmentBehindCommitsCount() prometheus.Collector {
 	)
 }
 
-// NewCollectorEnvironmentBehindDurationSeconds returns a new collector for the gitlab_ci_environment_behind_duration_seconds metric
+// NewCollectorEnvironmentBehindDurationSeconds returns a new collector for the gitlab_ci_environment_behind_duration_seconds metric.
 func NewCollectorEnvironmentBehindDurationSeconds() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -165,7 +165,7 @@ func NewCollectorEnvironmentBehindDurationSeconds() prometheus.Collector {
 	)
 }
 
-// NewCollectorEnvironmentDeploymentCount returns a new collector for the gitlab_ci_environment_deployment_count metric
+// NewCollectorEnvironmentDeploymentCount returns a new collector for the gitlab_ci_environment_deployment_count metric.
 func NewCollectorEnvironmentDeploymentCount() prometheus.Collector {
 	return prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -176,7 +176,7 @@ func NewCollectorEnvironmentDeploymentCount() prometheus.Collector {
 	)
 }
 
-// NewCollectorEnvironmentDeploymentDurationSeconds returns a new collector for the gitlab_ci_environment_deployment_duration_seconds metric
+// NewCollectorEnvironmentDeploymentDurationSeconds returns a new collector for the gitlab_ci_environment_deployment_duration_seconds metric.
 func NewCollectorEnvironmentDeploymentDurationSeconds() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -187,7 +187,7 @@ func NewCollectorEnvironmentDeploymentDurationSeconds() prometheus.Collector {
 	)
 }
 
-// NewCollectorEnvironmentDeploymentJobID returns a new collector for the gitlab_ci_environment_deployment_id metric
+// NewCollectorEnvironmentDeploymentJobID returns a new collector for the gitlab_ci_environment_deployment_id metric.
 func NewCollectorEnvironmentDeploymentJobID() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -198,7 +198,7 @@ func NewCollectorEnvironmentDeploymentJobID() prometheus.Collector {
 	)
 }
 
-// NewCollectorEnvironmentDeploymentStatus returns a new collector for the gitlab_ci_environment_deployment_status metric
+// NewCollectorEnvironmentDeploymentStatus returns a new collector for the gitlab_ci_environment_deployment_status metric.
 func NewCollectorEnvironmentDeploymentStatus() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -209,7 +209,7 @@ func NewCollectorEnvironmentDeploymentStatus() prometheus.Collector {
 	)
 }
 
-// NewCollectorEnvironmentDeploymentTimestamp returns a new collector for the gitlab_ci_environment_deployment_timestamp metric
+// NewCollectorEnvironmentDeploymentTimestamp returns a new collector for the gitlab_ci_environment_deployment_timestamp metric.
 func NewCollectorEnvironmentDeploymentTimestamp() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -220,7 +220,7 @@ func NewCollectorEnvironmentDeploymentTimestamp() prometheus.Collector {
 	)
 }
 
-// NewCollectorEnvironmentInformation returns a new collector for the gitlab_ci_environment_information metric
+// NewCollectorEnvironmentInformation returns a new collector for the gitlab_ci_environment_information metric.
 func NewCollectorEnvironmentInformation() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -231,7 +231,7 @@ func NewCollectorEnvironmentInformation() prometheus.Collector {
 	)
 }
 
-// NewCollectorID returns a new collector for the gitlab_ci_pipeline_id metric
+// NewCollectorID returns a new collector for the gitlab_ci_pipeline_id metric.
 func NewCollectorID() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -242,7 +242,7 @@ func NewCollectorID() prometheus.Collector {
 	)
 }
 
-// NewCollectorJobArtifactSizeBytes returns a new collector for the gitlab_ci_pipeline_job_artifact_size_bytes metric
+// NewCollectorJobArtifactSizeBytes returns a new collector for the gitlab_ci_pipeline_job_artifact_size_bytes metric.
 func NewCollectorJobArtifactSizeBytes() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -253,7 +253,7 @@ func NewCollectorJobArtifactSizeBytes() prometheus.Collector {
 	)
 }
 
-// NewCollectorJobDurationSeconds returns a new collector for the gitlab_ci_pipeline_job_duration_seconds metric
+// NewCollectorJobDurationSeconds returns a new collector for the gitlab_ci_pipeline_job_duration_seconds metric.
 func NewCollectorJobDurationSeconds() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -264,7 +264,7 @@ func NewCollectorJobDurationSeconds() prometheus.Collector {
 	)
 }
 
-// NewCollectorJobID returns a new collector for the gitlab_ci_pipeline_job_id metric
+// NewCollectorJobID returns a new collector for the gitlab_ci_pipeline_job_id metric.
 func NewCollectorJobID() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -275,7 +275,7 @@ func NewCollectorJobID() prometheus.Collector {
 	)
 }
 
-// NewCollectorJobQueuedDurationSeconds returns a new collector for the gitlab_ci_pipeline_job_queued_duration_seconds metric
+// NewCollectorJobQueuedDurationSeconds returns a new collector for the gitlab_ci_pipeline_job_queued_duration_seconds metric.
 func NewCollectorJobQueuedDurationSeconds() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -286,7 +286,7 @@ func NewCollectorJobQueuedDurationSeconds() prometheus.Collector {
 	)
 }
 
-// NewCollectorJobRunCount returns a new collector for the gitlab_ci_pipeline_job_run_count metric
+// NewCollectorJobRunCount returns a new collector for the gitlab_ci_pipeline_job_run_count metric.
 func NewCollectorJobRunCount() prometheus.Collector {
 	return prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -297,7 +297,7 @@ func NewCollectorJobRunCount() prometheus.Collector {
 	)
 }
 
-// NewCollectorJobStatus returns a new collector for the gitlab_ci_pipeline_job_status metric
+// NewCollectorJobStatus returns a new collector for the gitlab_ci_pipeline_job_status metric.
 func NewCollectorJobStatus() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -308,7 +308,7 @@ func NewCollectorJobStatus() prometheus.Collector {
 	)
 }
 
-// NewCollectorJobTimestamp returns a new collector for the gitlab_ci_pipeline_job_timestamp metric
+// NewCollectorJobTimestamp returns a new collector for the gitlab_ci_pipeline_job_timestamp metric.
 func NewCollectorJobTimestamp() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -319,7 +319,7 @@ func NewCollectorJobTimestamp() prometheus.Collector {
 	)
 }
 
-// NewCollectorStatus returns a new collector for the gitlab_ci_pipeline_status metric
+// NewCollectorStatus returns a new collector for the gitlab_ci_pipeline_status metric.
 func NewCollectorStatus() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -330,7 +330,7 @@ func NewCollectorStatus() prometheus.Collector {
 	)
 }
 
-// NewCollectorTimestamp returns a new collector for the gitlab_ci_pipeline_timestamp metric
+// NewCollectorTimestamp returns a new collector for the gitlab_ci_pipeline_timestamp metric.
 func NewCollectorTimestamp() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -341,7 +341,7 @@ func NewCollectorTimestamp() prometheus.Collector {
 	)
 }
 
-// NewCollectorRunCount returns a new collector for the gitlab_ci_pipeline_run_count metric
+// NewCollectorRunCount returns a new collector for the gitlab_ci_pipeline_run_count metric.
 func NewCollectorRunCount() prometheus.Collector {
 	return prometheus.NewCounterVec(
 		prometheus.CounterOpts{

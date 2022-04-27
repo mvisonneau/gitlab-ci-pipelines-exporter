@@ -1,6 +1,7 @@
 package ratelimit
 
 import (
+	"context"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -8,13 +9,14 @@ import (
 
 // Limiter ..
 type Limiter interface {
-	Take() time.Time
+	Take(context.Context) time.Time
 }
 
 // Take ..
-func Take(l Limiter) {
+func Take(ctx context.Context, l Limiter) {
 	now := time.Now()
-	throttled := l.Take()
+	throttled := l.Take(ctx)
+
 	if throttled.Sub(now).Milliseconds() > 10 {
 		log.WithFields(
 			log.Fields{

@@ -16,7 +16,9 @@ import (
 
 func TestRunInvalidConfigFile(t *testing.T) {
 	ctx, flags := NewTestContext()
+
 	flags.String("config", "path_does_not_exist", "")
+
 	exitCode, err := Run(ctx)
 	assert.Equal(t, 1, exitCode)
 	assert.Error(t, err)

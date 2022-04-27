@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -89,13 +90,23 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 }
 
 // ReadinessCheck ..
-func (c *Client) ReadinessCheck() healthcheck.Check {
+func (c *Client) ReadinessCheck(ctx context.Context) healthcheck.Check {
 	return func() error {
 		if c.Readiness.HTTPClient == nil {
 			return fmt.Errorf("readiness http client not configured")
 		}
 
-		resp, err := c.Readiness.HTTPClient.Get(c.Readiness.URL)
+		req, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodGet,
+			c.Readiness.URL,
+			nil,
+		)
+		if err != nil {
+			return err
+		}
+
+		resp, err := c.Readiness.HTTPClient.Do(req)
 		if err != nil {
 			return err
 		}
@@ -112,20 +123,19 @@ func (c *Client) ReadinessCheck() healthcheck.Check {
 	}
 }
 
-func (c *Client) rateLimit() {
-	ratelimit.Take(c.RateLimiter)
+func (c *Client) rateLimit(ctx context.Context) {
+	ratelimit.Take(ctx, c.RateLimiter)
 	// Used for monitoring purposes
 	c.RateCounter.Incr(1)
 	c.RequestsCounter++
 }
 
 func (c *Client) requestsRemaining(response *goGitlab.Response) {
-	remaining := response.Header.Get("ratelimit-remaining")
-	if remaining != "" {
+	if remaining := response.Header.Get("ratelimit-remaining"); remaining != "" {
 		c.RequestsRemaining, _ = strconv.Atoi(remaining)
 	}
-	limit := response.Header.Get("ratelimit-limit")
-	if limit != "" {
+
+	if limit := response.Header.Get("ratelimit-limit"); limit != "" {
 		c.RequestsLimit, _ = strconv.Atoi(limit)
 	}
 }

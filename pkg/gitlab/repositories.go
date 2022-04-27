@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/openlyinc/pointy"
@@ -9,22 +10,24 @@ import (
 )
 
 // GetCommitCountBetweenRefs ..
-func (c *Client) GetCommitCountBetweenRefs(project, from, to string) (int, error) {
+func (c *Client) GetCommitCountBetweenRefs(ctx context.Context, project, from, to string) (int, error) {
 	log.WithFields(log.Fields{
 		"project-name": project,
 		"from-ref":     from,
 		"to-ref":       to,
 	}).Debug("comparing refs")
 
-	c.rateLimit()
+	c.rateLimit(ctx)
+
 	cmp, resp, err := c.Repositories.Compare(project, &goGitlab.CompareOptions{
 		From:     &from,
 		To:       &to,
 		Straight: pointy.Bool(true),
-	}, nil)
+	}, goGitlab.WithContext(ctx))
 	if err != nil {
 		return 0, err
 	}
+
 	c.requestsRemaining(resp)
 
 	if cmp == nil {

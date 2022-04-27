@@ -11,7 +11,7 @@ import (
 )
 
 func TestListRefPipelineJobs(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	ref := schemas.Ref{
@@ -20,7 +20,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 	}
 
 	// Test with no most recent pipeline defined
-	jobs, err := c.ListRefPipelineJobs(ref)
+	jobs, err := c.ListRefPipelineJobs(ctx, ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 0)
 
@@ -58,7 +58,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 		ID: 1,
 	}
 
-	jobs, err = c.ListRefPipelineJobs(ref)
+	jobs, err = c.ListRefPipelineJobs(ctx, ref)
 	assert.NoError(t, err)
 	assert.Equal(t, []schemas.Job{
 		{ID: 10},
@@ -68,12 +68,12 @@ func TestListRefPipelineJobs(t *testing.T) {
 
 	// Test invalid project id
 	ref.Project.Name = "bar"
-	_, err = c.ListRefPipelineJobs(ref)
+	_, err = c.ListRefPipelineJobs(ctx, ref)
 	assert.Error(t, err)
 }
 
 func TestListPipelineJobs(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
@@ -92,17 +92,17 @@ func TestListPipelineJobs(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	jobs, err := c.ListPipelineJobs("foo", 1)
+	jobs, err := c.ListPipelineJobs(ctx, "foo", 1)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 2)
 
 	// Test invalid project id
-	_, err = c.ListPipelineJobs("bar", 1)
+	_, err = c.ListPipelineJobs(ctx, "bar", 1)
 	assert.Error(t, err)
 }
 
 func TestListPipelineBridges(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
@@ -121,17 +121,17 @@ func TestListPipelineBridges(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	bridges, err := c.ListPipelineBridges("foo", 1)
+	bridges, err := c.ListPipelineBridges(ctx, "foo", 1)
 	assert.NoError(t, err)
 	assert.Len(t, bridges, 1)
 
 	// Test invalid project id
-	_, err = c.ListPipelineBridges("bar", 1)
+	_, err = c.ListPipelineBridges(ctx, "bar", 1)
 	assert.Error(t, err)
 }
 
 func TestListRefMostRecentJobs(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	ref := schemas.Ref{
@@ -139,7 +139,7 @@ func TestListRefMostRecentJobs(t *testing.T) {
 		Name:    "yay",
 	}
 
-	jobs, err := c.ListRefMostRecentJobs(ref)
+	jobs, err := c.ListRefMostRecentJobs(ctx, ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 0)
 
@@ -170,7 +170,7 @@ func TestListRefMostRecentJobs(t *testing.T) {
 		},
 	}
 
-	jobs, err = c.ListRefMostRecentJobs(ref)
+	jobs, err = c.ListRefMostRecentJobs(ctx, ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 2)
 	assert.Equal(t, 3, jobs[0].ID)
@@ -181,7 +181,7 @@ func TestListRefMostRecentJobs(t *testing.T) {
 		Name: "baz",
 	}
 
-	jobs, err = c.ListRefMostRecentJobs(ref)
+	jobs, err = c.ListRefMostRecentJobs(ctx, ref)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 2)
 	assert.Equal(t, 3, jobs[0].ID)
@@ -189,6 +189,6 @@ func TestListRefMostRecentJobs(t *testing.T) {
 
 	// Test invalid project id
 	ref.Project.Name = "bar"
-	_, err = c.ListRefMostRecentJobs(ref)
+	_, err = c.ListRefMostRecentJobs(ctx, ref)
 	assert.Error(t, err)
 }

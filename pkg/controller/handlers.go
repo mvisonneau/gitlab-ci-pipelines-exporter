@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -13,25 +14,29 @@ import (
 )
 
 // HealthCheckHandler ..
-func (c *Controller) HealthCheckHandler() (h healthcheck.Handler) {
+func (c *Controller) HealthCheckHandler(ctx context.Context) (h healthcheck.Handler) {
 	h = healthcheck.NewHandler()
 	if c.Config.Gitlab.EnableHealthCheck {
-		h.AddReadinessCheck("gitlab-reachable", c.Gitlab.ReadinessCheck())
+		h.AddReadinessCheck("gitlab-reachable", c.Gitlab.ReadinessCheck(ctx))
 	} else {
 		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
 	}
+
 	return
 }
 
 // MetricsHandler ..
 func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := context.TODO()
 	registry := NewRegistry()
-	metrics, err := c.Store.Metrics()
+
+	metrics, err := c.Store.Metrics(ctx)
 	if err != nil {
 		log.Error(err.Error())
 	}
 
 	if err := registry.ExportInternalMetrics(
+		ctx,
 		c.Gitlab,
 		c.Store,
 	); err != nil {
@@ -48,22 +53,26 @@ func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 
 // WebhookHandler ..
 func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := context.TODO()
 	logFields := log.Fields{
 		"ip-address": r.RemoteAddr,
 		"user-agent": r.UserAgent(),
 	}
+
 	log.WithFields(logFields).Debug("webhook request")
 
 	if r.Header.Get("X-Gitlab-Token") != c.Config.Server.Webhook.SecretToken {
 		log.WithFields(logFields).Debug("invalid token provided for a webhook request")
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprint(w, "{\"error\": \"invalid token\"}")
+
 		return
 	}
 
 	if r.Body == http.NoBody {
 		log.WithFields(logFields).WithField("error", "nil body").Warn("unable to read body of a received webhook")
 		w.WriteHeader(http.StatusBadRequest)
+
 		return
 	}
 
@@ -71,6 +80,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithFields(logFields).WithField("error", err.Error()).Warn("unable to read body of a received webhook")
 		w.WriteHeader(http.StatusBadRequest)
+
 		return
 	}
 
@@ -78,14 +88,15 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.WithFields(logFields).WithFields(logFields).WithField("error", err.Error()).Warn("unable to parse body of a received webhook")
 		w.WriteHeader(http.StatusBadRequest)
+
 		return
 	}
 
 	switch event := event.(type) {
 	case *gitlab.PipelineEvent:
-		go c.processPipelineEvent(*event)
+		go c.processPipelineEvent(ctx, *event)
 	case *gitlab.DeploymentEvent:
-		go c.processDeploymentEvent(*event)
+		go c.processDeploymentEvent(ctx, *event)
 	default:
 		log.WithFields(logFields).WithField("event-type", reflect.TypeOf(event).String()).Warn("received a non supported event type as a webhook")
 		w.WriteHeader(http.StatusUnprocessableEntity)

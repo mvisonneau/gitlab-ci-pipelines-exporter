@@ -11,37 +11,37 @@ import (
 
 // Store ..
 type Store interface {
-	SetProject(schemas.Project) error
-	DelProject(schemas.ProjectKey) error
-	GetProject(*schemas.Project) error
-	ProjectExists(schemas.ProjectKey) (bool, error)
-	Projects() (schemas.Projects, error)
-	ProjectsCount() (int64, error)
-	SetEnvironment(schemas.Environment) error
-	DelEnvironment(schemas.EnvironmentKey) error
-	GetEnvironment(*schemas.Environment) error
-	EnvironmentExists(schemas.EnvironmentKey) (bool, error)
-	Environments() (schemas.Environments, error)
-	EnvironmentsCount() (int64, error)
-	SetRef(schemas.Ref) error
-	DelRef(schemas.RefKey) error
-	GetRef(*schemas.Ref) error
-	RefExists(schemas.RefKey) (bool, error)
-	Refs() (schemas.Refs, error)
-	RefsCount() (int64, error)
-	SetMetric(schemas.Metric) error
-	DelMetric(schemas.MetricKey) error
-	GetMetric(*schemas.Metric) error
-	MetricExists(schemas.MetricKey) (bool, error)
-	Metrics() (schemas.Metrics, error)
-	MetricsCount() (int64, error)
+	SetProject(context.Context, schemas.Project) error
+	DelProject(context.Context, schemas.ProjectKey) error
+	GetProject(context.Context, *schemas.Project) error
+	ProjectExists(context.Context, schemas.ProjectKey) (bool, error)
+	Projects(context.Context) (schemas.Projects, error)
+	ProjectsCount(context.Context) (int64, error)
+	SetEnvironment(context.Context, schemas.Environment) error
+	DelEnvironment(context.Context, schemas.EnvironmentKey) error
+	GetEnvironment(context.Context, *schemas.Environment) error
+	EnvironmentExists(context.Context, schemas.EnvironmentKey) (bool, error)
+	Environments(context.Context) (schemas.Environments, error)
+	EnvironmentsCount(context.Context) (int64, error)
+	SetRef(context.Context, schemas.Ref) error
+	DelRef(context.Context, schemas.RefKey) error
+	GetRef(context.Context, *schemas.Ref) error
+	RefExists(context.Context, schemas.RefKey) (bool, error)
+	Refs(context.Context) (schemas.Refs, error)
+	RefsCount(context.Context) (int64, error)
+	SetMetric(context.Context, schemas.Metric) error
+	DelMetric(context.Context, schemas.MetricKey) error
+	GetMetric(context.Context, *schemas.Metric) error
+	MetricExists(context.Context, schemas.MetricKey) (bool, error)
+	Metrics(context.Context) (schemas.Metrics, error)
+	MetricsCount(context.Context) (int64, error)
 
 	// Helpers to keep track of currently queued tasks and avoid scheduling them
 	// twice at the risk of ending up with loads of dangling goroutines being locked
-	QueueTask(schemas.TaskType, string, string) (bool, error)
-	UnqueueTask(schemas.TaskType, string) error
-	CurrentlyQueuedTasksCount() (uint64, error)
-	ExecutedTasksCount() (uint64, error)
+	QueueTask(context.Context, schemas.TaskType, string, string) (bool, error)
+	UnqueueTask(context.Context, schemas.TaskType, string) error
+	CurrentlyQueuedTasksCount(context.Context) (uint64, error)
+	ExecutedTasksCount(context.Context) (uint64, error)
 }
 
 // NewLocalStore ..
@@ -58,12 +58,11 @@ func NewLocalStore() Store {
 func NewRedisStore(client *redis.Client) Store {
 	return &Redis{
 		Client: client,
-		ctx:    context.TODO(),
 	}
 }
 
 // New creates a new store and populates it with
-// provided []schemas.Project
+// provided []schemas.Project.
 func New(
 	r *redis.Client,
 	projects config.Projects,
@@ -77,7 +76,8 @@ func New(
 	// Load all the configured projects in the store
 	for _, p := range projects {
 		sp := schemas.Project{Project: p}
-		exists, err := s.ProjectExists(sp.Key())
+
+		exists, err := s.ProjectExists(context.TODO(), sp.Key())
 		if err != nil {
 			log.WithFields(log.Fields{
 				"project-name": p.Name,
@@ -86,7 +86,7 @@ func New(
 		}
 
 		if !exists {
-			if err = s.SetProject(sp); err != nil {
+			if err = s.SetProject(context.TODO(), sp); err != nil {
 				log.WithFields(log.Fields{
 					"project-name": p.Name,
 					"error":        err.Error(),

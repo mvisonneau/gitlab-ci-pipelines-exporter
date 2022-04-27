@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var testCtx = context.Background()
+
 func TestNewLocalStore(t *testing.T) {
 	expectedValue := &Local{
 		projects:     make(schemas.Projects),
@@ -24,7 +26,6 @@ func TestNewRedisStore(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{})
 	expectedValue := &Redis{
 		Client: redisClient,
-		ctx:    context.TODO(),
 	}
 
 	assert.Equal(t, expectedValue, NewRedisStore(redisClient))
@@ -49,6 +50,6 @@ func TestNew(t *testing.T) {
 			Name: "bar",
 		},
 	})
-	count, _ := localStore.ProjectsCount()
+	count, _ := localStore.ProjectsCount(testCtx)
 	assert.Equal(t, int64(2), count)
 }

@@ -17,16 +17,17 @@ func TestNewRegistry(t *testing.T) {
 	assert.NotNil(t, r.Collectors)
 }
 
-// introduce a test to check the /metrics endpoint body
+// introduce a test to check the /metrics endpoint body.
 func TestMetricsHandler(t *testing.T) {
-	c, _, srv := newTestController(config.Config{})
+	_, c, _, srv := newTestController(config.Config{})
 	srv.Close()
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 	c.MetricsHandler(w, r)
-	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+
 	// TODO: Find a way to see if expected metrics are present
+	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
 }
 
 func TestRegistryGetCollector(t *testing.T) {

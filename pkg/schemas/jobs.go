@@ -29,17 +29,20 @@ type Jobs map[string]Job
 
 // NewJob ..
 func NewJob(gj goGitlab.Job) Job {
-	var artifactSize float64
+	var (
+		artifactSize float64
+		timestamp    float64
+		queued       time.Duration
+	)
+
 	for _, artifact := range gj.Artifacts {
 		artifactSize += float64(artifact.Size)
 	}
 
-	var timestamp float64
 	if gj.CreatedAt != nil {
 		timestamp = float64(gj.CreatedAt.Unix())
 	}
 
-	var queued time.Duration
 	if gj.StartedAt != nil && gj.CreatedAt != nil {
 		if gj.CreatedAt.Before(*gj.StartedAt) {
 			queued = gj.StartedAt.Sub(*gj.CreatedAt)

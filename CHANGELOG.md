@@ -7,9 +7,19 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+### Added
+
+- Now passing a `context.Context` to most functional calls
+- Aggregated already used linters and added new ones through the implementation of `golangci`
+- Release `.apk` packages for Alpine linux
+- Added man pages and autocompletion scripts (bash & zsh) to `.apk`, `.deb`, `.rpm` & `homebrew` packages
+- Release "fat" binaries (arm64 + amd64 combined) for MacOS under `_all` suffix
+
 ### Changed
 
 - Fixed a config issue preventing the arm deb/rpm packages to be released correctly
+- Upgraded golang to **v1.18**
+- Upgraded most dependencies to their lastest versions
 
 ## [v0.5.3] - 2022-02-11
 

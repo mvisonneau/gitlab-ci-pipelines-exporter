@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"reflect"
 	"regexp"
 
@@ -9,39 +10,39 @@ import (
 )
 
 // PullRefPipelineJobsMetrics ..
-func (c *Controller) PullRefPipelineJobsMetrics(ref schemas.Ref) error {
-	jobs, err := c.Gitlab.ListRefPipelineJobs(ref)
+func (c *Controller) PullRefPipelineJobsMetrics(ctx context.Context, ref schemas.Ref) error {
+	jobs, err := c.Gitlab.ListRefPipelineJobs(ctx, ref)
 	if err != nil {
 		return err
 	}
 
 	for _, job := range jobs {
-		c.ProcessJobMetrics(ref, job)
+		c.ProcessJobMetrics(ctx, ref, job)
 	}
 
 	return nil
 }
 
 // PullRefMostRecentJobsMetrics ..
-func (c *Controller) PullRefMostRecentJobsMetrics(ref schemas.Ref) error {
+func (c *Controller) PullRefMostRecentJobsMetrics(ctx context.Context, ref schemas.Ref) error {
 	if !ref.Project.Pull.Pipeline.Jobs.Enabled {
 		return nil
 	}
 
-	jobs, err := c.Gitlab.ListRefMostRecentJobs(ref)
+	jobs, err := c.Gitlab.ListRefMostRecentJobs(ctx, ref)
 	if err != nil {
 		return err
 	}
 
 	for _, job := range jobs {
-		c.ProcessJobMetrics(ref, job)
+		c.ProcessJobMetrics(ctx, ref, job)
 	}
 
 	return nil
 }
 
 // ProcessJobMetrics ..
-func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
+func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job schemas.Job) {
 	projectRefLogFields := log.Fields{
 		"project-name": ref.Project.Name,
 		"job-name":     job.Name,
@@ -69,8 +70,9 @@ func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 	}
 
 	// Refresh ref state from the store
-	if err := c.Store.GetRef(&ref); err != nil {
+	if err := c.Store.GetRef(ctx, &ref); err != nil {
 		log.WithFields(projectRefLogFields).WithField("error", err.Error()).Error("getting ref from the store")
+
 		return
 	}
 
@@ -85,35 +87,38 @@ func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 	if ref.LatestJobs == nil {
 		ref.LatestJobs = make(schemas.Jobs)
 	}
+
 	ref.LatestJobs[job.Name] = job
-	if err := c.Store.SetRef(ref); err != nil {
+
+	if err := c.Store.SetRef(ctx, ref); err != nil {
 		log.WithFields(
 			projectRefLogFields,
 		).WithField("error", err.Error()).Error("writing ref in the store")
+
 		return
 	}
 
 	log.WithFields(projectRefLogFields).Trace("processing job metrics")
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobID,
 		Labels: labels,
 		Value:  float64(job.ID),
 	})
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobTimestamp,
 		Labels: labels,
 		Value:  job.Timestamp,
 	})
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobDurationSeconds,
 		Labels: labels,
 		Value:  job.DurationSeconds,
 	})
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobQueuedDurationSeconds,
 		Labels: labels,
 		Value:  job.QueuedDurationSeconds,
@@ -127,11 +132,12 @@ func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 	// If the metric does not exist yet, start with 0 instead of 1
 	// this could cause some false positives in prometheus
 	// when restarting the exporter otherwise
-	jobRunCountExists, err := c.Store.MetricExists(jobRunCount.Key())
+	jobRunCountExists, err := c.Store.MetricExists(ctx, jobRunCount.Key())
 	if err != nil {
 		log.WithFields(
 			projectRefLogFields,
 		).WithField("error", err.Error()).Error("checking if metric exists in the store")
+
 		return
 	}
 
@@ -141,20 +147,22 @@ func (c *Controller) ProcessJobMetrics(ref schemas.Ref, job schemas.Job) {
 	jobTriggeredRegexp := regexp.MustCompile("^(skipped|manual|scheduled)$")
 	lastJobTriggered := !jobTriggeredRegexp.MatchString(lastJob.Status)
 	jobTriggered := !jobTriggeredRegexp.MatchString(job.Status)
+
 	if jobRunCountExists && ((lastJob.ID != job.ID && jobTriggered) || (lastJob.ID == job.ID && jobTriggered && !lastJobTriggered)) {
-		storeGetMetric(c.Store, &jobRunCount)
+		storeGetMetric(ctx, c.Store, &jobRunCount)
 		jobRunCount.Value++
 	}
 
-	storeSetMetric(c.Store, jobRunCount)
+	storeSetMetric(ctx, c.Store, jobRunCount)
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobArtifactSizeBytes,
 		Labels: labels,
 		Value:  job.ArtifactSize,
 	})
 
 	emitStatusMetric(
+		ctx,
 		c.Store,
 		schemas.MetricKindJobStatus,
 		labels,

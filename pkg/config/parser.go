@@ -8,19 +8,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Format represents the format of the config file
+// Format represents the format of the config file.
 type Format uint8
 
 const (
-	// FormatYAML represents a Config written in yaml format
+	// FormatYAML represents a Config written in yaml format.
 	FormatYAML Format = iota
 )
 
 // ParseFile reads the content of a file and attempt to unmarshal it
-// into a Config
+// into a Config.
 func ParseFile(filename string) (c Config, err error) {
-	var t Format
-	var fileBytes []byte
+	var (
+		t         Format
+		fileBytes []byte
+	)
 
 	// Figure out what type of config file we provided
 	t, err = GetTypeFromFileExtension(filename)
@@ -38,11 +40,8 @@ func ParseFile(filename string) (c Config, err error) {
 	return Parse(t, fileBytes)
 }
 
-// Parse unmarshal provided bytes with given ConfigType into a Config object
-func Parse(f Format, bytes []byte) (Config, error) {
-	cfg := Config{}
-	var err error
-
+// Parse unmarshal provided bytes with given ConfigType into a Config object.
+func Parse(f Format, bytes []byte) (cfg Config, err error) {
 	switch f {
 	case FormatYAML:
 		err = yaml.Unmarshal(bytes, &cfg)
@@ -56,18 +55,18 @@ func Parse(f Format, bytes []byte) (Config, error) {
 		cfg.Gitlab.HealthURL = fmt.Sprintf("%s/-/health", cfg.Gitlab.URL)
 	}
 
-	return cfg, err
+	return
 }
 
 // GetTypeFromFileExtension returns the ConfigType based upon the extension of
-// the file
+// the file.
 func GetTypeFromFileExtension(filename string) (f Format, err error) {
-	ext := filepath.Ext(filename)
-	switch ext {
+	switch ext := filepath.Ext(filename); ext {
 	case ".yml", ".yaml":
 		f = FormatYAML
 	default:
 		err = fmt.Errorf("unsupported config type '%s', expected .y(a)ml", ext)
 	}
+
 	return
 }

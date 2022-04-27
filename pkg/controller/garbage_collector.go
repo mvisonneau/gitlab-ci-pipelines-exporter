@@ -12,11 +12,11 @@ import (
 )
 
 // GarbageCollectProjects ..
-func (c *Controller) GarbageCollectProjects(_ context.Context) error {
+func (c *Controller) GarbageCollectProjects(ctx context.Context) error {
 	log.Info("starting 'projects' garbage collection")
 	defer log.Info("ending 'projects' garbage collection")
 
-	storedProjects, err := c.Store.Projects()
+	storedProjects, err := c.Store.Projects(ctx)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (c *Controller) GarbageCollectProjects(_ context.Context) error {
 
 	// Loop through what can be found from the wildcards
 	for _, w := range c.Config.Wildcards {
-		foundProjects, err := c.Gitlab.ListProjects(w)
+		foundProjects, err := c.Gitlab.ListProjects(ctx, w)
 		if err != nil {
 			return err
 		}
@@ -44,7 +44,7 @@ func (c *Controller) GarbageCollectProjects(_ context.Context) error {
 	}).Debug("found projects to garbage collect")
 
 	for k, p := range storedProjects {
-		if err = c.Store.DelProject(k); err != nil {
+		if err = c.Store.DelProject(ctx, k); err != nil {
 			return err
 		}
 
@@ -57,41 +57,44 @@ func (c *Controller) GarbageCollectProjects(_ context.Context) error {
 }
 
 // GarbageCollectEnvironments ..
-func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
+func (c *Controller) GarbageCollectEnvironments(ctx context.Context) error {
 	log.Info("starting 'environments' garbage collection")
 	defer log.Info("ending 'environments' garbage collection")
 
-	storedEnvironments, err := c.Store.Environments()
+	storedEnvironments, err := c.Store.Environments(ctx)
 	if err != nil {
 		return err
 	}
 
 	envProjects := make(map[schemas.Project]bool)
+
 	for _, env := range storedEnvironments {
 		p := schemas.NewProject(env.ProjectName)
 
-		projectExists, err := c.Store.ProjectExists(p.Key())
+		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 		if err != nil {
 			return err
 		}
 
 		// If the project does not exist anymore, delete the environment
 		if !projectExists {
-			if err = deleteEnv(c.Store, env, "non-existent-project"); err != nil {
+			if err = deleteEnv(ctx, c.Store, env, "non-existent-project"); err != nil {
 				return err
 			}
+
 			continue
 		}
 
-		if err = c.Store.GetProject(&p); err != nil {
+		if err = c.Store.GetProject(ctx, &p); err != nil {
 			return err
 		}
 
 		// If the environment is not configured to be pulled anymore, delete it
 		if !p.Pull.Environments.Enabled {
-			if err = deleteEnv(c.Store, env, "project-pull-environments-disabled"); err != nil {
+			if err = deleteEnv(ctx, c.Store, env, "project-pull-environments-disabled"); err != nil {
 				return err
 			}
+
 			continue
 		}
 
@@ -102,9 +105,10 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 		// If the environment is not configured to be pulled anymore, delete it
 		re := regexp.MustCompile(p.Pull.Environments.Regexp)
 		if !re.MatchString(env.Name) {
-			if err = deleteEnv(c.Store, env, "environment-not-in-regexp"); err != nil {
+			if err = deleteEnv(ctx, c.Store, env, "environment-not-in-regexp"); err != nil {
 				return err
 			}
+
 			continue
 		}
 
@@ -112,7 +116,7 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 		if env.OutputSparseStatusMetrics != p.OutputSparseStatusMetrics {
 			env.OutputSparseStatusMetrics = p.OutputSparseStatusMetrics
 
-			if err = c.Store.SetEnvironment(env); err != nil {
+			if err = c.Store.SetEnvironment(ctx, env); err != nil {
 				return err
 			}
 
@@ -125,8 +129,9 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 
 	// Refresh the environments from the API
 	existingEnvs := make(schemas.Environments)
+
 	for p := range envProjects {
-		projectEnvs, err := c.Gitlab.GetProjectEnvironments(p)
+		projectEnvs, err := c.Gitlab.GetProjectEnvironments(ctx, p)
 		if err != nil {
 			return err
 		}
@@ -136,14 +141,14 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 		}
 	}
 
-	storedEnvironments, err = c.Store.Environments()
+	storedEnvironments, err = c.Store.Environments(ctx)
 	if err != nil {
 		return err
 	}
 
 	for k, env := range storedEnvironments {
 		if _, exists := existingEnvs[k]; !exists {
-			if err = deleteEnv(c.Store, env, "non-existent-environment"); err != nil {
+			if err = deleteEnv(ctx, c.Store, env, "non-existent-environment"); err != nil {
 				return err
 			}
 		}
@@ -153,54 +158,59 @@ func (c *Controller) GarbageCollectEnvironments(_ context.Context) error {
 }
 
 // GarbageCollectRefs ..
-func (c *Controller) GarbageCollectRefs(_ context.Context) error {
+func (c *Controller) GarbageCollectRefs(ctx context.Context) error {
 	log.Info("starting 'refs' garbage collection")
 	defer log.Info("ending 'refs' garbage collection")
 
-	storedRefs, err := c.Store.Refs()
+	storedRefs, err := c.Store.Refs(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, ref := range storedRefs {
-		projectExists, err := c.Store.ProjectExists(ref.Project.Key())
+		projectExists, err := c.Store.ProjectExists(ctx, ref.Project.Key())
 		if err != nil {
 			return err
 		}
 
 		// If the project does not exist anymore, delete the ref
 		if !projectExists {
-			if err = deleteRef(c.Store, ref, "non-existent-project"); err != nil {
+			if err = deleteRef(ctx, c.Store, ref, "non-existent-project"); err != nil {
 				return err
 			}
+
 			continue
 		}
 
 		// If the ref is not configured to be pulled anymore, delete the ref
 		var re *regexp.Regexp
+
 		if re, err = schemas.GetRefRegexp(ref.Project.Pull.Refs, ref.Kind); err != nil {
-			if err = deleteRef(c.Store, ref, "invalid-ref-kind"); err != nil {
+			if err = deleteRef(ctx, c.Store, ref, "invalid-ref-kind"); err != nil {
 				return err
 			}
 		}
 
 		if !re.MatchString(ref.Name) {
-			if err = deleteRef(c.Store, ref, "ref-not-matching-regexp"); err != nil {
+			if err = deleteRef(ctx, c.Store, ref, "ref-not-matching-regexp"); err != nil {
 				return err
 			}
 		}
 
 		// Check if the latest configuration of the project in store matches the ref one
 		p := ref.Project
-		if err = c.Store.GetProject(&p); err != nil {
+
+		if err = c.Store.GetProject(ctx, &p); err != nil {
 			return err
 		}
 
 		if !reflect.DeepEqual(ref.Project, p) {
 			ref.Project = p
-			if err = c.Store.SetRef(ref); err != nil {
+
+			if err = c.Store.SetRef(ctx, ref); err != nil {
 				return err
 			}
+
 			log.WithFields(log.Fields{
 				"project-name": ref.Project.Name,
 				"ref":          ref.Name,
@@ -209,14 +219,15 @@ func (c *Controller) GarbageCollectRefs(_ context.Context) error {
 	}
 
 	// Refresh the refs from the API
-	projects, err := c.Store.Projects()
+	projects, err := c.Store.Projects(ctx)
 	if err != nil {
 		return err
 	}
 
 	expectedRefs := make(map[schemas.RefKey]bool)
+
 	for _, p := range projects {
-		refs, err := c.GetRefs(p)
+		refs, err := c.GetRefs(ctx, p)
 		if err != nil {
 			return err
 		}
@@ -227,14 +238,14 @@ func (c *Controller) GarbageCollectRefs(_ context.Context) error {
 	}
 
 	// Refresh the stored refs as we may have already removed some
-	storedRefs, err = c.Store.Refs()
+	storedRefs, err = c.Store.Refs(ctx)
 	if err != nil {
 		return err
 	}
 
 	for k, ref := range storedRefs {
 		if _, expected := expectedRefs[k]; !expected {
-			if err = deleteRef(c.Store, ref, "not-expected"); err != nil {
+			if err = deleteRef(ctx, c.Store, ref, "not-expected"); err != nil {
 				return err
 			}
 		}
@@ -244,21 +255,21 @@ func (c *Controller) GarbageCollectRefs(_ context.Context) error {
 }
 
 // GarbageCollectMetrics ..
-func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
+func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 	log.Info("starting 'metrics' garbage collection")
 	defer log.Info("ending 'metrics' garbage collection")
 
-	storedEnvironments, err := c.Store.Environments()
+	storedEnvironments, err := c.Store.Environments(ctx)
 	if err != nil {
 		return err
 	}
 
-	storedRefs, err := c.Store.Refs()
+	storedRefs, err := c.Store.Refs(ctx)
 	if err != nil {
 		return err
 	}
 
-	storedMetrics, err := c.Store.Metrics()
+	storedMetrics, err := c.Store.Metrics(ctx)
 	if err != nil {
 		return err
 	}
@@ -271,7 +282,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 		metricLabelEnvironment, metricLabelEnvironmentExists := m.Labels["environment"]
 
 		if !metricLabelProjectExists || (!metricLabelRefExists && !metricLabelEnvironmentExists) {
-			if err = c.Store.DelMetric(k); err != nil {
+			if err = c.Store.DelMetric(ctx, k); err != nil {
 				return err
 			}
 
@@ -293,7 +304,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 
 			// If the ref does not exist anymore, delete the metric
 			if !refExists {
-				if err = c.Store.DelMetric(k); err != nil {
+				if err = c.Store.DelMetric(ctx, k); err != nil {
 					return err
 				}
 
@@ -302,6 +313,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 					"metric-labels": m.Labels,
 					"reason":        "non-existent-ref",
 				}).Info("deleted metric from the store")
+
 				continue
 			}
 
@@ -313,9 +325,8 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 				schemas.MetricKindJobRunCount,
 				schemas.MetricKindJobStatus,
 				schemas.MetricKindJobTimestamp:
-
 				if !ref.Project.Pull.Pipeline.Jobs.Enabled {
-					if err = c.Store.DelMetric(k); err != nil {
+					if err = c.Store.DelMetric(ctx, k); err != nil {
 						return err
 					}
 
@@ -324,6 +335,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 						"metric-labels": m.Labels,
 						"reason":        "jobs-metrics-disabled-on-ref",
 					}).Info("deleted metric from the store")
+
 					continue
 				}
 
@@ -334,9 +346,8 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 			switch m.Kind {
 			case schemas.MetricKindJobStatus,
 				schemas.MetricKindStatus:
-
 				if ref.Project.OutputSparseStatusMetrics && m.Value != 1 {
-					if err = c.Store.DelMetric(k); err != nil {
+					if err = c.Store.DelMetric(ctx, k); err != nil {
 						return err
 					}
 
@@ -345,9 +356,9 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 						"metric-labels": m.Labels,
 						"reason":        "output-sparse-metrics-enabled-on-ref",
 					}).Info("deleted metric from the store")
+
 					continue
 				}
-
 			default:
 			}
 		}
@@ -362,7 +373,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 
 			// If the ref does not exist anymore, delete the metric
 			if !envExists {
-				if err = c.Store.DelMetric(k); err != nil {
+				if err = c.Store.DelMetric(ctx, k); err != nil {
 					return err
 				}
 
@@ -371,6 +382,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 					"metric-labels": m.Labels,
 					"reason":        "non-existent-environment",
 				}).Info("deleted metric from the store")
+
 				continue
 			}
 
@@ -378,7 +390,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 			switch m.Kind {
 			case schemas.MetricKindEnvironmentDeploymentStatus:
 				if env.OutputSparseStatusMetrics && m.Value != 1 {
-					if err = c.Store.DelMetric(k); err != nil {
+					if err = c.Store.DelMetric(ctx, k); err != nil {
 						return err
 					}
 
@@ -387,6 +399,7 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 						"metric-labels": m.Labels,
 						"reason":        "output-sparse-metrics-enabled-on-environment",
 					}).Info("deleted metric from the store")
+
 					continue
 				}
 			}
@@ -396,8 +409,8 @@ func (c *Controller) GarbageCollectMetrics(_ context.Context) error {
 	return nil
 }
 
-func deleteEnv(s store.Store, env schemas.Environment, reason string) (err error) {
-	if err = s.DelEnvironment(env.Key()); err != nil {
+func deleteEnv(ctx context.Context, s store.Store, env schemas.Environment, reason string) (err error) {
+	if err = s.DelEnvironment(ctx, env.Key()); err != nil {
 		return
 	}
 
@@ -410,8 +423,8 @@ func deleteEnv(s store.Store, env schemas.Environment, reason string) (err error
 	return
 }
 
-func deleteRef(s store.Store, ref schemas.Ref, reason string) (err error) {
-	if err = s.DelRef(ref.Key()); err != nil {
+func deleteRef(ctx context.Context, s store.Store, ref schemas.Ref, reason string) (err error) {
+	if err = s.DelRef(ctx, ref.Key()); err != nil {
 		return
 	}
 

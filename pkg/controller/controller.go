@@ -15,7 +15,7 @@ import (
 	"github.com/vmihailenco/taskq/v3"
 )
 
-// Controller holds the necessary clients to run the app and handle requests
+// Controller holds the necessary clients to run the app and handle requests.
 type Controller struct {
 	Config         config.Config
 	Redis          *redis.Client
@@ -28,7 +28,7 @@ type Controller struct {
 	UUID uuid.UUID
 }
 
-// New creates a new controller
+// New creates a new controller.
 func New(ctx context.Context, cfg config.Config, version string) (c Controller, err error) {
 	c.Config = cfg
 	c.UUID = uuid.New()
@@ -76,8 +76,8 @@ func (c *Controller) registerTasks() {
 	}
 }
 
-func (c *Controller) unqueueTask(tt schemas.TaskType, uniqueID string) {
-	if err := c.Store.UnqueueTask(tt, uniqueID); err != nil {
+func (c *Controller) unqueueTask(ctx context.Context, tt schemas.TaskType, uniqueID string) {
+	if err := c.Store.UnqueueTask(ctx, tt, uniqueID); err != nil {
 		log.WithFields(log.Fields{
 			"task_type":      tt,
 			"task_unique_id": uniqueID,
@@ -89,7 +89,7 @@ func (c *Controller) configureGitlab(cfg config.Gitlab, version string) (err err
 	var rl ratelimit.Limiter
 
 	if c.Redis != nil {
-		rl = ratelimit.NewRedisLimiter(context.Background(), c.Redis, cfg.MaximumRequestsPerSecond)
+		rl = ratelimit.NewRedisLimiter(c.Redis, cfg.MaximumRequestsPerSecond)
 	} else {
 		rl = ratelimit.NewLocalLimiter(cfg.MaximumRequestsPerSecond)
 	}
@@ -102,18 +102,21 @@ func (c *Controller) configureGitlab(cfg config.Gitlab, version string) (err err
 		RateLimiter:      rl,
 		ReadinessURL:     cfg.HealthURL,
 	})
+
 	return
 }
 
 func (c *Controller) configureRedis(url string) (err error) {
 	if len(url) <= 0 {
 		log.Debug("redis url is not configured, skipping configuration & using local driver")
+
 		return
 	}
 
 	log.Info("redis url configured, initializing connection..")
 
 	var opt *redis.Options
+
 	if opt, err = redis.ParseURL(url); err != nil {
 		return
 	}

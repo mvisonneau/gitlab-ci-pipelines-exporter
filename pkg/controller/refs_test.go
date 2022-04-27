@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -12,7 +11,7 @@ import (
 )
 
 func TestGetRefs(t *testing.T) {
-	c, mux, srv := newTestController(config.Config{})
+	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/repository/branches",
@@ -35,7 +34,7 @@ func TestGetRefs(t *testing.T) {
 	p.Pull.Refs.Tags.Regexp = `^v`
 	p.Pull.Refs.MergeRequests.Enabled = true
 
-	foundRefs, err := c.GetRefs(p)
+	foundRefs, err := c.GetRefs(ctx, p)
 	assert.NoError(t, err)
 
 	ref1 := schemas.NewRef(p, schemas.RefKindBranch, "main")
@@ -50,7 +49,7 @@ func TestGetRefs(t *testing.T) {
 }
 
 func TestPullRefsFromProject(t *testing.T) {
-	c, mux, srv := newTestController(config.Config{})
+	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo",
@@ -69,13 +68,13 @@ func TestPullRefsFromProject(t *testing.T) {
 		})
 
 	p1 := schemas.NewProject("foo")
-	assert.NoError(t, c.PullRefsFromProject(context.Background(), p1))
+	assert.NoError(t, c.PullRefsFromProject(ctx, p1))
 
 	ref1 := schemas.NewRef(p1, schemas.RefKindBranch, "main")
 	expectedRefs := schemas.Refs{
 		ref1.Key(): ref1,
 	}
 
-	projectsRefs, _ := c.Store.Refs()
+	projectsRefs, _ := c.Store.Refs(ctx)
 	assert.Equal(t, expectedRefs, projectsRefs)
 }

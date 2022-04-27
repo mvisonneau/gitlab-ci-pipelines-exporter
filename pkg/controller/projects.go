@@ -10,13 +10,13 @@ import (
 
 // PullProjectsFromWildcard ..
 func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wildcard) error {
-	foundProjects, err := c.Gitlab.ListProjects(w)
+	foundProjects, err := c.Gitlab.ListProjects(ctx, w)
 	if err != nil {
 		return err
 	}
 
 	for _, p := range foundProjects {
-		projectExists, err := c.Store.ProjectExists(p.Key())
+		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 		if err != nil {
 			return err
 		}
@@ -31,7 +31,7 @@ func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wild
 				"project-name":                     p.Name,
 			}).Info("discovered new project")
 
-			if err := c.Store.SetProject(p); err != nil {
+			if err := c.Store.SetProject(ctx, p); err != nil {
 				log.Errorf(err.Error())
 			}
 

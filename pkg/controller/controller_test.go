@@ -13,10 +13,12 @@ import (
 func newMockedGitlabAPIServer() (mux *http.ServeMux, srv *httptest.Server) {
 	mux = http.NewServeMux()
 	srv = httptest.NewServer(mux)
+
 	return
 }
 
-func newTestController(cfg config.Config) (c Controller, mux *http.ServeMux, srv *httptest.Server) {
+func newTestController(cfg config.Config) (ctx context.Context, c Controller, mux *http.ServeMux, srv *httptest.Server) {
+	ctx = context.Background()
 	mux, srv = newMockedGitlabAPIServer()
 
 	cfg.Gitlab.URL = srv.URL
@@ -25,6 +27,7 @@ func newTestController(cfg config.Config) (c Controller, mux *http.ServeMux, srv
 	}
 
 	c, _ = New(context.Background(), cfg, "0.0.0-ci")
+
 	return
 }
 

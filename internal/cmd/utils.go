@@ -9,10 +9,9 @@ import (
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/go-helpers/logger"
-	"github.com/vmihailenco/taskq/v3"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
+	"github.com/vmihailenco/taskq/v3"
 )
 
 var start time.Time
@@ -71,6 +70,7 @@ func configure(ctx *cli.Context) (cfg config.Config, err error) {
 
 func parseGlobalFlags(ctx *cli.Context) (cfg config.Global, err error) {
 	cfg.InternalMonitoringListenerAddress, err = url.Parse(ctx.String("internal-monitoring-listener-address"))
+
 	return
 }
 
@@ -88,7 +88,7 @@ func exit(exitCode int, err error) cli.ExitCoder {
 	return cli.NewExitError("", exitCode)
 }
 
-// ExecWrapper gracefully logs and exits our `run` functions
+// ExecWrapper gracefully logs and exits our `run` functions.
 func ExecWrapper(f func(ctx *cli.Context) (int, error)) cli.ActionFunc {
 	return func(ctx *cli.Context) error {
 		return exit(f(ctx))
@@ -114,6 +114,7 @@ func configCliOverrides(ctx *cli.Context, cfg *config.Config) {
 func assertStringVariableDefined(ctx *cli.Context, k string) {
 	if len(ctx.String(k)) == 0 {
 		_ = cli.ShowAppHelp(ctx)
+
 		log.Errorf("'--%s' must be set!", k)
 		os.Exit(2)
 	}

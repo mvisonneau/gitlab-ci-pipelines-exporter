@@ -10,21 +10,23 @@ import (
 // PullEnvironmentsFromProject ..
 func (c *Controller) PullEnvironmentsFromProject(ctx context.Context, p schemas.Project) (err error) {
 	var envs schemas.Environments
-	envs, err = c.Gitlab.GetProjectEnvironments(p)
+
+	envs, err = c.Gitlab.GetProjectEnvironments(ctx, p)
 	if err != nil {
 		return
 	}
 
 	for k := range envs {
 		var exists bool
-		exists, err = c.Store.EnvironmentExists(k)
+
+		exists, err = c.Store.EnvironmentExists(ctx, k)
 		if err != nil {
 			return
 		}
 
 		if !exists {
 			env := envs[k]
-			if err = c.UpdateEnvironment(&env); err != nil {
+			if err = c.UpdateEnvironment(ctx, &env); err != nil {
 				return
 			}
 
@@ -37,12 +39,13 @@ func (c *Controller) PullEnvironmentsFromProject(ctx context.Context, p schemas.
 			c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentMetrics, string(env.Key()), env)
 		}
 	}
+
 	return
 }
 
 // UpdateEnvironment ..
-func (c *Controller) UpdateEnvironment(env *schemas.Environment) error {
-	pulledEnv, err := c.Gitlab.GetEnvironment(env.ProjectName, env.ID)
+func (c *Controller) UpdateEnvironment(ctx context.Context, env *schemas.Environment) error {
+	pulledEnv, err := c.Gitlab.GetEnvironment(ctx, env.ProjectName, env.ID)
 	if err != nil {
 		return err
 	}
@@ -51,31 +54,35 @@ func (c *Controller) UpdateEnvironment(env *schemas.Environment) error {
 	env.ExternalURL = pulledEnv.ExternalURL
 	env.LatestDeployment = pulledEnv.LatestDeployment
 
-	return c.Store.SetEnvironment(*env)
+	return c.Store.SetEnvironment(ctx, *env)
 }
 
 // PullEnvironmentMetrics ..
-func (c *Controller) PullEnvironmentMetrics(env schemas.Environment) (err error) {
+func (c *Controller) PullEnvironmentMetrics(ctx context.Context, env schemas.Environment) (err error) {
 	// At scale, the scheduled environment may be behind the actual state being stored
 	// to avoid issues, we refresh it from the store before manipulating it
-	if err := c.Store.GetEnvironment(&env); err != nil {
+	if err := c.Store.GetEnvironment(ctx, &env); err != nil {
 		return err
 	}
 
 	// Save the existing deployment ID before we updated environment from the API
 	deploymentJobID := env.LatestDeployment.JobID
-	if err = c.UpdateEnvironment(&env); err != nil {
+
+	if err = c.UpdateEnvironment(ctx, &env); err != nil {
 		return
 	}
 
-	infoLabels := env.InformationLabelsValues()
-	var commitDate float64
+	var (
+		infoLabels = env.InformationLabelsValues()
+		commitDate float64
+	)
+
 	switch env.LatestDeployment.RefKind {
 	case schemas.RefKindBranch:
-		infoLabels["latest_commit_short_id"], commitDate, err = c.Gitlab.GetBranchLatestCommit(env.ProjectName, env.LatestDeployment.RefName)
+		infoLabels["latest_commit_short_id"], commitDate, err = c.Gitlab.GetBranchLatestCommit(ctx, env.ProjectName, env.LatestDeployment.RefName)
 	case schemas.RefKindTag:
 		// TODO: Review how to manage this in a nicier fashion
-		infoLabels["latest_commit_short_id"], commitDate, err = c.Gitlab.GetProjectMostRecentTagCommit(env.ProjectName, ".*")
+		infoLabels["latest_commit_short_id"], commitDate, err = c.Gitlab.GetProjectMostRecentTagCommit(ctx, env.ProjectName, ".*")
 	default:
 		infoLabels["latest_commit_short_id"] = env.LatestDeployment.CommitShortID
 		commitDate = env.LatestDeployment.Timestamp
@@ -104,27 +111,29 @@ func (c *Controller) PullEnvironmentMetrics(env schemas.Environment) (err error)
 		}
 
 		var commitCount int
-		if err = c.Store.GetMetric(&infoMetric); err != nil {
+
+		if err = c.Store.GetMetric(ctx, &infoMetric); err != nil {
 			return err
 		}
 
 		if infoMetric.Labels["latest_commit_short_id"] != infoLabels["latest_commit_short_id"] ||
 			infoMetric.Labels["current_commit_short_id"] != infoLabels["current_commit_short_id"] {
-			commitCount, err = c.Gitlab.GetCommitCountBetweenRefs(env.ProjectName, infoLabels["current_commit_short_id"], infoLabels["latest_commit_short_id"])
+			commitCount, err = c.Gitlab.GetCommitCountBetweenRefs(ctx, env.ProjectName, infoLabels["current_commit_short_id"], infoLabels["latest_commit_short_id"])
 			if err != nil {
 				return err
 			}
+
 			envBehindCommitCount = float64(commitCount)
 		} else {
 			// TODO: Find a more efficient way
-			if err = c.Store.GetMetric(&behindCommitsCountMetric); err != nil {
+			if err = c.Store.GetMetric(ctx, &behindCommitsCountMetric); err != nil {
 				return err
 			}
 			envBehindCommitCount = behindCommitsCountMetric.Value
 		}
 	}
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentBehindCommitsCount,
 		Labels: env.DefaultLabelsValues(),
 		Value:  envBehindCommitCount,
@@ -139,31 +148,34 @@ func (c *Controller) PullEnvironmentMetrics(env schemas.Environment) (err error)
 		Labels: env.DefaultLabelsValues(),
 	}
 
-	storeGetMetric(c.Store, &envDeploymentCount)
+	storeGetMetric(ctx, c.Store, &envDeploymentCount)
+
 	if env.LatestDeployment.JobID > deploymentJobID {
 		envDeploymentCount.Value++
 	}
-	storeSetMetric(c.Store, envDeploymentCount)
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, envDeploymentCount)
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentBehindDurationSeconds,
 		Labels: env.DefaultLabelsValues(),
 		Value:  envBehindDurationSeconds,
 	})
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentDeploymentDurationSeconds,
 		Labels: env.DefaultLabelsValues(),
 		Value:  env.LatestDeployment.DurationSeconds,
 	})
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentDeploymentJobID,
 		Labels: env.DefaultLabelsValues(),
 		Value:  float64(env.LatestDeployment.JobID),
 	})
 
 	emitStatusMetric(
+		ctx,
 		c.Store,
 		schemas.MetricKindEnvironmentDeploymentStatus,
 		env.DefaultLabelsValues(),
@@ -172,13 +184,13 @@ func (c *Controller) PullEnvironmentMetrics(env schemas.Environment) (err error)
 		env.OutputSparseStatusMetrics,
 	)
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentDeploymentTimestamp,
 		Labels: env.DefaultLabelsValues(),
 		Value:  env.LatestDeployment.Timestamp,
 	})
 
-	storeSetMetric(c.Store, schemas.Metric{
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindEnvironmentInformation,
 		Labels: infoLabels,
 		Value:  1,

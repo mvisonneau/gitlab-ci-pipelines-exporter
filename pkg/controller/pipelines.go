@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 
@@ -10,10 +11,10 @@ import (
 )
 
 // PullRefMetrics ..
-func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
+func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error {
 	// At scale, the scheduled ref may be behind the actual state being stored
 	// to avoid issues, we refresh it from the store before manipulating it
-	if err := c.Store.GetRef(&ref); err != nil {
+	if err := c.Store.GetRef(ctx, &ref); err != nil {
 		return err
 	}
 
@@ -31,7 +32,7 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 		refName = ref.Name
 	}
 
-	pipelines, _, err := c.Gitlab.GetProjectPipelines(ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
+	pipelines, _, err := c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
 		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
 			PerPage: 1,
@@ -45,10 +46,11 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 
 	if len(pipelines) == 0 {
 		log.WithFields(logFields).Debug("could not find any pipeline for the ref")
+
 		return nil
 	}
 
-	pipeline, err := c.Gitlab.GetRefPipeline(ref, pipelines[0].ID)
+	pipeline, err := c.Gitlab.GetRefPipeline(ctx, ref, pipelines[0].ID)
 	if err != nil {
 		return err
 	}
@@ -59,14 +61,14 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 
 		// fetch pipeline variables
 		if ref.Project.Pull.Pipeline.Variables.Enabled {
-			ref.LatestPipeline.Variables, err = c.Gitlab.GetRefPipelineVariablesAsConcatenatedString(ref)
+			ref.LatestPipeline.Variables, err = c.Gitlab.GetRefPipelineVariablesAsConcatenatedString(ctx, ref)
 			if err != nil {
 				return err
 			}
 		}
 
 		// Update the ref in the store
-		if err = c.Store.SetRef(ref); err != nil {
+		if err = c.Store.SetRef(ctx, ref); err != nil {
 			return err
 		}
 
@@ -77,25 +79,29 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 			Kind:   schemas.MetricKindRunCount,
 			Labels: ref.DefaultLabelsValues(),
 		}
-		storeGetMetric(c.Store, &runCount)
+
+		storeGetMetric(ctx, c.Store, &runCount)
+
 		if formerPipeline.ID != 0 && formerPipeline.ID != ref.LatestPipeline.ID {
 			runCount.Value++
 		}
-		storeSetMetric(c.Store, runCount)
 
-		storeSetMetric(c.Store, schemas.Metric{
+		storeSetMetric(ctx, c.Store, runCount)
+
+		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindCoverage,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  pipeline.Coverage,
 		})
 
-		storeSetMetric(c.Store, schemas.Metric{
+		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindID,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  float64(pipeline.ID),
 		})
 
 		emitStatusMetric(
+			ctx,
 			c.Store,
 			schemas.MetricKindStatus,
 			ref.DefaultLabelsValues(),
@@ -104,34 +110,35 @@ func (c *Controller) PullRefMetrics(ref schemas.Ref) error {
 			ref.Project.OutputSparseStatusMetrics,
 		)
 
-		storeSetMetric(c.Store, schemas.Metric{
+		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindDurationSeconds,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  pipeline.DurationSeconds,
 		})
 
-		storeSetMetric(c.Store, schemas.Metric{
+		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindQueuedDurationSeconds,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  pipeline.QueuedDurationSeconds,
 		})
 
-		storeSetMetric(c.Store, schemas.Metric{
+		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindTimestamp,
 			Labels: ref.DefaultLabelsValues(),
 			Value:  pipeline.Timestamp,
 		})
 
 		if ref.Project.Pull.Pipeline.Jobs.Enabled {
-			if err := c.PullRefPipelineJobsMetrics(ref); err != nil {
+			if err := c.PullRefPipelineJobsMetrics(ctx, ref); err != nil {
 				return err
 			}
 		}
+
 		return nil
 	}
 
 	if ref.Project.Pull.Pipeline.Jobs.Enabled {
-		if err := c.PullRefMostRecentJobsMetrics(ref); err != nil {
+		if err := c.PullRefMostRecentJobsMetrics(ctx, ref); err != nil {
 			return err
 		}
 	}

@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -12,19 +13,29 @@ import (
 )
 
 // GetRefPipeline ..
-func (c *Client) GetRefPipeline(ref schemas.Ref, pipelineID int) (p schemas.Pipeline, err error) {
-	c.rateLimit()
-	gp, resp, err := c.Pipelines.GetPipeline(ref.Project.Name, pipelineID)
+func (c *Client) GetRefPipeline(ctx context.Context, ref schemas.Ref, pipelineID int) (p schemas.Pipeline, err error) {
+	c.rateLimit(ctx)
+
+	gp, resp, err := c.Pipelines.GetPipeline(ref.Project.Name, pipelineID, goGitlab.WithContext(ctx))
 	if err != nil || gp == nil {
 		return schemas.Pipeline{}, fmt.Errorf("could not read content of pipeline %s - %s | %s", ref.Project.Name, ref.Name, err.Error())
 	}
+
 	c.requestsRemaining(resp)
 
 	return schemas.NewPipeline(*gp), nil
 }
 
 // GetProjectPipelines ..
-func (c *Client) GetProjectPipelines(projectName string, options *goGitlab.ListProjectPipelinesOptions) ([]*goGitlab.PipelineInfo, *goGitlab.Response, error) {
+func (c *Client) GetProjectPipelines(
+	ctx context.Context,
+	projectName string,
+	options *goGitlab.ListProjectPipelinesOptions,
+) (
+	[]*goGitlab.PipelineInfo,
+	*goGitlab.Response,
+	error,
+) {
 	fields := log.Fields{
 		"project-name": projectName,
 	}
@@ -48,18 +59,20 @@ func (c *Client) GetProjectPipelines(projectName string, options *goGitlab.ListP
 	fields["page"] = options.Page
 	log.WithFields(fields).Trace("listing project pipelines")
 
-	c.rateLimit()
-	pipelines, resp, err := c.Pipelines.ListProjectPipelines(projectName, options)
+	c.rateLimit(ctx)
+
+	pipelines, resp, err := c.Pipelines.ListProjectPipelines(projectName, options, goGitlab.WithContext(ctx))
 	if err != nil {
 		return nil, resp, fmt.Errorf("error listing project pipelines for project %s: %s", projectName, err.Error())
 	}
+
 	c.requestsRemaining(resp)
 
 	return pipelines, resp, nil
 }
 
 // GetRefPipelineVariablesAsConcatenatedString ..
-func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (string, error) {
+func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context, ref schemas.Ref) (string, error) {
 	if ref.LatestPipeline == (schemas.Pipeline{}) {
 		log.WithFields(
 			log.Fields{
@@ -67,6 +80,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (s
 				"ref":          ref.Name,
 			},
 		).Debug("most recent pipeline not defined, exiting..")
+
 		return "", nil
 	}
 
@@ -80,17 +94,24 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (s
 
 	variablesFilter, err := regexp.Compile(ref.Project.Pull.Pipeline.Variables.Regexp)
 	if err != nil {
-		return "", fmt.Errorf("the provided filter regex for pipeline variables is invalid '(%s)': %v", ref.Project.Pull.Pipeline.Variables.Regexp, err)
+		return "", fmt.Errorf(
+			"the provided filter regex for pipeline variables is invalid '(%s)': %v",
+			ref.Project.Pull.Pipeline.Variables.Regexp,
+			err,
+		)
 	}
 
-	c.rateLimit()
-	variables, resp, err := c.Pipelines.GetPipelineVariables(ref.Project.Name, ref.LatestPipeline.ID)
+	c.rateLimit(ctx)
+
+	variables, resp, err := c.Pipelines.GetPipelineVariables(ref.Project.Name, ref.LatestPipeline.ID, goGitlab.WithContext(ctx))
 	if err != nil {
 		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", ref.LatestPipeline.ID, err.Error())
 	}
+
 	c.requestsRemaining(resp)
 
 	var keptVariables []string
+
 	if len(variables) > 0 {
 		for _, v := range variables {
 			if variablesFilter.MatchString(v.Key) {
@@ -103,7 +124,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ref schemas.Ref) (s
 }
 
 // GetRefsFromPipelines ..
-func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind) (refs schemas.Refs, err error) {
+func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, refKind schemas.RefKind) (refs schemas.Refs, err error) {
 	refs = make(schemas.Refs)
 
 	options := &goGitlab.ListProjectPipelinesOptions{
@@ -115,13 +136,17 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 	}
 
 	var re *regexp.Regexp
+
 	if re, err = schemas.GetRefRegexp(p.Pull.Refs, refKind); err != nil {
 		return
 	}
 
-	var mostRecent, maxAgeSeconds uint
-	var limitToMostRecent, excludeDeleted bool
-	var existingRefs schemas.Refs
+	var (
+		mostRecent, maxAgeSeconds         uint
+		limitToMostRecent, excludeDeleted bool
+		existingRefs                      schemas.Refs
+	)
+
 	switch refKind {
 	case schemas.RefKindMergeRequest:
 		maxAgeSeconds = p.Pull.Refs.MergeRequests.MaxAgeSeconds
@@ -130,9 +155,11 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 		options.Scope = goGitlab.String("branches")
 		maxAgeSeconds = p.Pull.Refs.Branches.MaxAgeSeconds
 		mostRecent = p.Pull.Refs.Branches.MostRecent
+
 		if p.Pull.Refs.Branches.ExcludeDeleted {
 			excludeDeleted = true
-			if existingRefs, err = c.GetProjectBranches(p); err != nil {
+
+			if existingRefs, err = c.GetProjectBranches(ctx, p); err != nil {
 				return
 			}
 		}
@@ -140,9 +167,11 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 		options.Scope = goGitlab.String("tags")
 		maxAgeSeconds = p.Pull.Refs.Tags.MaxAgeSeconds
 		mostRecent = p.Pull.Refs.Tags.MostRecent
+
 		if p.Pull.Refs.Tags.ExcludeDeleted {
 			excludeDeleted = true
-			if existingRefs, err = c.GetProjectTags(p); err != nil {
+
+			if existingRefs, err = c.GetProjectTags(ctx, p); err != nil {
 				return
 			}
 		}
@@ -160,28 +189,33 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 	}
 
 	for {
-		var pipelines []*goGitlab.PipelineInfo
-		var resp *goGitlab.Response
-		pipelines, resp, err = c.GetProjectPipelines(p.Name, options)
+		var (
+			pipelines []*goGitlab.PipelineInfo
+			resp      *goGitlab.Response
+		)
+
+		pipelines, resp, err = c.GetProjectPipelines(ctx, p.Name, options)
 		if err != nil {
 			return
 		}
 
 		for _, pipeline := range pipelines {
 			refName := pipeline.Ref
-			if re.MatchString(refName) {
-				if refKind == schemas.RefKindMergeRequest {
-					if refName, err = schemas.GetMergeRequestIIDFromRefName(refName); err != nil {
-						log.WithField("ref", refName).WithError(err).Warn()
-						continue
-					}
-				}
-			} else {
+			if !re.MatchString(refName) {
 				// It is quite verbose otherwise..
 				if refKind != schemas.RefKindMergeRequest {
 					log.WithField("ref", refName).Debug("discovered pipeline ref not matching regexp")
 				}
+
 				continue
+			}
+
+			if refKind == schemas.RefKindMergeRequest {
+				if refName, err = schemas.GetMergeRequestIIDFromRefName(refName); err != nil {
+					log.WithField("ref", refName).WithError(err).Warn()
+
+					continue
+				}
 			}
 
 			ref := schemas.NewRef(
@@ -197,6 +231,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 						"ref":          ref.Name,
 						"ref-kind":     ref.Kind,
 					}).Debug("found deleted ref, ignoring..")
+
 					continue
 				}
 			}
@@ -207,6 +242,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 					"ref":          ref.Name,
 					"ref-kind":     ref.Kind,
 				}).Trace("found ref")
+
 				refs[ref.Key()] = ref
 
 				if limitToMostRecent {
@@ -221,6 +257,7 @@ func (c *Client) GetRefsFromPipelines(p schemas.Project, refKind schemas.RefKind
 		if resp.CurrentPage >= resp.NextPage {
 			break
 		}
+
 		options.Page = resp.NextPage
 	}
 

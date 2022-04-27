@@ -28,10 +28,14 @@ func NewTestContext() (ctx *cli.Context, flags *flag.FlagSet) {
 }
 
 func TestConfigure(t *testing.T) {
-	var cfg config.Config
-	var err error
+	var (
+		cfg config.Config
+		err error
+	)
+
 	f, err := ioutil.TempFile(".", "test-*.yml")
 	assert.NoError(t, err)
+
 	defer os.Remove(f.Name())
 
 	// Webhook endpoint enabled
@@ -44,17 +48,20 @@ func TestConfigure(t *testing.T) {
 
 	// Undefined gitlab-token
 	flags.String("gitlab-token", "", "")
+
 	_, err = configure(ctx)
 	assert.Error(t, err)
 
 	// Valid configuration
 	flags.Set("gitlab-token", "secret")
+
 	cfg, err = configure(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, "secret", cfg.Gitlab.Token)
 
 	// Invalid config file syntax
 	ioutil.WriteFile(f.Name(), []byte("["), 0o644)
+
 	cfg, err = configure(ctx)
 	assert.Error(t, err)
 
@@ -72,6 +79,7 @@ server:
 
 	// Defining the webhook secret token
 	flags.String("webhook-secret-token", "secret", "")
+
 	cfg, err = configure(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, "secret", cfg.Server.Webhook.SecretToken)

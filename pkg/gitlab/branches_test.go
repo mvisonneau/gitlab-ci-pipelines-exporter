@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetProjectBranches(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/branches"),
@@ -30,6 +30,7 @@ func TestGetProjectBranches(t *testing.T) {
 
 			if currentPage == 1 {
 				fmt.Fprint(w, `[{"name":"main"},{"name":"dev"}]`)
+
 				return
 			}
 
@@ -43,7 +44,7 @@ func TestGetProjectBranches(t *testing.T) {
 
 	p := schemas.NewProject("foo")
 	expectedRef := schemas.NewRef(p, schemas.RefKindBranch, "main")
-	refs, err := c.GetProjectBranches(p)
+	refs, err := c.GetProjectBranches(ctx, p)
 	assert.NoError(t, err)
 	assert.Len(t, refs, 1)
 	assert.Equal(t, schemas.Refs{
@@ -52,18 +53,18 @@ func TestGetProjectBranches(t *testing.T) {
 
 	// Test invalid project name
 	p.Name = "invalid"
-	_, err = c.GetProjectBranches(p)
+	_, err = c.GetProjectBranches(ctx, p)
 	assert.Error(t, err)
 
 	// Test invalid regexp
 	p.Name = "foo"
 	p.Pull.Refs.Branches.Regexp = `[`
-	_, err = c.GetProjectBranches(p)
+	_, err = c.GetProjectBranches(ctx, p)
 	assert.Error(t, err)
 }
 
 func TestGetBranchLatestCommit(t *testing.T) {
-	mux, server, c := getMockedClient()
+	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
 	mux.HandleFunc("/api/v4/projects/1/repository/branches/main",
@@ -78,7 +79,7 @@ func TestGetBranchLatestCommit(t *testing.T) {
 }`)
 		})
 
-	commitShortID, commitCreatedAt, err := c.GetBranchLatestCommit("1", "main")
+	commitShortID, commitCreatedAt, err := c.GetBranchLatestCommit(ctx, "1", "main")
 	assert.NoError(t, err)
 	assert.Equal(t, "7b5c3cc", commitShortID)
 	assert.Equal(t, float64(1553540113), commitCreatedAt)

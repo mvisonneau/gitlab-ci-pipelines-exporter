@@ -9,12 +9,13 @@ import (
 )
 
 // GetRefs ..
-func (c *Controller) GetRefs(p schemas.Project) (
+func (c *Controller) GetRefs(ctx context.Context, p schemas.Project) (
 	refs schemas.Refs,
 	err error,
 ) {
-	refs = make(schemas.Refs)
 	var pulledRefs schemas.Refs
+
+	refs = make(schemas.Refs)
 
 	if p.Pull.Refs.Branches.Enabled {
 		// If one of these parameter is set, we will need to fetch the branches from the
@@ -22,12 +23,11 @@ func (c *Controller) GetRefs(p schemas.Project) (
 		if !p.Pull.Refs.Branches.ExcludeDeleted ||
 			p.Pull.Refs.Branches.MostRecent > 0 ||
 			p.Pull.Refs.Branches.MaxAgeSeconds > 0 {
-
-			if pulledRefs, err = c.Gitlab.GetRefsFromPipelines(p, schemas.RefKindBranch); err != nil {
+			if pulledRefs, err = c.Gitlab.GetRefsFromPipelines(ctx, p, schemas.RefKindBranch); err != nil {
 				return
 			}
 		} else {
-			if pulledRefs, err = c.Gitlab.GetProjectBranches(p); err != nil {
+			if pulledRefs, err = c.Gitlab.GetProjectBranches(ctx, p); err != nil {
 				return
 			}
 		}
@@ -43,12 +43,11 @@ func (c *Controller) GetRefs(p schemas.Project) (
 		if !p.Pull.Refs.Tags.ExcludeDeleted ||
 			p.Pull.Refs.Tags.MostRecent > 0 ||
 			p.Pull.Refs.Tags.MaxAgeSeconds > 0 {
-
-			if pulledRefs, err = c.Gitlab.GetRefsFromPipelines(p, schemas.RefKindTag); err != nil {
+			if pulledRefs, err = c.Gitlab.GetRefsFromPipelines(ctx, p, schemas.RefKindTag); err != nil {
 				return
 			}
 		} else {
-			if pulledRefs, err = c.Gitlab.GetProjectTags(p); err != nil {
+			if pulledRefs, err = c.Gitlab.GetProjectTags(ctx, p); err != nil {
 				return
 			}
 		}
@@ -60,6 +59,7 @@ func (c *Controller) GetRefs(p schemas.Project) (
 
 	if p.Pull.Refs.MergeRequests.Enabled {
 		if pulledRefs, err = c.Gitlab.GetRefsFromPipelines(
+			ctx,
 			p,
 			schemas.RefKindMergeRequest,
 		); err != nil {
@@ -76,13 +76,13 @@ func (c *Controller) GetRefs(p schemas.Project) (
 
 // PullRefsFromProject ..
 func (c *Controller) PullRefsFromProject(ctx context.Context, p schemas.Project) error {
-	refs, err := c.GetRefs(p)
+	refs, err := c.GetRefs(ctx, p)
 	if err != nil {
 		return err
 	}
 
 	for _, ref := range refs {
-		refExists, err := c.Store.RefExists(ref.Key())
+		refExists, err := c.Store.RefExists(ctx, ref.Key())
 		if err != nil {
 			return err
 		}
@@ -94,12 +94,13 @@ func (c *Controller) PullRefsFromProject(ctx context.Context, p schemas.Project)
 				"ref-kind":     ref.Kind,
 			}).Info("discovered new ref")
 
-			if err = c.Store.SetRef(ref); err != nil {
+			if err = c.Store.SetRef(ctx, ref); err != nil {
 				return err
 			}
 
 			c.ScheduleTask(ctx, schemas.TaskTypePullRefMetrics, string(ref.Key()), ref)
 		}
 	}
+
 	return nil
 }

@@ -21,8 +21,13 @@ type Pipeline struct {
 
 // NewPipeline ..
 func NewPipeline(gp goGitlab.Pipeline) Pipeline {
-	var coverage float64
-	var err error
+	var (
+		coverage  float64
+		err       error
+		timestamp float64
+		queued    time.Duration
+	)
+
 	if gp.Coverage != "" {
 		coverage, err = strconv.ParseFloat(gp.Coverage, 64)
 		if err != nil {
@@ -30,12 +35,10 @@ func NewPipeline(gp goGitlab.Pipeline) Pipeline {
 		}
 	}
 
-	var timestamp float64
 	if gp.UpdatedAt != nil {
 		timestamp = float64(gp.UpdatedAt.Unix())
 	}
 
-	var queued time.Duration
 	if gp.StartedAt != nil && gp.CreatedAt != nil {
 		if gp.CreatedAt.Before(*gp.StartedAt) {
 			queued = gp.StartedAt.Sub(*gp.CreatedAt)

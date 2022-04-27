@@ -14,25 +14,25 @@ const redisKey string = `gcpe:gitlab:api`
 // Redis ..
 type Redis struct {
 	*redis_rate.Limiter
-	Context context.Context
-	MaxRPS  int
+	MaxRPS int
 }
 
 // NewRedisLimiter ..
-func NewRedisLimiter(ctx context.Context, redisClient *redis.Client, maxRPS int) Limiter {
+func NewRedisLimiter(redisClient *redis.Client, maxRPS int) Limiter {
 	return Redis{
 		Limiter: redis_rate.NewLimiter(redisClient),
-		Context: ctx,
 		MaxRPS:  maxRPS,
 	}
 }
 
 // Take ..
-func (r Redis) Take() time.Time {
-	res, err := r.Allow(r.Context, redisKey, redis_rate.PerSecond(r.MaxRPS))
+func (r Redis) Take(ctx context.Context) time.Time {
+	res, err := r.Allow(ctx, redisKey, redis_rate.PerSecond(r.MaxRPS))
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
+
 	time.Sleep(res.RetryAfter)
+
 	return time.Now()
 }

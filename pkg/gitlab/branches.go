@@ -1,6 +1,7 @@
 package gitlab
 
 import (
+	"context"
 	"regexp"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
@@ -9,7 +10,7 @@ import (
 )
 
 // GetProjectBranches ..
-func (c *Client) GetProjectBranches(p schemas.Project) (
+func (c *Client) GetProjectBranches(ctx context.Context, p schemas.Project) (
 	refs schemas.Refs,
 	err error,
 ) {
@@ -23,18 +24,24 @@ func (c *Client) GetProjectBranches(p schemas.Project) (
 	}
 
 	var re *regexp.Regexp
+
 	if re, err = regexp.Compile(p.Pull.Refs.Branches.Regexp); err != nil {
 		return
 	}
 
 	for {
-		c.rateLimit()
-		var branches []*goGitlab.Branch
-		var resp *goGitlab.Response
-		branches, resp, err = c.Branches.ListBranches(p.Name, options)
+		c.rateLimit(ctx)
+
+		var (
+			branches []*goGitlab.Branch
+			resp     *goGitlab.Response
+		)
+
+		branches, resp, err = c.Branches.ListBranches(p.Name, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}
+
 		c.requestsRemaining(resp)
 
 		for _, branch := range branches {
@@ -47,6 +54,7 @@ func (c *Client) GetProjectBranches(p schemas.Project) (
 		if resp.CurrentPage >= resp.NextPage {
 			break
 		}
+
 		options.Page = resp.NextPage
 	}
 
@@ -54,17 +62,19 @@ func (c *Client) GetProjectBranches(p schemas.Project) (
 }
 
 // GetBranchLatestCommit ..
-func (c *Client) GetBranchLatestCommit(project, branch string) (string, float64, error) {
+func (c *Client) GetBranchLatestCommit(ctx context.Context, project, branch string) (string, float64, error) {
 	log.WithFields(log.Fields{
 		"project-name": project,
 		"branch":       branch,
 	}).Debug("reading project branch")
 
-	c.rateLimit()
-	b, resp, err := c.Branches.GetBranch(project, branch, nil)
+	c.rateLimit(ctx)
+
+	b, resp, err := c.Branches.GetBranch(project, branch, goGitlab.WithContext(ctx))
 	if err != nil {
 		return "", 0, err
 	}
+
 	c.requestsRemaining(resp)
 
 	return b.Commit.ShortID, float64(b.Commit.CommittedDate.Unix()), nil

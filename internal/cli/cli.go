@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// Run handles the instanciation of the CLI application
+// Run handles the instanciation of the CLI application.
 func Run(version string, args []string) {
 	err := NewApp(version, time.Now()).Run(args)
 	if err != nil {
@@ -18,7 +18,7 @@ func Run(version string, args []string) {
 	}
 }
 
-// NewApp configures the CLI application
+// NewApp configures the CLI application.
 func NewApp(version string, start time.Time) (app *cli.App) {
 	app = cli.NewApp()
 	app.Name = "gitlab-ci-pipelines-exporter"

@@ -11,7 +11,7 @@ import (
 )
 
 func TestPullRefMetricsSucceed(t *testing.T) {
-	c, mux, srv := newTestController(config.Config{})
+	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
@@ -36,14 +36,16 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	p := schemas.NewProject("foo")
 	p.Pull.Pipeline.Variables.Enabled = true
 
-	assert.NoError(t, c.PullRefMetrics(schemas.NewRef(
-		p,
-		schemas.RefKindBranch,
-		"bar",
-	)))
+	assert.NoError(t, c.PullRefMetrics(
+		ctx,
+		schemas.NewRef(
+			p,
+			schemas.RefKindBranch,
+			"bar",
+		)))
 
 	// Check if all the metrics exist
-	metrics, _ := c.Store.Metrics()
+	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
 		"kind":      string(schemas.RefKindBranch),
 		"project":   "foo",
@@ -90,7 +92,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 }
 
 func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
-	c, mux, srv := newTestController(config.Config{})
+	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
@@ -114,9 +116,11 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 	p := schemas.NewProject("foo")
 	p.Pull.Pipeline.Variables.Enabled = true
 
-	assert.NoError(t, c.PullRefMetrics(schemas.NewRef(
-		p,
-		schemas.RefKindMergeRequest,
-		"1234",
-	)))
+	assert.NoError(t, c.PullRefMetrics(
+		ctx,
+		schemas.NewRef(
+			p,
+			schemas.RefKindMergeRequest,
+			"1234",
+		)))
 }
