@@ -20,6 +20,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Fixed a config issue preventing the arm deb/rpm packages to be released correctly
 - Upgraded golang to **v1.18**
 - Upgraded most dependencies to their lastest versions
+- Fixed child pipeline jobs not found whilst looking up through bridges (#345)
 
 ## [v0.5.3] - 2022-02-11
 
