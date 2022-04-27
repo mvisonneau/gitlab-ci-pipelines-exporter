@@ -29,27 +29,27 @@ func TestListRefPipelineJobs(t *testing.T) {
 			fmt.Fprint(w, `[{"id":10}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/2/jobs",
+	mux.HandleFunc("/api/v4/projects/11/pipelines/2/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"id":20}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/3/jobs",
+	mux.HandleFunc("/api/v4/projects/12/pipelines/3/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"id":30}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2}}]`)
+			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 11}}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/2/bridges",
+	mux.HandleFunc("/api/v4/projects/11/pipelines/2/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":3}}]`)
+			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":3, "project_id": 12}}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/3/bridges",
+	mux.HandleFunc("/api/v4/projects/12/pipelines/3/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[]`)
 		})

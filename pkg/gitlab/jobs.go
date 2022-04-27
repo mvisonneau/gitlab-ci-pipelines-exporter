@@ -2,6 +2,7 @@ package gitlab
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
@@ -42,7 +43,7 @@ func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs
 }
 
 // ListPipelineJobs ..
-func (c *Client) ListPipelineJobs(ctx context.Context, projectName string, pipelineID int) (jobs []schemas.Job, err error) {
+func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, pipelineID int) (jobs []schemas.Job, err error) {
 	var (
 		foundJobs []*goGitlab.Job
 		resp      *goGitlab.Response
@@ -58,7 +59,7 @@ func (c *Client) ListPipelineJobs(ctx context.Context, projectName string, pipel
 	for {
 		c.rateLimit(ctx)
 
-		foundJobs, resp, err = c.Jobs.ListPipelineJobs(projectName, pipelineID, options, goGitlab.WithContext(ctx))
+		foundJobs, resp, err = c.Jobs.ListPipelineJobs(projectNameOrID, pipelineID, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}
@@ -72,9 +73,9 @@ func (c *Client) ListPipelineJobs(ctx context.Context, projectName string, pipel
 		if resp.CurrentPage >= resp.NextPage {
 			log.WithFields(
 				log.Fields{
-					"project-name": projectName,
-					"pipeline-id":  pipelineID,
-					"jobs-count":   resp.TotalItems,
+					"project-name-or-id": projectNameOrID,
+					"pipeline-id":        pipelineID,
+					"jobs-count":         resp.TotalItems,
 				},
 			).Debug("found pipeline jobs")
 
@@ -88,7 +89,7 @@ func (c *Client) ListPipelineJobs(ctx context.Context, projectName string, pipel
 }
 
 // ListPipelineBridges ..
-func (c *Client) ListPipelineBridges(ctx context.Context, projectName string, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
+func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
 	var (
 		foundBridges []*goGitlab.Bridge
 		resp         *goGitlab.Response
@@ -104,7 +105,7 @@ func (c *Client) ListPipelineBridges(ctx context.Context, projectName string, pi
 	for {
 		c.rateLimit(ctx)
 
-		foundBridges, resp, err = c.Jobs.ListPipelineBridges(projectName, pipelineID, options, goGitlab.WithContext(ctx))
+		foundBridges, resp, err = c.Jobs.ListPipelineBridges(projectNameOrID, pipelineID, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}
@@ -116,9 +117,9 @@ func (c *Client) ListPipelineBridges(ctx context.Context, projectName string, pi
 		if resp.CurrentPage >= resp.NextPage {
 			log.WithFields(
 				log.Fields{
-					"project-name":  projectName,
-					"pipeline-id":   pipelineID,
-					"bridges-count": resp.TotalItems,
+					"project-name-or-id": projectNameOrID,
+					"pipeline-id":        pipelineID,
+					"bridges-count":      resp.TotalItems,
 				},
 			).Debug("found pipeline bridges")
 
@@ -132,20 +133,24 @@ func (c *Client) ListPipelineBridges(ctx context.Context, projectName string, pi
 }
 
 // ListPipelineChildJobs ..
-func (c *Client) ListPipelineChildJobs(ctx context.Context, projectName string, parentPipelineID int) (jobs []schemas.Job, err error) {
-	pipelineIDs := []int{parentPipelineID}
+func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID string, parentPipelineID int) (jobs []schemas.Job, err error) {
+	type pipelineDef struct {
+		projectNameOrID string
+		pipelineID      int
+	}
+
+	pipelines := []pipelineDef{{projectNameOrID, parentPipelineID}}
 
 	for {
-		if len(pipelineIDs) == 0 {
+		if len(pipelines) == 0 {
 			return
 		}
 
-		pipelineID := pipelineIDs[len(pipelineIDs)-1]
-		pipelineIDs = pipelineIDs[:len(pipelineIDs)-1]
+		pipeline := pipelines[len(pipelines)-1]
+		pipelines = pipelines[:len(pipelines)-1]
 
 		var foundBridges []*goGitlab.Bridge
-
-		foundBridges, err = c.ListPipelineBridges(ctx, projectName, pipelineID)
+		foundBridges, err = c.ListPipelineBridges(ctx, pipeline.projectNameOrID, pipeline.pipelineID)
 		if err != nil {
 			return
 		}
@@ -158,11 +163,9 @@ func (c *Client) ListPipelineChildJobs(ctx context.Context, projectName string, 
 				continue
 			}
 
-			pipelineIDs = append(pipelineIDs, foundBridge.DownstreamPipeline.ID)
-
+			pipelines = append(pipelines, pipelineDef{strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID})
 			var foundJobs []schemas.Job
-
-			foundJobs, err = c.ListPipelineJobs(ctx, projectName, foundBridge.DownstreamPipeline.ID)
+			foundJobs, err = c.ListPipelineJobs(ctx, strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID)
 			if err != nil {
 				return
 			}
