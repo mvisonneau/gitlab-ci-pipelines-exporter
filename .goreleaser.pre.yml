@@ -70,7 +70,7 @@ snapcrafts:
   - summary: GitLab CI pipelines exporter (prometheus/open-metrics)
     description: Monitor GitLab CI pipelines related metrics.
     license: Apache-2.0
-    confinement: classic
+    confinement: strict
     grade: devel
     apps:
       gitlab-ci-pipelines-exporter:
