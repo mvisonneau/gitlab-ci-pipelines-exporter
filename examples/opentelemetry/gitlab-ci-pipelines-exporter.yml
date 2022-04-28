@@ -3,7 +3,7 @@ log:
   level: trace
   format: json
 
-otlp:
+opentelemetry:
   grpc_endpoint: otel-collector:4317
 
 gitlab:

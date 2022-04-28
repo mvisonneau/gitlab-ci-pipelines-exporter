@@ -25,7 +25,7 @@ log:
   level: trace
   format: json
 
-otlp:
+opentelemetry:
   grpc_endpoint: otlp-collector:4317
 
 server:
@@ -153,7 +153,7 @@ wildcards:
 	xcfg.Log.Level = "trace"
 	xcfg.Log.Format = "json"
 
-	xcfg.OTLP.GRPCEndpoint = "otlp-collector:4317"
+	xcfg.OpenTelemetry.GRPCEndpoint = "otlp-collector:4317"
 
 	xcfg.Server.EnablePprof = true
 	xcfg.Server.ListenAddress = ":1025"

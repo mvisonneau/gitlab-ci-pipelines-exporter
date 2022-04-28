@@ -43,7 +43,7 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 	c.Config = cfg
 	c.UUID = uuid.New()
 
-	if err = configureTracing(ctx, cfg.OTLP.GRPCEndpoint); err != nil {
+	if err = configureTracing(ctx, cfg.OpenTelemetry.GRPCEndpoint); err != nil {
 		return
 	}
 
@@ -104,14 +104,14 @@ func (c *Controller) unqueueTask(ctx context.Context, tt schemas.TaskType, uniqu
 
 func configureTracing(ctx context.Context, grpcEndpoint string) error {
 	if len(grpcEndpoint) == 0 {
-		log.Debug("otlp.grpc_endpoint is not configured, skipping open telemetry support")
+		log.Debug("opentelemetry.grpc_endpoint is not configured, skipping open telemetry support")
 
 		return nil
 	}
 
 	log.WithFields(log.Fields{
-		"otlp_grpc_endpoint": grpcEndpoint,
-	}).Info("otlp gRPC endpoint provided, initializing connection..")
+		"opentelemetry_grpc_endpoint": grpcEndpoint,
+	}).Info("opentelemetry gRPC endpoint provided, initializing connection..")
 
 	traceClient := otlptracegrpc.NewClient(
 		otlptracegrpc.WithInsecure(),

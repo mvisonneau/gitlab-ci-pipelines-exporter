@@ -13,6 +13,12 @@ log:
   # (optional, default: text)
   format: text
 
+# OpenTelemetry configuration (currently supports tracing only)
+opentelemetry:
+  # Configure the OpenTelemetry collector gRPC endpoint in order to enable tracing
+  # (optional, default: "")
+  grpc_endpoint:
+
 # Exporter HTTP servers configuration
 server:
   # [address:port] to make the process listen
