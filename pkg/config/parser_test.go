@@ -25,6 +25,9 @@ log:
   level: trace
   format: json
 
+otlp:
+  grpc_endpoint: otlp-collector:4317
+
 server:
   enable_pprof: true
   listen_address: :1025
@@ -149,6 +152,8 @@ wildcards:
 
 	xcfg.Log.Level = "trace"
 	xcfg.Log.Format = "json"
+
+	xcfg.OTLP.GRPCEndpoint = "otlp-collector:4317"
 
 	xcfg.Server.EnablePprof = true
 	xcfg.Server.ListenAddress = ":1025"

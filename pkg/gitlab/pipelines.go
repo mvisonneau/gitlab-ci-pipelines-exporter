@@ -10,10 +10,18 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // GetRefPipeline ..
 func (c *Client) GetRefPipeline(ctx context.Context, ref schemas.Ref, pipelineID int) (p schemas.Pipeline, err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipeline")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
+	span.SetAttributes(attribute.String("ref_name", ref.Name))
+	span.SetAttributes(attribute.Int("pipeline_id", pipelineID))
+
 	c.rateLimit(ctx)
 
 	gp, resp, err := c.Pipelines.GetPipeline(ref.Project.Name, pipelineID, goGitlab.WithContext(ctx))
@@ -23,7 +31,7 @@ func (c *Client) GetRefPipeline(ctx context.Context, ref schemas.Ref, pipelineID
 
 	c.requestsRemaining(resp)
 
-	return schemas.NewPipeline(*gp), nil
+	return schemas.NewPipeline(ctx, *gp), nil
 }
 
 // GetProjectPipelines ..
@@ -36,6 +44,10 @@ func (c *Client) GetProjectPipelines(
 	*goGitlab.Response,
 	error,
 ) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetProjectPipelines")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", projectName))
+
 	fields := log.Fields{
 		"project-name": projectName,
 	}
@@ -73,6 +85,11 @@ func (c *Client) GetProjectPipelines(
 
 // GetRefPipelineVariablesAsConcatenatedString ..
 func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context, ref schemas.Ref) (string, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipelineVariablesAsConcatenatedString")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
+	span.SetAttributes(attribute.String("ref_name", ref.Name))
+
 	if ref.LatestPipeline == (schemas.Pipeline{}) {
 		log.WithFields(
 			log.Fields{
@@ -125,6 +142,11 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context
 
 // GetRefsFromPipelines ..
 func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, refKind schemas.RefKind) (refs schemas.Refs, err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefsFromPipelines")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", p.Name))
+	span.SetAttributes(attribute.String("ref_kind", string(refKind)))
+
 	refs = make(schemas.Refs)
 
 	options := &goGitlab.ListProjectPipelinesOptions{
@@ -212,7 +234,10 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 
 			if refKind == schemas.RefKindMergeRequest {
 				if refName, err = schemas.GetMergeRequestIIDFromRefName(refName); err != nil {
-					log.WithField("ref", refName).WithError(err).Warn()
+					log.WithContext(ctx).
+						WithField("ref", refName).
+						WithError(err).
+						Warn()
 
 					continue
 				}

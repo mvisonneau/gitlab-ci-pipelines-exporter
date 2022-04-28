@@ -24,7 +24,8 @@ func NewClient(serverAddress *url.URL) (c *Client) {
 
 	c.Client, err = rpc.Dial(c.serverAddress.Scheme, c.serverAddress.Host)
 	if err != nil {
-		log.Fatal("dialing:", err)
+		log.WithError(err).
+			Fatal("rpc dial")
 	}
 
 	return
@@ -33,7 +34,8 @@ func NewClient(serverAddress *url.URL) (c *Client) {
 // Status ..
 func (c *Client) Status() (s monitor.Status) {
 	if err := c.Call("Server.Status", "", &s); err != nil {
-		log.WithError(err).Fatal()
+		log.WithError(err).
+			Fatal()
 	}
 
 	return
@@ -42,7 +44,8 @@ func (c *Client) Status() (s monitor.Status) {
 // Config ..
 func (c *Client) Config() (s string) {
 	if err := c.Call("Server.Config", "", &s); err != nil {
-		log.WithError(err).Fatal()
+		log.WithError(err).
+			Fatal()
 	}
 
 	return

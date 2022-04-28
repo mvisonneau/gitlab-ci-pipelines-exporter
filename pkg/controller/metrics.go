@@ -35,7 +35,7 @@ type Registry struct {
 type RegistryCollectors map[schemas.MetricKind]prometheus.Collector
 
 // NewRegistry initialize a new registry.
-func NewRegistry() *Registry {
+func NewRegistry(ctx context.Context) *Registry {
 	r := &Registry{
 		Registry: prometheus.NewRegistry(),
 		Collectors: RegistryCollectors{
@@ -67,7 +67,8 @@ func NewRegistry() *Registry {
 	r.RegisterInternalCollectors()
 
 	if err := r.RegisterCollectors(); err != nil {
-		log.Fatal(err)
+		log.WithContext(ctx).
+			Fatal(err)
 	}
 
 	return r

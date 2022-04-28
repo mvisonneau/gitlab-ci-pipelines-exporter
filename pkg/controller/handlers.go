@@ -11,6 +11,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // HealthCheckHandler ..
@@ -19,7 +21,8 @@ func (c *Controller) HealthCheckHandler(ctx context.Context) (h healthcheck.Hand
 	if c.Config.Gitlab.EnableHealthCheck {
 		h.AddReadinessCheck("gitlab-reachable", c.Gitlab.ReadinessCheck(ctx))
 	} else {
-		log.Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
+		log.WithContext(ctx).
+			Warn("GitLab health check has been disabled. Readiness checks won't be operated.")
 	}
 
 	return
@@ -27,12 +30,18 @@ func (c *Controller) HealthCheckHandler(ctx context.Context) (h healthcheck.Hand
 
 // MetricsHandler ..
 func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := context.TODO()
-	registry := NewRegistry()
+	ctx := r.Context()
+	span := trace.SpanFromContext(ctx)
+
+	defer span.End()
+
+	registry := NewRegistry(ctx)
 
 	metrics, err := c.Store.Metrics(ctx)
 	if err != nil {
-		log.Error(err.Error())
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
 	}
 
 	if err := registry.ExportInternalMetrics(
@@ -40,20 +49,29 @@ func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 		c.Gitlab,
 		c.Store,
 	); err != nil {
-		log.WithError(err).Warn()
+		log.WithContext(ctx).
+			WithError(err).
+			Warn()
 	}
 
 	registry.ExportMetrics(metrics)
 
-	promhttp.HandlerFor(registry, promhttp.HandlerOpts{
-		Registry:          registry,
-		EnableOpenMetrics: c.Config.Server.Metrics.EnableOpenmetricsEncoding,
-	}).ServeHTTP(w, r)
+	otelhttp.NewHandler(
+		promhttp.HandlerFor(registry, promhttp.HandlerOpts{
+			Registry:          registry,
+			EnableOpenMetrics: c.Config.Server.Metrics.EnableOpenmetricsEncoding,
+		}),
+		"/metrics",
+	).ServeHTTP(w, r)
 }
 
 // WebhookHandler ..
 func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := context.TODO()
+	ctx := r.Context()
+	span := trace.SpanFromContext(ctx)
+
+	defer span.End()
+
 	logFields := log.Fields{
 		"ip-address": r.RemoteAddr,
 		"user-agent": r.UserAgent(),
@@ -70,7 +88,11 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Body == http.NoBody {
-		log.WithFields(logFields).WithField("error", "nil body").Warn("unable to read body of a received webhook")
+		log.WithContext(ctx).
+			WithFields(logFields).
+			WithError(fmt.Errorf("nil body")).
+			Warn("unable to read body of a received webhook")
+
 		w.WriteHeader(http.StatusBadRequest)
 
 		return
@@ -78,7 +100,11 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.WithFields(logFields).WithField("error", err.Error()).Warn("unable to read body of a received webhook")
+		log.WithContext(ctx).
+			WithFields(logFields).
+			WithError(err).
+			Warn("unable to read body of a received webhook")
+
 		w.WriteHeader(http.StatusBadRequest)
 
 		return
@@ -86,7 +112,11 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	event, err := gitlab.ParseHook(gitlab.HookEventType(r), payload)
 	if err != nil {
-		log.WithFields(logFields).WithFields(logFields).WithField("error", err.Error()).Warn("unable to parse body of a received webhook")
+		log.WithContext(ctx).
+			WithFields(logFields).
+			WithError(err).
+			Warn("unable to parse body of a received webhook")
+
 		w.WriteHeader(http.StatusBadRequest)
 
 		return
@@ -98,7 +128,11 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	case *gitlab.DeploymentEvent:
 		go c.processDeploymentEvent(ctx, *event)
 	default:
-		log.WithFields(logFields).WithField("event-type", reflect.TypeOf(event).String()).Warn("received a non supported event type as a webhook")
+		log.WithContext(ctx).
+			WithFields(logFields).
+			WithField("event-type", reflect.TypeOf(event).String()).
+			Warn("received a non supported event type as a webhook")
+
 		w.WriteHeader(http.StatusUnprocessableEntity)
 	}
 }

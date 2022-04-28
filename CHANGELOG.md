@@ -9,6 +9,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ### Added
 
+- Kickstarted tracing support through `opentelemetry` implementation for most of the network calls
 - Now passing a `context.Context` to most functional calls
 - Aggregated already used linters and added new ones through the implementation of `golangci`
 - Release `.apk` packages for Alpine linux

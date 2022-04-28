@@ -19,6 +19,9 @@ type Config struct {
 	// Log configuration for the exporter
 	Log Log `yaml:"log" validate:"dive"`
 
+	// OTLP configuration
+	OTLP OTLP `yaml:"otlp" validate:"dive"`
+
 	// Server related configuration
 	Server Server `yaml:"server" validate:"dive"`
 
@@ -51,6 +54,12 @@ type Log struct {
 
 	// Log format
 	Format string `default:"text" validate:"oneof=text json"`
+}
+
+// OTLP holds OpenTelemetry related configuration.
+type OTLP struct {
+	// gRPC endpoint of the opentelemetry collector
+	GRPCEndpoint string `yaml:"grpc_endpoint"`
 }
 
 // Server ..
@@ -177,6 +186,7 @@ type GarbageCollect struct {
 func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 	type localConfig struct {
 		Log             Log               `yaml:"log"`
+		OTLP            OTLP              `yaml:"otlp"`
 		Server          Server            `yaml:"server"`
 		Gitlab          Gitlab            `yaml:"gitlab"`
 		Redis           Redis             `yaml:"redis"`
@@ -196,6 +206,7 @@ func (c *Config) UnmarshalYAML(v *yaml.Node) (err error) {
 	}
 
 	c.Log = _cfg.Log
+	c.OTLP = _cfg.OTLP
 	c.Server = _cfg.Server
 	c.Gitlab = _cfg.Gitlab
 	c.Redis = _cfg.Redis

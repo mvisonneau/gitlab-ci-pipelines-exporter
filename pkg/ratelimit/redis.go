@@ -29,7 +29,9 @@ func NewRedisLimiter(redisClient *redis.Client, maxRPS int) Limiter {
 func (r Redis) Take(ctx context.Context) time.Time {
 	res, err := r.Allow(ctx, redisKey, redis_rate.PerSecond(r.MaxRPS))
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.WithContext(ctx).
+			WithError(err).
+			Fatal()
 	}
 
 	time.Sleep(res.RetryAfter)

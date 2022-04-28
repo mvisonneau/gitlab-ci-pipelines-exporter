@@ -32,14 +32,14 @@ func TestNewRedisStore(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	localStore := New(nil, config.Projects{})
+	localStore := New(testCtx, nil, config.Projects{})
 	assert.IsType(t, &Local{}, localStore)
 
 	redisClient := redis.NewClient(&redis.Options{})
-	redisStore := New(redisClient, config.Projects{})
+	redisStore := New(testCtx, redisClient, config.Projects{})
 	assert.IsType(t, &Redis{}, redisStore)
 
-	localStore = New(nil, config.Projects{
+	localStore = New(testCtx, nil, config.Projects{
 		{
 			Name: "foo",
 		},

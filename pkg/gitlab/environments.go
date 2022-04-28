@@ -7,6 +7,8 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // GetProjectEnvironments ..
@@ -14,6 +16,10 @@ func (c *Client) GetProjectEnvironments(ctx context.Context, p schemas.Project) 
 	envs schemas.Environments,
 	err error,
 ) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetProjectEnvironments")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", p.Name))
+
 	envs = make(schemas.Environments)
 
 	options := &goGitlab.ListEnvironmentsOptions{
@@ -83,6 +89,11 @@ func (c *Client) GetEnvironment(
 	environment schemas.Environment,
 	err error,
 ) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetEnvironment")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", project))
+	span.SetAttributes(attribute.Int("environment_id", environmentID))
+
 	environment = schemas.Environment{
 		ProjectName: project,
 		ID:          environmentID,
@@ -110,10 +121,12 @@ func (c *Client) GetEnvironment(
 	}
 
 	if e.LastDeployment == nil {
-		log.WithFields(log.Fields{
-			"project-name":     project,
-			"environment-name": e.Name,
-		}).Warn("no deployments found for the environment")
+		log.WithContext(ctx).
+			WithFields(log.Fields{
+				"project-name":     project,
+				"environment-name": e.Name,
+			}).
+			Warn("no deployments found for the environment")
 
 		return
 	}

@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"context"
 	"strconv"
 	"time"
 
@@ -20,7 +21,7 @@ type Pipeline struct {
 }
 
 // NewPipeline ..
-func NewPipeline(gp goGitlab.Pipeline) Pipeline {
+func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 	var (
 		coverage  float64
 		err       error
@@ -31,7 +32,9 @@ func NewPipeline(gp goGitlab.Pipeline) Pipeline {
 	if gp.Coverage != "" {
 		coverage, err = strconv.ParseFloat(gp.Coverage, 64)
 		if err != nil {
-			log.WithField("error", err.Error()).Warnf("could not parse coverage string returned from GitLab API '%s' into Float64", gp.Coverage)
+			log.WithContext(ctx).
+				WithField("error", err.Error()).
+				Warnf("could not parse coverage string returned from GitLab API '%s' into Float64", gp.Coverage)
 		}
 	}
 

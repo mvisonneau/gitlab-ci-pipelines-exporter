@@ -46,7 +46,10 @@ func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref)
 
 	refExists, err := c.Store.RefExists(ctx, ref.Key())
 	if err != nil {
-		log.WithFields(logFields).WithError(err).Error("reading ref from the store")
+		log.WithContext(ctx).
+			WithFields(logFields).
+			WithError(err).
+			Error("reading ref from the store")
 
 		return
 	}
@@ -57,7 +60,10 @@ func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref)
 
 		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 		if err != nil {
-			log.WithFields(logFields).WithError(err).Error("reading project from the store")
+			log.WithContext(ctx).
+				WithFields(logFields).
+				WithError(err).
+				Error("reading project from the store")
 
 			return
 		}
@@ -69,7 +75,9 @@ func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref)
 				// received, we trigger a scan
 				matches, err := isRefMatchingWilcard(w, ref)
 				if err != nil {
-					log.WithError(err).Warn("checking if the ref matches the wildcard config")
+					log.WithContext(ctx).
+						WithError(err).
+						Warn("checking if the ref matches the wildcard config")
 
 					continue
 				}
@@ -90,14 +98,19 @@ func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref)
 		if projectExists {
 			// If the project exists, we check that the ref matches it's configuration
 			if err := c.Store.GetProject(ctx, &p); err != nil {
-				log.WithFields(logFields).WithError(err).Error("reading project from the store")
+				log.WithContext(ctx).
+					WithFields(logFields).
+					WithError(err).
+					Error("reading project from the store")
 
 				return
 			}
 
 			matches, err := isRefMatchingProjectPullRefs(p.Pull.Refs, ref)
 			if err != nil {
-				log.WithError(err).Error("checking if the ref matches the project config")
+				log.WithContext(ctx).
+					WithError(err).
+					Error("checking if the ref matches the project config")
 
 				return
 			}
@@ -106,7 +119,10 @@ func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref)
 				ref.Project = p
 
 				if err = c.Store.SetRef(ctx, ref); err != nil {
-					log.WithFields(logFields).WithError(err).Error("writing ref in the store")
+					log.WithContext(ctx).
+						WithFields(logFields).
+						WithError(err).
+						Error("writing ref in the store")
 
 					return
 				}
@@ -145,7 +161,10 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 
 	envExists, err := c.Store.EnvironmentExists(ctx, env.Key())
 	if err != nil {
-		log.WithFields(logFields).WithError(err).Error("reading environment from the store")
+		log.WithContext(ctx).
+			WithFields(logFields).
+			WithError(err).
+			Error("reading environment from the store")
 
 		return
 	}
@@ -155,7 +174,10 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 
 		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 		if err != nil {
-			log.WithFields(logFields).WithError(err).Error("reading project from the store")
+			log.WithContext(ctx).
+				WithFields(logFields).
+				WithError(err).
+				Error("reading project from the store")
 
 			return
 		}
@@ -167,7 +189,9 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 				// received, we trigger a scan
 				matches, err := isEnvMatchingWilcard(w, env)
 				if err != nil {
-					log.WithError(err).Warn("checking if the env matches the wildcard config")
+					log.WithContext(ctx).
+						WithError(err).
+						Warn("checking if the env matches the wildcard config")
 
 					continue
 				}
@@ -187,12 +211,17 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 
 		if projectExists {
 			if err := c.Store.GetProject(ctx, &p); err != nil {
-				log.WithFields(logFields).WithError(err).Error("reading project from the store")
+				log.WithContext(ctx).
+					WithFields(logFields).
+					WithError(err).
+					Error("reading project from the store")
 			}
 
 			matches, err := isEnvMatchingProjectPullEnvironments(p.Pull.Environments, env)
 			if err != nil {
-				log.WithError(err).Error("checking if the env matches the project config")
+				log.WithContext(ctx).
+					WithError(err).
+					Error("checking if the env matches the project config")
 
 				return
 			}
@@ -200,7 +229,10 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 			if matches {
 				// As we do not get the environment ID within the deployment event, we need to query it back..
 				if err = c.UpdateEnvironment(ctx, &env); err != nil {
-					log.WithFields(logFields).WithError(err).Error("updating event from GitLab API")
+					log.WithContext(ctx).
+						WithFields(logFields).
+						WithError(err).
+						Error("updating event from GitLab API")
 
 					return
 				}
@@ -209,7 +241,8 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 			}
 		}
 
-		log.WithFields(logFields).Info("environment not configured in the exporter, ignoring deployment webhook")
+		log.WithFields(logFields).
+			Info("environment not configured in the exporter, ignoring deployment webhook")
 
 		return
 	}
@@ -217,7 +250,10 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 	// Need to refresh the env from the store in order to get at least it's ID
 	if env.ID == 0 {
 		if err = c.Store.GetEnvironment(ctx, &env); err != nil {
-			log.WithFields(logFields).WithError(err).Error("reading environment from the store")
+			log.WithContext(ctx).
+				WithFields(logFields).
+				WithError(err).
+				Error("reading environment from the store")
 		}
 	}
 

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestNewRegistry(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(context.Background())
 	assert.NotNil(t, r.Registry)
 	assert.NotNil(t, r.Collectors)
 }
@@ -31,13 +32,13 @@ func TestMetricsHandler(t *testing.T) {
 }
 
 func TestRegistryGetCollector(t *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(context.Background())
 	assert.Equal(t, r.Collectors[schemas.MetricKindCoverage], r.GetCollector(schemas.MetricKindCoverage))
 	assert.Nil(t, r.GetCollector(150))
 }
 
 func TestExportMetrics(_ *testing.T) {
-	r := NewRegistry()
+	r := NewRegistry(context.Background())
 
 	m1 := schemas.Metric{
 		Kind: schemas.MetricKindCoverage,

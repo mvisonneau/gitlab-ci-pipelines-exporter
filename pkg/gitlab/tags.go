@@ -6,6 +6,8 @@ import (
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	goGitlab "github.com/xanzy/go-gitlab"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // GetProjectTags ..
@@ -13,6 +15,10 @@ func (c *Client) GetProjectTags(ctx context.Context, p schemas.Project) (
 	refs schemas.Refs,
 	err error,
 ) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetProjectTags")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", p.Name))
+
 	refs = make(schemas.Refs)
 
 	options := &goGitlab.ListTagsOptions{
@@ -62,6 +68,11 @@ func (c *Client) GetProjectTags(ctx context.Context, p schemas.Project) (
 
 // GetProjectMostRecentTagCommit ..
 func (c *Client) GetProjectMostRecentTagCommit(ctx context.Context, projectName, filterRegexp string) (string, float64, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetProjectTags")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", projectName))
+	span.SetAttributes(attribute.String("regexp", filterRegexp))
+
 	options := &goGitlab.ListTagsOptions{
 		ListOptions: goGitlab.ListOptions{
 			Page:    1,

@@ -7,6 +7,8 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // GetProjectBranches ..
@@ -14,6 +16,10 @@ func (c *Client) GetProjectBranches(ctx context.Context, p schemas.Project) (
 	refs schemas.Refs,
 	err error,
 ) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetProjectBranches")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", p.Name))
+
 	refs = make(schemas.Refs)
 
 	options := &goGitlab.ListBranchesOptions{
@@ -63,6 +69,11 @@ func (c *Client) GetProjectBranches(ctx context.Context, p schemas.Project) (
 
 // GetBranchLatestCommit ..
 func (c *Client) GetBranchLatestCommit(ctx context.Context, project, branch string) (string, float64, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetBranchLatestCommit")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", project))
+	span.SetAttributes(attribute.String("branch_name", branch))
+
 	log.WithFields(log.Fields{
 		"project-name": project,
 		"branch":       branch,

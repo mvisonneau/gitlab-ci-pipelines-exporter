@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 
+	"github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
@@ -13,7 +14,16 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/taskq/v3"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+	"google.golang.org/grpc"
 )
+
+const tracerName = "gitlab-ci-pipelines-exporter"
 
 // Controller holds the necessary clients to run the app and handle requests.
 type Controller struct {
@@ -33,14 +43,18 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 	c.Config = cfg
 	c.UUID = uuid.New()
 
-	if err = c.configureRedis(cfg.Redis.URL); err != nil {
+	if err = configureTracing(ctx, cfg.OTLP.GRPCEndpoint); err != nil {
 		return
 	}
 
-	c.TaskController = NewTaskController(c.Redis)
+	if err = c.configureRedis(ctx, cfg.Redis.URL); err != nil {
+		return
+	}
+
+	c.TaskController = NewTaskController(ctx, c.Redis)
 	c.registerTasks()
 
-	c.Store = store.New(c.Redis, c.Config.Projects)
+	c.Store = store.New(ctx, c.Redis, c.Config.Projects)
 
 	if err = c.configureGitlab(cfg.Gitlab, version); err != nil {
 		return
@@ -78,11 +92,60 @@ func (c *Controller) registerTasks() {
 
 func (c *Controller) unqueueTask(ctx context.Context, tt schemas.TaskType, uniqueID string) {
 	if err := c.Store.UnqueueTask(ctx, tt, uniqueID); err != nil {
-		log.WithFields(log.Fields{
-			"task_type":      tt,
-			"task_unique_id": uniqueID,
-		}).WithError(err).Warn("unqueuing task")
+		log.WithContext(ctx).
+			WithFields(log.Fields{
+				"task_type":      tt,
+				"task_unique_id": uniqueID,
+			}).
+			WithError(err).
+			Warn("unqueuing task")
 	}
+}
+
+func configureTracing(ctx context.Context, grpcEndpoint string) error {
+	if len(grpcEndpoint) == 0 {
+		log.Debug("otlp.grpc_endpoint is not configured, skipping open telemetry support")
+
+		return nil
+	}
+
+	log.WithFields(log.Fields{
+		"otlp_grpc_endpoint": grpcEndpoint,
+	}).Info("otlp gRPC endpoint provided, initializing connection..")
+
+	traceClient := otlptracegrpc.NewClient(
+		otlptracegrpc.WithInsecure(),
+		otlptracegrpc.WithEndpoint(grpcEndpoint),
+		otlptracegrpc.WithDialOption(grpc.WithBlock()))
+
+	traceExp, err := otlptrace.New(ctx, traceClient)
+	if err != nil {
+		return err
+	}
+
+	res, err := resource.New(ctx,
+		resource.WithFromEnv(),
+		resource.WithProcess(),
+		resource.WithTelemetrySDK(),
+		resource.WithHost(),
+		resource.WithAttributes(
+			semconv.ServiceNameKey.String("gitlab-ci-pipelines-exporter"),
+		),
+	)
+	if err != nil {
+		return err
+	}
+
+	bsp := sdktrace.NewBatchSpanProcessor(traceExp)
+	tracerProvider := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithResource(res),
+		sdktrace.WithSpanProcessor(bsp),
+	)
+
+	otel.SetTracerProvider(tracerProvider)
+
+	return nil
 }
 
 func (c *Controller) configureGitlab(cfg config.Gitlab, version string) (err error) {
@@ -106,7 +169,10 @@ func (c *Controller) configureGitlab(cfg config.Gitlab, version string) (err err
 	return
 }
 
-func (c *Controller) configureRedis(url string) (err error) {
+func (c *Controller) configureRedis(ctx context.Context, url string) (err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:configureRedis")
+	defer span.End()
+
 	if len(url) <= 0 {
 		log.Debug("redis url is not configured, skipping configuration & using local driver")
 
@@ -123,7 +189,9 @@ func (c *Controller) configureRedis(url string) (err error) {
 
 	c.Redis = redis.NewClient(opt)
 
-	if _, err := c.Redis.Ping(context.Background()).Result(); err != nil {
+	c.Redis.AddHook(redisotel.NewTracingHook())
+
+	if _, err := c.Redis.Ping(ctx).Result(); err != nil {
 		return errors.Wrap(err, "connecting to redis")
 	}
 

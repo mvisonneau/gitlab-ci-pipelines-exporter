@@ -17,30 +17,27 @@ func metricLogFields(m schemas.Metric) log.Fields {
 
 func storeGetMetric(ctx context.Context, s store.Store, m *schemas.Metric) {
 	if err := s.GetMetric(ctx, m); err != nil {
-		log.WithFields(
-			metricLogFields(*m),
-		).WithField(
-			"error", err.Error(),
-		).Errorf("reading metric from the store")
+		log.WithContext(ctx).
+			WithFields(metricLogFields(*m)).
+			WithError(err).
+			Errorf("reading metric from the store")
 	}
 }
 
 func storeSetMetric(ctx context.Context, s store.Store, m schemas.Metric) {
 	if err := s.SetMetric(ctx, m); err != nil {
-		log.WithFields(
-			metricLogFields(m),
-		).WithField(
-			"error", err.Error(),
-		).Errorf("writing metric in the store")
+		log.WithContext(ctx).
+			WithFields(metricLogFields(m)).
+			WithError(err).
+			Errorf("writing metric from the store")
 	}
 }
 
 func storeDelMetric(ctx context.Context, s store.Store, m schemas.Metric) {
 	if err := s.DelMetric(ctx, m.Key()); err != nil {
-		log.WithFields(
-			metricLogFields(m),
-		).WithField(
-			"error", err.Error(),
-		).Errorf("deleting metric from the store")
+		log.WithContext(ctx).
+			WithFields(metricLogFields(m)).
+			WithError(err).
+			Errorf("deleting metric from the store")
 	}
 }

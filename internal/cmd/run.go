@@ -79,7 +79,9 @@ func Run(cliCtx *cli.Context) (int, error) {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.WithError(err).Fatal()
+			log.WithContext(ctx).
+				WithError(err).
+				Fatal()
 		}
 	}()
 

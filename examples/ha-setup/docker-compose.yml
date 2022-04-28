@@ -2,7 +2,7 @@
 version: '3.8'
 services:
   redis:
-    image: quay.io/bitnami/redis:6.2
+    image: docker.io/bitnami/redis:6.2
     ports:
       - 6379:6379
     environment:

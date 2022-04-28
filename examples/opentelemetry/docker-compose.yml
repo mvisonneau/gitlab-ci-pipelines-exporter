@@ -1,0 +1,71 @@
+---
+version: '3.8'
+services:
+  redis:
+    image: docker.io/bitnami/redis:6.2
+    ports:
+      - 6379:6379
+    environment:
+      ALLOW_EMPTY_PASSWORD: 'yes'
+
+  jaeger:
+    image: docker.io/jaegertracing/all-in-one:1.33
+    volumes:
+      - ./prometheus/config.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 16686:16686
+
+  otel-collector:
+    image: docker.io/otel/opentelemetry-collector-contrib-dev:latest
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - 4317:4317
+    links:
+      - jaeger
+
+  gitlab-ci-pipelines-exporter:
+    image: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.3
+    # You can comment out the image name and use the following statement
+    # to build the image against the current version of the repository
+    # build: ../..
+    ports:
+      - 8080:8080
+    environment:
+      GCPE_GITLAB_TOKEN: ${GCPE_GITLAB_TOKEN}
+      GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter.yml
+      GCPE_INTERNAL_MONITORING_LISTENER_ADDRESS: tcp://127.0.0.1:8082
+    links:
+      - redis
+      - otel-collector
+    volumes:
+      - type: bind
+        source: ./gitlab-ci-pipelines-exporter.yml
+        target: /etc/gitlab-ci-pipelines-exporter.yml
+
+  prometheus:
+    image: docker.io/prom/prometheus:v2.35.0
+    ports:
+      - 9090:9090
+    links:
+      - gitlab-ci-pipelines-exporter
+    volumes:
+      - ./prometheus/config.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: docker.io/grafana/grafana:8.5.0
+    ports:
+      - 3000:3000
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_INSTALL_PLUGINS: grafana-polystat-panel,yesoreyeram-boomtable-panel
+    links:
+      - prometheus
+      - jaeger
+    volumes:
+       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/default.yml
+
+networks:
+  default:
+    driver: bridge

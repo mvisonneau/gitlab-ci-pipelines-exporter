@@ -10,10 +10,16 @@ import (
 	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // GetProject ..
 func (c *Client) GetProject(ctx context.Context, name string) (*goGitlab.Project, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetProject")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", name))
+
 	log.WithFields(log.Fields{
 		"project-name": name,
 	}).Debug("reading project")
@@ -27,6 +33,14 @@ func (c *Client) GetProject(ctx context.Context, name string) (*goGitlab.Project
 
 // ListProjects ..
 func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas.Project, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListProjects")
+	defer span.End()
+	span.SetAttributes(attribute.String("wildcard_search", w.Search))
+	span.SetAttributes(attribute.String("wildcard_owner_kind", w.Owner.Kind))
+	span.SetAttributes(attribute.String("wildcard_owner_name", w.Owner.Name))
+	span.SetAttributes(attribute.Bool("wildcard_owner_include_subgroups", w.Owner.IncludeSubgroups))
+	span.SetAttributes(attribute.Bool("wildcard_archived", w.Archived))
+
 	logFields := log.Fields{
 		"wildcard-search":                  w.Search,
 		"wildcard-owner-kind":              w.Owner.Kind,

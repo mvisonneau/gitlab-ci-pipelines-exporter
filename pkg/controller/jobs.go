@@ -56,7 +56,10 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 	if ref.Project.Pull.Pipeline.Jobs.RunnerDescription.Enabled {
 		re, err := regexp.Compile(ref.Project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp)
 		if err != nil {
-			log.WithFields(projectRefLogFields).WithField("error", err.Error()).Error("invalid job runner description aggregation regexp")
+			log.WithContext(ctx).
+				WithFields(projectRefLogFields).
+				WithError(err).
+				Error("invalid job runner description aggregation regexp")
 		}
 
 		if re.MatchString(job.Runner.Description) {
@@ -71,7 +74,10 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 
 	// Refresh ref state from the store
 	if err := c.Store.GetRef(ctx, &ref); err != nil {
-		log.WithFields(projectRefLogFields).WithField("error", err.Error()).Error("getting ref from the store")
+		log.WithContext(ctx).
+			WithFields(projectRefLogFields).
+			WithError(err).
+			Error("getting ref from the store")
 
 		return
 	}
@@ -91,9 +97,10 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 	ref.LatestJobs[job.Name] = job
 
 	if err := c.Store.SetRef(ctx, ref); err != nil {
-		log.WithFields(
-			projectRefLogFields,
-		).WithField("error", err.Error()).Error("writing ref in the store")
+		log.WithContext(ctx).
+			WithFields(projectRefLogFields).
+			WithError(err).
+			Error("writing ref in the store")
 
 		return
 	}
@@ -134,9 +141,10 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 	// when restarting the exporter otherwise
 	jobRunCountExists, err := c.Store.MetricExists(ctx, jobRunCount.Key())
 	if err != nil {
-		log.WithFields(
-			projectRefLogFields,
-		).WithField("error", err.Error()).Error("checking if metric exists in the store")
+		log.WithContext(ctx).
+			WithFields(projectRefLogFields).
+			WithError(err).
+			Error("checking if metric exists in the store")
 
 		return
 	}

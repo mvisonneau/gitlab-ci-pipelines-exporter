@@ -1,6 +1,7 @@
 package schemas
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -32,5 +33,5 @@ func TestNewPipeline(t *testing.T) {
 		Status:                "running",
 	}
 
-	assert.Equal(t, expectedPipeline, NewPipeline(gitlabPipeline))
+	assert.Equal(t, expectedPipeline, NewPipeline(context.Background(), gitlabPipeline))
 }

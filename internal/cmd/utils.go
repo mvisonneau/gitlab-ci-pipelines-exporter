@@ -10,6 +10,7 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/go-helpers/logger"
 	log "github.com/sirupsen/logrus"
+	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"github.com/urfave/cli/v2"
 	"github.com/vmihailenco/taskq/v3"
 )
@@ -44,6 +45,13 @@ func configure(ctx *cli.Context) (cfg config.Config, err error) {
 	}); err != nil {
 		return
 	}
+
+	log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
+		log.PanicLevel,
+		log.FatalLevel,
+		log.ErrorLevel,
+		log.WarnLevel,
+	)))
 
 	// This hack is to embed taskq logs with logrus
 	taskq.SetLogger(stdlibLog.New(log.StandardLogger().WriterLevel(log.WarnLevel), "taskq", 0))
@@ -82,7 +90,7 @@ func exit(exitCode int, err error) cli.ExitCoder {
 	).Debug("exited..")
 
 	if err != nil {
-		log.Error(err.Error())
+		log.WithError(err).Error()
 	}
 
 	return cli.NewExitError("", exitCode)

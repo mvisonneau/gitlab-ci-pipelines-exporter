@@ -1,0 +1,17 @@
+datasources:
+- name: 'prometheus'
+  type: 'prometheus'
+  access: 'proxy'
+  org_id: 1
+  url: 'http://prometheus:9090'
+  is_default: true
+  version: 1
+  editable: true
+- name: 'jaeger'
+  type: 'jaeger'
+  access: 'proxy'
+  org_id: 1
+  url: 'http://jaeger:16686'
+  is_default: false
+  version: 1
+  editable: true

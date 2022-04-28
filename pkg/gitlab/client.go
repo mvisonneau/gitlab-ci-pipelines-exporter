@@ -12,10 +12,12 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 	"github.com/paulbellamy/ratecounter"
 	goGitlab "github.com/xanzy/go-gitlab"
+	"go.opentelemetry.io/otel"
 )
 
 const (
-	userAgent = "gitlab-ci-pipelines-exporter"
+	userAgent  = "gitlab-ci-pipelines-exporter"
+	tracerName = "gitlab-ci-pipelines-exporter"
 )
 
 // Client ..
@@ -91,6 +93,9 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 
 // ReadinessCheck ..
 func (c *Client) ReadinessCheck(ctx context.Context) healthcheck.Check {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ReadinessCheck")
+	defer span.End()
+
 	return func() error {
 		if c.Readiness.HTTPClient == nil {
 			return fmt.Errorf("readiness http client not configured")
@@ -124,6 +129,9 @@ func (c *Client) ReadinessCheck(ctx context.Context) healthcheck.Check {
 }
 
 func (c *Client) rateLimit(ctx context.Context) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:rateLimit")
+	defer span.End()
+
 	ratelimit.Take(ctx, c.RateLimiter)
 	// Used for monitoring purposes
 	c.RateCounter.Incr(1)

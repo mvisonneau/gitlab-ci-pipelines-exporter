@@ -32,7 +32,9 @@ func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wild
 			}).Info("discovered new project")
 
 			if err := c.Store.SetProject(ctx, p); err != nil {
-				log.Errorf(err.Error())
+				log.WithContext(ctx).
+					WithError(err).
+					Error()
 			}
 
 			c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(p.Key()), p)

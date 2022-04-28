@@ -14,6 +14,8 @@ import (
 	"github.com/vmihailenco/taskq/v3"
 	"github.com/vmihailenco/taskq/v3/memqueue"
 	"github.com/vmihailenco/taskq/v3/redisq"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const bufferSize = 1000
@@ -27,7 +29,10 @@ type TaskController struct {
 }
 
 // NewTaskController initializes and returns a new TaskController object.
-func NewTaskController(r *redis.Client) (t TaskController) {
+func NewTaskController(ctx context.Context, r *redis.Client) (t TaskController) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:NewTaskController")
+	defer span.End()
+
 	t.TaskMap = &taskq.TaskMap{}
 
 	queueOptions := &taskq.QueueOptions{
@@ -56,12 +61,16 @@ func NewTaskController(r *redis.Client) (t TaskController) {
 	// Purge the queue when we start
 	// I am only partially convinced this will not cause issues in HA fashion
 	if err := t.Queue.Purge(); err != nil {
-		log.WithField("error", err.Error()).Error("purging the pulling queue")
+		log.WithContext(ctx).
+			WithError(err).
+			Error("purging the pulling queue")
 	}
 
 	if r != nil {
 		if err := t.Factory.StartConsumers(context.TODO()); err != nil {
-			log.WithError(err).Fatal("starting consuming the task queue")
+			log.WithContext(ctx).
+				WithError(err).
+				Fatal("starting consuming the task queue")
 		}
 	}
 
@@ -84,10 +93,12 @@ func (c *Controller) TaskHandlerPullEnvironmentsFromProject(ctx context.Context,
 	// On errors, we do not want to retry these tasks
 	if p.Pull.Environments.Enabled {
 		if err := c.PullEnvironmentsFromProject(ctx, p); err != nil {
-			log.WithFields(log.Fields{
-				"project-name": p.Name,
-				"error":        err.Error(),
-			}).Warn("pulling environments from project")
+			log.WithContext(ctx).
+				WithFields(log.Fields{
+					"project-name": p.Name,
+				}).
+				WithError(err).
+				Warn("pulling environments from project")
 		}
 	}
 }
@@ -98,12 +109,14 @@ func (c *Controller) TaskHandlerPullEnvironmentMetrics(ctx context.Context, env 
 
 	// On errors, we do not want to retry these tasks
 	if err := c.PullEnvironmentMetrics(ctx, env); err != nil {
-		log.WithFields(log.Fields{
-			"project-name":     env.ProjectName,
-			"environment-name": env.Name,
-			"environment-id":   env.ID,
-			"error":            err.Error(),
-		}).Warn("pulling environment metrics")
+		log.WithContext(ctx).
+			WithFields(log.Fields{
+				"project-name":     env.ProjectName,
+				"environment-name": env.Name,
+				"environment-id":   env.ID,
+			}).
+			WithError(err).
+			Warn("pulling environment metrics")
 	}
 }
 
@@ -113,10 +126,12 @@ func (c *Controller) TaskHandlerPullRefsFromProject(ctx context.Context, p schem
 
 	// On errors, we do not want to retry these tasks
 	if err := c.PullRefsFromProject(ctx, p); err != nil {
-		log.WithFields(log.Fields{
-			"project-name": p.Name,
-			"error":        err.Error(),
-		}).Warn("pulling refs from project")
+		log.WithContext(ctx).
+			WithFields(log.Fields{
+				"project-name": p.Name,
+			}).
+			WithError(err).
+			Warn("pulling refs from project")
 	}
 }
 
@@ -126,11 +141,13 @@ func (c *Controller) TaskHandlerPullRefMetrics(ctx context.Context, ref schemas.
 
 	// On errors, we do not want to retry these tasks
 	if err := c.PullRefMetrics(ctx, ref); err != nil {
-		log.WithFields(log.Fields{
-			"project-name": ref.Project.Name,
-			"ref":          ref.Name,
-			"error":        err.Error(),
-		}).Warn("pulling ref metrics")
+		log.WithContext(ctx).
+			WithFields(log.Fields{
+				"project-name": ref.Project.Name,
+				"ref":          ref.Name,
+			}).
+			WithError(err).
+			Warn("pulling ref metrics")
 	}
 }
 
@@ -157,7 +174,9 @@ func (c *Controller) TaskHandlerPullEnvironmentsFromProjects(ctx context.Context
 
 	projectsCount, err := c.Store.ProjectsCount(ctx)
 	if err != nil {
-		log.Error(err.Error())
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
 	}
 
 	log.WithFields(
@@ -168,7 +187,9 @@ func (c *Controller) TaskHandlerPullEnvironmentsFromProjects(ctx context.Context
 
 	projects, err := c.Store.Projects(ctx)
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
 	}
 
 	for _, p := range projects {
@@ -183,7 +204,9 @@ func (c *Controller) TaskHandlerPullRefsFromProjects(ctx context.Context) {
 
 	projectsCount, err := c.Store.ProjectsCount(ctx)
 	if err != nil {
-		log.Error(err.Error())
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
 	}
 
 	log.WithFields(
@@ -194,7 +217,9 @@ func (c *Controller) TaskHandlerPullRefsFromProjects(ctx context.Context) {
 
 	projects, err := c.Store.Projects(ctx)
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
 	}
 
 	for _, p := range projects {
@@ -209,12 +234,16 @@ func (c *Controller) TaskHandlerPullMetrics(ctx context.Context) {
 
 	refsCount, err := c.Store.RefsCount(ctx)
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
 	}
 
 	envsCount, err := c.Store.EnvironmentsCount(ctx)
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
 	}
 
 	log.WithFields(
@@ -227,7 +256,9 @@ func (c *Controller) TaskHandlerPullMetrics(ctx context.Context) {
 	// ENVIRONMENTS
 	envs, err := c.Store.Environments(ctx)
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
 	}
 
 	for _, env := range envs {
@@ -237,7 +268,9 @@ func (c *Controller) TaskHandlerPullMetrics(ctx context.Context) {
 	// REFS
 	refs, err := c.Store.Refs(ctx)
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
 	}
 
 	for _, ref := range refs {
@@ -279,6 +312,9 @@ func (c *Controller) TaskHandlerGarbageCollectMetrics(ctx context.Context) error
 
 // Schedule ..
 func (c *Controller) Schedule(ctx context.Context, pull config.Pull, gc config.GarbageCollect) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:Schedule")
+	defer span.End()
+
 	for tt, cfg := range map[schemas.TaskType]config.SchedulerConfig{
 		schemas.TaskTypePullProjectsFromWildcards:    config.SchedulerConfig(pull.ProjectsFromWildcards),
 		schemas.TaskTypePullEnvironmentsFromProjects: config.SchedulerConfig(pull.EnvironmentsFromProjects),
@@ -307,6 +343,9 @@ func (c *Controller) Schedule(ctx context.Context, pull config.Pull, gc config.G
 // a key is periodically updated within Redis to let other instances know this
 // one is alive and processing tasks.
 func (c *Controller) ScheduleRedisSetKeepalive(ctx context.Context) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:ScheduleRedisSetKeepalive")
+	defer span.End()
+
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Duration(5) * time.Second)
 
@@ -318,7 +357,9 @@ func (c *Controller) ScheduleRedisSetKeepalive(ctx context.Context) {
 				return
 			case <-ticker.C:
 				if _, err := c.Store.(*store.Redis).SetKeepalive(ctx, c.UUID.String(), time.Duration(10)*time.Second); err != nil {
-					log.WithError(err).Fatal("setting keepalive")
+					log.WithContext(ctx).
+						WithError(err).
+						Fatal("setting keepalive")
 				}
 			}
 		}
@@ -327,6 +368,12 @@ func (c *Controller) ScheduleRedisSetKeepalive(ctx context.Context) {
 
 // ScheduleTask ..
 func (c *Controller) ScheduleTask(ctx context.Context, tt schemas.TaskType, uniqueID string, args ...interface{}) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:ScheduleTask")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("task_type", string(tt)))
+	span.SetAttributes(attribute.String("task_unique_id", uniqueID))
+
 	logFields := log.Fields{
 		"task_type":      tt,
 		"task_unique_id": uniqueID,
@@ -336,41 +383,57 @@ func (c *Controller) ScheduleTask(ctx context.Context, tt schemas.TaskType, uniq
 
 	qlen, err := c.TaskController.Queue.Len()
 	if err != nil {
-		log.WithFields(logFields).Warn("unable to read task queue length, skipping scheduling of task..")
+		log.WithContext(ctx).
+			WithFields(logFields).
+			Warn("unable to read task queue length, skipping scheduling of task..")
 
 		return
 	}
 
 	if qlen >= c.TaskController.Queue.Options().BufferSize {
-		log.WithFields(logFields).Warn("queue buffer size exhausted, skipping scheduling of task..")
+		log.WithContext(ctx).
+			WithFields(logFields).
+			Warn("queue buffer size exhausted, skipping scheduling of task..")
 
 		return
 	}
 
 	queued, err := c.Store.QueueTask(ctx, tt, uniqueID, c.UUID.String())
 	if err != nil {
-		log.WithFields(logFields).Warn("unable to declare the queueing, skipping scheduling of task..")
+		log.WithContext(ctx).
+			WithFields(logFields).
+			Warn("unable to declare the queueing, skipping scheduling of task..")
 
 		return
 	}
 
 	if !queued {
-		log.WithFields(logFields).Debug("task already queued, skipping scheduling of task..")
+		log.WithFields(logFields).
+			Debug("task already queued, skipping scheduling of task..")
 
 		return
 	}
 
 	go func(msg *taskq.Message) {
 		if err := c.TaskController.Queue.Add(msg); err != nil {
-			log.WithError(err).Warning("scheduling task")
+			log.WithContext(ctx).
+				WithError(err).
+				Warn("scheduling task")
 		}
 	}(msg)
 }
 
 // ScheduleTaskWithTicker ..
 func (c *Controller) ScheduleTaskWithTicker(ctx context.Context, tt schemas.TaskType, intervalSeconds int) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:ScheduleTaskWithTicker")
+	defer span.End()
+	span.SetAttributes(attribute.String("task_type", string(tt)))
+	span.SetAttributes(attribute.Int("interval_seconds", intervalSeconds))
+
 	if intervalSeconds <= 0 {
-		log.WithField("task", tt).Warn("task scheduling misconfigured, currently disabled")
+		log.WithContext(ctx).
+			WithField("task", tt).
+			Warn("task scheduling misconfigured, currently disabled")
 
 		return
 	}

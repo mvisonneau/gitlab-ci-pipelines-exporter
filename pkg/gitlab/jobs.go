@@ -8,10 +8,17 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // ListRefPipelineJobs ..
 func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs []schemas.Job, err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListRefPipelineJobs")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
+	span.SetAttributes(attribute.String("ref_name", ref.Name))
+
 	if ref.LatestPipeline == (schemas.Pipeline{}) {
 		log.WithFields(
 			log.Fields{
@@ -44,6 +51,11 @@ func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs
 
 // ListPipelineJobs ..
 func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, pipelineID int) (jobs []schemas.Job, err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListPipelineJobs")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name_or_id", projectNameOrID))
+	span.SetAttributes(attribute.Int("pipeline_id", pipelineID))
+
 	var (
 		foundJobs []*goGitlab.Job
 		resp      *goGitlab.Response
@@ -90,6 +102,11 @@ func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, p
 
 // ListPipelineBridges ..
 func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListPipelineBridges")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name_or_id", projectNameOrID))
+	span.SetAttributes(attribute.Int("pipeline_id", pipelineID))
+
 	var (
 		foundBridges []*goGitlab.Bridge
 		resp         *goGitlab.Response
@@ -134,6 +151,11 @@ func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string
 
 // ListPipelineChildJobs ..
 func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID string, parentPipelineID int) (jobs []schemas.Job, err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListPipelineChildJobs")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name_or_id", projectNameOrID))
+	span.SetAttributes(attribute.Int("parent_pipeline_id", parentPipelineID))
+
 	type pipelineDef struct {
 		projectNameOrID string
 		pipelineID      int
@@ -146,10 +168,13 @@ func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID stri
 			return
 		}
 
-		pipeline := pipelines[len(pipelines)-1]
+		var (
+			foundBridges []*goGitlab.Bridge
+			pipeline     = pipelines[len(pipelines)-1]
+		)
+
 		pipelines = pipelines[:len(pipelines)-1]
 
-		var foundBridges []*goGitlab.Bridge
 		foundBridges, err = c.ListPipelineBridges(ctx, pipeline.projectNameOrID, pipeline.pipelineID)
 		if err != nil {
 			return
@@ -164,7 +189,9 @@ func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID stri
 			}
 
 			pipelines = append(pipelines, pipelineDef{strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID})
+
 			var foundJobs []schemas.Job
+
 			foundJobs, err = c.ListPipelineJobs(ctx, strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID)
 			if err != nil {
 				return
@@ -177,6 +204,11 @@ func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID stri
 
 // ListRefMostRecentJobs ..
 func (c *Client) ListRefMostRecentJobs(ctx context.Context, ref schemas.Ref) (jobs []schemas.Job, err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListRefMostRecentJobs")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
+	span.SetAttributes(attribute.String("ref_name", ref.Name))
+
 	if len(ref.LatestJobs) == 0 {
 		log.WithFields(
 			log.Fields{
@@ -245,14 +277,16 @@ func (c *Client) ListRefMostRecentJobs(ctx context.Context, ref schemas.Ref) (jo
 				notFoundJobs = append(notFoundJobs, k)
 			}
 
-			log.WithFields(
-				log.Fields{
-					"project-name":   ref.Project.Name,
-					"ref":            ref.Name,
-					"jobs-count":     resp.TotalItems,
-					"not-found-jobs": strings.Join(notFoundJobs, ","),
-				},
-			).Warn("found some ref jobs but did not manage to refresh all jobs which were in memory")
+			log.WithContext(ctx).
+				WithFields(
+					log.Fields{
+						"project-name":   ref.Project.Name,
+						"ref":            ref.Name,
+						"jobs-count":     resp.TotalItems,
+						"not-found-jobs": strings.Join(notFoundJobs, ","),
+					},
+				).
+				Warn("found some ref jobs but did not manage to refresh all jobs which were in memory")
 
 			break
 		}
