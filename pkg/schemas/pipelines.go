@@ -3,7 +3,6 @@ package schemas
 import (
 	"context"
 	"strconv"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -26,7 +25,6 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 		coverage  float64
 		err       error
 		timestamp float64
-		queued    time.Duration
 	)
 
 	if gp.Coverage != "" {
@@ -42,18 +40,12 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 		timestamp = float64(gp.UpdatedAt.Unix())
 	}
 
-	if gp.StartedAt != nil && gp.CreatedAt != nil {
-		if gp.CreatedAt.Before(*gp.StartedAt) {
-			queued = gp.StartedAt.Sub(*gp.CreatedAt)
-		}
-	}
-
 	return Pipeline{
 		ID:                    gp.ID,
 		Coverage:              coverage,
 		Timestamp:             timestamp,
 		DurationSeconds:       float64(gp.Duration),
-		QueuedDurationSeconds: queued.Seconds(),
+		QueuedDurationSeconds: float64(gp.QueuedDuration),
 		Status:                gp.Status,
 	}
 }

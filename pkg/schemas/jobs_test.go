@@ -13,13 +13,14 @@ func TestNewJob(t *testing.T) {
 	startedAt := time.Date(2020, 10, 1, 13, 5, 35, 0, time.UTC)
 
 	gitlabJob := goGitlab.Job{
-		ID:        2,
-		Name:      "foo",
-		CreatedAt: &createdAt,
-		StartedAt: &startedAt,
-		Duration:  15,
-		Status:    "failed",
-		Stage:     "🚀",
+		ID:             2,
+		Name:           "foo",
+		CreatedAt:      &createdAt,
+		StartedAt:      &startedAt,
+		Duration:       15,
+		QueuedDuration: 10,
+		Status:         "failed",
+		Stage:          "🚀",
 		Runner: struct {
 			ID          int    "json:\"id\""
 			Description string "json:\"description\""
@@ -50,7 +51,7 @@ func TestNewJob(t *testing.T) {
 		Stage:                 "🚀",
 		Timestamp:             1.601557505e+09,
 		DurationSeconds:       15,
-		QueuedDurationSeconds: 30,
+		QueuedDurationSeconds: 10,
 		Status:                "failed",
 		ArtifactSize:          150,
 

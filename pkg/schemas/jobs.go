@@ -1,8 +1,6 @@
 package schemas
 
 import (
-	"time"
-
 	goGitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -32,7 +30,6 @@ func NewJob(gj goGitlab.Job) Job {
 	var (
 		artifactSize float64
 		timestamp    float64
-		queued       time.Duration
 	)
 
 	for _, artifact := range gj.Artifacts {
@@ -43,19 +40,13 @@ func NewJob(gj goGitlab.Job) Job {
 		timestamp = float64(gj.CreatedAt.Unix())
 	}
 
-	if gj.StartedAt != nil && gj.CreatedAt != nil {
-		if gj.CreatedAt.Before(*gj.StartedAt) {
-			queued = gj.StartedAt.Sub(*gj.CreatedAt)
-		}
-	}
-
 	return Job{
 		ID:                    gj.ID,
 		Name:                  gj.Name,
 		Stage:                 gj.Stage,
 		Timestamp:             timestamp,
 		DurationSeconds:       gj.Duration,
-		QueuedDurationSeconds: queued.Seconds(),
+		QueuedDurationSeconds: gj.QueuedDuration,
 		Status:                gj.Status,
 		ArtifactSize:          artifactSize,
 

@@ -22,6 +22,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - Upgraded golang to **v1.18**
 - Upgraded most dependencies to their lastest versions
 - Fixed child pipeline jobs not found whilst looking up through bridges (#345)
+- `gitlab_ci_pipeline_job_queued_duration_seconds` & `gitlab_ci_pipeline_queued_duration_seconds` will now be leveraging the value returned through the GitLab API instead of computing it with (startedAt - createdAt)
 
 ## [v0.5.3] - 2022-02-11
 

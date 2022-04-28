@@ -15,13 +15,14 @@ func TestNewPipeline(t *testing.T) {
 	updatedAt := time.Date(2020, 10, 1, 13, 5, 50, 0, time.UTC)
 
 	gitlabPipeline := goGitlab.Pipeline{
-		ID:        21,
-		Coverage:  "25.6",
-		CreatedAt: &createdAt,
-		StartedAt: &startedAt,
-		UpdatedAt: &updatedAt,
-		Duration:  15,
-		Status:    "running",
+		ID:             21,
+		Coverage:       "25.6",
+		CreatedAt:      &createdAt,
+		StartedAt:      &startedAt,
+		UpdatedAt:      &updatedAt,
+		Duration:       15,
+		QueuedDuration: 5,
+		Status:         "running",
 	}
 
 	expectedPipeline := Pipeline{
@@ -29,7 +30,7 @@ func TestNewPipeline(t *testing.T) {
 		Coverage:              25.6,
 		Timestamp:             1.60155755e+09,
 		DurationSeconds:       15,
-		QueuedDurationSeconds: 60,
+		QueuedDurationSeconds: 5,
 		Status:                "running",
 	}
 
