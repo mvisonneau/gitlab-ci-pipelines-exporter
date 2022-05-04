@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/controller"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/rpc"
+	monitoringServer "github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/server"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -32,14 +32,13 @@ func Run(cliCtx *cli.Context) (int, error) {
 
 	// Start the monitoring RPC server
 	go func(c *controller.Controller) {
-		rpc.ServeUNIX(
-			rpc.NewServer(
-				c.Gitlab,
-				c.Config,
-				c.Store,
-				c.TaskController.TaskSchedulingMonitoring,
-			),
+		s := monitoringServer.NewServer(
+			c.Gitlab,
+			c.Config,
+			c.Store,
+			c.TaskController.TaskSchedulingMonitoring,
 		)
+		s.Serve()
 	}(&c)
 
 	// Graceful shutdowns

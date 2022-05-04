@@ -34,6 +34,15 @@ release: ## Build & release the binaries (stable)
 	goreleaser release --rm-dist
 	find dist -type f -name "*.snap" -exec snapcraft upload --release stable,edge '{}' \;
 
+.PHONY: protoc
+protoc: setup ## Generate golang from .proto files
+	@command -v protoc 2>&1 >/dev/null        || (echo "protoc needs to be available in PATH: https://github.com/protocolbuffers/protobuf/releases"; false)
+	@command -v protoc-gen-go 2>&1 >/dev/null || go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+	protoc \
+		--go_out=. --go_opt=paths=source_relative \
+		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+		pkg/monitor/protobuf/monitor.proto
+
 .PHONY: prerelease
 prerelease: setup ## Build & prerelease the binaries (edge)
 	@\

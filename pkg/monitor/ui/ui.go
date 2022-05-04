@@ -1,8 +1,7 @@
 package ui
 
 import (
-	"bufio"
-	"bytes"
+	"context"
 	"fmt"
 	"net/url"
 	"os"
@@ -10,13 +9,12 @@ import (
 	"strings"
 	"time"
 
-	chromaQuick "github.com/alecthomas/chroma/quick"
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/rpc"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/client"
+	pb "github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/protobuf"
 	log "github.com/sirupsen/logrus"
 	"github.com/xeonx/timeago"
 )
@@ -24,12 +22,12 @@ import (
 type tab string
 
 const (
-	tabStatus tab = "status"
-	tabConfig tab = "config"
+	tabTelemetry tab = "telemetry"
+	tabConfig    tab = "config"
 )
 
 var tabs = [...]tab{
-	tabStatus,
+	tabTelemetry,
 	tabConfig,
 }
 
@@ -123,59 +121,67 @@ func max(a, b int) int {
 
 type model struct {
 	version         string
-	listenerAddress *url.URL
-	rpcClient       *rpc.Client
-	sub             chan monitor.Status
-	lastStatus      *monitor.Status
+	client          *client.Client
 	vp              viewport.Model
 	progress        *progress.Model
+	telemetry       *pb.Telemetry
+	telemetryStream chan *pb.Telemetry
 	tabID           int
 }
 
-func (m *model) renderLastStatus() string {
-	if m.lastStatus == nil {
+func (m *model) renderConfigViewport() string {
+	config, err := m.client.GetConfig(context.TODO(), &pb.Empty{})
+	if err != nil || config == nil {
+		log.WithError(err).Fatal()
+	}
+
+	return config.GetContent()
+}
+
+func (m *model) renderTelemetryViewport() string {
+	if m.telemetry == nil {
 		return "\nloading data.."
 	}
 
 	gitlabAPIUsage := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" GitLab API usage        ",
-		m.progress.ViewAs(m.lastStatus.GitLabAPIUsage),
+		m.progress.ViewAs(m.telemetry.GitlabApiUsage),
 		"\n",
 	)
 
 	gitlabAPIRequestsCount := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" GitLab API requests    ",
-		dataStyle.SetString(strconv.Itoa(int(m.lastStatus.GitLabAPIRequestsCount))).String(),
+		dataStyle.SetString(strconv.Itoa(int(m.telemetry.GetGitlabApiRequestsCount()))).String(),
 		"\n",
 	)
 
 	gitlabAPIRateLimit := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" GitLab API limit usage  ",
-		m.progress.ViewAs(m.lastStatus.GitLabAPIRateLimit),
+		m.progress.ViewAs(m.telemetry.GetGitlabApiRateLimit()),
 		"\n",
 	)
 
 	gitlabAPIRateLimitRemaining := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" GitLab API limit requests remaining ",
-		dataStyle.SetString(strconv.Itoa(int(m.lastStatus.GitLabAPILimitRemaining))).String(),
+		dataStyle.SetString(strconv.Itoa(int(m.telemetry.GetGitlabApiLimitRemaining()))).String(),
 		"\n",
 	)
 
 	tasksBufferUsage := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" Tasks buffer usage      ",
-		m.progress.ViewAs(m.lastStatus.TasksBufferUsage),
+		m.progress.ViewAs(m.telemetry.GetTasksBufferUsage()),
 		"\n",
 	)
 
 	tasksExecuted := lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" Tasks executed         ",
-		dataStyle.SetString(strconv.Itoa(int(m.lastStatus.TasksExecutedCount))).String(),
+		dataStyle.SetString(strconv.Itoa(int(m.telemetry.GetTasksExecutedCount()))).String(),
 		"\n",
 	)
 
@@ -187,24 +193,24 @@ func (m *model) renderLastStatus() string {
 		gitlabAPIRateLimitRemaining,
 		tasksBufferUsage,
 		tasksExecuted,
-		renderEntityStatus("Projects", m.lastStatus.Projects),
-		renderEntityStatus("Environments", m.lastStatus.Envs),
-		renderEntityStatus("Refs", m.lastStatus.Refs),
-		renderEntityStatus("Metrics", m.lastStatus.Metrics),
+		renderEntity("Projects", m.telemetry.GetProjects()),
+		renderEntity("Environments", m.telemetry.GetEnvs()),
+		renderEntity("Refs", m.telemetry.GetRefs()),
+		renderEntity("Metrics", m.telemetry.GetMetrics()),
 	}, "\n")
 }
 
-func renderEntityStatus(name string, es monitor.EntityStatus) string {
+func renderEntity(name string, e *pb.Entity) string {
 	return entityStyle.Render(lipgloss.JoinHorizontal(
 		lipgloss.Top,
 		" "+name+strings.Repeat(" ", 24-len(name)),
 		lipgloss.JoinVertical(
 			lipgloss.Left,
-			"Total      "+dataStyle.SetString(strconv.Itoa(int(es.Count))).String()+"\n",
-			"Last Pull  "+dataStyle.SetString(prettyTimeago(es.LastPull)).String()+"\n",
-			"Last GC    "+dataStyle.SetString(prettyTimeago(es.LastGC)).String()+"\n",
-			"Next Pull  "+dataStyle.SetString(prettyTimeago(es.NextPull)).String()+"\n",
-			"Next GC    "+dataStyle.SetString(prettyTimeago(es.NextGC)).String()+"\n",
+			"Total      "+dataStyle.SetString(strconv.Itoa(int(e.Count))).String()+"\n",
+			"Last Pull  "+dataStyle.SetString(prettyTimeago(e.LastPull.AsTime())).String()+"\n",
+			"Last GC    "+dataStyle.SetString(prettyTimeago(e.LastGc.AsTime())).String()+"\n",
+			"Next Pull  "+dataStyle.SetString(prettyTimeago(e.NextPull.AsTime())).String()+"\n",
+			"Next GC    "+dataStyle.SetString(prettyTimeago(e.NextGc.AsTime())).String()+"\n",
 		),
 		"\n",
 	))
@@ -218,30 +224,28 @@ func prettyTimeago(t time.Time) string {
 	return timeago.English.Format(t)
 }
 
-func newModel(version string, listenerAddress *url.URL) (m *model) {
-	rpcClient := rpc.NewClient(listenerAddress)
+func newModel(version string, endpoint *url.URL) (m *model) {
 	p := progress.NewModel(progress.WithScaledGradient("#80c904", "#ff9d5c"))
 
 	m = &model{
 		version:         version,
-		listenerAddress: listenerAddress,
-		sub:             make(chan monitor.Status),
 		vp:              viewport.Model{},
+		telemetryStream: make(chan *pb.Telemetry),
 		progress:        &p,
-		rpcClient:       rpcClient,
+		client:          client.NewClient(context.TODO(), endpoint),
 	}
 
 	return
 }
 
-func (m model) Init() tea.Cmd {
+func (m *model) Init() tea.Cmd {
 	return tea.Batch(
-		m.generateActivity(),
-		waitForActivity(m.sub),
+		m.streamTelemetry(context.TODO()),
+		waitForTelemetryUpdate(m.telemetryStream),
 	)
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.vp.Width = msg.Width
@@ -274,19 +278,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			return m, cmd
 		}
-	case monitor.Status:
-		m.lastStatus = &msg
-		if m.tabID == 0 {
-			m.vp.SetContent(m.renderLastStatus())
-		}
+	case *pb.Telemetry:
+		m.telemetry = msg
+		m.setPaneContent()
 
-		return m, waitForActivity(m.sub)
+		return m, waitForTelemetryUpdate(m.telemetryStream)
 	}
 
 	return m, nil
 }
 
-func (m model) View() string {
+func (m *model) View() string {
 	doc := strings.Builder{}
 
 	// TABS
@@ -328,18 +330,29 @@ func (m model) View() string {
 	return docStyle.Render(doc.String())
 }
 
-func waitForActivity(sub chan monitor.Status) tea.Cmd {
-	return func() tea.Msg {
-		return <-sub
+func (m *model) streamTelemetry(ctx context.Context) tea.Cmd {
+	c, err := m.client.GetTelemetry(ctx, &pb.Empty{})
+	if err != nil {
+		log.WithError(err).Fatal()
 	}
+
+	go func(m *model) {
+		for {
+			telemetry, err := c.Recv()
+			if err != nil {
+				log.WithError(err).Fatal()
+			}
+
+			m.telemetryStream <- telemetry
+		}
+	}(m)
+
+	return nil
 }
 
-func (m model) generateActivity() tea.Cmd {
+func waitForTelemetryUpdate(t chan *pb.Telemetry) tea.Cmd {
 	return func() tea.Msg {
-		for {
-			time.Sleep(time.Second)
-			m.sub <- m.rpcClient.Status()
-		}
+		return <-t
 	}
 }
 
@@ -356,17 +369,9 @@ func Start(version string, listenerAddress *url.URL) {
 
 func (m *model) setPaneContent() {
 	switch tabs[m.tabID] {
-	case tabStatus:
-		m.vp.SetContent(m.renderLastStatus())
+	case tabTelemetry:
+		m.vp.SetContent(m.renderTelemetryViewport())
 	case tabConfig:
-		var b bytes.Buffer
-
-		foo := bufio.NewWriter(&b)
-
-		if err := chromaQuick.Highlight(foo, m.rpcClient.Config(), "yaml", "terminal16m", "monokai"); err != nil {
-			log.WithError(err).Fatal()
-		}
-
-		m.vp.SetContent(b.String())
+		m.vp.SetContent(m.renderConfigViewport())
 	}
 }

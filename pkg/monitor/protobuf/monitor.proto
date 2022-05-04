@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/protobuf";
+
+package monitor;
+
+service Monitor {
+  rpc GetConfig(Empty) returns (Config) {}
+  rpc GetTelemetry(Empty) returns (stream Telemetry) {}
+}
+
+message Empty {}
+
+message Config {
+  string content = 1;
+}
+
+message Telemetry {
+  double gitlab_api_usage = 1;
+  uint64 gitlab_api_requests_count = 2;
+  double gitlab_api_rate_limit = 3;
+  uint64 gitlab_api_limit_remaining = 4;
+  double tasks_buffer_usage = 5;
+  uint64 tasks_executed_count = 6;
+  Entity projects = 7;
+  Entity refs = 8;
+  Entity envs = 9;
+  Entity metrics = 10;
+}
+
+message Entity {
+  int64 count = 1;
+  google.protobuf.Timestamp last_gc = 2;
+  google.protobuf.Timestamp last_pull = 3;
+  google.protobuf.Timestamp next_gc = 4;
+  google.protobuf.Timestamp next_pull = 5;
+}

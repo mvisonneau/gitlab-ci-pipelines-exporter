@@ -455,11 +455,8 @@ func (c *Controller) ScheduleTaskWithTicker(ctx context.Context, tt schemas.Task
 
 				return
 			case <-ticker.C:
-				switch tt {
-				default:
-					c.ScheduleTask(ctx, tt, "_")
-					c.TaskController.monitorNextTaskScheduling(tt, intervalSeconds)
-				}
+				c.ScheduleTask(ctx, tt, "_")
+				c.TaskController.monitorNextTaskScheduling(tt, intervalSeconds)
 			}
 		}
 	}(ctx)
