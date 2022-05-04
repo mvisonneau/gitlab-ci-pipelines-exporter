@@ -45,7 +45,7 @@ func TestNewClient(t *testing.T) {
 		URL:              "https://gitlab.example.com",
 		Token:            "supersecret",
 		UserAgentVersion: "0.0.0",
-		DisableTLSVerify: false,
+		DisableTLSVerify: true,
 		ReadinessURL:     "https://gitlab.example.com/amialive",
 		RateLimiter:      ratelimit.NewLocalLimiter(10),
 	}
@@ -57,6 +57,7 @@ func TestNewClient(t *testing.T) {
 	assert.Equal(t, "https", c.Client.BaseURL().Scheme)
 	assert.Equal(t, "gitlab.example.com", c.Client.BaseURL().Host)
 	assert.Equal(t, "https://gitlab.example.com/amialive", c.Readiness.URL)
+	assert.True(t, c.Readiness.HTTPClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify)
 	assert.Equal(t, 5*time.Second, c.Readiness.HTTPClient.Timeout)
 }
 
