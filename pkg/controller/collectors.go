@@ -4,8 +4,8 @@ import "github.com/prometheus/client_golang/prometheus"
 
 var (
 	defaultLabels                = []string{"project", "topics", "kind", "ref", "variables"}
-	jobLabels                    = []string{"stage", "job_name", "runner_description", "pipeline_id", "job_id"}
-	pipelineLabels               = []string{"pipeline_id"}
+	jobLabels                    = []string{"stage", "job_name", "runner_description", "pipeline_id", "job_id", "status"}
+	pipelineLabels               = []string{"pipeline_id", "status"}
 	statusLabels                 = []string{"status"}
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "username"}
@@ -305,7 +305,7 @@ func NewCollectorJobStatus() prometheus.Collector {
 			Name: "gitlab_ci_pipeline_job_status",
 			Help: "Status of the most recent job",
 		},
-		append(defaultLabels, append(jobLabels, statusLabels...)...),
+		append(defaultLabels, jobLabels...),
 	)
 }
 
@@ -327,7 +327,7 @@ func NewCollectorStatus() prometheus.Collector {
 			Name: "gitlab_ci_pipeline_status",
 			Help: "Status of the most recent pipeline",
 		},
-		append(defaultLabels, append(pipelineLabels, statusLabels...)...),
+		append(defaultLabels, pipelineLabels...),
 	)
 }
 

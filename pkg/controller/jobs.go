@@ -53,6 +53,7 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 	labels := ref.DefaultLabelsValues()
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
+	labels["status"] = job.Status
 	labels["job_id"] = strconv.Itoa(job.ID)
 	labels["pipeline_id"] = strconv.Itoa(job.PipelineID)
 

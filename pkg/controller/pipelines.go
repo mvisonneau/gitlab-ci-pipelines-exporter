@@ -75,6 +75,7 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 
 		labels := ref.DefaultLabelsValues()
 		labels["pipeline_id"] = strconv.Itoa(pipeline.ID)
+		labels["status"] = pipeline.Status
 
 		// If the metric does not exist yet, start with 0 instead of 1
 		// this could cause some false positives in prometheus
