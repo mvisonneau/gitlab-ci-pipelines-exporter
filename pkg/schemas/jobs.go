@@ -7,6 +7,7 @@ import (
 // Job ..
 type Job struct {
 	ID                    int
+	PipelineID            int
 	Name                  string
 	Stage                 string
 	Timestamp             float64
@@ -42,6 +43,7 @@ func NewJob(gj goGitlab.Job) Job {
 
 	return Job{
 		ID:                    gj.ID,
+		PipelineID:            gj.Pipeline.ID,
 		Name:                  gj.Name,
 		Stage:                 gj.Stage,
 		Timestamp:             timestamp,

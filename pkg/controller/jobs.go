@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"regexp"
+	"strconv"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
@@ -52,6 +53,8 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 	labels := ref.DefaultLabelsValues()
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
+	labels["job_id"] = strconv.Itoa(job.ID)
+	labels["pipeline_id"] = strconv.Itoa(job.PipelineID)
 
 	if ref.Project.Pull.Pipeline.Jobs.RunnerDescription.Enabled {
 		re, err := regexp.Compile(ref.Project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp)
