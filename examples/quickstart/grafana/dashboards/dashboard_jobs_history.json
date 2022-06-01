@@ -1,0 +1,707 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Jobs History",
+  "editable": true,
+  "gnetId": 10620,
+  "graphTooltip": 0,
+  "id": 8,
+  "iteration": 1652259186805,
+  "links": [],
+  "panels": [
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "displayMode": "auto",
+            "filterable": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job ID"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "View job #${__value.numeric}",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/-/jobs/${__value.numeric}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "thresholds"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "1": {
+                        "color": "green",
+                        "index": 10,
+                        "text": "SUCCESS"
+                      },
+                      "2": {
+                        "index": 9,
+                        "text": "RUNNING"
+                      },
+                      "3": {
+                        "index": 8,
+                        "text": "FAILED"
+                      },
+                      "4": {
+                        "index": 7,
+                        "text": "CANCELED"
+                      },
+                      "5": {
+                        "index": 6,
+                        "text": "CREATED"
+                      },
+                      "6": {
+                        "index": 5,
+                        "text": "WAITING FOR RESOURCE"
+                      },
+                      "7": {
+                        "index": 4,
+                        "text": "PREPARING"
+                      },
+                      "8": {
+                        "index": 3,
+                        "text": "PENDING"
+                      },
+                      "9": {
+                        "index": 2,
+                        "text": "SKIPPED"
+                      },
+                      "10": {
+                        "index": 1,
+                        "text": "MANUAL"
+                      },
+                      "11": {
+                        "index": 0,
+                        "text": "SCHEDULED"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "light-blue",
+                      "value": 1
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 3
+                    },
+                    {
+                      "color": "light-orange",
+                      "value": 5
+                    },
+                    {
+                      "color": "rgb(135, 135, 134)",
+                      "value": 9
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 217
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Kind"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 98
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 122
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Date"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pipeline ID"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "View pipeline #${__value.numeric}",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/-/pipelines/${__value.numeric}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job Name"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 285
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 19,
+        "x": 0,
+        "y": 0
+      },
+      "id": 119,
+      "links": [],
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date"
+          }
+        ]
+      },
+      "pluginVersion": "8.0.5",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "max by (project, ref, kind, pipeline_id, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", job_name=~\"$JOB_NAME\", status=~\"$STATUS\", job_id=~\"$JOB_ID\"}[1w]))",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "ID"
+        },
+        {
+          "exemplar": true,
+          "expr": "-max by (project, ref, kind, job_name, job_id) (time() - max_over_time (gitlab_ci_pipeline_job_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", job_name=~\"$JOB_NAME\", status=~\"$STATUS\", job_id=~\"$JOB_ID\"}[1w]))",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "Date"
+        },
+        {
+          "exemplar": true,
+          "expr": "max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", job_name=~\"$JOB_NAME\", status=~\"$STATUS\", job_id=~\"$JOB_ID\"}[1w]))",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "Duration"
+        },
+        {
+          "exemplar": true,
+          "expr": "(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"success\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 1 ) > 0 or\n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"failed\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 3 ) > 0 or \n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"running\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 2 ) > 0 or \n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"canceled\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 4 ) > 0 or \n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"created\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 5 ) > 0 or \n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"waiting_for_resource\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 6 ) > 0 or \n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"preparing\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 7 ) > 0 or \n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"pending\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 8 ) > 0 or \n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"skipped\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 9 ) > 0 or \n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"manual\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 10 ) > 0 or \n(max by (project, ref, kind, job_name, job_id) (max_over_time (gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", pipeline_id=~\"$PIPELINE_ID\", status=~\"scheduled\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}[1w])) * 11 ) > 0",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "Status"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "JOBS",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value #A": false,
+              "Value #ID": true,
+              "job_id": false,
+              "job_name": false,
+              "kind": true
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value #Date": 8,
+              "Value #Duration": 9,
+              "Value #ID": 4,
+              "Value #Status": 10,
+              "job_id": 5,
+              "job_name": 6,
+              "kind": 7,
+              "pipeline_id": 3,
+              "project": 1,
+              "ref": 2
+            },
+            "renameByName": {
+              "Value #A": "Status",
+              "Value #B": "Date",
+              "Value #C": "Duration",
+              "Value #D": "ID",
+              "Value #Date": "Date",
+              "Value #Duration": "Duration",
+              "Value #ID": "",
+              "Value #Status": "Status",
+              "job_id": "Job ID",
+              "job_name": "Job Name",
+              "kind": "Ref Kind",
+              "pipeline_id": "Pipeline ID",
+              "project": "Project",
+              "ref": "Ref Name",
+              "status": "Status"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "description": null,
+        "error": null,
+        "hide": 2,
+        "label": null,
+        "name": "GITLAB_HOST",
+        "query": "gitswarm.f5net.com",
+        "skipUrlSync": false,
+        "type": "constant"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "prometheus",
+        "definition": "label_values(gitlab_ci_pipeline_id, project)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "owner",
+        "multi": true,
+        "name": "OWNER",
+        "options": [],
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_id, project)",
+          "refId": "prometheus-OWNER-Variable-Query"
+        },
+        "refresh": 2,
+        "regex": "/(.*)\\/.*$/",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "prometheus",
+        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\"}, project)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "project",
+        "multi": true,
+        "name": "PROJECT",
+        "options": [],
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\"}, project)",
+          "refId": "prometheus-PROJECT-Variable-Query"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "prometheus",
+        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, ref)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "ref",
+        "multi": true,
+        "name": "REF",
+        "options": [],
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, ref)",
+          "refId": "prometheus-REF-Variable-Query"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "prometheus",
+        "definition": "label_values(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}, pipeline_id)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Pipeline ID",
+        "multi": true,
+        "name": "PIPELINE_ID",
+        "options": [],
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"$STATUS\", job_name=~\"$JOB_NAME\", job_id=~\"$JOB_ID\"}, pipeline_id)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "prometheus",
+        "definition": "label_values(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}, job_name)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Job Name",
+        "multi": true,
+        "name": "JOB_NAME",
+        "options": [],
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}, job_name)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": null,
+        "definition": "label_values(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB_NAME\"}, status)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Status",
+        "multi": true,
+        "name": "STATUS",
+        "options": [],
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_job_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB_NAME\"}, status)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "prometheus",
+        "definition": "label_values(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB_NAME\", status=~\"$STATUS\"}, job_id)",
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "Job ID",
+        "multi": true,
+        "name": "JOB_ID",
+        "options": [],
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", job_name=~\"$JOB_NAME\", status=~\"$STATUS\"}, job_id)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "GitLab CI Jobs History",
+  "uid": "gitlab_ci_jobs_history",
+  "version": 1
+}
