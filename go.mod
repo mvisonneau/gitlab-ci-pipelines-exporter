@@ -21,7 +21,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.13
 	github.com/urfave/cli/v2 v2.8.1
 	github.com/vmihailenco/msgpack/v5 v5.3.5
@@ -37,7 +37,7 @@ require (
 	go.uber.org/ratelimit v0.2.0
 	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
-	gopkg.in/yaml.v3 v3.0.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
