@@ -23,7 +23,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.1
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.13
-	github.com/urfave/cli/v2 v2.8.1
+	github.com/urfave/cli/v2 v2.10.3
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/vmihailenco/taskq/v3 v3.2.8
 	github.com/xanzy/go-gitlab v0.68.0
@@ -37,7 +37,7 @@ require (
 	go.uber.org/ratelimit v0.2.0
 	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
-	gopkg.in/yaml.v3 v3.0.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
