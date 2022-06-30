@@ -22,7 +22,7 @@ require (
 	github.com/prometheus/client_golang v1.12.2
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.5
-	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.13
+	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.14
 	github.com/urfave/cli/v2 v2.10.3
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/vmihailenco/taskq/v3 v3.2.8
@@ -81,7 +81,7 @@ require (
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelutil v0.1.13 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelutil v0.1.14 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
