@@ -63,8 +63,8 @@ github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghf
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/cespare/xxhash/v2 v2.1.2 h1:YRXhKfTDauu4ajMg1TPgFO5jnlC2HCbmLXMcTG5cbYE=
 github.com/cespare/xxhash/v2 v2.1.2/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
-github.com/charmbracelet/bubbles v0.11.0 h1:fBLyY0PvJnd56Vlu5L84JJH6f4axhgIJ9P3NET78f0Q=
-github.com/charmbracelet/bubbles v0.11.0/go.mod h1:bbeTiXwPww4M031aGi8UK2HT9RDWoiNibae+1yCMtcc=
+github.com/charmbracelet/bubbles v0.12.0 h1:fxb9U9yI60Hek3tcPmMTFya5NhvPrqpkpyMaNngFh7A=
+github.com/charmbracelet/bubbles v0.12.0/go.mod h1:bbeTiXwPww4M031aGi8UK2HT9RDWoiNibae+1yCMtcc=
 github.com/charmbracelet/bubbletea v0.21.0 h1:f3y+kanzgev5PA916qxmDybSHU3N804uOnKnhRPXTcI=
 github.com/charmbracelet/bubbletea v0.21.0/go.mod h1:GgmJMec61d08zXsOhqRC/AiOx4K4pmz+VIcRIm1FKr4=
 github.com/charmbracelet/harmonica v0.2.0 h1:8NxJWRWg/bzKqqEaaeFNipOu77YR5t8aSwG4pgaUBiQ=
