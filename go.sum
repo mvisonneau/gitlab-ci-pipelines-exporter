@@ -377,8 +377,8 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
-github.com/stretchr/testify v1.7.5 h1:s5PTfem8p8EbKQOctVV53k6jCJt3UX4IEJzwh+C324Q=
-github.com/stretchr/testify v1.7.5/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
+github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
+github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.14 h1:wr4qKY3KUDcltzKTQJ/tOuUhUnY4zbDnHoAq13e+ZnY=
 github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.14/go.mod h1:AgwK/cKYxv+JQyaBf1lG5YBA9zdG1EDlqjgrIXJPMc8=
 github.com/uptrace/opentelemetry-go-extra/otelutil v0.1.14 h1:vuYn+33yx7KrzmnUH2TYmapR8B8DwO0nRIluc0gRdfE=

@@ -21,7 +21,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.2
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.5
+	github.com/stretchr/testify v1.8.0
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.14
 	github.com/urfave/cli/v2 v2.10.3
 	github.com/vmihailenco/msgpack/v5 v5.3.5
