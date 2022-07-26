@@ -110,6 +110,7 @@ func (m Metric) Key() MetricKey {
 			m.Labels["kind"],
 			m.Labels["ref"],
 			m.Labels["stage"],
+			m.Labels["tag_list"],
 			m.Labels["job_name"],
 		})
 
