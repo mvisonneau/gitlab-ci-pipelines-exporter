@@ -77,7 +77,9 @@ func configure(ctx *cli.Context) (cfg config.Config, err error) {
 }
 
 func parseGlobalFlags(ctx *cli.Context) (cfg config.Global, err error) {
-	cfg.InternalMonitoringListenerAddress, err = url.Parse(ctx.String("internal-monitoring-listener-address"))
+	if listenerAddr := ctx.String("internal-monitoring-listener-address"); listenerAddr != "" {
+		cfg.InternalMonitoringListenerAddress, err = url.Parse(listenerAddr)
+	}
 
 	return
 }
