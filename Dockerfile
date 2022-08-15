@@ -2,7 +2,7 @@
 # BUILD CONTAINER
 ##
 
-FROM alpine:3.16.0 as certs
+FROM alpine:3.16.2 as certs
 
 RUN \
 apk add --no-cache ca-certificates
