@@ -16,8 +16,8 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-20.04
-          - macos-11.0
+          - ubuntu-22.04
+          - macos-12
           - windows-2022
 
     runs-on: ${{ matrix.os }}
@@ -29,10 +29,10 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.18
+          go-version: 1.19
 
       - name: Lint
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: make lint
 
       - name: Test
@@ -40,7 +40,7 @@ jobs:
 
       - name: Publish coverage to coveralls.io
         uses: shogo82148/actions-goveralls@v1
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
         with:
           path-to-profile: coverage.out
 
