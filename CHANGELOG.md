@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.5.4] - 2022-08-25
+
 ### Added
 
 - Kickstarted tracing support through `opentelemetry` implementation for most of the network calls
@@ -19,7 +21,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 ### Changed
 
 - Fixed a config issue preventing the arm deb/rpm packages to be released correctly
-- Upgraded golang to **v1.18**
+- Upgraded golang to **v1.19**
 - Upgraded most dependencies to their lastest versions
 - Fixed child pipeline jobs not found whilst looking up through bridges (#345)
 - `gitlab_ci_pipeline_job_queued_duration_seconds` & `gitlab_ci_pipeline_queued_duration_seconds` will now be leveraging the value returned through the GitLab API instead of computing it with (startedAt - createdAt)
@@ -628,7 +630,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.4...HEAD
+[v0.5.4]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.4
 [v0.5.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.3
 [v0.5.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.2
 [v0.5.1]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.1

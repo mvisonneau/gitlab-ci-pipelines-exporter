@@ -3,7 +3,7 @@ module github.com/mvisonneau/gitlab-ci-pipelines-exporter
 go 1.19
 
 require (
-	github.com/alicebob/miniredis/v2 v2.20.0
+	github.com/alicebob/miniredis/v2 v2.23.0
 	github.com/charmbracelet/bubbles v0.13.0
 	github.com/charmbracelet/bubbletea v0.22.1
 	github.com/charmbracelet/lipgloss v0.5.0
