@@ -29,11 +29,11 @@ require (
 	github.com/xanzy/go-gitlab v0.73.1
 	github.com/xeonx/timeago v1.0.0-rc5
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.34.0
-	go.opentelemetry.io/otel v1.9.0
+	go.opentelemetry.io/otel v1.10.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.9.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.9.0
 	go.opentelemetry.io/otel/sdk v1.9.0
-	go.opentelemetry.io/otel/trace v1.9.0
+	go.opentelemetry.io/otel/trace v1.10.0
 	go.uber.org/ratelimit v0.2.0
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
