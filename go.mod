@@ -23,7 +23,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.0
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.15
-	github.com/urfave/cli/v2 v2.11.2
+	github.com/urfave/cli/v2 v2.17.1
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/vmihailenco/taskq/v3 v3.2.9
 	github.com/xanzy/go-gitlab v0.73.1
