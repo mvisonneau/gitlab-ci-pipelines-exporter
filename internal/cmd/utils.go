@@ -95,7 +95,7 @@ func exit(exitCode int, err error) cli.ExitCoder {
 		log.WithError(err).Error()
 	}
 
-	return cli.NewExitError("", exitCode)
+	return cli.Exit("", exitCode)
 }
 
 // ExecWrapper gracefully logs and exits our `run` functions.
