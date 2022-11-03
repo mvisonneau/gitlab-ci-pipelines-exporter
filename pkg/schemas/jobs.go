@@ -14,6 +14,7 @@ type Job struct {
 	QueuedDurationSeconds float64
 	Status                string
 	ArtifactSize          float64
+	FailureReason         string
 	Runner                Runner
 }
 
@@ -48,6 +49,7 @@ func NewJob(gj goGitlab.Job) Job {
 		DurationSeconds:       gj.Duration,
 		QueuedDurationSeconds: gj.QueuedDuration,
 		Status:                gj.Status,
+		FailureReason:         gj.FailureReason,
 		ArtifactSize:          artifactSize,
 
 		Runner: Runner{

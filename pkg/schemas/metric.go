@@ -111,6 +111,7 @@ func (m Metric) Key() MetricKey {
 			m.Labels["ref"],
 			m.Labels["stage"],
 			m.Labels["job_name"],
+			m.Labels["failure_reason"],
 		})
 
 	case MetricKindEnvironmentBehindCommitsCount, MetricKindEnvironmentBehindDurationSeconds, MetricKindEnvironmentDeploymentCount, MetricKindEnvironmentDeploymentDurationSeconds, MetricKindEnvironmentDeploymentJobID, MetricKindEnvironmentDeploymentStatus, MetricKindEnvironmentDeploymentTimestamp, MetricKindEnvironmentInformation:
