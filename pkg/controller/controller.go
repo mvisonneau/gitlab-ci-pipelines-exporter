@@ -6,11 +6,6 @@ import (
 	"github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/taskq/v3"
@@ -21,6 +16,12 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"google.golang.org/grpc"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 )
 
 const tracerName = "gitlab-ci-pipelines-exporter"

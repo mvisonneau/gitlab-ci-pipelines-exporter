@@ -5,11 +5,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // ListRefPipelineJobs ..

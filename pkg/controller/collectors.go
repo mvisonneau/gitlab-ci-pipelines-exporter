@@ -313,7 +313,7 @@ func NewCollectorJobTimestamp() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_job_timestamp",
-			Help: "Creation date timestamp of the the most recent job",
+			Help: "Creation date timestamp of the most recent job",
 		},
 		append(defaultLabels, jobLabels...),
 	)

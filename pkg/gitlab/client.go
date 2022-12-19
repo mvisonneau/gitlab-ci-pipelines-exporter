@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 	"github.com/paulbellamy/ratecounter"
 	goGitlab "github.com/xanzy/go-gitlab"
 	"go.opentelemetry.io/otel"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 )
 
 const (

@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // PullRefMetrics ..

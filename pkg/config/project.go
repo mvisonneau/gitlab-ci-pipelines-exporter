@@ -56,7 +56,7 @@ type ProjectPullRefsBranches struct {
 	MostRecent uint `default:"0" yaml:"most_recent"`
 
 	// If the most recent pipeline for the branch was last updated at
-	// at time greater than this value the metrics won't be exported
+	// time greater than this value the metrics won't be exported
 	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
 
 	// Prevent exporting metrics for deleted branches
@@ -75,7 +75,7 @@ type ProjectPullRefsTags struct {
 	MostRecent uint `default:"0" yaml:"most_recent"`
 
 	// If the most recent pipeline for the tag was last updated at
-	// at time greater than this value the metrics won't be exported.
+	// time greater than this value the metrics won't be exported.
 	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
 
 	// Prevent exporting metrics for deleted tags.
@@ -91,7 +91,7 @@ type ProjectPullRefsMergeRequests struct {
 	MostRecent uint `default:"0" yaml:"most_recent"`
 
 	// If the most recent pipeline for the merge request was last updated at
-	// at time greater than this value the metrics won't be exported.
+	// time greater than this value the metrics won't be exported.
 	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
 }
 

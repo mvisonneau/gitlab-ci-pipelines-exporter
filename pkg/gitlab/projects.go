@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // GetProject ..

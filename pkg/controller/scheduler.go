@@ -6,16 +6,17 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/taskq/v3"
 	"github.com/vmihailenco/taskq/v3/memqueue"
 	"github.com/vmihailenco/taskq/v3/redisq"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 )
 
 const bufferSize = 1000

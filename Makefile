@@ -5,12 +5,14 @@ REPOSITORY    := mvisonneau/$(NAME)
 
 .PHONY: setup
 setup: ## Install required libraries/tools for build tasks
-	@command -v gofumpt 2>&1 >/dev/null       || go install mvdan.cc/gofumpt@v0.3.1
-	@command -v golangci-lint 2>&1 >/dev/null || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
+	@command -v gci 2>&1 >/dev/null           || go install github.com/daixiang0/gci@v0.9.0
+	@command -v gofumpt 2>&1 >/dev/null       || go install mvdan.cc/gofumpt@v0.4.0
+	@command -v golangci-lint 2>&1 >/dev/null || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
 
 .PHONY: fmt
 fmt: setup ## Format source code
 	gofumpt -w $(FILES)
+	gci write -s standard -s default -s "prefix(github.com/mvisonneau)" .
 
 .PHONY: lint
 lint: setup ## Run all lint related tests upon the codebase

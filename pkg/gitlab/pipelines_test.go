@@ -6,11 +6,12 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/xanzy/go-gitlab"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 func TestGetRefPipeline(t *testing.T) {

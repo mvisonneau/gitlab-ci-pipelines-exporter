@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/stretchr/testify/assert"
 )
 
 var testCtx = context.Background()
