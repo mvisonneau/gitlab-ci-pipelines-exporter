@@ -10,7 +10,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     env:
       DOCKER_CLI_EXPERIMENTAL: 'enabled'
@@ -67,7 +67,7 @@ jobs:
       - name: Install goreleaser
         uses: goreleaser/goreleaser-action@v2
         with:
-          version: v1.10.3
+          version: v1.13.1
           install-only: true
 
       - name: Run goreleaser
