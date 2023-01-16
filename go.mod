@@ -22,7 +22,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
-	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.17
+	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.1.18
 	github.com/urfave/cli/v2 v2.23.7
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/vmihailenco/taskq/v3 v3.2.9
@@ -85,7 +85,7 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelutil v0.1.17 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelutil v0.1.18 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 // indirect
@@ -95,7 +95,7 @@ require (
 	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/net v0.4.0 // indirect
 	golang.org/x/oauth2 v0.3.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
