@@ -125,6 +125,8 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	switch event := event.(type) {
 	case *gitlab.PipelineEvent:
 		go c.processPipelineEvent(ctx, *event)
+	case *gitlab.JobEvent:
+		go c.processJobEvent(ctx, *event)
 	case *gitlab.DeploymentEvent:
 		go c.processDeploymentEvent(ctx, *event)
 	default:

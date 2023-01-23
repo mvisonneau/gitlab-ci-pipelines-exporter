@@ -37,6 +37,34 @@ func (c *Controller) processPipelineEvent(ctx context.Context, e goGitlab.Pipeli
 	))
 }
 
+func (c *Controller) processJobEvent(ctx context.Context, e goGitlab.JobEvent) {
+	var (
+		refKind schemas.RefKind
+		refName = e.Ref
+	)
+
+	if e.Tag {
+		refKind = schemas.RefKindTag
+	} else {
+		refKind = schemas.RefKindBranch
+	}
+
+	project, _, err := c.Gitlab.Projects.GetProject(e.ProjectID, nil)
+	if err != nil {
+		log.WithContext(ctx).
+			WithError(err).
+			Error("reading project from GitLab")
+
+		return
+	}
+
+	c.triggerRefMetricsPull(ctx, schemas.NewRef(
+		schemas.NewProject(project.PathWithNamespace),
+		refKind,
+		refName,
+	))
+}
+
 func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref) {
 	logFields := log.Fields{
 		"project-name": ref.Project.Name,
