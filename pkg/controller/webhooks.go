@@ -18,7 +18,7 @@ func (c *Controller) processPipelineEvent(e goGitlab.PipelineEvent) {
 
 
 	ctx, ctxCancel := context.WithCancel(context.Background())
-	defet ctxCancel()
+	defer ctxCancel()
 
 	var (
 		refKind schemas.RefKind
@@ -154,7 +154,7 @@ schedulePull:
 func (c *Controller) processDeploymentEvent(e goGitlab.DeploymentEvent) {
 
 	ctx, ctxCancel := context.WithCancel(context.Background())
-	defet ctxCancel()
+	defer ctxCancel()
 
 	c.triggerEnvironmentMetricsPull(
 		ctx,
