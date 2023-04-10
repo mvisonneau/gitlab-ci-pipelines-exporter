@@ -14,11 +14,18 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
-func (c *Controller) processPipelineEvent(ctx context.Context, e goGitlab.PipelineEvent) {
+func (c *Controller) processPipelineEvent(e goGitlab.PipelineEvent) {
+
+
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	defet ctxCancel()
+
 	var (
 		refKind schemas.RefKind
 		refName = e.ObjectAttributes.Ref
 	)
+
+
 
 	// TODO: Perhaps it would be nice to match upon the regexp to validate
 	// that it is actually a merge request ref
@@ -144,7 +151,11 @@ schedulePull:
 	c.ScheduleTask(context.TODO(), schemas.TaskTypePullRefMetrics, string(ref.Key()), ref)
 }
 
-func (c *Controller) processDeploymentEvent(ctx context.Context, e goGitlab.DeploymentEvent) {
+func (c *Controller) processDeploymentEvent(e goGitlab.DeploymentEvent) {
+
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	defet ctxCancel()
+
 	c.triggerEnvironmentMetricsPull(
 		ctx,
 		schemas.Environment{
