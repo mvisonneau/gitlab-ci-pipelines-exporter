@@ -56,6 +56,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 	listOptions := goGitlab.ListOptions{
 		Page:    1,
 		PerPage: 100,
+		Simple:  true,
 	}
 
 	// As a result, the API will return the projects that the owner has access onto.
