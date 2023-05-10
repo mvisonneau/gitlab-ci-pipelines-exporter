@@ -8,6 +8,7 @@ var (
 	statusLabels                 = []string{"status"}
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "username"}
+	testSuiteLabels              = []string{"test_suite_name"}
 	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"}
 )
 
@@ -349,5 +350,137 @@ func NewCollectorRunCount() prometheus.Collector {
 			Help: "Number of executions of a pipeline",
 		},
 		defaultLabels,
+	)
+}
+
+// NewCollectorTestReportTotalTime returns a new collector for the gitlab_ci_pipeline_test_report_total_time metric.
+func NewCollectorTestReportTotalTime() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_report_total_time",
+			Help: "Duration in seconds of all the tests in the most recent pipeline",
+		},
+		defaultLabels,
+	)
+}
+
+// NewCollectorTestReportTotalCount returns a new collector for the gitlab_ci_pipeline_test_report_total_count metric.
+func NewCollectorTestReportTotalCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_report_total_count",
+			Help: "Number of total tests in the most recent pipeline",
+		},
+		defaultLabels,
+	)
+}
+
+// NewCollectorTestReportSuccessCount returns a new collector for the gitlab_ci_pipeline_test_report_success_count metric.
+func NewCollectorTestReportSuccessCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_report_success_count",
+			Help: "Number of successful tests in the most recent pipeline",
+		},
+		defaultLabels,
+	)
+}
+
+// NewCollectorTestReportFailedCount returns a new collector for the gitlab_ci_pipeline_test_report_failed_count metric.
+func NewCollectorTestReportFailedCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_report_failed_count",
+			Help: "Number of failed tests in the most recent pipeline",
+		},
+		defaultLabels,
+	)
+}
+
+// NewCollectorTestReportSkippedCount returns a new collector for the gitlab_ci_pipeline_test_report_skipped_count metric.
+func NewCollectorTestReportSkippedCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_report_skipped_count",
+			Help: "Number of skipped tests in the most recent pipeline",
+		},
+		defaultLabels,
+	)
+}
+
+// NewCollectorTestReportErrorCount returns a new collector for the gitlab_ci_pipeline_test_report_error_count metric.
+func NewCollectorTestReportErrorCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_report_error_count",
+			Help: "Number of errored tests in the most recent pipeline",
+		},
+		defaultLabels,
+	)
+}
+
+// NewCollectorTestSuiteTotalTime returns a new collector for the gitlab_ci_pipeline_test_suite_total_time metric.
+func NewCollectorTestSuiteTotalTime() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_suite_total_time",
+			Help: "Duration in seconds for the test suite",
+		},
+		append(defaultLabels, testSuiteLabels...),
+	)
+}
+
+// NewCollectorTestSuiteTotalCount returns a new collector for the gitlab_ci_pipeline_test_suite_total_count metric.
+func NewCollectorTestSuiteTotalCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_suite_total_count",
+			Help: "Number of total tests for the test suite",
+		},
+		append(defaultLabels, testSuiteLabels...),
+	)
+}
+
+// NewCollectorTestSuiteSuccessCount returns a new collector for the gitlab_ci_pipeline_test_suite_success_count metric.
+func NewCollectorTestSuiteSuccessCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_suite_success_count",
+			Help: "Number of successful tests for the test suite",
+		},
+		append(defaultLabels, testSuiteLabels...),
+	)
+}
+
+// NewCollectorTestSuiteFailedCount returns a new collector for the gitlab_ci_pipeline_test_suite_failed_count metric.
+func NewCollectorTestSuiteFailedCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_suite_failed_count",
+			Help: "Number of failed tests for the test suite",
+		},
+		append(defaultLabels, testSuiteLabels...),
+	)
+}
+
+// NewCollectorTestSuiteSkippedCount returns a new collector for the gitlab_ci_pipeline_test_suite_skipped_count metric.
+func NewCollectorTestSuiteSkippedCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_suite_skipped_count",
+			Help: "Number of skipped tests for the test suite",
+		},
+		append(defaultLabels, testSuiteLabels...),
+	)
+}
+
+// NewCollectorTestSuiteErrorCount returns a new collector for the gitlab_ci_pipeline_test_suite_error_count metric.
+func NewCollectorTestSuiteErrorCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_suite_error_count",
+			Help: "Number of errors for the test suite",
+		},
+		append(defaultLabels, testSuiteLabels...),
 	)
 }

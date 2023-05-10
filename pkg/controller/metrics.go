@@ -62,6 +62,18 @@ func NewRegistry(ctx context.Context) *Registry {
 			schemas.MetricKindRunCount:                             NewCollectorRunCount(),
 			schemas.MetricKindStatus:                               NewCollectorStatus(),
 			schemas.MetricKindTimestamp:                            NewCollectorTimestamp(),
+			schemas.MetricKindTestReportTotalTime:                  NewCollectorTestReportTotalTime(),
+			schemas.MetricKindTestReportTotalCount:                 NewCollectorTestReportTotalCount(),
+			schemas.MetricKindTestReportSuccessCount:               NewCollectorTestReportSuccessCount(),
+			schemas.MetricKindTestReportFailedCount:                NewCollectorTestReportFailedCount(),
+			schemas.MetricKindTestReportSkippedCount:               NewCollectorTestReportSkippedCount(),
+			schemas.MetricKindTestReportErrorCount:                 NewCollectorTestReportErrorCount(),
+			schemas.MetricKindTestSuiteTotalTime:                   NewCollectorTestSuiteTotalTime(),
+			schemas.MetricKindTestSuiteTotalCount:                  NewCollectorTestSuiteTotalCount(),
+			schemas.MetricKindTestSuiteSuccessCount:                NewCollectorTestSuiteSuccessCount(),
+			schemas.MetricKindTestSuiteFailedCount:                 NewCollectorTestSuiteFailedCount(),
+			schemas.MetricKindTestSuiteSkippedCount:                NewCollectorTestSuiteSkippedCount(),
+			schemas.MetricKindTestSuiteErrorCount:                  NewCollectorTestSuiteErrorCount(),
 		},
 	}
 

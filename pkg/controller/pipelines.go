@@ -135,6 +135,54 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 			}
 		}
 
+		// fetch pipeline test report
+		if ref.Project.Pull.Pipeline.TestReports.Enabled {
+			ref.LatestPipeline.TestReport, err = c.Gitlab.GetRefPipelineTestReport(ctx, ref)
+			if err != nil {
+				return err
+			}
+
+			storeSetMetric(ctx, c.Store, schemas.Metric{
+				Kind:   schemas.MetricKindTestReportErrorCount,
+				Labels: ref.DefaultLabelsValues(),
+				Value:  float64(ref.LatestPipeline.TestReport.ErrorCount),
+			})
+
+			storeSetMetric(ctx, c.Store, schemas.Metric{
+				Kind:   schemas.MetricKindTestReportFailedCount,
+				Labels: ref.DefaultLabelsValues(),
+				Value:  float64(ref.LatestPipeline.TestReport.FailedCount),
+			})
+
+			storeSetMetric(ctx, c.Store, schemas.Metric{
+				Kind:   schemas.MetricKindTestReportSkippedCount,
+				Labels: ref.DefaultLabelsValues(),
+				Value:  float64(ref.LatestPipeline.TestReport.SkippedCount),
+			})
+
+			storeSetMetric(ctx, c.Store, schemas.Metric{
+				Kind:   schemas.MetricKindTestReportSuccessCount,
+				Labels: ref.DefaultLabelsValues(),
+				Value:  float64(ref.LatestPipeline.TestReport.SuccessCount),
+			})
+
+			storeSetMetric(ctx, c.Store, schemas.Metric{
+				Kind:   schemas.MetricKindTestReportTotalCount,
+				Labels: ref.DefaultLabelsValues(),
+				Value:  float64(ref.LatestPipeline.TestReport.TotalCount),
+			})
+
+			storeSetMetric(ctx, c.Store, schemas.Metric{
+				Kind:   schemas.MetricKindTestReportTotalTime,
+				Labels: ref.DefaultLabelsValues(),
+				Value:  float64(ref.LatestPipeline.TestReport.TotalTime),
+			})
+
+			for _, ts := range ref.LatestPipeline.TestReport.TestSuites {
+				c.ProcessTestSuiteMetrics(ctx, ref, ts)
+			}
+		}
+
 		return nil
 	}
 
@@ -145,4 +193,64 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 	}
 
 	return nil
+}
+
+// ProcessTestSuiteMetrics ..
+func (c *Controller) ProcessTestSuiteMetrics(ctx context.Context, ref schemas.Ref, ts schemas.TestSuite) {
+	testSuiteLogFields := log.Fields{
+		"project-name":    ref.Project.Name,
+		"ref":             ref.Name,
+		"test-suite-name": ts.Name,
+	}
+
+	labels := ref.DefaultLabelsValues()
+	labels["test_suite_name"] = ts.Name
+
+	// Refresh ref state from the store
+	if err := c.Store.GetRef(ctx, &ref); err != nil {
+		log.WithContext(ctx).
+			WithFields(testSuiteLogFields).
+			WithError(err).
+			Error("getting ref from the store")
+
+		return
+	}
+
+	log.WithFields(testSuiteLogFields).Trace("processing test suite metrics")
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteErrorCount,
+		Labels: labels,
+		Value:  float64(ts.ErrorCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteFailedCount,
+		Labels: labels,
+		Value:  float64(ts.FailedCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteSkippedCount,
+		Labels: labels,
+		Value:  float64(ts.SkippedCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteSuccessCount,
+		Labels: labels,
+		Value:  float64(ts.SuccessCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteTotalCount,
+		Labels: labels,
+		Value:  float64(ts.TotalCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteTotalTime,
+		Labels: labels,
+		Value:  ts.TotalTime,
+	})
 }

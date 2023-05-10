@@ -2,6 +2,7 @@ package gitlab
 
 import (
 	"context"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -20,7 +21,7 @@ func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs
 	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
 	span.SetAttributes(attribute.String("ref_name", ref.Name))
 
-	if ref.LatestPipeline == (schemas.Pipeline{}) {
+	if reflect.DeepEqual(ref.LatestPipeline, (schemas.Pipeline{})) {
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.Project.Name,

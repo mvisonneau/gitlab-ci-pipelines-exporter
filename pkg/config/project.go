@@ -97,8 +97,9 @@ type ProjectPullRefsMergeRequests struct {
 
 // ProjectPullPipeline ..
 type ProjectPullPipeline struct {
-	Jobs      ProjectPullPipelineJobs      `yaml:"jobs"`
-	Variables ProjectPullPipelineVariables `yaml:"variables"`
+	Jobs        ProjectPullPipelineJobs        `yaml:"jobs"`
+	Variables   ProjectPullPipelineVariables   `yaml:"variables"`
+	TestReports ProjectPullPipelineTestReports `yaml:"test_reports"`
 }
 
 // ProjectPullPipelineJobs ..
@@ -135,6 +136,12 @@ type ProjectPullPipelineVariables struct {
 
 	// Regexp to filter pipeline variables values to fetch.
 	Regexp string `default:".*" yaml:"regexp"`
+}
+
+// ProjectPullPipelineTestReports ..
+type ProjectPullPipelineTestReports struct {
+	// Enabled set to true will attempt to retrieve the test report included in the pipeline.
+	Enabled bool `default:"false" yaml:"enabled"`
 }
 
 // Project holds information about a GitLab project.

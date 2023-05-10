@@ -33,9 +33,16 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 			fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
 		})
 
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+		})
+
 	// Metrics pull shall succeed
 	p := schemas.NewProject("foo")
 	p.Pull.Pipeline.Variables.Enabled = true
+	p.Pull.Pipeline.TestReports.Enabled = true
 
 	assert.NoError(t, c.PullRefMetrics(
 		ctx,
@@ -83,6 +90,93 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	}
 	assert.Equal(t, queued, metrics[queued.Key()])
 
+	trTotalTime := schemas.Metric{
+		Kind:   schemas.MetricKindTestReportTotalTime,
+		Labels: labels,
+		Value:  5,
+	}
+	assert.Equal(t, trTotalTime, metrics[trTotalTime.Key()])
+
+	trTotalCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestReportTotalCount,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, trTotalCount, metrics[trTotalCount.Key()])
+
+	trSuccessCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestReportSuccessCount,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, trSuccessCount, metrics[trSuccessCount.Key()])
+
+	trFailedCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestReportFailedCount,
+		Labels: labels,
+		Value:  0,
+	}
+	assert.Equal(t, trFailedCount, metrics[trFailedCount.Key()])
+
+	trSkippedCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestReportSkippedCount,
+		Labels: labels,
+		Value:  0,
+	}
+	assert.Equal(t, trSkippedCount, metrics[trSkippedCount.Key()])
+
+	trErrorCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestReportErrorCount,
+		Labels: labels,
+		Value:  0,
+	}
+	assert.Equal(t, trErrorCount, metrics[trErrorCount.Key()])
+
+	labels["test_suite_name"] = "Secure"
+
+	tsTotalTime := schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteTotalTime,
+		Labels: labels,
+		Value:  5,
+	}
+	assert.Equal(t, tsTotalTime, metrics[tsTotalTime.Key()])
+
+	tsTotalCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteTotalCount,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, tsTotalCount, metrics[tsTotalCount.Key()])
+
+	tsSuccessCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteSuccessCount,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, tsSuccessCount, metrics[tsSuccessCount.Key()])
+
+	tsFailedCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteFailedCount,
+		Labels: labels,
+		Value:  0,
+	}
+	assert.Equal(t, tsFailedCount, metrics[tsFailedCount.Key()])
+
+	tsSkippedCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteSkippedCount,
+		Labels: labels,
+		Value:  0,
+	}
+	assert.Equal(t, tsSkippedCount, metrics[tsSkippedCount.Key()])
+
+	tsErrorCount := schemas.Metric{
+		Kind:   schemas.MetricKindTestSuiteErrorCount,
+		Labels: labels,
+		Value:  0,
+	}
+	assert.Equal(t, tsErrorCount, metrics[tsErrorCount.Key()])
+
+	delete(labels, "test_suite_name")
 	labels["status"] = "running"
 	status := schemas.Metric{
 		Kind:   schemas.MetricKindStatus,

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -88,7 +87,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 					Archived:    &w.Archived,
 					ListOptions: listOptions,
 					Search:      &w.Search,
-					Simple:      aws.Bool(true),
+					Simple:      pointy.Bool(true),
 				},
 				goGitlab.WithContext(ctx),
 			)
@@ -101,7 +100,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 					IncludeSubGroups: &w.Owner.IncludeSubgroups,
 					ListOptions:      listOptions,
 					Search:           &w.Search,
-					Simple:           aws.Bool(true),
+					Simple:           pointy.Bool(true),
 				},
 				goGitlab.WithContext(ctx),
 			)
@@ -112,7 +111,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 					ListOptions: listOptions,
 					Archived:    &w.Archived,
 					Search:      &w.Search,
-					Simple:      aws.Bool(true),
+					Simple:      pointy.Bool(true),
 				},
 				goGitlab.WithContext(ctx),
 			)

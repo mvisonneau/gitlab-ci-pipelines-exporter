@@ -175,3 +175,53 @@ func TestGetRefsFromPipelines(t *testing.T) {
 		"622996356": schemas.NewRef(p, schemas.RefKindMergeRequest, "1234"),
 	}, refs)
 }
+
+func TestGetRefPipelineTestReport(t *testing.T) {
+	ctx, mux, server, c := getMockedClient()
+	defer server.Close()
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+		})
+
+	p := schemas.NewProject("foo")
+
+	ref := schemas.Ref{
+		Project: p,
+		Name:    "yay",
+	}
+
+	// Should return right away as MostRecentPipeline is not defined
+	tr, err := c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{}, tr)
+
+	ref.LatestPipeline = schemas.Pipeline{
+		ID: 1,
+	}
+
+	// Should work
+	tr, err = c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{
+		TotalTime:    5,
+		TotalCount:   1,
+		SuccessCount: 1,
+		FailedCount:  0,
+		SkippedCount: 0,
+		ErrorCount:   0,
+		TestSuites: []schemas.TestSuite{
+			{
+				Name:         "Secure",
+				TotalTime:    5,
+				TotalCount:   1,
+				SuccessCount: 1,
+				FailedCount:  0,
+				SkippedCount: 0,
+				ErrorCount:   0,
+			},
+		},
+	}, tr)
+}

@@ -306,6 +306,10 @@ project_defaults:
         # Filter pipelines variables to include
         # (optional, default: ".*", all variables)
         regexp: ".*"
+      
+      test_reports:
+        # Fetch test reports in a separate metric (optiona, default: false)
+        enabled: false
 
 # The list of the projects you want to monitor (optional)
 projects:
@@ -413,6 +417,10 @@ projects:
           # Filter pipelines variables to include
           # (optional, default: ".*", all variables)
           regexp: ".*"
+          
+        test_reports:
+          # Fetch test reports in a separate metric (optiona, default: false)
+          enabled: false
 
 # Dynamically fetch projects to monitor using a wildcard (optional)
 wildcards:
@@ -536,6 +544,10 @@ wildcards:
           # Filter pipelines variables to include
           # (optional, default: ".*", all variables)
           regexp: ".*"
+          
+        test_reports:
+          # Fetch test reports in a separate metric (optiona, default: false)
+          enabled: false
 ```
 
 ## Pull all projects accessible by the provided token

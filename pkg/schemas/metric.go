@@ -74,6 +74,42 @@ const (
 
 	// MetricKindTimestamp ..
 	MetricKindTimestamp
+
+	// MetricKindTestReportTotalTime ..
+	MetricKindTestReportTotalTime
+
+	// MetricKindTestReportTotalCount ..
+	MetricKindTestReportTotalCount
+
+	// MetricKindTestReportSuccessCount ..
+	MetricKindTestReportSuccessCount
+
+	// MetricKindTestReportFailedCount ..
+	MetricKindTestReportFailedCount
+
+	// MetricKindTestReportSkippedCount ..
+	MetricKindTestReportSkippedCount
+
+	// MetricKindTestReportErrorCount ..
+	MetricKindTestReportErrorCount
+
+	// MetricKindTestSuiteTotalTime ..
+	MetricKindTestSuiteTotalTime
+
+	// MetricKindTestSuiteTotalCount ..
+	MetricKindTestSuiteTotalCount
+
+	// MetricKindTestSuiteSuccessCount ..
+	MetricKindTestSuiteSuccessCount
+
+	// MetricKindTestSuiteFailedCount ..
+	MetricKindTestSuiteFailedCount
+
+	// MetricKindTestSuiteSkippedCount ..
+	MetricKindTestSuiteSkippedCount
+
+	// MetricKindTestSuiteErrorCount ..
+	MetricKindTestSuiteErrorCount
 )
 
 // MetricKind ..
@@ -97,7 +133,7 @@ func (m Metric) Key() MetricKey {
 	key := strconv.Itoa(int(m.Kind))
 
 	switch m.Kind {
-	case MetricKindCoverage, MetricKindDurationSeconds, MetricKindID, MetricKindQueuedDurationSeconds, MetricKindRunCount, MetricKindStatus, MetricKindTimestamp:
+	case MetricKindCoverage, MetricKindDurationSeconds, MetricKindID, MetricKindQueuedDurationSeconds, MetricKindRunCount, MetricKindStatus, MetricKindTimestamp, MetricKindTestReportTotalCount, MetricKindTestReportErrorCount, MetricKindTestReportFailedCount, MetricKindTestReportSkippedCount, MetricKindTestReportSuccessCount, MetricKindTestReportTotalTime:
 		key += fmt.Sprintf("%v", []string{
 			m.Labels["project"],
 			m.Labels["kind"],
@@ -117,6 +153,14 @@ func (m Metric) Key() MetricKey {
 		key += fmt.Sprintf("%v", []string{
 			m.Labels["project"],
 			m.Labels["environment"],
+		})
+
+	case MetricKindTestSuiteErrorCount, MetricKindTestSuiteFailedCount, MetricKindTestSuiteSkippedCount, MetricKindTestSuiteSuccessCount, MetricKindTestSuiteTotalCount, MetricKindTestSuiteTotalTime:
+		key += fmt.Sprintf("%v", []string{
+			m.Labels["project"],
+			m.Labels["kind"],
+			m.Labels["ref"],
+			m.Labels["test_suite_name"],
 		})
 	}
 
