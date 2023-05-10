@@ -358,7 +358,7 @@ func NewCollectorTestReportTotalTime() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_test_report_total_time",
-			Help: "Duration in seconds of all the tests in the most recent pipeline",
+			Help: "Duration in seconds of all the tests in the most recently finished pipeline",
 		},
 		defaultLabels,
 	)
@@ -369,7 +369,7 @@ func NewCollectorTestReportTotalCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_test_report_total_count",
-			Help: "Number of total tests in the most recent pipeline",
+			Help: "Number of total tests in the most recently finished pipeline",
 		},
 		defaultLabels,
 	)
@@ -380,7 +380,7 @@ func NewCollectorTestReportSuccessCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_test_report_success_count",
-			Help: "Number of successful tests in the most recent pipeline",
+			Help: "Number of successful tests in the most recently finished pipeline",
 		},
 		defaultLabels,
 	)
@@ -391,7 +391,7 @@ func NewCollectorTestReportFailedCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_test_report_failed_count",
-			Help: "Number of failed tests in the most recent pipeline",
+			Help: "Number of failed tests in the most recently finished pipeline",
 		},
 		defaultLabels,
 	)
@@ -402,7 +402,7 @@ func NewCollectorTestReportSkippedCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_test_report_skipped_count",
-			Help: "Number of skipped tests in the most recent pipeline",
+			Help: "Number of skipped tests in the most recently finished pipeline",
 		},
 		defaultLabels,
 	)
@@ -413,7 +413,7 @@ func NewCollectorTestReportErrorCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_test_report_error_count",
-			Help: "Number of errored tests in the most recent pipeline",
+			Help: "Number of errored tests in the most recently finished pipeline",
 		},
 		defaultLabels,
 	)

@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
+	"golang.org/x/exp/slices"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
@@ -135,60 +136,65 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 			}
 		}
 
-		// fetch pipeline test report
-		if ref.Project.Pull.Pipeline.TestReports.Enabled {
-			ref.LatestPipeline.TestReport, err = c.Gitlab.GetRefPipelineTestReport(ctx, ref)
-			if err != nil {
-				return err
-			}
-
-			storeSetMetric(ctx, c.Store, schemas.Metric{
-				Kind:   schemas.MetricKindTestReportErrorCount,
-				Labels: ref.DefaultLabelsValues(),
-				Value:  float64(ref.LatestPipeline.TestReport.ErrorCount),
-			})
-
-			storeSetMetric(ctx, c.Store, schemas.Metric{
-				Kind:   schemas.MetricKindTestReportFailedCount,
-				Labels: ref.DefaultLabelsValues(),
-				Value:  float64(ref.LatestPipeline.TestReport.FailedCount),
-			})
-
-			storeSetMetric(ctx, c.Store, schemas.Metric{
-				Kind:   schemas.MetricKindTestReportSkippedCount,
-				Labels: ref.DefaultLabelsValues(),
-				Value:  float64(ref.LatestPipeline.TestReport.SkippedCount),
-			})
-
-			storeSetMetric(ctx, c.Store, schemas.Metric{
-				Kind:   schemas.MetricKindTestReportSuccessCount,
-				Labels: ref.DefaultLabelsValues(),
-				Value:  float64(ref.LatestPipeline.TestReport.SuccessCount),
-			})
-
-			storeSetMetric(ctx, c.Store, schemas.Metric{
-				Kind:   schemas.MetricKindTestReportTotalCount,
-				Labels: ref.DefaultLabelsValues(),
-				Value:  float64(ref.LatestPipeline.TestReport.TotalCount),
-			})
-
-			storeSetMetric(ctx, c.Store, schemas.Metric{
-				Kind:   schemas.MetricKindTestReportTotalTime,
-				Labels: ref.DefaultLabelsValues(),
-				Value:  float64(ref.LatestPipeline.TestReport.TotalTime),
-			})
-
-			for _, ts := range ref.LatestPipeline.TestReport.TestSuites {
-				c.ProcessTestSuiteMetrics(ctx, ref, ts)
-			}
-		}
-
 		return nil
 	}
 
 	if ref.Project.Pull.Pipeline.Jobs.Enabled {
 		if err := c.PullRefMostRecentJobsMetrics(ctx, ref); err != nil {
 			return err
+		}
+	}
+
+	finishedStatusesList := []string{
+		"success",
+		"failed",
+	}
+
+	// fetch pipeline test report
+	if ref.Project.Pull.Pipeline.TestReports.Enabled && slices.Contains(finishedStatusesList, ref.LatestPipeline.Status) {
+		ref.LatestPipeline.TestReport, err = c.Gitlab.GetRefPipelineTestReport(ctx, ref)
+		if err != nil {
+			return err
+		}
+
+		storeSetMetric(ctx, c.Store, schemas.Metric{
+			Kind:   schemas.MetricKindTestReportErrorCount,
+			Labels: ref.DefaultLabelsValues(),
+			Value:  float64(ref.LatestPipeline.TestReport.ErrorCount),
+		})
+
+		storeSetMetric(ctx, c.Store, schemas.Metric{
+			Kind:   schemas.MetricKindTestReportFailedCount,
+			Labels: ref.DefaultLabelsValues(),
+			Value:  float64(ref.LatestPipeline.TestReport.FailedCount),
+		})
+
+		storeSetMetric(ctx, c.Store, schemas.Metric{
+			Kind:   schemas.MetricKindTestReportSkippedCount,
+			Labels: ref.DefaultLabelsValues(),
+			Value:  float64(ref.LatestPipeline.TestReport.SkippedCount),
+		})
+
+		storeSetMetric(ctx, c.Store, schemas.Metric{
+			Kind:   schemas.MetricKindTestReportSuccessCount,
+			Labels: ref.DefaultLabelsValues(),
+			Value:  float64(ref.LatestPipeline.TestReport.SuccessCount),
+		})
+
+		storeSetMetric(ctx, c.Store, schemas.Metric{
+			Kind:   schemas.MetricKindTestReportTotalCount,
+			Labels: ref.DefaultLabelsValues(),
+			Value:  float64(ref.LatestPipeline.TestReport.TotalCount),
+		})
+
+		storeSetMetric(ctx, c.Store, schemas.Metric{
+			Kind:   schemas.MetricKindTestReportTotalTime,
+			Labels: ref.DefaultLabelsValues(),
+			Value:  float64(ref.LatestPipeline.TestReport.TotalTime),
+		})
+
+		for _, ts := range ref.LatestPipeline.TestReport.TestSuites {
+			c.ProcessTestSuiteMetrics(ctx, ref, ts)
 		}
 	}
 

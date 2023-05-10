@@ -35,12 +35,12 @@
 | `gitlab_ci_pipeline_run_count` | Number of executions of a pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
 | `gitlab_ci_pipeline_status` | Status of the most recent pipeline | [project], [topics], [ref], [kind], [variables], [status] | *available by default* |
 | `gitlab_ci_pipeline_timestamp` | Timestamp of the last update of the most recent pipeline | [project], [topics], [ref], [kind], [variables] | *available by default* |
-| `gitlab_ci_pipeline_test_report_total_time` | Duration in seconds of all the tests in the most recent pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
-| `gitlab_ci_pipeline_test_report_total_count` | Number of total tests in the most recent pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
-| `gitlab_ci_pipeline_test_report_success_count` | Number of successful tests in the most recent pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
-| `gitlab_ci_pipeline_test_report_failed_count` | Number of failed tests in the most recent pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
-| `gitlab_ci_pipeline_test_report_skipped_count` | Number of skipped tests in the most recent pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
-| `gitlab_ci_pipeline_test_report_error_count` | Number of errored tests in the most recent pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
+| `gitlab_ci_pipeline_test_report_total_time` | Duration in seconds of all the tests in the most recently finished pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
+| `gitlab_ci_pipeline_test_report_total_count` | Number of total tests in the most recently finished pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
+| `gitlab_ci_pipeline_test_report_success_count` | Number of successful tests in the most recently finished pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
+| `gitlab_ci_pipeline_test_report_failed_count` | Number of failed tests in the most recently finished pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
+| `gitlab_ci_pipeline_test_report_skipped_count` | Number of skipped tests in the most recently finished pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
+| `gitlab_ci_pipeline_test_report_error_count` | Number of errored tests in the most recently finished pipeline | [project], [topics], [ref], [kind], [variables] | `project_defaults.pull.pipeline.test_reports.enabled` |
 | `gitlab_ci_pipeline_test_suite_total_time` | Duration in seconds for the test suite | [project], [topics], [ref], [kind], [variables], [test_suite_name] | `project_defaults.pull.pipeline.test_reports.enabled` |
 | `gitlab_ci_pipeline_test_suite_total_count` | Number of total tests for the test suite | [project], [topics], [ref], [kind], [variables], [test_suite_name] | `project_defaults.pull.pipeline.test_reports.enabled` |
 | `gitlab_ci_pipeline_test_suite_success_count` | Number of successful tests for the test suite | [project], [topics], [ref], [kind], [variables], [test_suite_name] | `project_defaults.pull.pipeline.test_reports.enabled` |
