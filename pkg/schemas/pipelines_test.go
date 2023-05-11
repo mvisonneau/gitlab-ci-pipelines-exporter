@@ -45,7 +45,7 @@ func TestNewTestReport(t *testing.T) {
 		FailedCount:  1,
 		SkippedCount: 0,
 		ErrorCount:   0,
-		TestSuites: []goGitlab.PipelineTestSuites{
+		TestSuites: []*goGitlab.PipelineTestSuites{
 			{
 				Name:         "First",
 				TotalTime:    3,
@@ -54,7 +54,7 @@ func TestNewTestReport(t *testing.T) {
 				FailedCount:  0,
 				SkippedCount: 0,
 				ErrorCount:   0,
-				TestCases:    []goGitlab.PipelineTestCases{},
+				TestCases:    []*goGitlab.PipelineTestCases{},
 			},
 			{
 				Name:         "Second",
@@ -64,7 +64,7 @@ func TestNewTestReport(t *testing.T) {
 				FailedCount:  1,
 				SkippedCount: 0,
 				ErrorCount:   0,
-				TestCases:    []goGitlab.PipelineTestCases{},
+				TestCases:    []*goGitlab.PipelineTestCases{},
 			},
 		},
 	}
@@ -97,11 +97,11 @@ func TestNewTestReport(t *testing.T) {
 			},
 		},
 	}
-	assert.Equal(t, expectedTestReport, NewTestReport(context.Background(), gitlabTestReport))
+	assert.Equal(t, expectedTestReport, NewTestReport(gitlabTestReport))
 }
 
 func TestNewTestSuite(t *testing.T) {
-	gitlabTestSuite := goGitlab.PipelineTestSuites{
+	gitlabTestSuite := &goGitlab.PipelineTestSuites{
 		Name:         "Suite",
 		TotalTime:    4,
 		TotalCount:   6,
@@ -109,7 +109,7 @@ func TestNewTestSuite(t *testing.T) {
 		FailedCount:  2,
 		SkippedCount: 1,
 		ErrorCount:   1,
-		TestCases:    []goGitlab.PipelineTestCases{},
+		TestCases:    []*goGitlab.PipelineTestCases{},
 	}
 
 	expectedTestSuite := TestSuite{
@@ -121,5 +121,5 @@ func TestNewTestSuite(t *testing.T) {
 		SkippedCount: 1,
 		ErrorCount:   1,
 	}
-	assert.Equal(t, expectedTestSuite, NewTestSuite(context.Background(), gitlabTestSuite))
+	assert.Equal(t, expectedTestSuite, NewTestSuite(gitlabTestSuite))
 }

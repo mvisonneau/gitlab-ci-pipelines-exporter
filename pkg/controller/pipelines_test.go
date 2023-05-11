@@ -90,6 +90,66 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	}
 	assert.Equal(t, queued, metrics[queued.Key()])
 
+	labels["status"] = "running"
+	status := schemas.Metric{
+		Kind:   schemas.MetricKindStatus,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, status, metrics[status.Key()])
+}
+
+func TestPullRefTestReportMetrics(t *testing.T) {
+	ctx, c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "bar", r.URL.Query().Get("ref"))
+			fmt.Fprint(w, `[{"id":1}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, `{"id":1,"created_at":"2016-08-11T11:27:00.085Z", "started_at":"2016-08-11T11:28:00.085Z",
+			"duration":300,"queued_duration":60,"status":"success","coverage":"30.2"}`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+		})
+
+	// Metrics pull shall succeed
+	p := schemas.NewProject("foo")
+	p.Pull.Pipeline.Variables.Enabled = true
+	p.Pull.Pipeline.TestReports.Enabled = true
+
+	assert.NoError(t, c.PullRefMetrics(
+		ctx,
+		schemas.NewRef(
+			p,
+			schemas.RefKindBranch,
+			"bar",
+		)))
+
+	// Check if all the metrics exist
+	metrics, _ := c.Store.Metrics(ctx)
+	labels := map[string]string{
+		"kind":      string(schemas.RefKindBranch),
+		"project":   "foo",
+		"ref":       "bar",
+		"topics":    "",
+		"variables": "foo:bar",
+	}
+
 	trTotalTime := schemas.Metric{
 		Kind:   schemas.MetricKindTestReportTotalTime,
 		Labels: labels,
@@ -175,15 +235,6 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 		Value:  0,
 	}
 	assert.Equal(t, tsErrorCount, metrics[tsErrorCount.Key()])
-
-	delete(labels, "test_suite_name")
-	labels["status"] = "running"
-	status := schemas.Metric{
-		Kind:   schemas.MetricKindStatus,
-		Labels: labels,
-		Value:  1,
-	}
-	assert.Equal(t, status, metrics[status.Key()])
 }
 
 func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {

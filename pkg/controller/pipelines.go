@@ -14,6 +14,13 @@ import (
 
 // PullRefMetrics ..
 func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error {
+	finishedStatusesList := []string{
+		"success",
+		"failed",
+		"skipped",
+		"cancelled",
+	}
+
 	// At scale, the scheduled ref may be behind the actual state being stored
 	// to avoid issues, we refresh it from the store before manipulating it
 	if err := c.Store.GetRef(ctx, &ref); err != nil {
@@ -135,19 +142,10 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 				return err
 			}
 		}
-
-		return nil
-	}
-
-	if ref.Project.Pull.Pipeline.Jobs.Enabled {
+	} else {
 		if err := c.PullRefMostRecentJobsMetrics(ctx, ref); err != nil {
 			return err
 		}
-	}
-
-	finishedStatusesList := []string{
-		"success",
-		"failed",
 	}
 
 	// fetch pipeline test report
@@ -157,41 +155,7 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 			return err
 		}
 
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindTestReportErrorCount,
-			Labels: ref.DefaultLabelsValues(),
-			Value:  float64(ref.LatestPipeline.TestReport.ErrorCount),
-		})
-
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindTestReportFailedCount,
-			Labels: ref.DefaultLabelsValues(),
-			Value:  float64(ref.LatestPipeline.TestReport.FailedCount),
-		})
-
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindTestReportSkippedCount,
-			Labels: ref.DefaultLabelsValues(),
-			Value:  float64(ref.LatestPipeline.TestReport.SkippedCount),
-		})
-
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindTestReportSuccessCount,
-			Labels: ref.DefaultLabelsValues(),
-			Value:  float64(ref.LatestPipeline.TestReport.SuccessCount),
-		})
-
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindTestReportTotalCount,
-			Labels: ref.DefaultLabelsValues(),
-			Value:  float64(ref.LatestPipeline.TestReport.TotalCount),
-		})
-
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindTestReportTotalTime,
-			Labels: ref.DefaultLabelsValues(),
-			Value:  float64(ref.LatestPipeline.TestReport.TotalTime),
-		})
+		c.ProcessTestReportMetrics(ctx, ref, ref.LatestPipeline.TestReport)
 
 		for _, ts := range ref.LatestPipeline.TestReport.TestSuites {
 			c.ProcessTestSuiteMetrics(ctx, ref, ts)
@@ -199,6 +163,64 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 	}
 
 	return nil
+}
+
+// ProcessTestReportMetrics ..
+func (c *Controller) ProcessTestReportMetrics(ctx context.Context, ref schemas.Ref, tr schemas.TestReport) {
+	testReportLogFields := log.Fields{
+		"project-name": ref.Project.Name,
+		"ref":          ref.Name,
+	}
+
+	labels := ref.DefaultLabelsValues()
+
+	// Refresh ref state from the store
+	if err := c.Store.GetRef(ctx, &ref); err != nil {
+		log.WithContext(ctx).
+			WithFields(testReportLogFields).
+			WithError(err).
+			Error("getting ref from the store")
+
+		return
+	}
+
+	log.WithFields(testReportLogFields).Trace("processing test report metrics")
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestReportErrorCount,
+		Labels: labels,
+		Value:  float64(tr.ErrorCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestReportFailedCount,
+		Labels: labels,
+		Value:  float64(tr.FailedCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestReportSkippedCount,
+		Labels: labels,
+		Value:  float64(tr.SkippedCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestReportSuccessCount,
+		Labels: labels,
+		Value:  float64(tr.SuccessCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestReportTotalCount,
+		Labels: labels,
+		Value:  float64(tr.TotalCount),
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestReportTotalTime,
+		Labels: labels,
+		Value:  float64(tr.TotalTime),
+	})
 }
 
 // ProcessTestSuiteMetrics ..

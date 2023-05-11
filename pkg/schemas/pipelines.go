@@ -74,13 +74,11 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 }
 
 // NewTestReport ..
-func NewTestReport(ctx context.Context, gtr goGitlab.PipelineTestReport) TestReport {
-	var (
-		testSuites []TestSuite = []TestSuite{}
-	)
+func NewTestReport(gtr goGitlab.PipelineTestReport) TestReport {
+	testSuites := []TestSuite{}
 
 	for _, x := range gtr.TestSuites {
-		testSuites = append(testSuites, NewTestSuite(ctx, x))
+		testSuites = append(testSuites, NewTestSuite(x))
 	}
 
 	return TestReport{
@@ -95,7 +93,7 @@ func NewTestReport(ctx context.Context, gtr goGitlab.PipelineTestReport) TestRep
 }
 
 // NewTestSuite ..
-func NewTestSuite(ctx context.Context, gts goGitlab.PipelineTestSuites) TestSuite {
+func NewTestSuite(gts *goGitlab.PipelineTestSuites) TestSuite {
 	return TestSuite{
 		Name:         gts.Name,
 		TotalTime:    gts.TotalTime,

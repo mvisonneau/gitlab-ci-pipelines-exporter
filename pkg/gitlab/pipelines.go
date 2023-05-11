@@ -319,12 +319,12 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 
 	c.rateLimit(ctx)
 
-	testreport, resp, err := c.Pipelines.GetPipelineTestReport(ref.Project.Name, ref.LatestPipeline.ID, goGitlab.WithContext(ctx))
+	testReport, resp, err := c.Pipelines.GetPipelineTestReport(ref.Project.Name, ref.LatestPipeline.ID, goGitlab.WithContext(ctx))
 	if err != nil {
 		return schemas.TestReport{}, fmt.Errorf("could not fetch test report for %d: %s", ref.LatestPipeline.ID, err.Error())
 	}
 
 	c.requestsRemaining(resp)
 
-	return schemas.NewTestReport(ctx, *testreport), nil
+	return schemas.NewTestReport(*testReport), nil
 }
