@@ -154,7 +154,7 @@ func (c *Controller) configureGitlab(cfg config.Gitlab, version string) (err err
 	if c.Redis != nil {
 		rl = ratelimit.NewRedisLimiter(c.Redis, cfg.MaximumRequestsPerSecond)
 	} else {
-		rl = ratelimit.NewLocalLimiter(cfg.MaximumRequestsPerSecond)
+		rl = ratelimit.NewLocalLimiter(cfg.MaximumRequestsPerSecond, cfg.TimeWindow)
 	}
 
 	c.Gitlab, err = gitlab.NewClient(gitlab.ClientConfig{

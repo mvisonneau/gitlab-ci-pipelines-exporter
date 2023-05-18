@@ -90,6 +90,10 @@ gitlab:
   # (optional, default: 1)
   maximum_requests_per_second: 1
 
+  # Time window for the rate limit, in seconds.
+  # (optional, default: 1)
+  time_window: 1
+
 pull:
   projects_from_wildcards:
     # Whether to trigger a discovery or not when the

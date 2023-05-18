@@ -13,9 +13,9 @@ type Local struct {
 }
 
 // NewLocalLimiter ..
-func NewLocalLimiter(maxRPS int) Limiter {
+func NewLocalLimiter(maxRPS int, TimeWindow int) Limiter {
 	return Local{
-		localRatelimit.New(maxRPS),
+		localRatelimit.New(maxRPS, localRatelimit.Per(time.Duration(TimeWindow)*time.Second)),
 	}
 }
 

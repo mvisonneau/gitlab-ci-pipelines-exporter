@@ -23,6 +23,7 @@ func TestNew(t *testing.T) {
 	c.Gitlab.EnableHealthCheck = true
 	c.Gitlab.EnableTLSVerify = true
 	c.Gitlab.MaximumRequestsPerSecond = 1
+	c.Gitlab.TimeWindow = 1
 
 	c.Pull.ProjectsFromWildcards.OnInit = true
 	c.Pull.ProjectsFromWildcards.Scheduled = true

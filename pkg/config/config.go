@@ -111,6 +111,9 @@ type Gitlab struct {
 
 	// Rate limit for the GitLab API requests/sec
 	MaximumRequestsPerSecond int `default:"1" validate:"gte=1" yaml:"maximum_requests_per_second"`
+
+	// Changes the time window of the rate limiter, in seconds
+	TimeWindow int `default:"1" validate:"gte=1" yaml:"time_window"`
 }
 
 // Redis ..

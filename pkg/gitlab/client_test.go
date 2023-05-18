@@ -28,7 +28,7 @@ func getMockedClient() (context.Context, *http.ServeMux, *httptest.Server, *Clie
 
 	c := &Client{
 		Client:      gc,
-		RateLimiter: ratelimit.NewLocalLimiter(100),
+		RateLimiter: ratelimit.NewLocalLimiter(100, 1),
 		RateCounter: ratecounter.NewRateCounter(time.Second),
 	}
 
@@ -47,7 +47,7 @@ func TestNewClient(t *testing.T) {
 		UserAgentVersion: "0.0.0",
 		DisableTLSVerify: true,
 		ReadinessURL:     "https://gitlab.example.com/amialive",
-		RateLimiter:      ratelimit.NewLocalLimiter(10),
+		RateLimiter:      ratelimit.NewLocalLimiter(10, 1),
 	}
 
 	c, err := NewClient(cfg)
