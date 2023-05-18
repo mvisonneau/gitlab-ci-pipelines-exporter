@@ -86,9 +86,13 @@ gitlab:
   # GitLab instance (handy when self-hosting) (optional, default: true)
   enable_tls_verify: true
 
-  # Rate limit for the GitLab API requests/sec
+  # Maximum limit for the GitLab API requests/sec
   # (optional, default: 1)
   maximum_requests_per_second: 1
+
+  # Rate limit for the GitLab API requests/sec
+  # (optional, default: 5)
+  burstable_requests_per_second: 5
 
 pull:
   projects_from_wildcards:
