@@ -114,6 +114,16 @@ type Gitlab struct {
 
 	// Burstable limit for the GitLab API requests/sec
 	BurstableRequestsPerSecond int `default:"5" validate:"gte=1" yaml:"burstable_requests_per_second"`
+
+	// Maximum amount of jobs to keep queue, if this limit is reached
+	// newly created ones will get dropped. As a best practice you should not change this value.
+	// Workarounds to avoid hitting the limit are:
+	// - increase polling intervals
+	// - increase API rate limit
+	// - reduce the amount of projects, refs, environments or metrics you are looking into
+	// - leverage webhooks instead of polling schedules
+	//
+	MaximumJobsQueueSize int `default:"1000" validate:"gte=10" yaml:"maximum_jobs_queue_size"`
 }
 
 // Redis ..

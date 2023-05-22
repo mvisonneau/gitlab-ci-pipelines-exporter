@@ -19,8 +19,6 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 )
 
-const bufferSize = 1000
-
 // TaskController holds task related clients.
 type TaskController struct {
 	Factory                  taskq.Factory
@@ -30,7 +28,7 @@ type TaskController struct {
 }
 
 // NewTaskController initializes and returns a new TaskController object.
-func NewTaskController(ctx context.Context, r *redis.Client) (t TaskController) {
+func NewTaskController(ctx context.Context, r *redis.Client, maximumJobsQueueSize int) (t TaskController) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:NewTaskController")
 	defer span.End()
 
@@ -40,7 +38,7 @@ func NewTaskController(ctx context.Context, r *redis.Client) (t TaskController) 
 		Name:                 "default",
 		PauseErrorsThreshold: 3,
 		Handler:              t.TaskMap,
-		BufferSize:           bufferSize,
+		BufferSize:           maximumJobsQueueSize,
 	}
 
 	if r != nil {

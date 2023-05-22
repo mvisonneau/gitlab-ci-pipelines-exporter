@@ -94,6 +94,17 @@ gitlab:
   # (optional, default: 5)
   burstable_requests_per_second: 5
 
+  # Maximum amount of jobs to keep queue, if this limit is reached
+  # newly created ones will get dropped. As a best practice you should not change this value.
+  # Workarounds to avoid hitting the limit are:
+  # - increase polling intervals
+  # - increase API rate limit
+  # - reduce the amount of projects, refs, environments or metrics you are looking into
+  # - leverage webhooks instead of polling schedules
+  #
+  # (optional, default: 1000)
+  maximum_jobs_queue_size: 1000
+
 pull:
   projects_from_wildcards:
     # Whether to trigger a discovery or not when the

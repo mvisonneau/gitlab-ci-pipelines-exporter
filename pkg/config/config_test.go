@@ -24,6 +24,7 @@ func TestNew(t *testing.T) {
 	c.Gitlab.EnableTLSVerify = true
 	c.Gitlab.MaximumRequestsPerSecond = 1
 	c.Gitlab.BurstableRequestsPerSecond = 5
+	c.Gitlab.MaximumJobsQueueSize = 1000
 
 	c.Pull.ProjectsFromWildcards.OnInit = true
 	c.Pull.ProjectsFromWildcards.Scheduled = true
