@@ -134,15 +134,6 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 				continue
 			}
 
-			if !gp.JobsEnabled {
-				log.WithFields(logFields).WithFields(log.Fields{
-					"project-id":   gp.ID,
-					"project-name": gp.PathWithNamespace,
-				}).Debug("jobs/pipelines not enabled on project, skipping")
-
-				continue
-			}
-
 			p := schemas.NewProject(gp.PathWithNamespace)
 			p.ProjectParameters = w.ProjectParameters
 			projects = append(projects, p)

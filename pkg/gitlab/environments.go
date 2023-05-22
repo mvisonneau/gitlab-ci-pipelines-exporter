@@ -127,7 +127,7 @@ func (c *Client) GetEnvironment(
 				"project-name":     project,
 				"environment-name": e.Name,
 			}).
-			Warn("no deployments found for the environment")
+			Debug("no deployments found for the environment")
 
 		return
 	}
