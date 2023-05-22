@@ -128,7 +128,7 @@ func (s *Server) GetTelemetry(_ *pb.Empty, ts pb.Monitor_GetTelemetryServer) (er
 			telemetry.GitlabApiUsage = 1
 		}
 
-		telemetry.GitlabApiRequestsCount = s.gitlabClient.RequestsCounter
+		telemetry.GitlabApiRequestsCount = s.gitlabClient.RequestsCounter.Load()
 
 		telemetry.GitlabApiRateLimit = float64(s.gitlabClient.RequestsRemaining) / float64(s.gitlabClient.RequestsLimit)
 		if telemetry.GitlabApiRateLimit > 1 {

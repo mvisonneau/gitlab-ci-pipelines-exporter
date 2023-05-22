@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
@@ -32,7 +33,7 @@ type Client struct {
 
 	RateLimiter       ratelimit.Limiter
 	RateCounter       *ratecounter.RateCounter
-	RequestsCounter   uint64
+	RequestsCounter   atomic.Uint64
 	RequestsLimit     int
 	RequestsRemaining int
 }
@@ -136,7 +137,7 @@ func (c *Client) rateLimit(ctx context.Context) {
 	ratelimit.Take(ctx, c.RateLimiter)
 	// Used for monitoring purposes
 	c.RateCounter.Incr(1)
-	c.RequestsCounter++
+	c.RequestsCounter.Add(1)
 }
 
 func (c *Client) requestsRemaining(response *goGitlab.Response) {

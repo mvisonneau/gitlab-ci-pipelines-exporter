@@ -3,12 +3,12 @@ package controller
 import (
 	"context"
 
-	"github.com/go-redis/redis/extra/redisotel/v8"
-	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis/extra/redisotel/v9"
+	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
-	"github.com/vmihailenco/taskq/v3"
+	"github.com/vmihailenco/taskq/v4"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -83,8 +83,7 @@ func (c *Controller) registerTasks() {
 		schemas.TaskTypePullRefsFromProject:          c.TaskHandlerPullRefsFromProject,
 		schemas.TaskTypePullRefsFromProjects:         c.TaskHandlerPullRefsFromProjects,
 	} {
-		_, _ = c.TaskController.TaskMap.Register(&taskq.TaskOptions{
-			Name:       string(n),
+		_, _ = c.TaskController.TaskMap.Register(string(n), &taskq.TaskConfig{
 			Handler:    h,
 			RetryLimit: 1,
 		})
@@ -190,7 +189,9 @@ func (c *Controller) configureRedis(ctx context.Context, url string) (err error)
 
 	c.Redis = redis.NewClient(opt)
 
-	c.Redis.AddHook(redisotel.NewTracingHook())
+	if err = redisotel.InstrumentTracing(c.Redis); err != nil {
+		return
+	}
 
 	if _, err := c.Redis.Ping(ctx).Result(); err != nil {
 		return errors.Wrap(err, "connecting to redis")

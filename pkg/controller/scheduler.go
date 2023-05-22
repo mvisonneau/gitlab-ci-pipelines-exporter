@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
-	"github.com/vmihailenco/taskq/v3"
-	"github.com/vmihailenco/taskq/v3/memqueue"
-	"github.com/vmihailenco/taskq/v3/redisq"
+	"github.com/vmihailenco/taskq/memqueue/v4"
+	"github.com/vmihailenco/taskq/redisq/v4"
+	"github.com/vmihailenco/taskq/v4"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -36,18 +36,11 @@ func NewTaskController(ctx context.Context, r *redis.Client) (t TaskController) 
 
 	t.TaskMap = &taskq.TaskMap{}
 
-	queueOptions := &taskq.QueueOptions{
+	queueOptions := &taskq.QueueConfig{
 		Name:                 "default",
 		PauseErrorsThreshold: 3,
 		Handler:              t.TaskMap,
 		BufferSize:           bufferSize,
-
-		// Disable system resources checks
-		MinSystemResources: taskq.SystemResources{
-			Load1PerCPU:          -1,
-			MemoryFreeMB:         0,
-			MemoryFreePercentage: 0,
-		},
 	}
 
 	if r != nil {
@@ -61,7 +54,7 @@ func NewTaskController(ctx context.Context, r *redis.Client) (t TaskController) 
 
 	// Purge the queue when we start
 	// I am only partially convinced this will not cause issues in HA fashion
-	if err := t.Queue.Purge(); err != nil {
+	if err := t.Queue.Purge(ctx); err != nil {
 		log.WithContext(ctx).
 			WithError(err).
 			Error("purging the pulling queue")
@@ -380,9 +373,9 @@ func (c *Controller) ScheduleTask(ctx context.Context, tt schemas.TaskType, uniq
 		"task_unique_id": uniqueID,
 	}
 	task := c.TaskController.TaskMap.Get(string(tt))
-	msg := task.WithArgs(ctx, args...)
+	msg := task.NewJob(args...)
 
-	qlen, err := c.TaskController.Queue.Len()
+	qlen, err := c.TaskController.Queue.Len(ctx)
 	if err != nil {
 		log.WithContext(ctx).
 			WithFields(logFields).
@@ -415,8 +408,8 @@ func (c *Controller) ScheduleTask(ctx context.Context, tt schemas.TaskType, uniq
 		return
 	}
 
-	go func(msg *taskq.Message) {
-		if err := c.TaskController.Queue.Add(msg); err != nil {
+	go func(job *taskq.Job) {
+		if err := c.TaskController.Queue.AddJob(ctx, job); err != nil {
 			log.WithContext(ctx).
 				WithError(err).
 				Warn("scheduling task")
