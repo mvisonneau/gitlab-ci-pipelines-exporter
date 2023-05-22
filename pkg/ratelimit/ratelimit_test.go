@@ -21,7 +21,7 @@ func MeasureTakeDuration(l Limiter) int64 {
 }
 
 func TestLocalTake(t *testing.T) {
-	l := NewLocalLimiter(1)
+	l := NewLocalLimiter(1, 1)
 
 	assert.LessOrEqual(t, MeasureTakeDuration(l), int64(100*time.Millisecond))
 	assert.GreaterOrEqual(t, MeasureTakeDuration(l), int64(time.Second))
