@@ -3,6 +3,7 @@ package gitlab
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -91,7 +92,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context
 	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
 	span.SetAttributes(attribute.String("ref_name", ref.Name))
 
-	if ref.LatestPipeline == (schemas.Pipeline{}) {
+	if reflect.DeepEqual(ref.LatestPipeline, (schemas.Pipeline{})) {
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.Project.Name,
@@ -288,4 +289,42 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 	}
 
 	return
+}
+
+// GetRefPipelineTestReport ..
+func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) (schemas.TestReport, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipelineTestReport")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
+	span.SetAttributes(attribute.String("ref_name", ref.Name))
+
+	if reflect.DeepEqual(ref.LatestPipeline, (schemas.Pipeline{})) {
+		log.WithFields(
+			log.Fields{
+				"project-name": ref.Project.Name,
+				"ref":          ref.Name,
+			},
+		).Debug("most recent pipeline not defined, exiting...")
+
+		return schemas.TestReport{}, nil
+	}
+
+	log.WithFields(
+		log.Fields{
+			"project-name": ref.Project.Name,
+			"ref":          ref.Name,
+			"pipeline-id":  ref.LatestPipeline.ID,
+		},
+	).Debug("fetching pipeline test report")
+
+	c.rateLimit(ctx)
+
+	testReport, resp, err := c.Pipelines.GetPipelineTestReport(ref.Project.Name, ref.LatestPipeline.ID, goGitlab.WithContext(ctx))
+	if err != nil {
+		return schemas.TestReport{}, fmt.Errorf("could not fetch test report for %d: %s", ref.LatestPipeline.ID, err.Error())
+	}
+
+	c.requestsRemaining(resp)
+
+	return schemas.NewTestReport(*testReport), nil
 }
