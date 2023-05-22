@@ -49,7 +49,7 @@ jobs:
           password: ${{ secrets.QUAY_TOKEN }}
 
       - name: Snapcraft config
-        uses: samuelmeuli/action-snapcraft@v2
+        uses: samuelmeuli/action-snapcraft@v1
         with:
           snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
 
