@@ -25,6 +25,7 @@ universal_binaries:
 
 archives:
   - name_template: '{{ .ProjectName }}_edge_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    rlcp: true
     format_overrides:
       - goos: windows
         format: zip

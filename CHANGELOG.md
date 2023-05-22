@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.5.5] - 2023-05-22
+
 ### Added
 
 - new metrics:

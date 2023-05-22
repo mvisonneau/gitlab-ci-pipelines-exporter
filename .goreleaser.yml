@@ -25,6 +25,7 @@ universal_binaries:
 
 archives:
   - name_template: '{{ .ProjectName }}_edge_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    rlcp: true
     format_overrides:
       - goos: windows
         format: zip
@@ -79,13 +80,13 @@ brews:
       zsh_completion.install "./helpers/autocomplete/zsh" => "_{{ .ProjectName }}"
       man1.install "./helpers/manpages/{{ .ProjectName }}.1.gz"
 
-scoop:
-  description: *description
-  homepage: *homepage
-  license: *license
-  bucket:
-    owner: mvisonneau
-    name: scoops
+scoops:
+  - description: *description
+    homepage: *homepage
+    license: *license
+    bucket:
+      owner: mvisonneau
+      name: scoops
 
 snapcrafts:
   - summary: *description
