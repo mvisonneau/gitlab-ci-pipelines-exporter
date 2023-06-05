@@ -50,7 +50,7 @@ type ProjectPullRefsBranches struct {
 	Enabled bool `default:"true" yaml:"enabled"`
 
 	// Filter for branches to include
-	Regexp string `default:"^main|master$" yaml:"regexp"`
+	Regexp string `default:"^(?:main|master)$" yaml:"regexp"`
 
 	// Only keep most 'n' recently updated branches
 	MostRecent uint `default:"0" yaml:"most_recent"`

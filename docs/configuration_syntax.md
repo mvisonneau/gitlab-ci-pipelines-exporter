@@ -243,8 +243,8 @@ project_defaults:
         enabled: true
 
         # Filter for branches to include
-        # (optional, default: "^main|master$" -- main/master branches)
-        regexp: "^main|master$"
+        # (optional, default: "^(?:main|master)$" -- main/master branches)
+        regexp: "^(?:main|master)$"
         
         # Only keep most 'n' recently updated branches
         # (optional, default: 0 -- disabled/keep every branch matching the regexp)"
@@ -354,8 +354,8 @@ projects:
           enabled: true
 
           # Filter for branches to include
-          # (optional, default: "^main|master$" -- main/master branches)
-          regexp: "^main|master$"
+          # (optional, default: "^(?:main|master)$" -- main/master branches)
+          regexp: "^(?:main|master)$"
           
           # Only keep most 'n' recently updated branches
           # (optional, default: 0 -- disabled/keep every branch matching the regexp)"
@@ -481,8 +481,8 @@ wildcards:
           enabled: true
 
           # Filter for branches to include
-          # (optional, default: "^main|master$" -- main/master branches)
-          regexp: "^main|master$"
+          # (optional, default: "^(?:main|master)$" -- main/master branches)
+          regexp: "^(?:main|master)$"
           
           # Only keep most 'n' recently updated branches
           # (optional, default: 0 -- disabled/keep every branch matching the regexp)"
