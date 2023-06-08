@@ -9,7 +9,8 @@ var (
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "username"}
 	testSuiteLabels              = []string{"test_suite_name"}
-	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled"}
+	testCaseLabels            	 = []string{"test_case_name","test_case_classname"}
+	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled", "error"}
 )
 
 // NewInternalCollectorCurrentlyQueuedTasksCount returns a new collector for the gcpe_currently_queued_tasks_count metric.
@@ -482,5 +483,27 @@ func NewCollectorTestSuiteErrorCount() prometheus.Collector {
 			Help: "Number of errors for the test suite",
 		},
 		append(defaultLabels, testSuiteLabels...),
+	)
+}
+
+// NewCollectorTestCaseExecutionTime returns a new collector for the gitlab_ci_pipeline_test_case_execution_time metric.
+func NewCollectorTestCaseExecutionTime() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_case_execution_time",
+			Help: "Duration in seconds for the test case",
+		},
+		append(defaultLabels, append(testSuiteLabels, testCaseLabels...)...),
+	)
+}
+
+// NewCollectorTestCaseStatus returns a new collector for the gitlab_ci_pipeline_test_case_status metric.
+func NewCollectorTestCaseStatus() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_test_case_status",
+			Help: "Status of the test case in most recent job",
+		},
+		append(defaultLabels, append(testSuiteLabels, append(testCaseLabels, statusLabels...)...)...),
 	)
 }
