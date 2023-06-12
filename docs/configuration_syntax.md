@@ -50,6 +50,20 @@ server:
     # environment variable)
     secret_token: 063f51ec-09a4-11eb-adc1-0242ac120002
 
+    add_webhooks: 
+      # Whether to add webhooks to projects from wildcards when
+      # exporter starts (optional, default: false)
+      on_init: false
+      # Whether to add webhooks to projects from wildcards
+      # on a regular basis (optional, default: false)
+      scheduled: false
+      # Interval in seconds to add webhooks to projects 
+      # from wildcards (optional, default: 43200)
+      interval_seconds: 43200
+
+    # GCPE Webhook endpoint URL 
+    webhook_url: https://gcpe.example.net/webhook
+
 # Redis configuration, optional and solely useful for an HA setup.
 # By default the data is held in memory of the exporter
 redis:

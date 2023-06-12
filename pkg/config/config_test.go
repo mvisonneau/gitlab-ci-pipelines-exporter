@@ -72,6 +72,9 @@ func TestNew(t *testing.T) {
 	c.ProjectDefaults.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `shared-runners-manager-(\d*)\.gitlab\.com`
 	c.ProjectDefaults.Pull.Pipeline.Variables.Regexp = `.*`
 
+	c.Server.Webhook.AddWebhooks.IntervalSeconds = 43200
+	c.Server.Webhook.AddWebhooks.Scheduled = false
+
 	assert.Equal(t, c, New())
 }
 
