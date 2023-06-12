@@ -68,7 +68,7 @@ dev-env: ## Build a local development environment using Docker
 		-v $(shell pwd):/go/src/github.com/mvisonneau/$(NAME) \
 		-w /go/src/github.com/mvisonneau/$(NAME) \
 		-p 8080:8080 \
-		golang:1.19 \
+		golang:1.20 \
 		/bin/bash -c 'make setup; make install; bash'
 
 .PHONY: is-git-dirty

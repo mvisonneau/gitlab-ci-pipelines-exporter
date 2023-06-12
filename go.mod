@@ -29,7 +29,7 @@ require (
 	github.com/vmihailenco/taskq/memqueue/v4 v4.0.0-beta.4
 	github.com/vmihailenco/taskq/redisq/v4 v4.0.0-beta.4
 	github.com/vmihailenco/taskq/v4 v4.0.0-beta.4
-	github.com/xanzy/go-gitlab v0.83.0
+	github.com/xanzy/go-gitlab v0.85.0
 	github.com/xeonx/timeago v1.0.0-rc5
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.41.1
 	go.opentelemetry.io/otel v1.15.1

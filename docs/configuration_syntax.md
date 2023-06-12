@@ -563,6 +563,12 @@ wildcards:
         test_reports:
           # Fetch test reports in a separate metric (optiona, default: false)
           enabled: false
+          
+          from_child_pipelines:
+            # Combines test reports from subsequent child/downstream pipelines
+            # (optional, default: false)
+            enabled: false
+          
 ```
 
 ## Pull all projects accessible by the provided token
