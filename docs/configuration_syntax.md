@@ -64,6 +64,9 @@ server:
     # GCPE Webhook endpoint URL 
     webhook_url: https://gcpe.example.net/webhook
 
+    # Whether to remove webhooks when GCPE shutsdown
+    remove_webhooks: false
+
 # Redis configuration, optional and solely useful for an HA setup.
 # By default the data is held in memory of the exporter
 redis:
