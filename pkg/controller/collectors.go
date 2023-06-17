@@ -9,7 +9,7 @@ var (
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "username"}
 	testSuiteLabels              = []string{"test_suite_name"}
-	testCaseLabels            	 = []string{"test_case_name","test_case_classname"}
+	testCaseLabels               = []string{"test_case_name", "test_case_classname"}
 	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled", "error"}
 )
 

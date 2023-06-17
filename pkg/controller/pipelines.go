@@ -163,7 +163,6 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 			if ref.Project.Pull.Pipeline.TestReports.TestCases.Enabled {
 				for _, tc := range ts.TestCases {
 					c.ProcessTestCaseMetrics(ctx, ref, ts, tc)
-					
 				}
 			}
 		}

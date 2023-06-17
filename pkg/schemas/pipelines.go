@@ -40,15 +40,15 @@ type TestSuite struct {
 	FailedCount  int
 	SkippedCount int
 	ErrorCount   int
-	TestCases	 []TestCase
+	TestCases    []TestCase
 }
 
 // TestCase ..
 type TestCase struct {
-	Name         	string
-	Classname		string
-	ExecutionTime   float64
-	Status   		string
+	Name          string
+	Classname     string
+	ExecutionTime float64
+	Status        string
 }
 
 // NewPipeline ..
@@ -124,9 +124,9 @@ func NewTestSuite(gts *goGitlab.PipelineTestSuites) TestSuite {
 // NewTestCase ..
 func NewTestCase(gtc *goGitlab.PipelineTestCases) TestCase {
 	return TestCase{
-		Name:           gtc.Name,
-		Classname:      gtc.Classname,
-		ExecutionTime:  gtc.ExecutionTime,
-		Status:         gtc.Status,
+		Name:          gtc.Name,
+		Classname:     gtc.Classname,
+		ExecutionTime: gtc.ExecutionTime,
+		Status:        gtc.Status,
 	}
 }

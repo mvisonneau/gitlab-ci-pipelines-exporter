@@ -238,12 +238,23 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 	}
 	assert.Equal(t, tsErrorCount, metrics[tsErrorCount.Key()])
 
+	labels["test_case_name"] = "Security Reports can create an auto-remediation MR"
+	labels["test_case_classname"] = "vulnerability_management_spec"
+
 	tcExecutionTime := schemas.Metric{
 		Kind:   schemas.MetricKindTestCaseExecutionTime,
 		Labels: labels,
 		Value:  5,
 	}
 	assert.Equal(t, tcExecutionTime, metrics[tcExecutionTime.Key()])
+
+	labels["status"] = "success"
+	tcStatus := schemas.Metric{
+		Kind:   schemas.MetricKindTestCaseStatus,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, tcStatus, metrics[tcStatus.Key()])
 }
 
 func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
