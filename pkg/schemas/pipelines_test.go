@@ -54,7 +54,14 @@ func TestNewTestReport(t *testing.T) {
 				FailedCount:  0,
 				SkippedCount: 0,
 				ErrorCount:   0,
-				TestCases:    []*goGitlab.PipelineTestCases{},
+				TestCases:    []*goGitlab.PipelineTestCases{
+					{
+						Name: 	       "First",
+						Classname:     "ClassFirst",
+						ExecutionTime: 4,
+						Status:       "success",
+					},
+				},
 			},
 			{
 				Name:         "Second",
@@ -64,7 +71,14 @@ func TestNewTestReport(t *testing.T) {
 				FailedCount:  1,
 				SkippedCount: 0,
 				ErrorCount:   0,
-				TestCases:    []*goGitlab.PipelineTestCases{},
+				TestCases:    []*goGitlab.PipelineTestCases{
+					{
+						Name: 	       "First",
+						Classname:     "ClassFirst",
+						ExecutionTime: 4,
+						Status:       "success",
+					},
+				},
 			},
 		},
 	}
@@ -85,6 +99,14 @@ func TestNewTestReport(t *testing.T) {
 				FailedCount:  0,
 				SkippedCount: 0,
 				ErrorCount:   0,
+				TestCases: []TestCase{
+					{
+						Name: 	       "First",
+						Classname:     "ClassFirst",
+						ExecutionTime: 4,
+						Status:       "success",
+					},
+				},
 			},
 			{
 				Name:         "Second",
@@ -94,6 +116,14 @@ func TestNewTestReport(t *testing.T) {
 				FailedCount:  1,
 				SkippedCount: 0,
 				ErrorCount:   0,
+				TestCases: []TestCase{
+					{
+						Name: 	       "First",
+						Classname:     "ClassFirst",
+						ExecutionTime: 4,
+						Status:       "success",
+					},
+				},
 			},
 		},
 	}
@@ -109,7 +139,14 @@ func TestNewTestSuite(t *testing.T) {
 		FailedCount:  2,
 		SkippedCount: 1,
 		ErrorCount:   1,
-		TestCases:    []*goGitlab.PipelineTestCases{},
+		TestCases:    []*goGitlab.PipelineTestCases{
+			{
+				Name: 	       "First",
+				Classname:     "ClassFirst",
+				ExecutionTime: 4,
+				Status:       "success",
+			},
+		},
 	}
 
 	expectedTestSuite := TestSuite{
@@ -120,6 +157,14 @@ func TestNewTestSuite(t *testing.T) {
 		FailedCount:  2,
 		SkippedCount: 1,
 		ErrorCount:   1,
+		TestCases: []TestCase{
+			{
+				Name: 	       "First",
+				Classname:     "ClassFirst",
+				ExecutionTime: 4,
+				Status:       "success",
+			},
+		},
 	}
 	assert.Equal(t, expectedTestSuite, NewTestSuite(gitlabTestSuite))
 }

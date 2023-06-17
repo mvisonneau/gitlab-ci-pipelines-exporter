@@ -118,7 +118,7 @@ GitLab username of the person which triggered the most recent deployment of the 
 
 ### Status
 
-Status of the pipeline or deployment
+Status of the pipeline, deployment or test case
 
 ### Stage
 

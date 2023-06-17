@@ -43,6 +43,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	p := schemas.NewProject("foo")
 	p.Pull.Pipeline.Variables.Enabled = true
 	p.Pull.Pipeline.TestReports.Enabled = true
+	p.Pull.Pipeline.TestReports.TestCases.Enabled = true
 
 	assert.NoError(t, c.PullRefMetrics(
 		ctx,
@@ -131,6 +132,7 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 	p := schemas.NewProject("foo")
 	p.Pull.Pipeline.Variables.Enabled = true
 	p.Pull.Pipeline.TestReports.Enabled = true
+	p.Pull.Pipeline.TestReports.TestCases.Enabled = true
 
 	assert.NoError(t, c.PullRefMetrics(
 		ctx,
@@ -235,6 +237,13 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 		Value:  0,
 	}
 	assert.Equal(t, tsErrorCount, metrics[tsErrorCount.Key()])
+
+	tcExecutionTime := schemas.Metric{
+		Kind:   schemas.MetricKindTestCaseExecutionTime,
+		Labels: labels,
+		Value:  5,
+	}
+	assert.Equal(t, tcExecutionTime, metrics[tcExecutionTime.Key()])
 }
 
 func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {

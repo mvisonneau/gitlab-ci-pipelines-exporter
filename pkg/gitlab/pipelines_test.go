@@ -221,6 +221,14 @@ func TestGetRefPipelineTestReport(t *testing.T) {
 				FailedCount:  0,
 				SkippedCount: 0,
 				ErrorCount:   0,
+				TestCases: []schemas.TestCase{
+					{
+						Name: 	       "Security Reports can create an auto-remediation MR",
+						Classname:     "vulnerability_management_spec",
+						ExecutionTime: 5,
+						Status:       "success",
+					},
+				},
 			},
 		},
 	}, tr)
