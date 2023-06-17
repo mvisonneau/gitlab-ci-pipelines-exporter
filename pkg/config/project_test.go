@@ -17,7 +17,7 @@ func TestNewProject(t *testing.T) {
 	p.Pull.Environments.ExcludeStopped = true
 
 	p.Pull.Refs.Branches.Enabled = true
-	p.Pull.Refs.Branches.Regexp = `^main|master$`
+	p.Pull.Refs.Branches.Regexp = `^(?:main|master)$`
 	p.Pull.Refs.Branches.ExcludeDeleted = true
 
 	p.Pull.Refs.Tags.Enabled = true
