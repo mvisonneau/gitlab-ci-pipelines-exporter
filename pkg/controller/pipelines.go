@@ -159,10 +159,12 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 
 		for _, ts := range ref.LatestPipeline.TestReport.TestSuites {
 			c.ProcessTestSuiteMetrics(ctx, ref, ts)
-		
-			for _, tc := range ts.TestCases {
-				c.ProcessTestCaseMetrics(ctx, ref, ts, tc)
-				
+			// fetch pipeline test cases
+			if ref.Project.Pull.Pipeline.TestReports.TestCases.Enabled {
+				for _, tc := range ts.TestCases {
+					c.ProcessTestCaseMetrics(ctx, ref, ts, tc)
+					
+				}
 			}
 		}
 	}

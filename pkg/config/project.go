@@ -100,7 +100,6 @@ type ProjectPullPipeline struct {
 	Jobs        ProjectPullPipelineJobs        `yaml:"jobs"`
 	Variables   ProjectPullPipelineVariables   `yaml:"variables"`
 	TestReports ProjectPullPipelineTestReports `yaml:"test_reports"`
-	TestCases 	ProjectPullPipelineTestCases   `yaml:"test_cases"`
 }
 
 // ProjectPullPipelineJobs ..
@@ -142,11 +141,12 @@ type ProjectPullPipelineVariables struct {
 // ProjectPullPipelineTestReports ..
 type ProjectPullPipelineTestReports struct {
 	// Enabled set to true will attempt to retrieve the test report included in the pipeline.
-	Enabled bool `default:"false" yaml:"enabled"`
+	Enabled   bool 									  `default:"false" yaml:"enabled"`
+	TestCases ProjectPullPipelineTestReportsTestCases `yaml:"test_cases"`
 }
 
 // ProjectPullPipelineTestCases ..
-type ProjectPullPipelineTestCases struct {
+type ProjectPullPipelineTestReportsTestCases struct {
 	// Enabled set to true will attempt to retrieve the test report included in the pipeline.
 	Enabled bool `default:"false" yaml:"enabled"`
 }
