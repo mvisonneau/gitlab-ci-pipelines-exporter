@@ -441,6 +441,10 @@ projects:
           # Fetch test reports in a separate metric (optiona, default: false)
           enabled: false
 
+          test_cases:
+          # Fetch test cases reports in a separate metric (optional, default: false)
+            enabled: false
+
 # Dynamically fetch projects to monitor using a wildcard (optional)
 wildcards:
   - # Define the owner of the projects we want to look for (optional)
@@ -567,6 +571,10 @@ wildcards:
         test_reports:
           # Fetch test reports in a separate metric (optiona, default: false)
           enabled: false
+
+          test_cases:
+          # Fetch test cases reports in a separate metric (optional, default: false)
+            enabled: false
 ```
 
 ## Pull all projects accessible by the provided token

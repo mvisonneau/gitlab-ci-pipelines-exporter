@@ -47,6 +47,8 @@
 | `gitlab_ci_pipeline_test_suite_failed_count` | Number of failed tests for the test suite | [project], [topics], [ref], [kind], [variables], [test_suite_name] | `project_defaults.pull.pipeline.test_reports.enabled` |
 | `gitlab_ci_pipeline_test_suite_skipped_count` | Number of skipped tests for the test suite | [project], [topics], [ref], [kind], [variables], [test_suite_name] | `project_defaults.pull.pipeline.test_reports.enabled` |
 | `gitlab_ci_pipeline_test_suite_error_count` | Duration in errored tests for the test suite | [project], [topics], [ref], [kind], [variables], [test_suite_name] | `project_defaults.pull.pipeline.test_reports.enabled` |
+| `gitlab_ci_pipeline_test_case_execution_time` | Duration in seconds for the test case | [project], [topics], [ref], [kind], [variables], [test_suite_name], [test_case_name=], [test_case_classname] | `project_defaults.pull.pipeline.test_reports.test_cases.enabled` |
+| `gitlab_ci_pipeline_test_case_status` | Status of the most recent test case | [project], [topics], [ref], [kind], [variables], [test_suite_name], [test_case_name=], [test_case_classname], [status] | `project_defaults.pull.pipeline.test_reports.test_cases.enabled` |
 
 ## Labels
 
@@ -79,6 +81,16 @@ Those are not fetched by default, you need to set `project_defaults.pull.pipelin
 
 Name of the test suite.
 This is not fetched by default, you need to set `project_default.pull.pipeline.test_reports.enabled` to **true**
+
+### Test Case Name
+
+Name of the test case.
+This is not fetched by default, you need to set `project_default.pull.pipeline.test_reports.test_cases.enabled` to **true**
+
+### Test Case ClassName
+
+Name of the test case classname.
+This is not fetched by default, you need to set `project_default.pull.pipeline.test_reports.test_cases.enabled` to **true**
 
 ### Environment
 
@@ -161,3 +173,5 @@ This flag affect every `_status$` metrics:
 [username]: #username
 [variables]: #variables
 [test_suite_name]: #test-suite-name
+[test_case_name]: #test-case-name
+[test_case_classname]: #test-case-classname
