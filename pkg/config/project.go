@@ -141,6 +141,13 @@ type ProjectPullPipelineVariables struct {
 // ProjectPullPipelineTestReports ..
 type ProjectPullPipelineTestReports struct {
 	// Enabled set to true will attempt to retrieve the test report included in the pipeline.
+	Enabled   bool                                    `default:"false" yaml:"enabled"`
+	TestCases ProjectPullPipelineTestReportsTestCases `yaml:"test_cases"`
+}
+
+// ProjectPullPipelineTestCases ..
+type ProjectPullPipelineTestReportsTestCases struct {
+	// Enabled set to true will attempt to retrieve the test report included in the pipeline.
 	Enabled bool `default:"false" yaml:"enabled"`
 }
 

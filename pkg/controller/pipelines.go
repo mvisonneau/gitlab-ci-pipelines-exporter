@@ -159,6 +159,12 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 
 		for _, ts := range ref.LatestPipeline.TestReport.TestSuites {
 			c.ProcessTestSuiteMetrics(ctx, ref, ts)
+			// fetch pipeline test cases
+			if ref.Project.Pull.Pipeline.TestReports.TestCases.Enabled {
+				for _, tc := range ts.TestCases {
+					c.ProcessTestCaseMetrics(ctx, ref, ts, tc)
+				}
+			}
 		}
 	}
 
@@ -281,4 +287,47 @@ func (c *Controller) ProcessTestSuiteMetrics(ctx context.Context, ref schemas.Re
 		Labels: labels,
 		Value:  ts.TotalTime,
 	})
+}
+
+func (c *Controller) ProcessTestCaseMetrics(ctx context.Context, ref schemas.Ref, ts schemas.TestSuite, tc schemas.TestCase) {
+	testCaseLogFields := log.Fields{
+		"project-name":     ref.Project.Name,
+		"ref":              ref.Name,
+		"test-suite-name":  ts.Name,
+		"test-case-name":   tc.Name,
+		"test-case-status": tc.Status,
+	}
+
+	labels := ref.DefaultLabelsValues()
+	labels["test_suite_name"] = ts.Name
+	labels["test_case_name"] = tc.Name
+	labels["test_case_classname"] = tc.Classname
+
+	// Get the existing ref from the store
+	if err := c.Store.GetRef(ctx, &ref); err != nil {
+		log.WithContext(ctx).
+			WithFields(testCaseLogFields).
+			WithError(err).
+			Error("getting ref from the store")
+
+		return
+	}
+
+	log.WithFields(testCaseLogFields).Trace("processing test case metrics")
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTestCaseExecutionTime,
+		Labels: labels,
+		Value:  tc.ExecutionTime,
+	})
+
+	emitStatusMetric(
+		ctx,
+		c.Store,
+		schemas.MetricKindTestCaseStatus,
+		labels,
+		statusesList[:],
+		tc.Status,
+		ref.Project.OutputSparseStatusMetrics,
+	)
 }
