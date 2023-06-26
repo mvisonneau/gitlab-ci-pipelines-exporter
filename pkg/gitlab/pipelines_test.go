@@ -233,3 +233,317 @@ func TestGetRefPipelineTestReport(t *testing.T) {
 		},
 	}, tr)
 }
+
+func TestGetRefPipelineFailedTestReport(t *testing.T) {
+	ctx, mux, server, c := getMockedClient()
+	defer server.Close()
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `{"total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "failed", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": "Failed message", "stack_trace": null}]}]}`)
+		})
+
+	p := schemas.NewProject("foo")
+
+	ref := schemas.Ref{
+		Project: p,
+		Name:    "yay",
+	}
+
+	// Should return right away as MostRecentPipeline is not defined
+	tr, err := c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{}, tr)
+
+	ref.LatestPipeline = schemas.Pipeline{
+		ID: 1,
+	}
+
+	// Should work
+	tr, err = c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{
+		TotalTime:    5,
+		TotalCount:   2,
+		SuccessCount: 1,
+		FailedCount:  1,
+		SkippedCount: 0,
+		ErrorCount:   0,
+		TestSuites: []schemas.TestSuite{
+			{
+				Name:         "Secure",
+				TotalTime:    5,
+				TotalCount:   2,
+				SuccessCount: 1,
+				FailedCount:  1,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []schemas.TestCase{
+					{
+						Name:          "Security Reports can create an auto-remediation MR",
+						Classname:     "vulnerability_management_spec",
+						ExecutionTime: 5,
+						Status:        "failed",
+					},
+				},
+			},
+		},
+	}, tr)
+}
+
+func TestGetRefPipelineWithParentChildTestReport(t *testing.T) {
+	ctx, mux, server, c := getMockedClient()
+	defer server.Close()
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 1}}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/1/pipelines/2/test_report",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `{"total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 3, "system_output": null, "stack_trace": null}]}]}`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/1/pipelines/2/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `[]`)
+		})
+
+	p := schemas.NewProject("foo")
+
+	p.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled = true
+
+	ref := schemas.Ref{
+		Project: p,
+		Name:    "yay",
+	}
+
+	// Should return right away as MostRecentPipeline is not defined
+	tr, err := c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{}, tr)
+
+	ref.LatestPipeline = schemas.Pipeline{
+		ID: 1,
+	}
+
+	// Should work
+	tr, err = c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{
+		TotalTime:    8,
+		TotalCount:   4,
+		SuccessCount: 4,
+		FailedCount:  0,
+		SkippedCount: 0,
+		ErrorCount:   0,
+		TestSuites: []schemas.TestSuite{
+			{
+				Name:         "Secure",
+				TotalTime:    5,
+				TotalCount:   1,
+				SuccessCount: 1,
+				FailedCount:  0,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []schemas.TestCase{
+					{
+						Name:          "Security Reports can create an auto-remediation MR",
+						Classname:     "vulnerability_management_spec",
+						ExecutionTime: 5,
+						Status:        "success",
+					},
+				},
+			},
+			{
+				Name:         "Secure",
+				TotalTime:    3,
+				TotalCount:   3,
+				SuccessCount: 3,
+				FailedCount:  0,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []schemas.TestCase{
+					{
+						Name:          "Security Reports can create an auto-remediation MR",
+						Classname:     "vulnerability_management_spec",
+						ExecutionTime: 3,
+						Status:        "success",
+					},
+				},
+			},
+		},
+	}, tr)
+}
+
+func TestGetRefPipelineWithMultiProjectTestReport(t *testing.T) {
+	ctx, mux, server, c := getMockedClient()
+	defer server.Close()
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 11}}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/11/pipelines/2/test_report",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `{"total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 3, "system_output": null, "stack_trace": null}]}]}`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/11/pipelines/2/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `[]`)
+		})
+
+	p := schemas.NewProject("foo")
+
+	p.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled = true
+
+	ref := schemas.Ref{
+		Project: p,
+		Name:    "yay",
+	}
+
+	// Should return right away as MostRecentPipeline is not defined
+	tr, err := c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{}, tr)
+
+	ref.LatestPipeline = schemas.Pipeline{
+		ID: 1,
+	}
+
+	// Should work
+	tr, err = c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{
+		TotalTime:    8,
+		TotalCount:   4,
+		SuccessCount: 4,
+		FailedCount:  0,
+		SkippedCount: 0,
+		ErrorCount:   0,
+		TestSuites: []schemas.TestSuite{
+			{
+				Name:         "Secure",
+				TotalTime:    5,
+				TotalCount:   1,
+				SuccessCount: 1,
+				FailedCount:  0,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []schemas.TestCase{
+					{
+						Name:          "Security Reports can create an auto-remediation MR",
+						Classname:     "vulnerability_management_spec",
+						ExecutionTime: 5,
+						Status:        "success",
+					},
+				},
+			},
+			{
+				Name:         "Secure",
+				TotalTime:    3,
+				TotalCount:   3,
+				SuccessCount: 3,
+				FailedCount:  0,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []schemas.TestCase{
+					{
+						Name:          "Security Reports can create an auto-remediation MR",
+						Classname:     "vulnerability_management_spec",
+						ExecutionTime: 3,
+						Status:        "success",
+					},
+				},
+			},
+		},
+	}, tr)
+}
+
+func TestGetRefPipelineWithNoChildrenTestReport(t *testing.T) {
+	ctx, mux, server, c := getMockedClient()
+	defer server.Close()
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `[]`)
+		})
+
+	p := schemas.NewProject("foo")
+
+	p.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled = true
+
+	ref := schemas.Ref{
+		Project: p,
+		Name:    "yay",
+	}
+
+	// Should return right away as MostRecentPipeline is not defined
+	tr, err := c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{}, tr)
+
+	ref.LatestPipeline = schemas.Pipeline{
+		ID: 1,
+	}
+
+	// Should work
+	tr, err = c.GetRefPipelineTestReport(ctx, ref)
+	assert.NoError(t, err)
+	assert.Equal(t, schemas.TestReport{
+		TotalTime:    5,
+		TotalCount:   1,
+		SuccessCount: 1,
+		FailedCount:  0,
+		SkippedCount: 0,
+		ErrorCount:   0,
+		TestSuites: []schemas.TestSuite{
+			{
+				Name:         "Secure",
+				TotalTime:    5,
+				TotalCount:   1,
+				SuccessCount: 1,
+				FailedCount:  0,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []schemas.TestCase{
+					{
+						Name:          "Security Reports can create an auto-remediation MR",
+						Classname:     "vulnerability_management_spec",
+						ExecutionTime: 5,
+						Status:        "success",
+					},
+				},
+			},
+		},
+	}, tr)
+}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -319,12 +320,63 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 
 	c.rateLimit(ctx)
 
-	testReport, resp, err := c.Pipelines.GetPipelineTestReport(ref.Project.Name, ref.LatestPipeline.ID, goGitlab.WithContext(ctx))
-	if err != nil {
-		return schemas.TestReport{}, fmt.Errorf("could not fetch test report for %d: %s", ref.LatestPipeline.ID, err.Error())
+	type pipelineDef struct {
+		projectNameOrID string
+		pipelineID      int
 	}
 
-	c.requestsRemaining(resp)
+	var currentPipeline pipelineDef
 
-	return schemas.NewTestReport(*testReport), nil
+	baseTestReport := schemas.TestReport{
+		TotalTime:    0,
+		TotalCount:   0,
+		SuccessCount: 0,
+		FailedCount:  0,
+		SkippedCount: 0,
+		ErrorCount:   0,
+		TestSuites:   []schemas.TestSuite{},
+	}
+	childPipelines := []pipelineDef{{ref.Project.Name, ref.LatestPipeline.ID}}
+
+	for {
+		if len(childPipelines) == 0 {
+			return baseTestReport, nil
+		}
+
+		currentPipeline, childPipelines = childPipelines[0], childPipelines[1:]
+
+		testReport, resp, err := c.Pipelines.GetPipelineTestReport(currentPipeline.projectNameOrID, currentPipeline.pipelineID, goGitlab.WithContext(ctx))
+		if err != nil {
+			return schemas.TestReport{}, fmt.Errorf("could not fetch test report for %d: %s", ref.LatestPipeline.ID, err.Error())
+		}
+
+		c.requestsRemaining(resp)
+
+		convertedTestReport := schemas.NewTestReport(*testReport)
+
+		baseTestReport = schemas.TestReport{
+			TotalTime:    baseTestReport.TotalTime + convertedTestReport.TotalTime,
+			TotalCount:   baseTestReport.TotalCount + convertedTestReport.TotalCount,
+			SuccessCount: baseTestReport.SuccessCount + convertedTestReport.SuccessCount,
+			FailedCount:  baseTestReport.FailedCount + convertedTestReport.FailedCount,
+			SkippedCount: baseTestReport.SkippedCount + convertedTestReport.SkippedCount,
+			ErrorCount:   baseTestReport.ErrorCount + convertedTestReport.ErrorCount,
+			TestSuites:   append(baseTestReport.TestSuites, convertedTestReport.TestSuites...),
+		}
+
+		if ref.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled {
+			foundBridges, err := c.ListPipelineBridges(ctx, currentPipeline.projectNameOrID, currentPipeline.pipelineID)
+			if err != nil {
+				return baseTestReport, err
+			}
+
+			for _, foundBridge := range foundBridges {
+				if foundBridge.DownstreamPipeline == nil {
+					continue
+				}
+
+				childPipelines = append(childPipelines, pipelineDef{strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID})
+			}
+		}
+	}
 }

@@ -571,6 +571,11 @@ wildcards:
         test_reports:
           # Fetch test reports in a separate metric (optiona, default: false)
           enabled: false
+          
+          from_child_pipelines:
+            # Combines test reports from subsequent child/downstream pipelines
+            # (optional, default: false)
+            enabled: false
 
           test_cases:
           # Fetch test cases reports in a separate metric (optional, default: false)
