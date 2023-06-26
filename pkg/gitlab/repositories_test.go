@@ -28,6 +28,6 @@ func TestGetCommitCountBetweenRefs(t *testing.T) {
 	assert.Equal(t, 3, commitCount)
 
 	commitCount, err = c.GetCommitCountBetweenRefs(ctx, "bar", "", "")
-	assert.NoError(t, err)
+	assert.Error(t, err)
 	assert.Equal(t, 0, commitCount)
 }
