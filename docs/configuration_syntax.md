@@ -326,6 +326,10 @@ project_defaults:
         # Fetch test reports in a separate metric (optiona, default: false)
         enabled: false
 
+        test_cases:
+        # Fetch test cases reports in a separate metric (optional, default: false)
+          enabled: false
+
 # The list of the projects you want to monitor (optional)
 projects:
   - # Name of the project (actually path with namespace) to fetch
@@ -436,6 +440,10 @@ projects:
         test_reports:
           # Fetch test reports in a separate metric (optiona, default: false)
           enabled: false
+
+          test_cases:
+          # Fetch test cases reports in a separate metric (optional, default: false)
+            enabled: false
 
 # Dynamically fetch projects to monitor using a wildcard (optional)
 wildcards:
@@ -563,6 +571,10 @@ wildcards:
         test_reports:
           # Fetch test reports in a separate metric (optiona, default: false)
           enabled: false
+
+          test_cases:
+          # Fetch test cases reports in a separate metric (optional, default: false)
+            enabled: false
 ```
 
 ## Pull all projects accessible by the provided token
