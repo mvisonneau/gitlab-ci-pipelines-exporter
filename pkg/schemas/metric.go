@@ -110,6 +110,12 @@ const (
 
 	// MetricKindTestSuiteErrorCount ..
 	MetricKindTestSuiteErrorCount
+
+	// MetricKindTestCaseExecutionTime ..
+	MetricKindTestCaseExecutionTime
+
+	// MetricKindTestCaseStatus ..
+	MetricKindTestCaseStatus
 )
 
 // MetricKind ..
@@ -162,11 +168,21 @@ func (m Metric) Key() MetricKey {
 			m.Labels["ref"],
 			m.Labels["test_suite_name"],
 		})
+
+	case MetricKindTestCaseExecutionTime, MetricKindTestCaseStatus:
+		key += fmt.Sprintf("%v", []string{
+			m.Labels["project"],
+			m.Labels["kind"],
+			m.Labels["ref"],
+			m.Labels["test_suite_name"],
+			m.Labels["test_case_name"],
+			m.Labels["test_case_classname"],
+		})
 	}
 
 	// If the metric is a "status" one, add the status label
 	switch m.Kind {
-	case MetricKindJobStatus, MetricKindEnvironmentDeploymentStatus, MetricKindStatus:
+	case MetricKindJobStatus, MetricKindEnvironmentDeploymentStatus, MetricKindStatus, MetricKindTestCaseStatus:
 		key += m.Labels["status"]
 	}
 

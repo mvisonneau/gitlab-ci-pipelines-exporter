@@ -40,6 +40,15 @@ type TestSuite struct {
 	FailedCount  int
 	SkippedCount int
 	ErrorCount   int
+	TestCases    []TestCase
+}
+
+// TestCase ..
+type TestCase struct {
+	Name          string
+	Classname     string
+	ExecutionTime float64
+	Status        string
 }
 
 // NewPipeline ..
@@ -94,6 +103,12 @@ func NewTestReport(gtr goGitlab.PipelineTestReport) TestReport {
 
 // NewTestSuite ..
 func NewTestSuite(gts *goGitlab.PipelineTestSuites) TestSuite {
+	testCases := []TestCase{}
+
+	for _, x := range gts.TestCases {
+		testCases = append(testCases, NewTestCase(x))
+	}
+
 	return TestSuite{
 		Name:         gts.Name,
 		TotalTime:    gts.TotalTime,
@@ -102,5 +117,16 @@ func NewTestSuite(gts *goGitlab.PipelineTestSuites) TestSuite {
 		FailedCount:  gts.FailedCount,
 		SkippedCount: gts.SkippedCount,
 		ErrorCount:   gts.ErrorCount,
+		TestCases:    testCases,
+	}
+}
+
+// NewTestCase ..
+func NewTestCase(gtc *goGitlab.PipelineTestCases) TestCase {
+	return TestCase{
+		Name:          gtc.Name,
+		Classname:     gtc.Classname,
+		ExecutionTime: gtc.ExecutionTime,
+		Status:        gtc.Status,
 	}
 }
