@@ -13,10 +13,11 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/client"
-	pb "github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/protobuf"
 	log "github.com/sirupsen/logrus"
 	"github.com/xeonx/timeago"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/client"
+	pb "github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/protobuf"
 )
 
 type tab string

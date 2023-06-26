@@ -7,11 +7,12 @@
 package protobuf
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -388,14 +389,17 @@ func file_pkg_monitor_protobuf_monitor_proto_rawDescGZIP() []byte {
 	return file_pkg_monitor_protobuf_monitor_proto_rawDescData
 }
 
-var file_pkg_monitor_protobuf_monitor_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_pkg_monitor_protobuf_monitor_proto_goTypes = []interface{}{
-	(*Empty)(nil),                 // 0: monitor.Empty
-	(*Config)(nil),                // 1: monitor.Config
-	(*Telemetry)(nil),             // 2: monitor.Telemetry
-	(*Entity)(nil),                // 3: monitor.Entity
-	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
-}
+var (
+	file_pkg_monitor_protobuf_monitor_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+	file_pkg_monitor_protobuf_monitor_proto_goTypes  = []interface{}{
+		(*Empty)(nil),                 // 0: monitor.Empty
+		(*Config)(nil),                // 1: monitor.Config
+		(*Telemetry)(nil),             // 2: monitor.Telemetry
+		(*Entity)(nil),                // 3: monitor.Entity
+		(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
+	}
+)
+
 var file_pkg_monitor_protobuf_monitor_proto_depIdxs = []int32{
 	3,  // 0: monitor.Telemetry.projects:type_name -> monitor.Entity
 	3,  // 1: monitor.Telemetry.refs:type_name -> monitor.Entity

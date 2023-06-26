@@ -15,7 +15,7 @@ func TestNewWildcard(t *testing.T) {
 	w.Pull.Environments.ExcludeStopped = true
 
 	w.Pull.Refs.Branches.Enabled = true
-	w.Pull.Refs.Branches.Regexp = `^main|master$`
+	w.Pull.Refs.Branches.Regexp = `^(?:main|master)$`
 	w.Pull.Refs.Branches.ExcludeDeleted = true
 
 	w.Pull.Refs.Tags.Enabled = true

@@ -9,18 +9,17 @@ import (
 
 // Limiter ..
 type Limiter interface {
-	Take(context.Context) time.Time
+	Take(context.Context) time.Duration
 }
 
 // Take ..
 func Take(ctx context.Context, l Limiter) {
-	now := time.Now()
 	throttled := l.Take(ctx)
 
-	if throttled.Sub(now).Milliseconds() > 10 {
+	if throttled.Milliseconds() > 10 {
 		log.WithFields(
 			log.Fields{
-				"for": throttled.Sub(now),
+				"for": throttled.String(),
 			},
 		).Debug("throttled GitLab requests")
 	}

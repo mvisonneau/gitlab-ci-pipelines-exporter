@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
-	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 )
 
 // Registry wraps a pointer of prometheus.Registry.
@@ -61,6 +62,20 @@ func NewRegistry(ctx context.Context) *Registry {
 			schemas.MetricKindRunCount:                             NewCollectorRunCount(),
 			schemas.MetricKindStatus:                               NewCollectorStatus(),
 			schemas.MetricKindTimestamp:                            NewCollectorTimestamp(),
+			schemas.MetricKindTestReportTotalTime:                  NewCollectorTestReportTotalTime(),
+			schemas.MetricKindTestReportTotalCount:                 NewCollectorTestReportTotalCount(),
+			schemas.MetricKindTestReportSuccessCount:               NewCollectorTestReportSuccessCount(),
+			schemas.MetricKindTestReportFailedCount:                NewCollectorTestReportFailedCount(),
+			schemas.MetricKindTestReportSkippedCount:               NewCollectorTestReportSkippedCount(),
+			schemas.MetricKindTestReportErrorCount:                 NewCollectorTestReportErrorCount(),
+			schemas.MetricKindTestSuiteTotalTime:                   NewCollectorTestSuiteTotalTime(),
+			schemas.MetricKindTestSuiteTotalCount:                  NewCollectorTestSuiteTotalCount(),
+			schemas.MetricKindTestSuiteSuccessCount:                NewCollectorTestSuiteSuccessCount(),
+			schemas.MetricKindTestSuiteFailedCount:                 NewCollectorTestSuiteFailedCount(),
+			schemas.MetricKindTestSuiteSkippedCount:                NewCollectorTestSuiteSkippedCount(),
+			schemas.MetricKindTestSuiteErrorCount:                  NewCollectorTestSuiteErrorCount(),
+			schemas.MetricKindTestCaseExecutionTime:                NewCollectorTestCaseExecutionTime(),
+			schemas.MetricKindTestCaseStatus:                       NewCollectorTestCaseStatus(),
 		},
 	}
 
@@ -145,7 +160,7 @@ func (r *Registry) ExportInternalMetrics(
 	r.InternalCollectors.CurrentlyQueuedTasksCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(currentlyQueuedTasks))
 	r.InternalCollectors.EnvironmentsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(environmentsCount))
 	r.InternalCollectors.ExecutedTasksCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(executedTasksCount))
-	r.InternalCollectors.GitLabAPIRequestsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(g.RequestsCounter))
+	r.InternalCollectors.GitLabAPIRequestsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(g.RequestsCounter.Load()))
 	r.InternalCollectors.GitlabAPIRequestsRemaining.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(g.RequestsRemaining))
 	r.InternalCollectors.GitlabAPIRequestsLimit.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(g.RequestsLimit))
 	r.InternalCollectors.MetricsCount.(*prometheus.GaugeVec).With(prometheus.Labels{}).Set(float64(metricsCount))

@@ -6,13 +6,15 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 	"github.com/paulbellamy/ratecounter"
 	goGitlab "github.com/xanzy/go-gitlab"
 	"go.opentelemetry.io/otel"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 )
 
 const (
@@ -31,7 +33,7 @@ type Client struct {
 
 	RateLimiter       ratelimit.Limiter
 	RateCounter       *ratecounter.RateCounter
-	RequestsCounter   uint64
+	RequestsCounter   atomic.Uint64
 	RequestsLimit     int
 	RequestsRemaining int
 }
@@ -135,7 +137,7 @@ func (c *Client) rateLimit(ctx context.Context) {
 	ratelimit.Take(ctx, c.RateLimiter)
 	// Used for monitoring purposes
 	c.RateCounter.Incr(1)
-	c.RequestsCounter++
+	c.RequestsCounter.Add(1)
 }
 
 func (c *Client) requestsRemaining(response *goGitlab.Response) {

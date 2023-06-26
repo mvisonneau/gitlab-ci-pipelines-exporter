@@ -67,20 +67,23 @@ func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 
 // WebhookHandler ..
 func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	span := trace.SpanFromContext(ctx)
-
+	span := trace.SpanFromContext(r.Context())
 	defer span.End()
 
-	logFields := log.Fields{
-		"ip-address": r.RemoteAddr,
-		"user-agent": r.UserAgent(),
-	}
+	// We create a new background context instead of relying on the request one which has a short cancellation TTL
+	ctx := trace.ContextWithSpan(context.Background(), span)
 
-	log.WithFields(logFields).Debug("webhook request")
+	logger := log.
+		WithContext(ctx).
+		WithFields(log.Fields{
+			"ip-address": r.RemoteAddr,
+			"user-agent": r.UserAgent(),
+		})
+
+	logger.Debug("webhook request")
 
 	if r.Header.Get("X-Gitlab-Token") != c.Config.Server.Webhook.SecretToken {
-		log.WithFields(logFields).Debug("invalid token provided for a webhook request")
+		logger.Debug("invalid token provided for a webhook request")
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprint(w, "{\"error\": \"invalid token\"}")
 
@@ -88,8 +91,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Body == http.NoBody {
-		log.WithContext(ctx).
-			WithFields(logFields).
+		logger.
 			WithError(fmt.Errorf("nil body")).
 			Warn("unable to read body of a received webhook")
 
@@ -100,8 +102,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	payload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.WithContext(ctx).
-			WithFields(logFields).
+		logger.
 			WithError(err).
 			Warn("unable to read body of a received webhook")
 
@@ -112,8 +113,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 	event, err := gitlab.ParseHook(gitlab.HookEventType(r), payload)
 	if err != nil {
-		log.WithContext(ctx).
-			WithFields(logFields).
+		logger.
 			WithError(err).
 			Warn("unable to parse body of a received webhook")
 
@@ -130,8 +130,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	case *gitlab.DeploymentEvent:
 		go c.processDeploymentEvent(ctx, *event)
 	default:
-		log.WithContext(ctx).
-			WithFields(logFields).
+		logger.
 			WithField("event-type", reflect.TypeOf(event).String()).
 			Warn("received a non supported event type as a webhook")
 

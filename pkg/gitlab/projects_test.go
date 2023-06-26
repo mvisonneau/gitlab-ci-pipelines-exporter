@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 )
 
 func TestGetProject(t *testing.T) {
@@ -43,7 +44,7 @@ func TestListUserProjects(t *testing.T) {
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar","jobs_enabled":true},{"id":2,"path_with_namespace":"bar/baz","jobs_enabled":true}]`)
+			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar"},{"id":2,"path_with_namespace":"bar/baz"}]`)
 		})
 
 	projects, err := c.ListProjects(ctx, w)
@@ -69,7 +70,7 @@ func TestListGroupProjects(t *testing.T) {
 	mux.HandleFunc(fmt.Sprintf("/api/v4/groups/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar","jobs_enabled":true},{"id":2,"path_with_namespace":"bar/baz","jobs_enabled":true}]`)
+			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar"},{"id":2,"path_with_namespace":"bar/baz"}]`)
 		})
 
 	projects, err := c.ListProjects(ctx, w)
@@ -95,7 +96,7 @@ func TestListProjects(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo","jobs_enabled":false},{"id":2,"path_with_namespace":"bar","jobs_enabled":true}]`)
+			fmt.Fprint(w, `[{"id":2,"path_with_namespace":"bar"}]`)
 		})
 
 	projects, err := c.ListProjects(ctx, w)

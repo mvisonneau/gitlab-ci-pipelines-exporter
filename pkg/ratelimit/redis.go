@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/go-redis/redis_rate/v9"
+	"github.com/go-redis/redis_rate/v10"
+	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,7 +26,9 @@ func NewRedisLimiter(redisClient *redis.Client, maxRPS int) Limiter {
 }
 
 // Take ..
-func (r Redis) Take(ctx context.Context) time.Time {
+func (r Redis) Take(ctx context.Context) time.Duration {
+	start := time.Now()
+
 	res, err := r.Allow(ctx, redisKey, redis_rate.PerSecond(r.MaxRPS))
 	if err != nil {
 		log.WithContext(ctx).
@@ -36,5 +38,5 @@ func (r Redis) Take(ctx context.Context) time.Time {
 
 	time.Sleep(res.RetryAfter)
 
-	return time.Now()
+	return start.Sub(time.Now())
 }

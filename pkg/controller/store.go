@@ -3,9 +3,10 @@ package controller
 import (
 	"context"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
-	log "github.com/sirupsen/logrus"
 )
 
 func metricLogFields(m schemas.Metric) log.Fields {

@@ -8,6 +8,7 @@ package protobuf
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -85,12 +86,12 @@ type MonitorServer interface {
 }
 
 // UnimplementedMonitorServer must be embedded to have forward compatible implementations.
-type UnimplementedMonitorServer struct {
-}
+type UnimplementedMonitorServer struct{}
 
 func (UnimplementedMonitorServer) GetConfig(context.Context, *Empty) (*Config, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfig not implemented")
 }
+
 func (UnimplementedMonitorServer) GetTelemetry(*Empty, Monitor_GetTelemetryServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetTelemetry not implemented")
 }

@@ -36,3 +36,135 @@ func TestNewPipeline(t *testing.T) {
 
 	assert.Equal(t, expectedPipeline, NewPipeline(context.Background(), gitlabPipeline))
 }
+
+func TestNewTestReport(t *testing.T) {
+	gitlabTestReport := goGitlab.PipelineTestReport{
+		TotalTime:    10,
+		TotalCount:   2,
+		SuccessCount: 1,
+		FailedCount:  1,
+		SkippedCount: 0,
+		ErrorCount:   0,
+		TestSuites: []*goGitlab.PipelineTestSuites{
+			{
+				Name:         "First",
+				TotalTime:    3,
+				TotalCount:   1,
+				SuccessCount: 1,
+				FailedCount:  0,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []*goGitlab.PipelineTestCases{
+					{
+						Name:          "First",
+						Classname:     "ClassFirst",
+						ExecutionTime: 4,
+						Status:        "success",
+					},
+				},
+			},
+			{
+				Name:         "Second",
+				TotalTime:    2,
+				TotalCount:   1,
+				SuccessCount: 0,
+				FailedCount:  1,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []*goGitlab.PipelineTestCases{
+					{
+						Name:          "First",
+						Classname:     "ClassFirst",
+						ExecutionTime: 4,
+						Status:        "success",
+					},
+				},
+			},
+		},
+	}
+
+	expectedTestReport := TestReport{
+		TotalTime:    10,
+		TotalCount:   2,
+		SuccessCount: 1,
+		FailedCount:  1,
+		SkippedCount: 0,
+		ErrorCount:   0,
+		TestSuites: []TestSuite{
+			{
+				Name:         "First",
+				TotalTime:    3,
+				TotalCount:   1,
+				SuccessCount: 1,
+				FailedCount:  0,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []TestCase{
+					{
+						Name:          "First",
+						Classname:     "ClassFirst",
+						ExecutionTime: 4,
+						Status:        "success",
+					},
+				},
+			},
+			{
+				Name:         "Second",
+				TotalTime:    2,
+				TotalCount:   1,
+				SuccessCount: 0,
+				FailedCount:  1,
+				SkippedCount: 0,
+				ErrorCount:   0,
+				TestCases: []TestCase{
+					{
+						Name:          "First",
+						Classname:     "ClassFirst",
+						ExecutionTime: 4,
+						Status:        "success",
+					},
+				},
+			},
+		},
+	}
+	assert.Equal(t, expectedTestReport, NewTestReport(gitlabTestReport))
+}
+
+func TestNewTestSuite(t *testing.T) {
+	gitlabTestSuite := &goGitlab.PipelineTestSuites{
+		Name:         "Suite",
+		TotalTime:    4,
+		TotalCount:   6,
+		SuccessCount: 2,
+		FailedCount:  2,
+		SkippedCount: 1,
+		ErrorCount:   1,
+		TestCases: []*goGitlab.PipelineTestCases{
+			{
+				Name:          "First",
+				Classname:     "ClassFirst",
+				ExecutionTime: 4,
+				Status:        "success",
+			},
+		},
+	}
+
+	expectedTestSuite := TestSuite{
+		Name:         "Suite",
+		TotalTime:    4,
+		TotalCount:   6,
+		SuccessCount: 2,
+		FailedCount:  2,
+		SkippedCount: 1,
+		ErrorCount:   1,
+		TestCases: []TestCase{
+			{
+				Name:          "First",
+				Classname:     "ClassFirst",
+				ExecutionTime: 4,
+				Status:        "success",
+			},
+		},
+	}
+	assert.Equal(t, expectedTestSuite, NewTestSuite(gitlabTestSuite))
+}

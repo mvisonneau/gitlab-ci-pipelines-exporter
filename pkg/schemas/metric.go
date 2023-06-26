@@ -74,6 +74,48 @@ const (
 
 	// MetricKindTimestamp ..
 	MetricKindTimestamp
+
+	// MetricKindTestReportTotalTime ..
+	MetricKindTestReportTotalTime
+
+	// MetricKindTestReportTotalCount ..
+	MetricKindTestReportTotalCount
+
+	// MetricKindTestReportSuccessCount ..
+	MetricKindTestReportSuccessCount
+
+	// MetricKindTestReportFailedCount ..
+	MetricKindTestReportFailedCount
+
+	// MetricKindTestReportSkippedCount ..
+	MetricKindTestReportSkippedCount
+
+	// MetricKindTestReportErrorCount ..
+	MetricKindTestReportErrorCount
+
+	// MetricKindTestSuiteTotalTime ..
+	MetricKindTestSuiteTotalTime
+
+	// MetricKindTestSuiteTotalCount ..
+	MetricKindTestSuiteTotalCount
+
+	// MetricKindTestSuiteSuccessCount ..
+	MetricKindTestSuiteSuccessCount
+
+	// MetricKindTestSuiteFailedCount ..
+	MetricKindTestSuiteFailedCount
+
+	// MetricKindTestSuiteSkippedCount ..
+	MetricKindTestSuiteSkippedCount
+
+	// MetricKindTestSuiteErrorCount ..
+	MetricKindTestSuiteErrorCount
+
+	// MetricKindTestCaseExecutionTime ..
+	MetricKindTestCaseExecutionTime
+
+	// MetricKindTestCaseStatus ..
+	MetricKindTestCaseStatus
 )
 
 // MetricKind ..
@@ -97,7 +139,7 @@ func (m Metric) Key() MetricKey {
 	key := strconv.Itoa(int(m.Kind))
 
 	switch m.Kind {
-	case MetricKindCoverage, MetricKindDurationSeconds, MetricKindID, MetricKindQueuedDurationSeconds, MetricKindRunCount, MetricKindStatus, MetricKindTimestamp:
+	case MetricKindCoverage, MetricKindDurationSeconds, MetricKindID, MetricKindQueuedDurationSeconds, MetricKindRunCount, MetricKindStatus, MetricKindTimestamp, MetricKindTestReportTotalCount, MetricKindTestReportErrorCount, MetricKindTestReportFailedCount, MetricKindTestReportSkippedCount, MetricKindTestReportSuccessCount, MetricKindTestReportTotalTime:
 		key += fmt.Sprintf("%v", []string{
 			m.Labels["project"],
 			m.Labels["kind"],
@@ -119,11 +161,29 @@ func (m Metric) Key() MetricKey {
 			m.Labels["project"],
 			m.Labels["environment"],
 		})
+
+	case MetricKindTestSuiteErrorCount, MetricKindTestSuiteFailedCount, MetricKindTestSuiteSkippedCount, MetricKindTestSuiteSuccessCount, MetricKindTestSuiteTotalCount, MetricKindTestSuiteTotalTime:
+		key += fmt.Sprintf("%v", []string{
+			m.Labels["project"],
+			m.Labels["kind"],
+			m.Labels["ref"],
+			m.Labels["test_suite_name"],
+		})
+
+	case MetricKindTestCaseExecutionTime, MetricKindTestCaseStatus:
+		key += fmt.Sprintf("%v", []string{
+			m.Labels["project"],
+			m.Labels["kind"],
+			m.Labels["ref"],
+			m.Labels["test_suite_name"],
+			m.Labels["test_case_name"],
+			m.Labels["test_case_classname"],
+		})
 	}
 
 	// If the metric is a "status" one, add the status label
 	switch m.Kind {
-	case MetricKindJobStatus, MetricKindEnvironmentDeploymentStatus, MetricKindStatus:
+	case MetricKindJobStatus, MetricKindEnvironmentDeploymentStatus, MetricKindStatus, MetricKindTestCaseStatus:
 		key += m.Labels["status"]
 	}
 

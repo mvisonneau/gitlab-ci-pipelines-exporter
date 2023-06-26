@@ -5,8 +5,9 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // PullRefPipelineJobsMetrics ..
