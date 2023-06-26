@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestPullProjectsFromWildcard(t *testing.T) {
@@ -16,7 +17,7 @@ func TestPullProjectsFromWildcard(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo","jobs_enabled":false},{"id":2,"path_with_namespace":"bar","jobs_enabled":true}]`)
+			fmt.Fprint(w, `[{"id":2,"path_with_namespace":"bar","jobs_enabled":true}]`)
 		})
 
 	w := config.NewWildcard()

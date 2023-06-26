@@ -3,8 +3,10 @@ linters:
   disable:
     # Deprecated ones
     - golint
+    - ifshort
     - interfacer
     - maligned
+    - nosnakecase
     - scopelint
 
     # We don't want these ones
@@ -17,6 +19,7 @@ linters:
     - nakedret
     - testpackage
     - varnamelen
+    - interfacebloat
 
     # TODO
     - tagliatelle
@@ -43,3 +46,9 @@ linters-settings:
   
   nestif:
     min-complexity: 18
+  
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/mvisonneau)

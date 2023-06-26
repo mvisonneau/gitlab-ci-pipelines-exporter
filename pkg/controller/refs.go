@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/imdario/mergo"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // GetRefs ..

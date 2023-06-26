@@ -17,6 +17,38 @@ type Pipeline struct {
 	QueuedDurationSeconds float64
 	Status                string
 	Variables             string
+	TestReport            TestReport
+}
+
+// TestReport ..
+type TestReport struct {
+	TotalTime    float64
+	TotalCount   int
+	SuccessCount int
+	FailedCount  int
+	SkippedCount int
+	ErrorCount   int
+	TestSuites   []TestSuite
+}
+
+// TestSuite ..
+type TestSuite struct {
+	Name         string
+	TotalTime    float64
+	TotalCount   int
+	SuccessCount int
+	FailedCount  int
+	SkippedCount int
+	ErrorCount   int
+	TestCases    []TestCase
+}
+
+// TestCase ..
+type TestCase struct {
+	Name          string
+	Classname     string
+	ExecutionTime float64
+	Status        string
 }
 
 // NewPipeline ..
@@ -47,5 +79,54 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 		DurationSeconds:       float64(gp.Duration),
 		QueuedDurationSeconds: float64(gp.QueuedDuration),
 		Status:                gp.Status,
+	}
+}
+
+// NewTestReport ..
+func NewTestReport(gtr goGitlab.PipelineTestReport) TestReport {
+	testSuites := []TestSuite{}
+
+	for _, x := range gtr.TestSuites {
+		testSuites = append(testSuites, NewTestSuite(x))
+	}
+
+	return TestReport{
+		TotalTime:    gtr.TotalTime,
+		TotalCount:   gtr.TotalCount,
+		SuccessCount: gtr.SuccessCount,
+		FailedCount:  gtr.FailedCount,
+		SkippedCount: gtr.SkippedCount,
+		ErrorCount:   gtr.ErrorCount,
+		TestSuites:   testSuites,
+	}
+}
+
+// NewTestSuite ..
+func NewTestSuite(gts *goGitlab.PipelineTestSuites) TestSuite {
+	testCases := []TestCase{}
+
+	for _, x := range gts.TestCases {
+		testCases = append(testCases, NewTestCase(x))
+	}
+
+	return TestSuite{
+		Name:         gts.Name,
+		TotalTime:    gts.TotalTime,
+		TotalCount:   gts.TotalCount,
+		SuccessCount: gts.SuccessCount,
+		FailedCount:  gts.FailedCount,
+		SkippedCount: gts.SkippedCount,
+		ErrorCount:   gts.ErrorCount,
+		TestCases:    testCases,
+	}
+}
+
+// NewTestCase ..
+func NewTestCase(gtc *goGitlab.PipelineTestCases) TestCase {
+	return TestCase{
+		Name:          gtc.Name,
+		Classname:     gtc.Classname,
+		ExecutionTime: gtc.ExecutionTime,
+		Status:        gtc.Status,
 	}
 }

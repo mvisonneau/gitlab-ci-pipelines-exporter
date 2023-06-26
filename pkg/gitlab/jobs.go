@@ -2,14 +2,16 @@ package gitlab
 
 import (
 	"context"
+	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // ListRefPipelineJobs ..
@@ -19,7 +21,7 @@ func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs
 	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
 	span.SetAttributes(attribute.String("ref_name", ref.Name))
 
-	if ref.LatestPipeline == (schemas.Pipeline{}) {
+	if reflect.DeepEqual(ref.LatestPipeline, (schemas.Pipeline{})) {
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.Project.Name,

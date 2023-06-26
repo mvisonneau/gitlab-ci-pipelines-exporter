@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // GetProject ..
@@ -86,6 +87,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 					Archived:    &w.Archived,
 					ListOptions: listOptions,
 					Search:      &w.Search,
+					Simple:      pointy.Bool(true),
 				},
 				goGitlab.WithContext(ctx),
 			)
@@ -98,6 +100,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 					IncludeSubGroups: &w.Owner.IncludeSubgroups,
 					ListOptions:      listOptions,
 					Search:           &w.Search,
+					Simple:           pointy.Bool(true),
 				},
 				goGitlab.WithContext(ctx),
 			)
@@ -108,6 +111,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 					ListOptions: listOptions,
 					Archived:    &w.Archived,
 					Search:      &w.Search,
+					Simple:      pointy.Bool(true),
 				},
 				goGitlab.WithContext(ctx),
 			)
@@ -126,15 +130,6 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 					"project-id":   gp.ID,
 					"project-name": gp.PathWithNamespace,
 				}).Debug("project path not matching owner's name, skipping")
-
-				continue
-			}
-
-			if !gp.JobsEnabled {
-				log.WithFields(logFields).WithFields(log.Fields{
-					"project-id":   gp.ID,
-					"project-name": gp.PathWithNamespace,
-				}).Debug("jobs/pipelines not enabled on project, skipping")
 
 				continue
 			}

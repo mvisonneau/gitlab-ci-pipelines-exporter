@@ -766,7 +766,7 @@
                   {
                     "targetBlank": true,
                     "title": "View pipeline #${__value.numeric}",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/pipelines/${__value.numeric}"
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/-/pipelines/${__value.numeric}"
                   }
                 ]
               },

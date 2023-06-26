@@ -26,7 +26,7 @@ services:
       - jaeger
 
   gitlab-ci-pipelines-exporter:
-    image: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.4
+    image: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.5
     # You can comment out the image name and use the following statement
     # to build the image against the current version of the repository
     # build: ../..
@@ -45,7 +45,7 @@ services:
         target: /etc/gitlab-ci-pipelines-exporter.yml
 
   prometheus:
-    image: docker.io/prom/prometheus:v2.35.0
+    image: docker.io/prom/prometheus:v2.44.0
     ports:
       - 9090:9090
     links:
@@ -54,7 +54,7 @@ services:
       - ./prometheus/config.yml:/etc/prometheus/prometheus.yml
 
   grafana:
-    image: docker.io/grafana/grafana:8.5.0
+    image: docker.io/grafana/grafana:9.5.2
     ports:
       - 3000:3000
     environment:

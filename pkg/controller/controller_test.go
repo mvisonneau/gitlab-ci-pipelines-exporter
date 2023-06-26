@@ -6,8 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 )
 
 func newMockedGitlabAPIServer() (mux *http.ServeMux, srv *httptest.Server) {
@@ -22,8 +23,12 @@ func newTestController(cfg config.Config) (ctx context.Context, c Controller, mu
 	mux, srv = newMockedGitlabAPIServer()
 
 	cfg.Gitlab.URL = srv.URL
-	if cfg.Gitlab.MaximumRequestsPerSecond <= 1 {
+	if cfg.Gitlab.MaximumRequestsPerSecond < 1 {
 		cfg.Gitlab.MaximumRequestsPerSecond = 1000
+	}
+
+	if cfg.Gitlab.BurstableRequestsPerSecond < 1 {
+		cfg.Gitlab.BurstableRequestsPerSecond = 1
 	}
 
 	c, _ = New(context.Background(), cfg, "0.0.0-ci")

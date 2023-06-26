@@ -17,26 +17,26 @@ jobs:
       matrix:
         os:
           - ubuntu-22.04
-          - macos-12
+          - macos-13
           - windows-2022
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.19
+          go-version: '1.20'
 
       - name: Lint
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: make lint
 
       - name: Test
-        run: make coverage
+        run: make test
 
       - name: Publish coverage to coveralls.io
         uses: shogo82148/actions-goveralls@v1

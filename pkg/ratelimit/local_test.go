@@ -7,5 +7,5 @@ import (
 )
 
 func TestNewLocalLimiter(t *testing.T) {
-	assert.IsType(t, Local{}, NewLocalLimiter(10))
+	assert.IsType(t, Local{}, NewLocalLimiter(10, 1))
 }

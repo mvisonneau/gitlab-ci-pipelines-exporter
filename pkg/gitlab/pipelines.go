@@ -3,15 +3,18 @@ package gitlab
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 // GetRefPipeline ..
@@ -90,7 +93,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context
 	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
 	span.SetAttributes(attribute.String("ref_name", ref.Name))
 
-	if ref.LatestPipeline == (schemas.Pipeline{}) {
+	if reflect.DeepEqual(ref.LatestPipeline, (schemas.Pipeline{})) {
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.Project.Name,
@@ -287,4 +290,93 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 	}
 
 	return
+}
+
+// GetRefPipelineTestReport ..
+func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) (schemas.TestReport, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipelineTestReport")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
+	span.SetAttributes(attribute.String("ref_name", ref.Name))
+
+	if reflect.DeepEqual(ref.LatestPipeline, (schemas.Pipeline{})) {
+		log.WithFields(
+			log.Fields{
+				"project-name": ref.Project.Name,
+				"ref":          ref.Name,
+			},
+		).Debug("most recent pipeline not defined, exiting...")
+
+		return schemas.TestReport{}, nil
+	}
+
+	log.WithFields(
+		log.Fields{
+			"project-name": ref.Project.Name,
+			"ref":          ref.Name,
+			"pipeline-id":  ref.LatestPipeline.ID,
+		},
+	).Debug("fetching pipeline test report")
+
+	c.rateLimit(ctx)
+
+	type pipelineDef struct {
+		projectNameOrID string
+		pipelineID      int
+	}
+
+	var currentPipeline pipelineDef
+
+	baseTestReport := schemas.TestReport{
+		TotalTime:    0,
+		TotalCount:   0,
+		SuccessCount: 0,
+		FailedCount:  0,
+		SkippedCount: 0,
+		ErrorCount:   0,
+		TestSuites:   []schemas.TestSuite{},
+	}
+	childPipelines := []pipelineDef{{ref.Project.Name, ref.LatestPipeline.ID}}
+
+	for {
+		if len(childPipelines) == 0 {
+			return baseTestReport, nil
+		}
+
+		currentPipeline, childPipelines = childPipelines[0], childPipelines[1:]
+
+		testReport, resp, err := c.Pipelines.GetPipelineTestReport(currentPipeline.projectNameOrID, currentPipeline.pipelineID, goGitlab.WithContext(ctx))
+		if err != nil {
+			return schemas.TestReport{}, fmt.Errorf("could not fetch test report for %d: %s", ref.LatestPipeline.ID, err.Error())
+		}
+
+		c.requestsRemaining(resp)
+
+		convertedTestReport := schemas.NewTestReport(*testReport)
+
+		baseTestReport = schemas.TestReport{
+			TotalTime:    baseTestReport.TotalTime + convertedTestReport.TotalTime,
+			TotalCount:   baseTestReport.TotalCount + convertedTestReport.TotalCount,
+			SuccessCount: baseTestReport.SuccessCount + convertedTestReport.SuccessCount,
+			FailedCount:  baseTestReport.FailedCount + convertedTestReport.FailedCount,
+			SkippedCount: baseTestReport.SkippedCount + convertedTestReport.SkippedCount,
+			ErrorCount:   baseTestReport.ErrorCount + convertedTestReport.ErrorCount,
+			TestSuites:   append(baseTestReport.TestSuites, convertedTestReport.TestSuites...),
+		}
+
+		if ref.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled {
+			foundBridges, err := c.ListPipelineBridges(ctx, currentPipeline.projectNameOrID, currentPipeline.pipelineID)
+			if err != nil {
+				return baseTestReport, err
+			}
+
+			for _, foundBridge := range foundBridges {
+				if foundBridge.DownstreamPipeline == nil {
+					continue
+				}
+
+				childPipelines = append(childPipelines, pipelineDef{strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID})
+			}
+		}
+	}
 }

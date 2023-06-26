@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
 func TestGetProjectEnvironments(t *testing.T) {

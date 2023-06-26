@@ -7,12 +7,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
-	"github.com/mvisonneau/go-helpers/logger"
+	"github.com/go-logr/stdr"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"github.com/urfave/cli/v2"
-	"github.com/vmihailenco/taskq/v3"
+	"github.com/vmihailenco/taskq/v4"
+
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/mvisonneau/go-helpers/logger"
 )
 
 var start time.Time
@@ -54,7 +56,7 @@ func configure(ctx *cli.Context) (cfg config.Config, err error) {
 	)))
 
 	// This hack is to embed taskq logs with logrus
-	taskq.SetLogger(stdlibLog.New(log.StandardLogger().WriterLevel(log.WarnLevel), "taskq", 0))
+	taskq.SetLogger(stdr.New(stdlibLog.New(log.StandardLogger().WriterLevel(log.WarnLevel), "taskq", 0)))
 
 	log.WithFields(
 		log.Fields{
@@ -95,7 +97,7 @@ func exit(exitCode int, err error) cli.ExitCoder {
 		log.WithError(err).Error()
 	}
 
-	return cli.NewExitError("", exitCode)
+	return cli.Exit("", exitCode)
 }
 
 // ExecWrapper gracefully logs and exits our `run` functions.

@@ -7,6 +7,32 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.5.5] - 2023-05-22
+
+### Added
+
+- new metrics:
+  - `gitlab_ci_pipeline_test_report_total_time` -> Duration in seconds of all the tests in the most recently finished pipeline
+  - `gitlab_ci_pipeline_test_report_total_count` -> Number of total tests in the most recently finished pipeline
+  - `gitlab_ci_pipeline_test_report_success_count` -> Number of successful tests in the most recently finished pipeline
+  - `gitlab_ci_pipeline_test_report_failed_count` -> Number of failed tests in the most recently finished pipeline
+  - `gitlab_ci_pipeline_test_report_skipped_count` -> Number of skipped tests in the most recently finished pipeline
+  - `gitlab_ci_pipeline_test_report_error_count` -> Number of errored tests in the most recently finished pipeline
+  - `gitlab_ci_pipeline_test_suite_total_time` -> Duration in seconds for the test suite
+  - `gitlab_ci_pipeline_test_suite_total_count` -> Number of total tests for the test suite
+  - `gitlab_ci_pipeline_test_suite_success_count` -> Number of successful tests for the test suite
+  - `gitlab_ci_pipeline_test_suite_failed_count` -> Number of failed tests for the test suite
+  - `gitlab_ci_pipeline_test_suite_skipped_count` -> Number of skipped tests for the test suite
+  - `gitlab_ci_pipeline_test_suite_error_count` -> Duration in errored tests for the test suite
+- new configuration parameter: `gitlab.burstable_requests_per_second`, introducing a burstable amount of API RPS
+- new configuration parameter: `gitlab.maximum_jobs_queue_size`, controlling the queue buffer size
+
+### Changed
+
+- Upgraded golang to **v1.20**
+- Upgraded most dependencies to their latest versions
+- Reduced the amount of data being pulled from the project list API calls
+
 ## [v0.5.4] - 2022-08-25
 
 ### Added

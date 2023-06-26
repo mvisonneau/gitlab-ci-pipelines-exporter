@@ -8,5 +8,5 @@ gitlab-ci-pipelines-exporter
 !cmd/gitlab-ci-pipelines-exporter
 !examples/**/gitlab-ci-pipelines-exporter
 coverage.out
-.waypoint
 .*.sock
+.idea

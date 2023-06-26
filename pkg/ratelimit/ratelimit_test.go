@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +21,7 @@ func MeasureTakeDuration(l Limiter) int64 {
 }
 
 func TestLocalTake(t *testing.T) {
-	l := NewLocalLimiter(1)
+	l := NewLocalLimiter(1, 1)
 
 	assert.LessOrEqual(t, MeasureTakeDuration(l), int64(100*time.Millisecond))
 	assert.GreaterOrEqual(t, MeasureTakeDuration(l), int64(time.Second))
