@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -81,12 +82,16 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 			return err
 		}
 
+		labels := ref.DefaultLabelsValues()
+		labels["pipeline_id"] = strconv.Itoa(pipeline.ID)
+		labels["status"] = pipeline.Status
+
 		// If the metric does not exist yet, start with 0 instead of 1
 		// this could cause some false positives in prometheus
 		// when restarting the exporter otherwise
 		runCount := schemas.Metric{
 			Kind:   schemas.MetricKindRunCount,
-			Labels: ref.DefaultLabelsValues(),
+			Labels: labels,
 		}
 
 		storeGetMetric(ctx, c.Store, &runCount)
@@ -99,13 +104,13 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 
 		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindCoverage,
-			Labels: ref.DefaultLabelsValues(),
+			Labels: labels,
 			Value:  pipeline.Coverage,
 		})
 
 		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindID,
-			Labels: ref.DefaultLabelsValues(),
+			Labels: labels,
 			Value:  float64(pipeline.ID),
 		})
 
@@ -113,7 +118,7 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 			ctx,
 			c.Store,
 			schemas.MetricKindStatus,
-			ref.DefaultLabelsValues(),
+			labels,
 			statusesList[:],
 			pipeline.Status,
 			ref.Project.OutputSparseStatusMetrics,
@@ -121,19 +126,19 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 
 		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindDurationSeconds,
-			Labels: ref.DefaultLabelsValues(),
+			Labels: labels,
 			Value:  pipeline.DurationSeconds,
 		})
 
 		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindQueuedDurationSeconds,
-			Labels: ref.DefaultLabelsValues(),
+			Labels: labels,
 			Value:  pipeline.QueuedDurationSeconds,
 		})
 
 		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindTimestamp,
-			Labels: ref.DefaultLabelsValues(),
+			Labels: labels,
 			Value:  pipeline.Timestamp,
 		})
 
