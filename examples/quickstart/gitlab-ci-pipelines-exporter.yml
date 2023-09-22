@@ -4,7 +4,7 @@ log:
 
 gitlab:
   url: https://https://gitlab.cee.redhat.com/
-  token: AYxiDmMLjsPuS2s_WvAc
+  token: ${GCPE_GITLAB_TOKEN}
 
 # Pull jobs related metrics on all projects
 project_defaults:

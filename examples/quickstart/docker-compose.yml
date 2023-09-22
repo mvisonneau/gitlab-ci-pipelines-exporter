@@ -1,5 +1,5 @@
 ---
-version: '3.8'
+version: "3.8"
 services:
   gitlab-ci-pipelines-exporter:
     image: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.5
@@ -9,7 +9,7 @@ services:
     ports:
       - 8080:8080
     environment:
-      GCPE_GITLAB_TOKEN: AYxiDmMLjsPuS2s_WvAc
+      GCPE_GITLAB_TOKEN: ${GCPE_GITLAB_TOKEN}
       GCPE_CONFIG: /etc/gitlab-ci-pipelines-exporter.yml
       GCPE_INTERNAL_MONITORING_LISTENER_ADDRESS: tcp://127.0.0.1:8082
     volumes:
@@ -31,7 +31,7 @@ services:
     ports:
       - 3000:3000
     environment:
-      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_INSTALL_PLUGINS: grafana-polystat-panel,yesoreyeram-boomtable-panel
     links:
       - prometheus
