@@ -1,0 +1,217 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 6,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "e0926d16-b782-4e30-a478-b8d2a6036775"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "orgSlug!='grafana'": {
+                  "color": "yellow",
+                  "index": 1
+                },
+                "orgSlug=='grafana'": {
+                  "color": "green",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 20,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "annotations": false,
+        "annotationsLimit": 100,
+        "annotationsType": "",
+        "autoScroll": true,
+        "calendarType": "bigCalendar",
+        "colors": "frame",
+        "descriptionField": "description",
+        "displayTime": false,
+        "quickLinks": false,
+        "textField": "name",
+        "timeField": "updatedAt"
+      },
+      "pluginVersion": "9.5.2",
+      "targets": [
+        {
+          "cacheDurationSeconds": 300,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "e0926d16-b782-4e30-a478-b8d2a6036775"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.items[*].name"
+            },
+            {
+              "jsonPath": "$.items[*].description",
+              "language": "jsonpath",
+              "name": ""
+            },
+            {
+              "jsonPath": "$.items[*].updatedAt",
+              "language": "jsonpath",
+              "name": ""
+            }
+          ],
+          "method": "GET",
+          "queryParams": "",
+          "refId": "A",
+          "urlPath": ""
+        }
+      ],
+      "title": "All available plugins",
+      "type": "marcusolsson-calendar-panel"
+    },
+    {
+      "datasource": {
+        "type": "marcusolsson-json-datasource",
+        "uid": "e0926d16-b782-4e30-a478-b8d2a6036775"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 20,
+        "w": 16,
+        "x": 0,
+        "y": 20
+      },
+      "id": 2,
+      "options": {
+        "annotations": false,
+        "annotationsLimit": 100,
+        "annotationsType": "",
+        "autoScroll": true,
+        "calendarType": "bigCalendar",
+        "colors": "frame",
+        "descriptionField": "description",
+        "displayTime": false,
+        "quickLinks": false,
+        "textField": "name",
+        "timeField": "updatedAt"
+      },
+      "pluginVersion": "9.5.2",
+      "targets": [
+        {
+          "cacheDurationSeconds": 300,
+          "datasource": {
+            "type": "marcusolsson-json-datasource",
+            "uid": "e0926d16-b782-4e30-a478-b8d2a6036775"
+          },
+          "fields": [
+            {
+              "jsonPath": "$.items[?(@.orgSlug == 'grafana')].name",
+              "name": ""
+            },
+            {
+              "jsonPath": "$.items[?(@.orgSlug == 'grafana')].description",
+              "language": "jsonpath",
+              "name": ""
+            },
+            {
+              "jsonPath": "$.items[?(@.orgSlug == 'grafana')].updatedAt ",
+              "language": "jsonpath",
+              "name": ""
+            }
+          ],
+          "hide": false,
+          "method": "GET",
+          "queryParams": "",
+          "refId": "B",
+          "urlPath": ""
+        }
+      ],
+      "title": "Only Grafana authored plugins",
+      "type": "marcusolsson-calendar-panel"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Plugins calendar",
+  "uid": "b4f075b8-115b-497b-a845-65cd6911559b",
+  "version": 7,
+  "weekStart": ""
+}
