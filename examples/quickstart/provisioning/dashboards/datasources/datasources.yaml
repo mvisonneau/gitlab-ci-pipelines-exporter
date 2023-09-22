@@ -1,0 +1,27 @@
+apiVersion: 1
+
+datasources:
+  - name: Volkov Labs RSS
+    type: volkovlabs-rss-datasource
+    access: proxy
+    isDefault: true
+    uid: rZAdZdf7a
+    orgId: 1
+    version: 1
+    editable: true
+    jsonData:
+      feed: https://volkovlabs.io/blog/rss.xml
+  - name: Volkov Labs YouTube
+    type: volkovlabs-rss-datasource
+    access: proxy
+    orgId: 1
+    uid: rZAdZdf82
+    version: 1
+    editable: true
+    jsonData:
+      feed: https://www.youtube.com/feeds/videos.xml?channel_id=UCQadniwbukI6ZmTN2oTTb-g
+  - name: Static
+    type: marcusolsson-static-datasource
+    access: proxy
+    orgId: 1
+    uid: U0HP2Rv4z
