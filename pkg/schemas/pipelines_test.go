@@ -22,6 +22,7 @@ func TestNewPipeline(t *testing.T) {
 		UpdatedAt:      &updatedAt,
 		Duration:       15,
 		QueuedDuration: 5,
+		Source:         "schedule",
 		Status:         "running",
 	}
 
@@ -31,6 +32,7 @@ func TestNewPipeline(t *testing.T) {
 		Timestamp:             1.60155755e+09,
 		DurationSeconds:       15,
 		QueuedDurationSeconds: 5,
+		Source:                "schedule",
 		Status:                "running",
 	}
 
