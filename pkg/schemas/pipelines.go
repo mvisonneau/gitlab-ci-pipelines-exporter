@@ -15,6 +15,7 @@ type Pipeline struct {
 	Timestamp             float64
 	DurationSeconds       float64
 	QueuedDurationSeconds float64
+	Source                string
 	Status                string
 	Variables             string
 	TestReport            TestReport
@@ -78,6 +79,7 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 		Timestamp:             timestamp,
 		DurationSeconds:       float64(gp.Duration),
 		QueuedDurationSeconds: float64(gp.QueuedDuration),
+		Source:                gp.Source,
 		Status:                gp.Status,
 	}
 }

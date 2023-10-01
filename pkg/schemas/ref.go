@@ -60,6 +60,7 @@ func (ref Ref) DefaultLabelsValues() map[string]string {
 		"ref":       ref.Name,
 		"topics":    ref.Project.Topics,
 		"variables": ref.LatestPipeline.Variables,
+		"source":    ref.LatestPipeline.Source,
 	}
 }
 
