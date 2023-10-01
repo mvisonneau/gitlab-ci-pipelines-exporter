@@ -54,6 +54,7 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 	labels["stage"] = job.Stage
 	labels["job_name"] = job.Name
 	labels["tag_list"] = job.TagList
+	labels["failure_reason"] = job.FailureReason
 
 	if ref.Project.Pull.Pipeline.Jobs.RunnerDescription.Enabled {
 		re, err := regexp.Compile(ref.Project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp)

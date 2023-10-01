@@ -123,6 +123,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		"source":             ref.LatestPipeline.Source,
 		"stage":              newJob.Stage,
 		"tag_list":           newJob.TagList,
+		"failure_reason":     newJob.FailureReason,
 		"job_name":           newJob.Name,
 		"runner_description": ref.Project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp,
 	}

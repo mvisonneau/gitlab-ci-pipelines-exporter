@@ -17,6 +17,7 @@ type Job struct {
 	Status                string
 	TagList               string
 	ArtifactSize          float64
+	FailureReason         string
 	Runner                Runner
 }
 
@@ -53,6 +54,7 @@ func NewJob(gj goGitlab.Job) Job {
 		Status:                gj.Status,
 		TagList:               strings.Join(gj.TagList, ","),
 		ArtifactSize:          artifactSize,
+		FailureReason:         gj.FailureReason,
 
 		Runner: Runner{
 			Description: gj.Runner.Description,
