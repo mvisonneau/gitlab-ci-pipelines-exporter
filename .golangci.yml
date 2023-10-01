@@ -32,6 +32,8 @@ linters:
     - gomnd
     - lll
     - dupl
+    - depguard
+    - tagalign
 
 linters-settings:
   funlen:

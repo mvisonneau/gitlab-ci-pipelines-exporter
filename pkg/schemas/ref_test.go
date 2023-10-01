@@ -30,7 +30,7 @@ func TestRefDefaultLabelsValues(t *testing.T) {
 		Name:    "feature",
 		LatestPipeline: Pipeline{
 			Variables: "blah",
-			Source: "schedule",
+			Source:    "schedule",
 		},
 		LatestJobs: make(Jobs),
 	}
