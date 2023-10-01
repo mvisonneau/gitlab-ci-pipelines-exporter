@@ -120,6 +120,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		"ref":                ref.Name,
 		"kind":               string(ref.Kind),
 		"variables":          ref.LatestPipeline.Variables,
+		"source":             ref.LatestPipeline.Source,
 		"stage":              newJob.Stage,
 		"tag_list":           newJob.TagList,
 		"failure_reason":     newJob.FailureReason,
