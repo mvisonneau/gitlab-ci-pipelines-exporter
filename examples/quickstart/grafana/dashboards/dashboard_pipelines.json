@@ -35,7 +35,7 @@
       },
       "id": 116,
       "options": {
-        "content": "<p style=\"text-align:center;\"><img src=\"https://www.cloudfoundry.org/wp-content/uploads/2017/10/icon_gitlab_cf@2x.png\" width=80px/></p>",
+        "content": "<p style=\"text-align:center;\"><img src=\"https://about.gitlab.com/images/press/logo/png/gitlab-logo-500.png\" width=100px/></p>",
         "mode": "html"
       },
       "pluginVersion": "7.3.1",

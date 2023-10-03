@@ -30,6 +30,7 @@ func TestRefDefaultLabelsValues(t *testing.T) {
 		Name:    "feature",
 		LatestPipeline: Pipeline{
 			Variables: "blah",
+			Source:    "schedule",
 		},
 		LatestJobs: make(Jobs),
 	}
@@ -40,6 +41,7 @@ func TestRefDefaultLabelsValues(t *testing.T) {
 		"ref":       "feature",
 		"topics":    "amazing,project",
 		"variables": "blah",
+		"source":    "schedule",
 	}
 
 	assert.Equal(t, expectedValue, ref.DefaultLabelsValues())

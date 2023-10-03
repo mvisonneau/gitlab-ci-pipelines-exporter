@@ -24,7 +24,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `{"id":1,"created_at":"2016-08-11T11:27:00.085Z", "started_at":"2016-08-11T11:28:00.085Z",
-			"duration":300,"queued_duration":60,"status":"running","coverage":"30.2"}`)
+			"duration":300,"queued_duration":60,"status":"running","coverage":"30.2","source":"schedule"}`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
@@ -61,6 +61,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 		"ref":       "bar",
 		"topics":    "",
 		"variables": "foo:bar",
+		"source":    "schedule",
 	}
 
 	runCount := schemas.Metric{
@@ -113,7 +114,7 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `{"id":1,"created_at":"2016-08-11T11:27:00.085Z", "started_at":"2016-08-11T11:28:00.085Z",
-			"duration":300,"queued_duration":60,"status":"success","coverage":"30.2"}`)
+			"duration":300,"queued_duration":60,"status":"success","coverage":"30.2","source":"schedule"}`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
@@ -150,6 +151,7 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 		"ref":       "bar",
 		"topics":    "",
 		"variables": "foo:bar",
+		"source":    "schedule",
 	}
 
 	trTotalTime := schemas.Metric{
@@ -269,7 +271,7 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `{"id":1,"updated_at":"2016-08-11T11:28:34.085Z","duration":300,"status":"running","coverage":"30.2"}`)
+			fmt.Fprint(w, `{"id":1,"updated_at":"2016-08-11T11:28:34.085Z","duration":300,"status":"running","coverage":"30.2","source":"schedule"}`)
 		})
 
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/pipelines/1/variables"),

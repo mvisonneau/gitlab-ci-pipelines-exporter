@@ -78,6 +78,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		DurationSeconds: 15,
 		Status:          "failed",
 		Stage:           "🚀",
+		TagList:         "",
 		ArtifactSize:    150,
 		Runner: schemas.Runner{
 			Description: "foo-123-bar",
@@ -119,7 +120,10 @@ func TestProcessJobMetrics(t *testing.T) {
 		"ref":                ref.Name,
 		"kind":               string(ref.Kind),
 		"variables":          ref.LatestPipeline.Variables,
+		"source":             ref.LatestPipeline.Source,
 		"stage":              newJob.Stage,
+		"tag_list":           newJob.TagList,
+		"failure_reason":     newJob.FailureReason,
 		"job_name":           newJob.Name,
 		"runner_description": ref.Project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp,
 	}

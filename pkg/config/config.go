@@ -17,28 +17,28 @@ type Config struct {
 	Global Global `yaml:",omitempty"`
 
 	// Log configuration for the exporter
-	Log Log `yaml:"log" validate:"dive"`
+	Log Log `yaml:"log"`
 
 	// OpenTelemetry configuration
-	OpenTelemetry OpenTelemetry `yaml:"opentelemetry" validate:"dive"`
+	OpenTelemetry OpenTelemetry `yaml:"opentelemetry"`
 
 	// Server related configuration
-	Server Server `yaml:"server" validate:"dive"`
+	Server Server `yaml:"server"`
 
 	// GitLab related configuration
-	Gitlab Gitlab `yaml:"gitlab" validate:"dive"`
+	Gitlab Gitlab `yaml:"gitlab"`
 
 	// Redis related configuration
-	Redis Redis `yaml:"redis" validate:"dive"`
+	Redis Redis `yaml:"redis"`
 
 	// Pull configuration
-	Pull Pull `yaml:"pull" validate:"dive"`
+	Pull Pull `yaml:"pull"`
 
 	// GarbageCollect configuration
-	GarbageCollect GarbageCollect `yaml:"garbage_collect" validate:"dive"`
+	GarbageCollect GarbageCollect `yaml:"garbage_collect"`
 
 	// Default parameters which can be overridden at either the Project or Wildcard level
-	ProjectDefaults ProjectParameters `yaml:"project_defaults" validate:"dive"`
+	ProjectDefaults ProjectParameters `yaml:"project_defaults"`
 
 	// List of projects to pull
 	Projects []Project `validate:"unique,at-least-1-project-or-wildcard,dive" yaml:"projects"`

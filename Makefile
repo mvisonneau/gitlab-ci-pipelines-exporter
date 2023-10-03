@@ -7,11 +7,11 @@ REPOSITORY    := mvisonneau/$(NAME)
 .PHONY: fmt
 fmt: ## Format source code
 	go run mvdan.cc/gofumpt@v0.5.0 -w $(shell git ls-files **/*.go)
-	go run github.com/daixiang0/gci@v0.10.1 write -s standard -s default -s "prefix(github.com/mvisonneau)" .
+	go run github.com/daixiang0/gci@v0.11.2 write -s standard -s default -s "prefix(github.com/mvisonneau)" .
 
 .PHONY: lint
 lint: ## Run all lint related tests upon the codebase
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2 run -v --fast
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2 run -v --fast
 
 .PHONY: test
 test: ## Run the tests against the codebase
@@ -40,7 +40,7 @@ release: ## Build & release the binaries (stable)
 .PHONY: protoc
 protoc: ## Generate golang from .proto files
 	@command -v protoc 2>&1 >/dev/null        || (echo "protoc needs to be available in PATH: https://github.com/protocolbuffers/protobuf/releases"; false)
-	@command -v protoc-gen-go 2>&1 >/dev/null || go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+	@command -v protoc-gen-go 2>&1 >/dev/null || go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.3.0
 	protoc \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
