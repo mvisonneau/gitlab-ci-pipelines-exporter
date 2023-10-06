@@ -90,6 +90,9 @@ type ProjectPullRefsMergeRequests struct {
 	// Filter for MRs to include (by title).
 	Regexp string `default:".*" yaml:"regexp"`
 
+	// Monitor all pipelines on a merge request, not just those in the main project
+	IncludeSourcePipelines bool `default:"false" yaml:"include_source_pipelines"`
+
 	// Only keep most 'n' recently updated merge requests.
 	MostRecent uint `default:"0" yaml:"most_recent"`
 

@@ -66,6 +66,8 @@ func (ref Ref) DefaultLabelsValues(input ...Pipeline) map[string]string {
 
 	if ref.SourceProject == nil {
 		sourceName = ref.Project.Name
+	} else if ref.LatestPipeline.ProjectID == ref.Project.ID {
+		sourceName = ref.Project.Name
 	} else {
 		sourceName = ref.SourceProject.Name
 	}

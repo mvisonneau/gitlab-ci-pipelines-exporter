@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "gitlab.com/gitlab-org/api/client-go"
@@ -26,27 +27,49 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		"ref-kind":     ref.Kind,
 	}
 
-	// We need a different syntax if the ref is a merge-request
-	var refName string
-	if ref.Kind == schemas.RefKindMergeRequest {
-		refName = fmt.Sprintf("refs/merge-requests/%s/head", ref.Name)
-	} else {
-		refName = ref.Name
-	}
+	var (
+		pipelines []*goGitlab.PipelineInfo
+		err       error
+	)
 
-	pipelines, _, err := c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
-		ListOptions: goGitlab.ListOptions{
+	// We need a different syntax if the ref is a merge-request
+	if ref.SourceProject == nil {
+		var refName string
+		if ref.Kind == schemas.RefKindMergeRequest {
+			refName = fmt.Sprintf("refs/merge-requests/%s/head", ref.Name)
+		} else {
+			refName = ref.Name
+		}
+
+		pipelines, _, err = c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
+			// We only need the most recent pipeline
+			ListOptions: goGitlab.ListOptions{
+				PerPage: int64(ref.Project.Pull.Pipeline.PerRef),
+				Page:    1,
+			},
+			Ref: &refName,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching project pipelines for %s: %v", ref.Project.Name, err)
+		}
+	} else {
+		id, err := strconv.ParseInt(ref.Name, 10, 64)
+		if err != nil {
+			return fmt.Errorf("error converting merge request refname to an integer %s: %v", ref.Name, err)
+		}
+
+		pipelines, _, err = c.Gitlab.GetMergeRequestPipelines(ctx, ref.Project.Name, id, &goGitlab.ListOptions{
+			// We only need the most recent pipeline
 			PerPage: int64(ref.Project.Pull.Pipeline.PerRef),
 			Page:    1,
-		},
-		Ref: &refName,
-	})
-	if err != nil {
-		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.Project.Name, err)
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching project merge requests pipeline for %s!%s: %v", ref.Project.Name, ref.Name, err)
+		}
 	}
 
 	if len(pipelines) == 0 && ref.Kind == schemas.RefKindMergeRequest {
-		refName = fmt.Sprintf("refs/merge-requests/%s/merge", ref.Name)
+		refName := fmt.Sprintf("refs/merge-requests/%s/merge", ref.Name)
 		pipelines, _, err = c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
 			// We only need the most recent pipeline
 			ListOptions: goGitlab.ListOptions{
