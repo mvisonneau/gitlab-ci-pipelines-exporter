@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -19,16 +18,17 @@ import (
 )
 
 // GetRefPipeline ..
-func (c *Client) GetRefPipeline(ctx context.Context, ref schemas.Ref, pipelineID int64) (p schemas.Pipeline, err error) {
+func (c *Client) GetRefPipeline(ctx context.Context, ref schemas.Ref, projectID int64, pipelineID int64) (p schemas.Pipeline, err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipeline")
 	defer span.End()
 	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
 	span.SetAttributes(attribute.String("ref_name", ref.Name))
+	span.SetAttributes(attribute.Int64("project_id", projectID))
 	span.SetAttributes(attribute.Int64("pipeline_id", pipelineID))
 
 	c.rateLimit(ctx)
 
-	gp, resp, err := c.Pipelines.GetPipeline(ref.Project.Name, pipelineID, goGitlab.WithContext(ctx))
+	gp, resp, err := c.Pipelines.GetPipeline(projectID, pipelineID, goGitlab.WithContext(ctx))
 	if err != nil || gp == nil {
 		return schemas.Pipeline{}, fmt.Errorf("could not read content of pipeline %s - %s | %s", ref.Project.Name, ref.Name, err.Error())
 	}
@@ -124,7 +124,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context
 
 	c.rateLimit(ctx)
 
-	variables, resp, err := c.Pipelines.GetPipelineVariables(ref.Project.Name, pipeline.ID, goGitlab.WithContext(ctx))
+	variables, resp, err := c.Pipelines.GetPipelineVariables(ref.Project.ID, pipeline.ID, goGitlab.WithContext(ctx))
 	if err != nil {
 		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", pipeline.ID, err.Error())
 	}
@@ -330,8 +330,8 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 	c.rateLimit(ctx)
 
 	type pipelineDef struct {
-		projectNameOrID string
-		pipelineID      int64
+		projectID  int64
+		pipelineID int64
 	}
 
 	var currentPipeline pipelineDef
@@ -345,7 +345,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 		ErrorCount:   0,
 		TestSuites:   []schemas.TestSuite{},
 	}
-	childPipelines := []pipelineDef{{ref.Project.Name, ref.LatestPipeline.ID}}
+	childPipelines := []pipelineDef{{ref.LatestPipeline.ProjectID, ref.LatestPipeline.ID}}
 
 	for {
 		if len(childPipelines) == 0 {
@@ -354,7 +354,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 
 		currentPipeline, childPipelines = childPipelines[0], childPipelines[1:]
 
-		testReport, resp, err := c.Pipelines.GetPipelineTestReport(currentPipeline.projectNameOrID, currentPipeline.pipelineID, goGitlab.WithContext(ctx))
+		testReport, resp, err := c.Pipelines.GetPipelineTestReport(currentPipeline.projectID, currentPipeline.pipelineID, goGitlab.WithContext(ctx))
 		if err != nil {
 			return schemas.TestReport{}, fmt.Errorf("could not fetch test report for %d: %s", ref.LatestPipeline.ID, err.Error())
 		}
@@ -374,7 +374,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 		}
 
 		if ref.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled {
-			foundBridges, err := c.ListPipelineBridges(ctx, currentPipeline.projectNameOrID, currentPipeline.pipelineID)
+			foundBridges, err := c.ListPipelineBridges(ctx, currentPipeline.projectID, currentPipeline.pipelineID)
 			if err != nil {
 				return baseTestReport, err
 			}
@@ -384,7 +384,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 					continue
 				}
 
-				childPipelines = append(childPipelines, pipelineDef{strconv.FormatInt(foundBridge.DownstreamPipeline.ProjectID, 10), foundBridge.DownstreamPipeline.ID})
+				childPipelines = append(childPipelines, pipelineDef{foundBridge.DownstreamPipeline.ProjectID, foundBridge.DownstreamPipeline.ID})
 			}
 		}
 	}

@@ -91,7 +91,7 @@ func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Re
 		"cancelled",
 	}
 
-	pipeline, err := c.Gitlab.GetRefPipeline(ctx, ref, apiPipeline.ID)
+	pipeline, err := c.Gitlab.GetRefPipeline(ctx, ref, apiPipeline.ProjectID, apiPipeline.ID)
 	if err != nil {
 		return err
 	}
