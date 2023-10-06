@@ -110,7 +110,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"})",
+          "expr": "count(gitlab_ci_pipeline_run_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"})",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -193,7 +193,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_status{status=\"failed\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} > 0) or vector(0)",
+          "expr": "count(gitlab_ci_pipeline_status{status=\"failed\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -272,7 +272,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}[1h]))",
+          "expr": "sum(increase(gitlab_ci_pipeline_run_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}[1h]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -417,13 +417,13 @@
       ],
       "targets": [
         {
-          "expr": "(gitlab_ci_pipeline_status{status=\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status=~\"failed|canceled\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} * 3 > 0) or (gitlab_ci_pipeline_status{status!~\"success|running|failed|canceled\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} * 4 > 0)",
+          "expr": "(gitlab_ci_pipeline_status{status=\"success\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status=~\"failed|canceled\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"} * 3 > 0) or (gitlab_ci_pipeline_status{status!~\"success|running|failed|canceled\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"} * 4 > 0)",
           "format": "time_series",
           "hide": false,
           "instant": true,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "                                          {{project}} - {{ref}}",
+          "legendFormat": "                                          {{source_project}} - {{ref}}",
           "refId": "A"
         }
       ],
@@ -510,7 +510,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(time() - gitlab_ci_pipeline_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"})",
+          "expr": "avg(time() - gitlab_ci_pipeline_timestamp{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -593,7 +593,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_pipeline_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"})",
+          "expr": "avg(gitlab_ci_pipeline_duration_seconds{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -672,11 +672,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}[1m])) by (project, ref) / sum(increase(gitlab_ci_pipeline_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}[1m])) by (project, ref)",
+          "expr": "sum(increase(gitlab_ci_pipeline_run_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}[1m])) by (source_project, ref) / sum(increase(gitlab_ci_pipeline_run_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}[1m])) by (source_project, ref)",
           "format": "time_series",
           "instant": false,
           "interval": "",
-          "legendFormat": "{{ project }} - {{ ref }}",
+          "legendFormat": "{{ source_project }} - {{ ref }}",
           "refId": "A"
         }
       ],
@@ -766,7 +766,7 @@
                   {
                     "targetBlank": true,
                     "title": "View pipeline #${__value.numeric}",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/-/pipelines/${__value.numeric}"
+                    "url": "https://${GITLAB_HOST}/${__data.fields.source_project}/-/pipelines/${__value.numeric}"
                   }
                 ]
               },
@@ -942,7 +942,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
+          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) unless max(gitlab_ci_pipeline_status{status!~\"success\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -952,7 +952,7 @@
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "expr": "max(gitlab_ci_pipeline_duration_seconds{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -962,7 +962,7 @@
           "refId": "C"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "expr": "max(gitlab_ci_pipeline_id{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) > 0)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -994,7 +994,7 @@
               "Value #D": 1,
               "job_name": 3,
               "kind": 4,
-              "project": 2,
+              "source_project": 2,
               "ref": 5,
               "status": 8
             },
@@ -1005,7 +1005,7 @@
               "Value #D": "ID",
               "job_name": "Job",
               "kind": "Ref Kind",
-              "project": "Project",
+              "source_project": "Project",
               "ref": "Ref Name",
               "status": "Status"
             }
@@ -1072,7 +1072,7 @@
                   {
                     "targetBlank": true,
                     "title": "View pipeline #${__value.numeric}",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/pipelines/${__value.numeric}"
+                    "url": "https://${GITLAB_HOST}/${__data.fields.source_project}/pipelines/${__value.numeric}"
                   }
                 ]
               },
@@ -1354,7 +1354,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
+          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) unless max(gitlab_ci_pipeline_status{status=~\"success\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1364,7 +1364,7 @@
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "expr": "max(gitlab_ci_pipeline_duration_seconds{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) unless (max(gitlab_ci_pipeline_status{status=~\"success\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1374,7 +1374,7 @@
           "refId": "C"
         },
         {
-          "expr": "(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"running\"}) by (project, ref, kind) * 2) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"failed\"}) by (project, ref, kind) * 3) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"canceled\"}) by (project, ref, kind) * 4) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"created\"}) by (project, ref, kind) * 5) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"waiting_for_resource\"}) by (project, ref, kind) * 6) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"preparing\"}) by (project, ref, kind) * 7) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"pending\"}) by (project, ref, kind) * 8) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"skipped\"}) by (project, ref, kind) * 9) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"manual\"}) by (project, ref, kind) * 10) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"scheduled\"}) by (project, ref, kind) * 11) > 0",
+          "expr": "(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"running\"}) by (source_project, ref, kind) * 2) > 0 or\n(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"failed\"}) by (source_project, ref, kind) * 3) > 0 or\n(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"canceled\"}) by (source_project, ref, kind) * 4) > 0 or\n(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"created\"}) by (source_project, ref, kind) * 5) > 0 or\n(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"waiting_for_resource\"}) by (source_project, ref, kind) * 6) > 0 or\n(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"preparing\"}) by (source_project, ref, kind) * 7) > 0 or\n(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"pending\"}) by (source_project, ref, kind) * 8) > 0 or\n(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"skipped\"}) by (source_project, ref, kind) * 9) > 0 or\n(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"manual\"}) by (source_project, ref, kind) * 10) > 0 or\n(max(gitlab_ci_pipeline_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\", status=~\"scheduled\"}) by (source_project, ref, kind) * 11) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1384,7 +1384,7 @@
           "refId": "A"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind, job_name) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind, job_name) > 0)",
+          "expr": "max(gitlab_ci_pipeline_id{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind, job_name) unless (max(gitlab_ci_pipeline_status{status=~\"success\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", ref=~\"$REF\"}) by (source_project, ref, kind, job_name) > 0)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1416,7 +1416,7 @@
               "Value #D": 1,
               "job_name": 3,
               "kind": 4,
-              "project": 2,
+              "source_project": 2,
               "ref": 5,
               "status": 8
             },
@@ -1427,7 +1427,7 @@
               "Value #D": "ID",
               "job_name": "Job",
               "kind": "Ref Kind",
-              "project": "Project",
+              "source_project": "Project",
               "ref": "Ref Name",
               "status": "Status"
             }
@@ -1476,7 +1476,7 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id, project)",
+        "definition": "label_values(gitlab_ci_pipeline_id, source_project)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1484,7 +1484,7 @@
         "multi": true,
         "name": "OWNER",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id, project)",
+        "query": "label_values(gitlab_ci_pipeline_id, source_project)",
         "refresh": 1,
         "regex": "/(.*)\\/.*$/",
         "skipUrlSync": false,
@@ -1507,15 +1507,15 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\"}, project)",
+        "definition": "label_values(gitlab_ci_pipeline_id{source_project=~\"($OWNER).*\"}, source_project)",
         "error": null,
         "hide": 0,
         "includeAll": true,
-        "label": "project",
+        "label": "source_project",
         "multi": true,
         "name": "PROJECT",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\"}, project)",
+        "query": "label_values(gitlab_ci_pipeline_id{source_project=~\"($OWNER).*\"}, source_project)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -1538,7 +1538,7 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, ref)",
+        "definition": "label_values(gitlab_ci_pipeline_id{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\"}, ref)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1546,7 +1546,7 @@
         "multi": true,
         "name": "REF",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, ref)",
+        "query": "label_values(gitlab_ci_pipeline_id{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\"}, ref)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
