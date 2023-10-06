@@ -250,12 +250,19 @@ func (c *Client) ListRefMostRecentJobs(ctx context.Context, ref schemas.Ref) (jo
 		}
 	}
 
+	var projectName string
+	if ref.SourceProject == nil {
+		projectName = ref.Project.Name
+	} else {
+		projectName = ref.SourceProject.Name
+	}
+
 	options := []goGitlab.RequestOptionFunc{goGitlab.WithContext(ctx)}
 
 	for {
 		c.rateLimit(ctx)
 
-		foundJobs, resp, err = c.Jobs.ListProjectJobs(ref.Project.Name, opt, options...)
+		foundJobs, resp, err = c.Jobs.ListProjectJobs(projectName, opt, options...)
 		if err != nil {
 			return
 		}
