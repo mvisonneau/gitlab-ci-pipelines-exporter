@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
 	"go.opentelemetry.io/otel"
@@ -79,6 +80,103 @@ func (c *Client) GetProjectPipelines(
 	pipelines, resp, err := c.Pipelines.ListProjectPipelines(projectName, options, goGitlab.WithContext(ctx))
 	if err != nil {
 		return nil, resp, fmt.Errorf("error listing project pipelines for project %s: %s", projectName, err.Error())
+	}
+
+	c.requestsRemaining(resp)
+
+	return pipelines, resp, nil
+}
+
+// ListProjectMergeRequests ..
+func (c *Client) ListProjectMergeRequests(
+	ctx context.Context,
+	projectName string,
+	options *goGitlab.ListProjectMergeRequestsOptions,
+) (
+	[]*goGitlab.MergeRequest,
+	*goGitlab.Response,
+	error,
+) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListProjectMergeRequests")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", projectName))
+
+	fields := log.Fields{
+		"project-name": projectName,
+	}
+
+	if options.Page == 0 {
+		options.Page = 1
+	}
+
+	if options.PerPage == 0 {
+		options.PerPage = 100
+	}
+
+	fields["page"] = options.Page
+	log.WithFields(fields).Trace("listing project merge requests")
+
+	c.rateLimit(ctx)
+
+	mrs, resp, err := c.MergeRequests.ListProjectMergeRequests(projectName, options, goGitlab.WithContext(ctx))
+	if err != nil {
+		return nil, resp, fmt.Errorf("error listing project merge requests for project %s: %s", projectName, err.Error())
+	}
+
+	c.requestsRemaining(resp)
+
+	return mrs, resp, nil
+}
+
+// GetMergeRequestPipelines ..
+func (c *Client) GetMergeRequestPipelines(
+	ctx context.Context,
+	projectName string,
+	mergeRequest int,
+	options *goGitlab.ListOptions,
+) (
+	[]*goGitlab.PipelineInfo,
+	*goGitlab.Response,
+	error,
+) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetMergeRequestPipelines")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", projectName))
+
+	fields := log.Fields{
+		"project-name": projectName,
+	}
+
+	if options.Page == 0 {
+		options.Page = 1
+	}
+
+	if options.PerPage == 0 {
+		options.PerPage = 100
+	}
+
+	fields["page"] = options.Page
+	log.WithFields(fields).Trace("listing merge request pipelines")
+
+	params := map[string]string{
+		"page":     fmt.Sprint(options.Page),
+		"per_page": fmt.Sprint(options.PerPage),
+	}
+	optionFunc := func(req *retryablehttp.Request) error {
+		for k, v := range params {
+			q := req.URL.Query()
+			q.Add(k, v)
+			req.URL.RawQuery = q.Encode()
+		}
+
+		return nil
+	}
+
+	c.rateLimit(ctx)
+
+	pipelines, resp, err := c.MergeRequests.ListMergeRequestPipelines(projectName, mergeRequest, optionFunc, goGitlab.WithContext(ctx))
+	if err != nil {
+		return nil, resp, fmt.Errorf("error merge request project pipelines for project %s!%d: %s", projectName, mergeRequest, err.Error())
 	}
 
 	c.requestsRemaining(resp)
@@ -262,6 +360,108 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 
 					continue
 				}
+			}
+
+			if _, ok := refs[ref.Key()]; !ok {
+				log.WithFields(log.Fields{
+					"project-name": ref.Project.Name,
+					"ref":          ref.Name,
+					"ref-kind":     ref.Kind,
+				}).Trace("found ref")
+
+				refs[ref.Key()] = ref
+
+				if limitToMostRecent {
+					mostRecent--
+					if mostRecent <= 0 {
+						return
+					}
+				}
+			}
+		}
+
+		if resp.CurrentPage >= resp.NextPage {
+			break
+		}
+
+		options.Page = resp.NextPage
+	}
+
+	return
+}
+
+// GetMergeRequestRefsFromPipelines ..
+func (c *Client) GetMergeRequestRefsFromPipelines(ctx context.Context, p schemas.Project) (refs schemas.Refs, err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetMergeRequestRefsFromPipelines")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", p.Name))
+	span.SetAttributes(attribute.String("ref_kind", "merge-request"))
+
+	refs = make(schemas.Refs)
+
+	options := &goGitlab.ListProjectMergeRequestsOptions{
+		ListOptions: goGitlab.ListOptions{
+			Page:    1,
+			PerPage: 100,
+		},
+		OrderBy: goGitlab.String("updated_at"),
+	}
+
+	var (
+		mostRecent, maxAgeSeconds uint
+		limitToMostRecent         bool
+	)
+
+	maxAgeSeconds = p.Pull.Refs.MergeRequests.MaxAgeSeconds
+	mostRecent = p.Pull.Refs.MergeRequests.MostRecent
+
+	if mostRecent > 0 {
+		limitToMostRecent = true
+	}
+
+	if maxAgeSeconds > 0 {
+		t := time.Now().Add(-time.Second * time.Duration(maxAgeSeconds))
+		options.UpdatedAfter = &t
+	}
+
+	for {
+		var (
+			mrs  []*goGitlab.MergeRequest
+			resp *goGitlab.Response
+		)
+
+		mrs, resp, err = c.ListProjectMergeRequests(ctx, p.Name, options)
+		if err != nil {
+			return
+		}
+
+		for _, mr := range mrs {
+			var refName string
+
+			refName = fmt.Sprint(mr.IID)
+
+			ref := schemas.NewRef(
+				p,
+				schemas.RefKindMergeRequest,
+				refName,
+			)
+
+			if mr.SourceProjectID == mr.TargetProjectID {
+				ref.SourceProject = &p
+			} else {
+				var (
+					goProject     *goGitlab.Project
+					sourceProject schemas.Project
+				)
+
+				goProject, err = c.GetProjectByID(ctx, mr.SourceProjectID)
+				if err != nil {
+					return
+				}
+				sourceProject = p
+				sourceProject.Name = goProject.PathWithNamespace
+
+				ref.SourceProject = &sourceProject
 			}
 
 			if _, ok := refs[ref.Key()]; !ok {

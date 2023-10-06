@@ -28,6 +28,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - new configuration parameter: `gitlab.maximum_jobs_queue_size`, controlling the queue buffer size
 - new label for pipelines and jobs: `source` to indicate the reason the pipeline started
 - new label for pipelines and jobs: `source_project` to indicate pipelines for merge requests on forks
+- pipelines in forks hosting merge request pipelines may now be selected using the `include_source_pipelines` option
 
 ### Changed
 

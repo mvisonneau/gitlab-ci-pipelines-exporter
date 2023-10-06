@@ -59,12 +59,21 @@ func (c *Controller) GetRefs(ctx context.Context, p schemas.Project) (
 	}
 
 	if p.Pull.Refs.MergeRequests.Enabled {
-		if pulledRefs, err = c.Gitlab.GetRefsFromPipelines(
-			ctx,
-			p,
-			schemas.RefKindMergeRequest,
-		); err != nil {
-			return
+		if p.Pull.Refs.MergeRequests.IncludeSourcePipelines {
+			if pulledRefs, err = c.Gitlab.GetMergeRequestRefsFromPipelines(
+				ctx,
+				p,
+			); err != nil {
+				return
+			}
+		} else {
+			if pulledRefs, err = c.Gitlab.GetRefsFromPipelines(
+				ctx,
+				p,
+				schemas.RefKindMergeRequest,
+			); err != nil {
+				return
+			}
 		}
 
 		if err = mergo.Merge(&refs, pulledRefs); err != nil {
