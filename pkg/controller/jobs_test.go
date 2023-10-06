@@ -116,6 +116,7 @@ func TestProcessJobMetrics(t *testing.T) {
 	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
 		"project":            ref.Project.Name,
+		"source_project":     ref.Project.Name,
 		"topics":             ref.Project.Topics,
 		"ref":                ref.Name,
 		"kind":               string(ref.Kind),

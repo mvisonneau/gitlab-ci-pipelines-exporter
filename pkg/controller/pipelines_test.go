@@ -56,12 +56,13 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	// Check if all the metrics exist
 	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "schedule",
+		"kind":           string(schemas.RefKindBranch),
+		"project":        "foo",
+		"source_project": "foo",
+		"ref":            "bar",
+		"topics":         "",
+		"variables":      "foo:bar",
+		"source":         "schedule",
 	}
 
 	runCount := schemas.Metric{
@@ -146,12 +147,13 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 	// Check if all the metrics exist
 	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "schedule",
+		"kind":           string(schemas.RefKindBranch),
+		"project":        "foo",
+		"source_project": "foo",
+		"ref":            "bar",
+		"topics":         "",
+		"variables":      "foo:bar",
+		"source":         "schedule",
 	}
 
 	trTotalTime := schemas.Metric{

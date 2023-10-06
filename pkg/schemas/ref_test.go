@@ -36,12 +36,13 @@ func TestRefDefaultLabelsValues(t *testing.T) {
 	}
 
 	expectedValue := map[string]string{
-		"kind":      "branch",
-		"project":   "foo/bar",
-		"ref":       "feature",
-		"topics":    "amazing,project",
-		"variables": "blah",
-		"source":    "schedule",
+		"kind":           "branch",
+		"project":        "foo/bar",
+		"source_project": "foo/bar",
+		"ref":            "feature",
+		"topics":         "amazing,project",
+		"variables":      "blah",
+		"source":         "schedule",
 	}
 
 	assert.Equal(t, expectedValue, ref.DefaultLabelsValues())

@@ -27,6 +27,7 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 - new configuration parameter: `gitlab.burstable_requests_per_second`, introducing a burstable amount of API RPS
 - new configuration parameter: `gitlab.maximum_jobs_queue_size`, controlling the queue buffer size
 - new label for pipelines and jobs: `source` to indicate the reason the pipeline started
+- new label for pipelines and jobs: `source_project` to indicate pipelines for merge requests on forks
 
 ### Changed
 
