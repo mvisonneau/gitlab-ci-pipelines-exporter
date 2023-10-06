@@ -25,7 +25,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 0)
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"id":10}]`)
 		})
@@ -40,7 +40,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 			fmt.Fprint(w, `[{"id":30}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 11}}]`)
 		})
@@ -68,7 +68,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 	}, jobs)
 
 	// Test invalid project id
-	ref.Project.Name = "bar"
+	ref.LatestPipeline.ProjectID = 1000
 	_, err = c.ListRefPipelineJobs(ctx, ref)
 	assert.Error(t, err)
 }
@@ -77,7 +77,7 @@ func TestListPipelineJobs(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
+	mux.HandleFunc("/api/v4/projects/1/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
@@ -88,17 +88,17 @@ func TestListPipelineJobs(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/bar/pipelines/1/jobs",
+	mux.HandleFunc("/api/v4/projects/2/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	jobs, err := c.ListPipelineJobs(ctx, "foo", 1)
+	jobs, err := c.ListPipelineJobs(ctx, 1, 1)
 	assert.NoError(t, err)
 	assert.Len(t, jobs, 2)
 
 	// Test invalid project id
-	_, err = c.ListPipelineJobs(ctx, "bar", 1)
+	_, err = c.ListPipelineJobs(ctx, 2, 1)
 	assert.Error(t, err)
 }
 
@@ -106,7 +106,7 @@ func TestListPipelineBridges(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+	mux.HandleFunc("/api/v4/projects/1/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
@@ -117,17 +117,17 @@ func TestListPipelineBridges(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"pipeline":{"id":100}}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/bar/pipelines/1/bridges",
+	mux.HandleFunc("/api/v4/projects/2/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	bridges, err := c.ListPipelineBridges(ctx, "foo", 1)
+	bridges, err := c.ListPipelineBridges(ctx, 1, 1)
 	assert.NoError(t, err)
 	assert.Len(t, bridges, 1)
 
 	// Test invalid project id
-	_, err = c.ListPipelineBridges(ctx, "bar", 1)
+	_, err = c.ListPipelineBridges(ctx, 2, 1)
 	assert.Error(t, err)
 }
 

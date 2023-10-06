@@ -59,7 +59,7 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		return nil
 	}
 
-	pipeline, err := c.Gitlab.GetRefPipeline(ctx, ref, pipelines[0].ID)
+	pipeline, err := c.Gitlab.GetRefPipeline(ctx, ref, pipelines[0].ProjectID, pipelines[0].ID)
 	if err != nil {
 		return err
 	}

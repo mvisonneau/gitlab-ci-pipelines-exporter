@@ -18,7 +18,7 @@ func TestGetRefPipeline(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
+	mux.HandleFunc("/api/v4/projects/1/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `{"id":1}`)
@@ -29,7 +29,7 @@ func TestGetRefPipeline(t *testing.T) {
 		Name:    "yay",
 	}
 
-	pipeline, err := c.GetRefPipeline(ctx, ref, 1)
+	pipeline, err := c.GetRefPipeline(ctx, ref, 1, 1)
 	assert.NoError(t, err)
 	assert.NotNil(t, pipeline)
 	assert.Equal(t, 1, pipeline.ID)
@@ -65,7 +65,7 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/variables",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `[{"key":"foo","value":"bar"},{"key":"bar","value":"baz"}]`)
@@ -180,7 +180,7 @@ func TestGetRefPipelineTestReport(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
@@ -238,7 +238,7 @@ func TestGetRefPipelineFailedTestReport(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `{"total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "failed", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": "Failed message", "stack_trace": null}]}]}`)
@@ -296,13 +296,13 @@ func TestGetRefPipelineWithParentChildTestReport(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 1}}]`)
@@ -391,13 +391,13 @@ func TestGetRefPipelineWithMultiProjectTestReport(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 11}}]`)
@@ -486,13 +486,13 @@ func TestGetRefPipelineWithNoChildrenTestReport(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			fmt.Fprint(w, `[]`)
