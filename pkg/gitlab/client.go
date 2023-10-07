@@ -141,6 +141,10 @@ func (c *Client) rateLimit(ctx context.Context) {
 }
 
 func (c *Client) requestsRemaining(response *goGitlab.Response) {
+	if response == nil {
+		return
+	}
+
 	if remaining := response.Header.Get("ratelimit-remaining"); remaining != "" {
 		c.RequestsRemaining, _ = strconv.Atoi(remaining)
 	}
