@@ -11,7 +11,7 @@ require (
 	github.com/go-logr/stdr v1.2.2
 	github.com/go-playground/validator/v10 v10.15.4
 	github.com/go-redis/redis_rate/v10 v10.0.1
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/heptiolabs/healthcheck v0.0.0-20211123025425-613501dd5deb
 	github.com/imdario/mergo v0.3.16
 	github.com/mvisonneau/go-helpers v0.0.1
