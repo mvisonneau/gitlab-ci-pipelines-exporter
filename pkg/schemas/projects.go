@@ -11,6 +11,7 @@ import (
 type Project struct {
 	config.Project
 
+	ID     int
 	Topics string
 }
 

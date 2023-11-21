@@ -15,7 +15,7 @@ func TestPullRefPipelineJobsMetrics(t *testing.T) {
 	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"id":1,"created_at":"2016-08-11T11:28:34.085Z","started_at":"2016-08-11T11:28:56.085Z"},{"id":2,"created_at":"2016-08-11T11:28:34.085Z","started_at":"2016-08-11T11:28:58.085Z"}]`)
 		})
@@ -116,6 +116,7 @@ func TestProcessJobMetrics(t *testing.T) {
 	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
 		"project":            ref.Project.Name,
+		"source_project":     ref.Project.Name,
 		"topics":             ref.Project.Topics,
 		"ref":                ref.Name,
 		"kind":               string(ref.Kind),

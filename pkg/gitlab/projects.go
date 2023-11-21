@@ -32,6 +32,23 @@ func (c *Client) GetProject(ctx context.Context, name string) (*goGitlab.Project
 	return p, err
 }
 
+// GetProjectByID ..
+func (c *Client) GetProjectByID(ctx context.Context, id int) (*goGitlab.Project, error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetProjectByID")
+	defer span.End()
+	span.SetAttributes(attribute.Int("project_id", id))
+
+	log.WithFields(log.Fields{
+		"project-id": id,
+	}).Debug("reading project")
+
+	c.rateLimit(ctx)
+	p, resp, err := c.Projects.GetProject(id, &goGitlab.GetProjectOptions{}, goGitlab.WithContext(ctx))
+	c.requestsRemaining(resp)
+
+	return p, err
+}
+
 // ListProjects ..
 func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas.Project, error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListProjects")
@@ -136,6 +153,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 
 			p := schemas.NewProject(gp.PathWithNamespace)
 			p.ProjectParameters = w.ProjectParameters
+			p.ID = gp.ID
 			projects = append(projects, p)
 		}
 

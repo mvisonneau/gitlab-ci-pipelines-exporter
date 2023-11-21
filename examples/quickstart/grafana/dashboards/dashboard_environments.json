@@ -144,13 +144,13 @@
       ],
       "targets": [
         {
-          "expr": "gitlab_ci_environment_behind_commits_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}",
+          "expr": "gitlab_ci_environment_behind_commits_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}",
           "format": "time_series",
           "hide": false,
           "instant": true,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "                                               {{ project }} - {{ environment }}",
+          "legendFormat": "                                               {{ source_project }} - {{ environment }}",
           "refId": "A"
         }
       ],
@@ -232,7 +232,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_environment_information{available=\"true\", project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) or vector(0)",
+          "expr": "count(gitlab_ci_environment_information{available=\"true\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -315,7 +315,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_environment_behind_commits_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT.*\"} > 0) or vector(0)",
+          "expr": "count(gitlab_ci_environment_behind_commits_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT.*\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -398,7 +398,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_environment_status{status=\"failed\", project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"} > 0) or vector(0)",
+          "expr": "count(gitlab_ci_environment_status{status=\"failed\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -507,7 +507,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "count(gitlab_ci_environment_information{available=\"false\", project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) or vector(0)",
+          "expr": "count(gitlab_ci_environment_information{available=\"false\", source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -591,7 +591,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_environment_behind_commits_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"})",
+          "expr": "avg(gitlab_ci_environment_behind_commits_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"})",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -671,11 +671,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(increase(gitlab_ci_environment_deployment_count{project=~\"($OWNER).*\",project=~\"$PROJECT\",environment=~\"$ENVIRONMENT\"}[1m])) by (project, environment) / sum(increase(gitlab_ci_environment_deployment_count{project=~\"($OWNER).*\",project=~\"$PROJECT\",environment=~\"$ENVIRONMENT\"}[1m])) by (project, environment)",
+          "expr": "sum(increase(gitlab_ci_environment_deployment_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\",environment=~\"$ENVIRONMENT\"}[1m])) by (source_project, environment) / sum(increase(gitlab_ci_environment_deployment_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\",environment=~\"$ENVIRONMENT\"}[1m])) by (source_project, environment)",
           "format": "time_series",
           "instant": false,
           "interval": "",
-          "legendFormat": "{{ environment }} - {{ project }}",
+          "legendFormat": "{{ environment }} - {{ source_project }}",
           "refId": "A"
         }
       ],
@@ -785,7 +785,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "sum(increase(gitlab_ci_environment_deployment_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}[1h]))",
+          "expr": "sum(increase(gitlab_ci_environment_deployment_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}[1h]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -869,7 +869,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_environment_behind_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"})",
+          "expr": "avg(gitlab_ci_environment_behind_duration_seconds{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -927,7 +927,7 @@
                   {
                     "targetBlank": true,
                     "title": "View environment #${__value.numeric}",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.project:raw}/-/environments/${__value.numeric}"
+                    "url": "https://${GITLAB_HOST}/${__data.fields.source_project:raw}/-/environments/${__value.numeric}"
                   }
                 ]
               },
@@ -1179,7 +1179,7 @@
                   {
                     "targetBlank": true,
                     "title": "View job #${__value.numeric}",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.project:raw}/-/jobs/${__value.numeric}"
+                    "url": "https://${GITLAB_HOST}/${__data.fields.source_project:raw}/-/jobs/${__value.numeric}"
                   }
                 ]
               },
@@ -1330,7 +1330,7 @@
       "pluginVersion": "7.3.1",
       "targets": [
         {
-          "expr": "(max(gitlab_ci_environment_deployment_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"success\"}) by (project, environment) * 1) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"running\"}) by (project, environment) * 2) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"failed\"}) by (project, environment) * 3) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"canceled\"}) by (project, environment) * 4) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"skipped\"}) by (project, environment) * 5) > 0 or\n(max(gitlab_ci_environment_deployment_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"created|waiting_for_resource|preparing|pending|manual|scheduled\"}) by (project, environment) * 6) > 0",
+          "expr": "(max(gitlab_ci_environment_deployment_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"success\"}) by (source_project, environment) * 1) > 0 or\n(max(gitlab_ci_environment_deployment_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"running\"}) by (source_project, environment) * 2) > 0 or\n(max(gitlab_ci_environment_deployment_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"failed\"}) by (source_project, environment) * 3) > 0 or\n(max(gitlab_ci_environment_deployment_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"canceled\"}) by (source_project, environment) * 4) > 0 or\n(max(gitlab_ci_environment_deployment_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"skipped\"}) by (source_project, environment) * 5) > 0 or\n(max(gitlab_ci_environment_deployment_status{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\", status=~\"created|waiting_for_resource|preparing|pending|manual|scheduled\"}) by (source_project, environment) * 6) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1340,7 +1340,7 @@
           "refId": "A"
         },
         {
-          "expr": "-max(time() - gitlab_ci_environment_deployment_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
+          "expr": "-max(time() - gitlab_ci_environment_deployment_timestamp{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (source_project, environment)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1350,7 +1350,7 @@
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_environment_deployment_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
+          "expr": "max(gitlab_ci_environment_deployment_duration_seconds{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (source_project, environment)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1360,7 +1360,7 @@
           "refId": "C"
         },
         {
-          "expr": "max(gitlab_ci_environment_information{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (environment_id, project, environment, author_email, current_commit_short_id, ref, latest_commit_short_id)",
+          "expr": "max(gitlab_ci_environment_information{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (environment_id, source_project, environment, author_email, current_commit_short_id, ref, latest_commit_short_id)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1368,7 +1368,7 @@
           "refId": "D"
         },
         {
-          "expr": "max(gitlab_ci_environment_behind_commits_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
+          "expr": "max(gitlab_ci_environment_behind_commits_count{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (source_project, environment)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1376,7 +1376,7 @@
           "refId": "E"
         },
         {
-          "expr": "max(gitlab_ci_environment_behind_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
+          "expr": "max(gitlab_ci_environment_behind_duration_seconds{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (source_project, environment)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1384,7 +1384,7 @@
           "refId": "F"
         },
         {
-          "expr": "max(gitlab_ci_environment_deployment_job_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (project, environment)",
+          "expr": "max(gitlab_ci_environment_deployment_job_id{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\", environment=~\"$ENVIRONMENT\"}) by (source_project, environment)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1423,7 +1423,7 @@
               "environment": 2,
               "environment_id": 1,
               "latest_commit_short_id": 11,
-              "project": 3,
+              "source_project": 3,
               "ref": 6,
               "status": 14
             },
@@ -1442,7 +1442,7 @@
               "job_name": "Job",
               "kind": "Ref Kind",
               "latest_commit_short_id": "Latest commit",
-              "project": "Project",
+              "source_project": "Project",
               "ref": "Ref Name",
               "status": "Status"
             }
@@ -1491,7 +1491,7 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_environment_information, project)",
+        "definition": "label_values(gitlab_ci_environment_information, source_project)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1499,7 +1499,7 @@
         "multi": true,
         "name": "OWNER",
         "options": [],
-        "query": "label_values(gitlab_ci_environment_information, project)",
+        "query": "label_values(gitlab_ci_environment_information, source_project)",
         "refresh": 2,
         "regex": "/(.*)\\/.*$/",
         "skipUrlSync": false,
@@ -1522,15 +1522,15 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_environment_information{project=~\"($OWNER).*\"}, project)",
+        "definition": "label_values(gitlab_ci_environment_information{source_project=~\"($OWNER).*\"}, source_project)",
         "error": null,
         "hide": 0,
         "includeAll": true,
-        "label": "project",
+        "label": "source_project",
         "multi": true,
         "name": "PROJECT",
         "options": [],
-        "query": "label_values(gitlab_ci_environment_information{project=~\"($OWNER).*\"}, project)",
+        "query": "label_values(gitlab_ci_environment_information{source_project=~\"($OWNER).*\"}, source_project)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -1553,7 +1553,7 @@
           ]
         },
         "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_environment_information{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, environment)",
+        "definition": "label_values(gitlab_ci_environment_information{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\"}, environment)",
         "error": null,
         "hide": 0,
         "includeAll": true,
@@ -1561,7 +1561,7 @@
         "multi": true,
         "name": "ENVIRONMENT",
         "options": [],
-        "query": "label_values(gitlab_ci_environment_information{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, environment)",
+        "query": "label_values(gitlab_ci_environment_information{source_project=~\"($OWNER).*\",source_project=~\"$PROJECT\"}, environment)",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,

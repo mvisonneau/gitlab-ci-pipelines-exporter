@@ -44,12 +44,13 @@ func TestExportMetrics(_ *testing.T) {
 	m1 := schemas.Metric{
 		Kind: schemas.MetricKindCoverage,
 		Labels: prometheus.Labels{
-			"project":   "foo",
-			"topics":    "alpha",
-			"ref":       "bar",
-			"kind":      "branch",
-			"source":    "schedule",
-			"variables": "beta",
+			"project":        "foo",
+			"source_project": "foo",
+			"topics":         "alpha",
+			"ref":            "bar",
+			"kind":           "branch",
+			"source":         "schedule",
+			"variables":      "beta",
 		},
 		Value: float64(107.7),
 	}
@@ -57,12 +58,13 @@ func TestExportMetrics(_ *testing.T) {
 	m2 := schemas.Metric{
 		Kind: schemas.MetricKindRunCount,
 		Labels: prometheus.Labels{
-			"project":   "foo",
-			"topics":    "alpha",
-			"ref":       "bar",
-			"kind":      "branch",
-			"source":    "schedule",
-			"variables": "beta",
+			"project":        "foo",
+			"source_project": "foo",
+			"topics":         "alpha",
+			"ref":            "bar",
+			"kind":           "branch",
+			"source":         "schedule",
+			"variables":      "beta",
 		},
 		Value: float64(10),
 	}

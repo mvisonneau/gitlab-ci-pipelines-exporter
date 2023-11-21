@@ -3,7 +3,6 @@ package gitlab
 import (
 	"context"
 	"reflect"
-	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -32,7 +31,7 @@ func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs
 		return
 	}
 
-	jobs, err = c.ListPipelineJobs(ctx, ref.Project.Name, ref.LatestPipeline.ID)
+	jobs, err = c.ListPipelineJobs(ctx, ref.LatestPipeline.ProjectID, ref.LatestPipeline.ID)
 	if err != nil {
 		return
 	}
@@ -40,7 +39,7 @@ func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs
 	if ref.Project.Pull.Pipeline.Jobs.FromChildPipelines.Enabled {
 		var childJobs []schemas.Job
 
-		childJobs, err = c.ListPipelineChildJobs(ctx, ref.Project.Name, ref.LatestPipeline.ID)
+		childJobs, err = c.ListPipelineChildJobs(ctx, ref.LatestPipeline.ProjectID, ref.LatestPipeline.ID)
 		if err != nil {
 			return
 		}
@@ -52,10 +51,10 @@ func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs
 }
 
 // ListPipelineJobs ..
-func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, pipelineID int) (jobs []schemas.Job, err error) {
+func (c *Client) ListPipelineJobs(ctx context.Context, projectID int, pipelineID int) (jobs []schemas.Job, err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListPipelineJobs")
 	defer span.End()
-	span.SetAttributes(attribute.String("project_name_or_id", projectNameOrID))
+	span.SetAttributes(attribute.Int("project_id", projectID))
 	span.SetAttributes(attribute.Int("pipeline_id", pipelineID))
 
 	var (
@@ -73,7 +72,7 @@ func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, p
 	for {
 		c.rateLimit(ctx)
 
-		foundJobs, resp, err = c.Jobs.ListPipelineJobs(projectNameOrID, pipelineID, options, goGitlab.WithContext(ctx))
+		foundJobs, resp, err = c.Jobs.ListPipelineJobs(projectID, pipelineID, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}
@@ -87,9 +86,9 @@ func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, p
 		if resp.CurrentPage >= resp.NextPage {
 			log.WithFields(
 				log.Fields{
-					"project-name-or-id": projectNameOrID,
-					"pipeline-id":        pipelineID,
-					"jobs-count":         resp.TotalItems,
+					"project-id":  projectID,
+					"pipeline-id": pipelineID,
+					"jobs-count":  resp.TotalItems,
 				},
 			).Debug("found pipeline jobs")
 
@@ -103,10 +102,10 @@ func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, p
 }
 
 // ListPipelineBridges ..
-func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
+func (c *Client) ListPipelineBridges(ctx context.Context, projectID int, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListPipelineBridges")
 	defer span.End()
-	span.SetAttributes(attribute.String("project_name_or_id", projectNameOrID))
+	span.SetAttributes(attribute.Int("project_id", projectID))
 	span.SetAttributes(attribute.Int("pipeline_id", pipelineID))
 
 	var (
@@ -124,7 +123,7 @@ func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string
 	for {
 		c.rateLimit(ctx)
 
-		foundBridges, resp, err = c.Jobs.ListPipelineBridges(projectNameOrID, pipelineID, options, goGitlab.WithContext(ctx))
+		foundBridges, resp, err = c.Jobs.ListPipelineBridges(projectID, pipelineID, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}
@@ -136,9 +135,9 @@ func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string
 		if resp.CurrentPage >= resp.NextPage {
 			log.WithFields(
 				log.Fields{
-					"project-name-or-id": projectNameOrID,
-					"pipeline-id":        pipelineID,
-					"bridges-count":      resp.TotalItems,
+					"project-id":    projectID,
+					"pipeline-id":   pipelineID,
+					"bridges-count": resp.TotalItems,
 				},
 			).Debug("found pipeline bridges")
 
@@ -152,18 +151,18 @@ func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string
 }
 
 // ListPipelineChildJobs ..
-func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID string, parentPipelineID int) (jobs []schemas.Job, err error) {
+func (c *Client) ListPipelineChildJobs(ctx context.Context, projectID int, parentPipelineID int) (jobs []schemas.Job, err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListPipelineChildJobs")
 	defer span.End()
-	span.SetAttributes(attribute.String("project_name_or_id", projectNameOrID))
+	span.SetAttributes(attribute.Int("project_id", projectID))
 	span.SetAttributes(attribute.Int("parent_pipeline_id", parentPipelineID))
 
 	type pipelineDef struct {
-		projectNameOrID string
-		pipelineID      int
+		projectID  int
+		pipelineID int
 	}
 
-	pipelines := []pipelineDef{{projectNameOrID, parentPipelineID}}
+	pipelines := []pipelineDef{{projectID, parentPipelineID}}
 
 	for {
 		if len(pipelines) == 0 {
@@ -177,7 +176,7 @@ func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID stri
 
 		pipelines = pipelines[:len(pipelines)-1]
 
-		foundBridges, err = c.ListPipelineBridges(ctx, pipeline.projectNameOrID, pipeline.pipelineID)
+		foundBridges, err = c.ListPipelineBridges(ctx, pipeline.projectID, pipeline.pipelineID)
 		if err != nil {
 			return
 		}
@@ -190,11 +189,11 @@ func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID stri
 				continue
 			}
 
-			pipelines = append(pipelines, pipelineDef{strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID})
+			pipelines = append(pipelines, pipelineDef{foundBridge.DownstreamPipeline.ProjectID, foundBridge.DownstreamPipeline.ID})
 
 			var foundJobs []schemas.Job
 
-			foundJobs, err = c.ListPipelineJobs(ctx, strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID)
+			foundJobs, err = c.ListPipelineJobs(ctx, foundBridge.DownstreamPipeline.ProjectID, foundBridge.DownstreamPipeline.ID)
 			if err != nil {
 				return
 			}
@@ -240,10 +239,17 @@ func (c *Client) ListRefMostRecentJobs(ctx context.Context, ref schemas.Ref) (jo
 		},
 	}
 
+	var projectName string
+	if ref.SourceProject == nil {
+		projectName = ref.Project.Name
+	} else {
+		projectName = ref.SourceProject.Name
+	}
+
 	for {
 		c.rateLimit(ctx)
 
-		foundJobs, resp, err = c.Jobs.ListProjectJobs(ref.Project.Name, options, goGitlab.WithContext(ctx))
+		foundJobs, resp, err = c.Jobs.ListProjectJobs(projectName, options, goGitlab.WithContext(ctx))
 		if err != nil {
 			return
 		}

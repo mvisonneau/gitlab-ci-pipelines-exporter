@@ -87,6 +87,9 @@ type ProjectPullRefsMergeRequests struct {
 	// Monitor pipelines related to project merge requests.
 	Enabled bool `yaml:"enabled"`
 
+	// Monitor all pipelines on a merge request, not just those in the main project
+	IncludeSourcePipelines bool `default:"false" yaml:"include_source_pipelines"`
+
 	// Only keep most 'n' recently updated merge requests.
 	MostRecent uint `default:"0" yaml:"most_recent"`
 

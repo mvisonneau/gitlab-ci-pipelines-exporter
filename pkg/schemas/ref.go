@@ -31,6 +31,7 @@ type Ref struct {
 	Kind           RefKind
 	Name           string
 	Project        Project
+	SourceProject  *Project
 	LatestPipeline Pipeline
 	LatestJobs     Jobs
 }
@@ -54,13 +55,24 @@ func (refs Refs) Count() int {
 
 // DefaultLabelsValues ..
 func (ref Ref) DefaultLabelsValues() map[string]string {
+	var sourceName string
+
+	if ref.SourceProject == nil {
+		sourceName = ref.Project.Name
+	} else if ref.LatestPipeline.ProjectID == ref.Project.ID {
+		sourceName = ref.Project.Name
+	} else {
+		sourceName = ref.SourceProject.Name
+	}
+
 	return map[string]string{
-		"kind":      string(ref.Kind),
-		"project":   ref.Project.Name,
-		"ref":       ref.Name,
-		"topics":    ref.Project.Topics,
-		"variables": ref.LatestPipeline.Variables,
-		"source":    ref.LatestPipeline.Source,
+		"kind":           string(ref.Kind),
+		"project":        ref.Project.Name,
+		"source_project": sourceName,
+		"ref":            ref.Name,
+		"topics":         ref.Project.Topics,
+		"variables":      ref.LatestPipeline.Variables,
+		"source":         ref.LatestPipeline.Source,
 	}
 }
 
