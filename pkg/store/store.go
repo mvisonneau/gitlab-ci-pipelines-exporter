@@ -63,8 +63,7 @@ func NewRedisStore(client *redis.Client) Store {
 	}
 }
 
-// New creates a new store and populates it with
-// provided []schemas.Project.
+// New creates a new store and populates it with provided []schemas.Project
 func New(
 	ctx context.Context,
 	r *redis.Client,
