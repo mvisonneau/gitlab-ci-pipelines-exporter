@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
+	"go.openly.dev/pointy"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
