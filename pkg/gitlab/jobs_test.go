@@ -148,8 +148,8 @@ func TestListRefMostRecentJobs(t *testing.T) {
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
-				"page":     []string{"1"},
-				"per_page": []string{"100"},
+				"pagination": []string{"keyset"},
+				"per_page":   []string{"100"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
 			fmt.Fprint(w, `[{"id":3,"name":"foo","ref":"yay"},{"id":4,"name":"bar","ref":"yay"}]`)
