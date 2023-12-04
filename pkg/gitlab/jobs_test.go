@@ -161,9 +161,9 @@ func TestListRefMostRecentJobs(t *testing.T) {
 			defer server.Close()
 
 			if tc.keysetPagination {
-				c.UpdateVersion(GitLabVersion{Major: 16, Minor: 0})
+				c.UpdateVersion(NewGitLabVersion("16.0.0"))
 			} else {
-				c.UpdateVersion(GitLabVersion{Major: 15, Minor: 0})
+				c.UpdateVersion(NewGitLabVersion("15.0.0"))
 			}
 
 			ref := schemas.Ref{

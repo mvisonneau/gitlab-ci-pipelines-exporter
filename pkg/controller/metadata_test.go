@@ -31,16 +31,16 @@ func TestGetGitLabMetadataSuccess(t *testing.T) {
 "enterprise":true
 }
 `,
-			expectedVersion: gitlab.GitLabVersion{Major: 16, Minor: 7, Patch: 0, Suffix: "pre"},
+			expectedVersion: gitlab.NewGitLabVersion("v16.7.0-pre"),
 		},
 		{
 			name: "unsuccessful parse",
 			data: `
 {
-"version":"16.7"
+"revision":"3fe364fe754"
 }
 `,
-			expectedVersion: gitlab.GitLabVersion{Major: 0, Minor: 0, Patch: 0, Suffix: "Invalid version format"},
+			expectedVersion: gitlab.NewGitLabVersion(""),
 		},
 	}
 

@@ -1,22 +1,32 @@
 package gitlab
 
+import (
+	"strings"
+
+	"golang.org/x/mod/semver"
+)
+
 type GitLabVersion struct {
-	Major  int
-	Minor  int
-	Patch  int
-	Suffix string
+	Version string
+}
+
+func NewGitLabVersion(version string) GitLabVersion {
+	ver := ""
+	if strings.HasPrefix(version, "v") {
+		ver = version
+	} else if version != "" {
+		ver = "v" + version
+	}
+
+	return GitLabVersion{Version: ver}
 }
 
 // PipelineJobsKeysetPaginationSupported returns true if the GitLab instance
 // is running 15.9 or later.
 func (v GitLabVersion) PipelineJobsKeysetPaginationSupported() bool {
-	if v.Major == 0 {
+	if v.Version == "" {
 		return false
-	} else if v.Major < 15 {
-		return false
-	} else if v.Major > 15 {
-		return true
-	} else {
-		return v.Minor >= 9
 	}
+
+	return semver.Compare(v.Version, "v15.9.0") >= 0
 }

@@ -14,32 +14,42 @@ func TestPipelineJobsKeysetPaginationSupported(t *testing.T) {
 	}{
 		{
 			name:           "unknown",
-			version:        GitLabVersion{Major: 0, Minor: 0, Patch: 0, Suffix: ""},
+			version:        NewGitLabVersion(""),
 			expectedResult: false,
 		},
 		{
 			name:           "15.8.0",
-			version:        GitLabVersion{Major: 15, Minor: 8, Patch: 0, Suffix: ""},
+			version:        NewGitLabVersion("15.8.0"),
+			expectedResult: false,
+		},
+		{
+			name:           "v15.8.0",
+			version:        NewGitLabVersion("v15.8.0"),
 			expectedResult: false,
 		},
 		{
 			name:           "15.9.0",
-			version:        GitLabVersion{Major: 15, Minor: 9, Patch: 0, Suffix: ""},
+			version:        NewGitLabVersion("15.9.0"),
+			expectedResult: true,
+		},
+		{
+			name:           "v15.9.0",
+			version:        NewGitLabVersion("v15.9.0"),
 			expectedResult: true,
 		},
 		{
 			name:           "15.9.1",
-			version:        GitLabVersion{Major: 15, Minor: 9, Patch: 1, Suffix: ""},
+			version:        NewGitLabVersion("15.9.1"),
 			expectedResult: true,
 		},
 		{
 			name:           "15.10.2",
-			version:        GitLabVersion{Major: 15, Minor: 10, Patch: 12, Suffix: ""},
+			version:        NewGitLabVersion("15.10.2"),
 			expectedResult: true,
 		},
 		{
 			name:           "16.0.0",
-			version:        GitLabVersion{Major: 16, Minor: 0, Patch: 0, Suffix: ""},
+			version:        NewGitLabVersion("16.0.0"),
 			expectedResult: true,
 		},
 	}
