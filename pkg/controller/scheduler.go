@@ -307,6 +307,10 @@ func (c *Controller) Schedule(ctx context.Context, pull config.Pull, gc config.G
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:Schedule")
 	defer span.End()
 
+	go func() {
+		c.GetGitLabMetadata(ctx)
+	}()
+
 	for tt, cfg := range map[schemas.TaskType]config.SchedulerConfig{
 		schemas.TaskTypePullProjectsFromWildcards:    config.SchedulerConfig(pull.ProjectsFromWildcards),
 		schemas.TaskTypePullEnvironmentsFromProjects: config.SchedulerConfig(pull.EnvironmentsFromProjects),

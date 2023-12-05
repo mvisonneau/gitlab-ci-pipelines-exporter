@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -36,6 +37,9 @@ type Client struct {
 	RequestsCounter   atomic.Uint64
 	RequestsLimit     int
 	RequestsRemaining int
+
+	version GitLabVersion
+	mutex   sync.RWMutex
 }
 
 // ClientConfig ..
@@ -138,6 +142,19 @@ func (c *Client) rateLimit(ctx context.Context) {
 	// Used for monitoring purposes
 	c.RateCounter.Incr(1)
 	c.RequestsCounter.Add(1)
+}
+
+func (c *Client) UpdateVersion(version GitLabVersion) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	c.version = version
+}
+
+func (c *Client) Version() GitLabVersion {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+
+	return c.version
 }
 
 func (c *Client) requestsRemaining(response *goGitlab.Response) {

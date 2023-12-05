@@ -231,13 +231,24 @@ func (c *Client) ListRefMostRecentJobs(ctx context.Context, ref schemas.Ref) (jo
 	var (
 		foundJobs []*goGitlab.Job
 		resp      *goGitlab.Response
+		opt       *goGitlab.ListJobsOptions
 	)
 
-	opt := &goGitlab.ListJobsOptions{
-		ListOptions: goGitlab.ListOptions{
-			Pagination: "keyset",
-			PerPage:    100,
-		},
+	keysetPagination := c.Version().PipelineJobsKeysetPaginationSupported()
+	if keysetPagination {
+		opt = &goGitlab.ListJobsOptions{
+			ListOptions: goGitlab.ListOptions{
+				Pagination: "keyset",
+				PerPage:    100,
+			},
+		}
+	} else {
+		opt = &goGitlab.ListJobsOptions{
+			ListOptions: goGitlab.ListOptions{
+				Page:    1,
+				PerPage: 100,
+			},
+		}
 	}
 
 	options := []goGitlab.RequestOptionFunc{goGitlab.WithContext(ctx)}
@@ -274,7 +285,8 @@ func (c *Client) ListRefMostRecentJobs(ctx context.Context, ref schemas.Ref) (jo
 			}
 		}
 
-		if resp.NextLink == "" {
+		if keysetPagination && resp.NextLink == "" ||
+			(!keysetPagination && resp.CurrentPage >= resp.NextPage) {
 			var notFoundJobs []string
 
 			for k := range jobsToRefresh {
@@ -295,9 +307,11 @@ func (c *Client) ListRefMostRecentJobs(ctx context.Context, ref schemas.Ref) (jo
 			break
 		}
 
-		options = []goGitlab.RequestOptionFunc{
-			goGitlab.WithContext(ctx),
-			goGitlab.WithKeysetPaginationParameters(resp.NextLink),
+		if keysetPagination {
+			options = []goGitlab.RequestOptionFunc{
+				goGitlab.WithContext(ctx),
+				goGitlab.WithKeysetPaginationParameters(resp.NextLink),
+			}
 		}
 	}
 
