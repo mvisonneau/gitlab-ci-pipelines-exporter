@@ -77,6 +77,7 @@ func (c *Controller) registerTasks() {
 		schemas.TaskTypePullEnvironmentsFromProject:  c.TaskHandlerPullEnvironmentsFromProject,
 		schemas.TaskTypePullEnvironmentsFromProjects: c.TaskHandlerPullEnvironmentsFromProjects,
 		schemas.TaskTypePullMetrics:                  c.TaskHandlerPullMetrics,
+		schemas.TaskTypePullProject:                  c.TaskHandlerPullProject,
 		schemas.TaskTypePullProjectsFromWildcard:     c.TaskHandlerPullProjectsFromWildcard,
 		schemas.TaskTypePullProjectsFromWildcards:    c.TaskHandlerPullProjectsFromWildcards,
 		schemas.TaskTypePullRefMetrics:               c.TaskHandlerPullRefMetrics,

@@ -99,9 +99,9 @@ func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref)
 
 		// Perhaps the project is discoverable through a wildcard
 		if !projectExists && len(c.Config.Wildcards) > 0 {
-			for id, w := range c.Config.Wildcards {
+			for _, w := range c.Config.Wildcards {
 				// If in all our wildcards we have one which can potentially match the project ref
-				// received, we trigger a scan
+				// received, we trigger a pull of the project
 				matches, err := isRefMatchingWilcard(w, ref)
 				if err != nil {
 					log.WithContext(ctx).
@@ -112,8 +112,8 @@ func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref)
 				}
 
 				if matches {
-					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProjectsFromWildcard, strconv.Itoa(id), strconv.Itoa(id), w)
-					log.WithFields(logFields).Info("project ref not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
+					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProject, ref.Project.Name)
+					log.WithFields(logFields).Info("project ref not currently exported but its configuration matches a wildcard, triggering a pull of the project")
 				} else {
 					log.WithFields(logFields).Debug("project ref not matching wildcard, skipping..")
 				}
@@ -213,9 +213,9 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 
 		// Perhaps the project is discoverable through a wildcard
 		if !projectExists && len(c.Config.Wildcards) > 0 {
-			for id, w := range c.Config.Wildcards {
+			for _, w := range c.Config.Wildcards {
 				// If in all our wildcards we have one which can potentially match the env
-				// received, we trigger a scan
+				// received, we trigger a pull of the project
 				matches, err := isEnvMatchingWilcard(w, env)
 				if err != nil {
 					log.WithContext(ctx).
@@ -226,8 +226,8 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 				}
 
 				if matches {
-					c.ScheduleTask(ctx, schemas.TaskTypePullProjectsFromWildcard, strconv.Itoa(id), strconv.Itoa(id), w)
-					log.WithFields(logFields).Info("project environment not currently exported but its configuration matches a wildcard, triggering a pull of the projects from this wildcard")
+					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProject, env.ProjectName)
+					log.WithFields(logFields).Info("project environment not currently exported but its configuration matches a wildcard, triggering a pull of the project")
 				} else {
 					log.WithFields(logFields).Debug("project ref not matching wildcard, skipping..")
 				}

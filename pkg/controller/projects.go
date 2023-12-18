@@ -9,6 +9,37 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
+// PullProject ..
+func (c *Controller) PullProject(ctx context.Context, name string) error {
+	gp, err := c.Gitlab.GetProject(ctx, name)
+	if err != nil {
+		return err
+	}
+	p := schemas.NewProject(gp.PathWithNamespace)
+
+	projectExists, err := c.Store.ProjectExists(ctx, p.Key())
+	if err != nil {
+		return err
+	}
+
+	if !projectExists {
+		log.WithFields(log.Fields{
+			"project-name": p.Name,
+		}).Info("discovered new project")
+
+		if err := c.Store.SetProject(ctx, p); err != nil {
+			log.WithContext(ctx).
+				WithError(err).
+				Error()
+		}
+
+		c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(p.Key()), p)
+		c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentsFromProject, string(p.Key()), p)
+	}
+
+	return nil
+}
+
 // PullProjectsFromWildcard ..
 func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wildcard) error {
 	foundProjects, err := c.Gitlab.ListProjects(ctx, w)
