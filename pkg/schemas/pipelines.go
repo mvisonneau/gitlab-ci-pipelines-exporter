@@ -18,6 +18,8 @@ type Pipeline struct {
 	Source                string
 	Status                string
 	Variables             string
+	TriggeredByUsername   string
+	TriggeredByName       string
 	TestReport            TestReport
 }
 
@@ -73,7 +75,7 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 		timestamp = float64(gp.UpdatedAt.Unix())
 	}
 
-	return Pipeline{
+	result := Pipeline{
 		ID:                    gp.ID,
 		Coverage:              coverage,
 		Timestamp:             timestamp,
@@ -82,6 +84,11 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 		Source:                gp.Source,
 		Status:                gp.Status,
 	}
+	if gp.User != nil {
+		result.TriggeredByName = gp.User.Name
+		result.TriggeredByUsername = gp.User.Username
+	}
+	return result
 }
 
 // NewTestReport ..

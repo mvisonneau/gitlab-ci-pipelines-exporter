@@ -3,7 +3,7 @@ package controller
 import "github.com/prometheus/client_golang/prometheus"
 
 var (
-	defaultLabels                = []string{"project", "topics", "kind", "ref", "source", "variables"}
+	defaultLabels                = []string{"project", "topics", "kind", "ref", "source", "variables", "username"}
 	jobLabels                    = []string{"stage", "job_name", "runner_description", "tag_list", "failure_reason"}
 	statusLabels                 = []string{"status"}
 	environmentLabels            = []string{"project", "environment"}
