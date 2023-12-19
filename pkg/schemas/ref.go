@@ -55,13 +55,14 @@ func (refs Refs) Count() int {
 // DefaultLabelsValues ..
 func (ref Ref) DefaultLabelsValues() map[string]string {
 	return map[string]string{
-		"kind":      string(ref.Kind),
-		"project":   ref.Project.Name,
-		"ref":       ref.Name,
-		"topics":    ref.Project.Topics,
-		"variables": ref.LatestPipeline.Variables,
-		"source":    ref.LatestPipeline.Source,
-		"username":  ref.LatestPipeline.TriggeredByUsername,
+		"kind":        string(ref.Kind),
+		"project":     ref.Project.Name,
+		"ref":         ref.Name,
+		"topics":      ref.Project.Topics,
+		"variables":   ref.LatestPipeline.Variables,
+		"source":      ref.LatestPipeline.Source,
+		"username":    ref.LatestPipeline.TriggeredByUsername,
+		"pipeline_id": strconv.Itoa(ref.LatestPipeline.ID),
 	}
 }
 
