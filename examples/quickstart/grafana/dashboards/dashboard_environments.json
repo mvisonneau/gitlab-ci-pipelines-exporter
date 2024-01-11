@@ -926,8 +926,8 @@
                 "value": [
                   {
                     "targetBlank": true,
-                    "title": "View environment #${__value.numeric}",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.project:raw}/-/environments/${__value.numeric}"
+                    "title": "View environment #${__value.text}",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project:raw}/-/environments/${__value.text}"
                   }
                 ]
               },
