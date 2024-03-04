@@ -83,10 +83,11 @@ func (c *Controller) processPushEvent(ctx context.Context, e goGitlab.PushEvent)
 					"ref":          e.Ref,
 				}).
 				Error("extracting branch name from ref")
+
 			return
 		}
 
-		deleteRef(ctx, c.Store, schemas.NewRef(
+		_ = deleteRef(ctx, c.Store, schemas.NewRef(
 			schemas.NewProject(e.Project.PathWithNamespace),
 			refKind,
 			refName,
@@ -111,10 +112,11 @@ func (c *Controller) processTagEvent(ctx context.Context, e goGitlab.TagEvent) {
 					"ref":          e.Ref,
 				}).
 				Error("extracting tag name from ref")
+
 			return
 		}
 
-		deleteRef(ctx, c.Store, schemas.NewRef(
+		_ = deleteRef(ctx, c.Store, schemas.NewRef(
 			schemas.NewProject(e.Project.PathWithNamespace),
 			refKind,
 			refName,

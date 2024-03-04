@@ -7,6 +7,34 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.5.6] - 2023-12-06
+
+### Changed
+
+* fix default branch regexp by @gnomus in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/665
+* Add test cases metrics from pipeline reports by @karpanin in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/675
+* bump go-gitlab version, bump golang version for make dev-env by @jasonwliu in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/670
+* Combine test report metrics with childrens reports by @jasonwliu in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/672
+* Fix misformed url to Gitlab pipeline by @fredsnap in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/650
+* Update go-gitlab to fix test reports by @clawoflight in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/686
+* Update GitLab logo to new branding in Grafana dashboard quickstart by @dnsmichi in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/694
+* Add tag_list label to metrics by @mpetke in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/499
+* pipelines: store the source of the pipeline as well by @mathstuf in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/723
+* feat: failure reason to job status by @strpc in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/718
+* build(deps): bump github.com/xanzy/go-gitlab from 0.92.3 to 0.94.0 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/743
+* build(deps): bump github.com/charmbracelet/lipgloss from 0.8.0 to 0.9.1 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/735
+* gitlab/client: guard against `nil` responses by @mathstuf in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/729
+* build(deps): bump golang.org/x/net from 0.15.0 to 0.17.0 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/732
+* build(deps): bump github.com/alicebob/miniredis/v2 from 2.23.0 to 2.31.0 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/734
+* build(deps): bump github.com/google/uuid from 1.3.1 to 1.4.0 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/737
+* build(deps): bump golang.org/x/time from 0.3.0 to 0.4.0 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/741
+* build(deps): bump github.com/go-playground/validator/v10 from 10.15.4 to 10.16.0 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/742
+* build(deps): bump github.com/redis/go-redis/v9 from 9.2.1 to 9.3.0 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/740
+* build(deps): bump github.com/vmihailenco/msgpack/v5 from 5.4.0 to 5.4.1 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/739
+* build(deps): bump google.golang.org/grpc from 1.58.2 to 1.59.0 by @dependabot in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/736
+* feat: use keyset pagination for retrieving project CI jobs by @stanhu in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/744
+* fix: use keyset pagination only when it is supported by @stanhu in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/755
+
 ## [v0.5.5] - 2023-05-22
 
 ### Added
@@ -658,6 +686,8 @@ if not seen in a long time.
 - README
 
 [Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.4...HEAD
+[v0.5.6]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.6
+[v0.5.5]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.5
 [v0.5.4]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.4
 [v0.5.3]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.3
 [v0.5.2]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.2
