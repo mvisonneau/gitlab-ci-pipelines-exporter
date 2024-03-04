@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 )
@@ -14,16 +15,15 @@ func TestGetProject(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	project := "foo/bar"
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/%s", project),
+	mux.HandleFunc("/api/v4/projects/foo%2Fbar",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `{"id":1}`)
+			_, _ = fmt.Fprint(w, `{"id":1}`)
 		})
 
-	p, err := c.GetProject(ctx, project)
+	p, err := c.GetProject(ctx, "foo/bar")
 	assert.NoError(t, err)
-	assert.NotNil(t, p)
+	require.NotNil(t, p)
 	assert.Equal(t, 1, p.ID)
 }
 
@@ -44,7 +44,7 @@ func TestListUserProjects(t *testing.T) {
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar"},{"id":2,"path_with_namespace":"bar/baz"}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar"},{"id":2,"path_with_namespace":"bar/baz"}]`)
 		})
 
 	projects, err := c.ListProjects(ctx, w)
@@ -70,7 +70,7 @@ func TestListGroupProjects(t *testing.T) {
 	mux.HandleFunc(fmt.Sprintf("/api/v4/groups/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar"},{"id":2,"path_with_namespace":"bar/baz"}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar"},{"id":2,"path_with_namespace":"bar/baz"}]`)
 		})
 
 	projects, err := c.ListProjects(ctx, w)
@@ -96,7 +96,7 @@ func TestListProjects(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `[{"id":2,"path_with_namespace":"bar"}]`)
+			_, _ = fmt.Fprint(w, `[{"id":2,"path_with_namespace":"bar"}]`)
 		})
 
 	projects, err := c.ListProjects(ctx, w)
