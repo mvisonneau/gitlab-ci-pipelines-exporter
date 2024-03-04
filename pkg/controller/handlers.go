@@ -129,6 +129,10 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		go c.processJobEvent(ctx, *event)
 	case *gitlab.DeploymentEvent:
 		go c.processDeploymentEvent(ctx, *event)
+	case *gitlab.PushEvent:
+		go c.processPushEvent(ctx, *event)
+	case *gitlab.TagEvent:
+		go c.processTagEvent(ctx, *event)
 	default:
 		logger.
 			WithField("event-type", reflect.TypeOf(event).String()).

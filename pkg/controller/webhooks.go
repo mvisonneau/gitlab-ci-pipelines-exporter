@@ -66,6 +66,62 @@ func (c *Controller) processJobEvent(ctx context.Context, e goGitlab.JobEvent) {
 	))
 }
 
+func (c *Controller) processPushEvent(ctx context.Context, e goGitlab.PushEvent) {
+	if e.CheckoutSHA == "" {
+		var (
+			refKind = schemas.RefKindBranch
+			refName string
+		)
+
+		// branch refs in push events have "refs/heads/" prefix
+		if branch, found := strings.CutPrefix(e.Ref, "refs/heads/"); found {
+			refName = branch
+		} else {
+			log.WithContext(ctx).
+				WithFields(log.Fields{
+					"project-name": e.Project.Name,
+					"ref":          e.Ref,
+				}).
+				Error("extracting branch name from ref")
+			return
+		}
+
+		deleteRef(ctx, c.Store, schemas.NewRef(
+			schemas.NewProject(e.Project.PathWithNamespace),
+			refKind,
+			refName,
+		), "received branch deletion push event from webhook")
+	}
+}
+
+func (c *Controller) processTagEvent(ctx context.Context, e goGitlab.TagEvent) {
+	if e.CheckoutSHA == "" {
+		var (
+			refKind = schemas.RefKindTag
+			refName string
+		)
+
+		// tags refs in tag events have "refs/tags/" prefix
+		if tag, found := strings.CutPrefix(e.Ref, "refs/tags/"); found {
+			refName = tag
+		} else {
+			log.WithContext(ctx).
+				WithFields(log.Fields{
+					"project-name": e.Project.Name,
+					"ref":          e.Ref,
+				}).
+				Error("extracting tag name from ref")
+			return
+		}
+
+		deleteRef(ctx, c.Store, schemas.NewRef(
+			schemas.NewProject(e.Project.PathWithNamespace),
+			refKind,
+			refName,
+		), "received tag deletion tag event from webhook")
+	}
+}
+
 func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref) {
 	logFields := log.Fields{
 		"project-name": ref.Project.Name,
