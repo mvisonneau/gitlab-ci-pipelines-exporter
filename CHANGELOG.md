@@ -7,6 +7,16 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.5.7] - 2024-03-03
+
+### Changed
+
+* fix environment id hyperlink NaN by @toby181 in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/776
+* webhooks: handle ref and tag deletion events by @sysedwinistrator in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/794
+* webhooks: only pull project for which request was received by @sysedwinistrator in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/793
+* ratelimit: redis should retry if allowed requests exceeded by @bkylerussell in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/789
+* chore: dependencies, tooling and go updates by @mvisonneau in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/799
+
 ## [v0.5.6] - 2023-12-06
 
 ### Changed
@@ -685,7 +695,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.4...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.7...HEAD
+[v0.5.7]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.7
 [v0.5.6]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.6
 [v0.5.5]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.5
 [v0.5.4]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.4
