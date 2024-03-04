@@ -4,6 +4,9 @@ package schemas
 type TaskType string
 
 const (
+	// TaskTypePullProject ..
+	TaskTypePullProject TaskType = "PullProject"
+
 	// TaskTypePullProjectsFromWildcard ..
 	TaskTypePullProjectsFromWildcard TaskType = "PullProjectsFromWildcard"
 
