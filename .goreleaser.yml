@@ -25,7 +25,6 @@ universal_binaries:
 
 archives:
   - name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-    rlcp: true
     format_overrides:
       - goos: windows
         format: zip
@@ -69,7 +68,7 @@ brews:
     homepage: *homepage
     license: *license
     folder: Formula
-    tap:
+    repository:
       owner: mvisonneau
       name: homebrew-tap
     test: |
@@ -84,7 +83,7 @@ scoops:
   - description: *description
     homepage: *homepage
     license: *license
-    bucket:
+    repository:
       owner: mvisonneau
       name: scoops
 
@@ -211,4 +210,4 @@ signs:
       ]
 
 changelog:
-  skip: true
+  disable: true

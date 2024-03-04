@@ -49,9 +49,7 @@ jobs:
           password: ${{ secrets.QUAY_TOKEN }}
 
       - name: Snapcraft config
-        uses: samuelmeuli/action-snapcraft@v1
-        with:
-          snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
+        uses: samuelmeuli/action-snapcraft@v2
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -74,3 +72,4 @@ jobs:
         run: make ${{ github.ref == 'refs/heads/main' && 'pre' || '' }}release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
