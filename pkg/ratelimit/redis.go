@@ -29,14 +29,25 @@ func NewRedisLimiter(redisClient *redis.Client, maxRPS int) Limiter {
 func (r Redis) Take(ctx context.Context) time.Duration {
 	start := time.Now()
 
-	res, err := r.Allow(ctx, redisKey, redis_rate.PerSecond(r.MaxRPS))
-	if err != nil {
-		log.WithContext(ctx).
-			WithError(err).
-			Fatal()
-	}
+	for {
+		res, err := r.Allow(ctx, redisKey, redis_rate.PerSecond(r.MaxRPS))
+		if err != nil {
+			log.WithContext(ctx).
+				WithError(err).
+				Fatal()
+		}
 
-	time.Sleep(res.RetryAfter)
+		if res.Allowed > 0 {
+			break
+		} else {
+			log.WithFields(
+				log.Fields{
+					"for": res.RetryAfter.String(),
+				},
+			).Debug("throttled GitLab requests")
+			time.Sleep(res.RetryAfter)
+		}
+	}
 
 	return start.Sub(time.Now())
 }
