@@ -84,6 +84,15 @@ server:
 	cfg, err = configure(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, "secret", cfg.Server.Webhook.SecretToken)
+
+	// Test health url flag
+	healthURL := "https://gitlab.com/-/readiness?token"
+	flags.String("gitlab-health-url", healthURL, "")
+
+	cfg, err = configure(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, cfg.Gitlab.HealthURL, healthURL)
+	assert.True(t, cfg.Gitlab.EnableHealthCheck)
 }
 
 func TestExit(t *testing.T) {

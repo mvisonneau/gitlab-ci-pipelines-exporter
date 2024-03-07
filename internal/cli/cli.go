@@ -64,6 +64,11 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 					EnvVars: []string{"GCPE_WEBHOOK_SECRET_TOKEN"},
 					Usage:   "`token` used to authenticate legitimate requests (overrides config file parameter)",
 				},
+				&cli.StringFlag{
+					Name:    "gitlab-health-url",
+					EnvVars: []string{"GCPE_GITLAB_HEALTH_URL"},
+					Usage:   "GitLab health URL (overrides config file parameter)",
+				},
 			},
 		},
 		{

@@ -121,6 +121,11 @@ func configCliOverrides(ctx *cli.Context, cfg *config.Config) {
 	if ctx.String("redis-url") != "" {
 		cfg.Redis.URL = ctx.String("redis-url")
 	}
+
+	if healthURL := ctx.String("gitlab-health-url"); healthURL != "" {
+		cfg.Gitlab.HealthURL = healthURL
+		cfg.Gitlab.EnableHealthCheck = true
+	}
 }
 
 func assertStringVariableDefined(ctx *cli.Context, k string) {
