@@ -184,8 +184,8 @@ github.com/vmihailenco/taskq/taskqtest/v4 v4.0.0-beta.4 h1:HkxNl01xXIxSiZ5gGUEBE
 github.com/vmihailenco/taskq/taskqtest/v4 v4.0.0-beta.4/go.mod h1:eFJBPc15KwfiX5P/1wdQH6s28uflseLuzrTcHGXufek=
 github.com/vmihailenco/taskq/v4 v4.0.0-beta.4 h1:Scybb5OGiu6Vr5R/Py7bseNcPwBKjuTS38VO2oixifA=
 github.com/vmihailenco/taskq/v4 v4.0.0-beta.4/go.mod h1:KcqARv9hRrEUGlJfTq44lNyNPseskPbvFH7G5VWgSKY=
-github.com/xanzy/go-gitlab v0.98.0 h1:psTMbnA0vSo512M8WUpM5YIFPxrdQ/11V0y/5SdzIIg=
-github.com/xanzy/go-gitlab v0.98.0/go.mod h1:ETg8tcj4OhrB84UEgeE8dSuV/0h4BBL1uOV/qK0vlyI=
+github.com/xanzy/go-gitlab v0.102.0 h1:ExHuJ1OTQ2yt25zBMMj0G96ChBirGYv8U7HyUiYkZ+4=
+github.com/xanzy/go-gitlab v0.102.0/go.mod h1:ETg8tcj4OhrB84UEgeE8dSuV/0h4BBL1uOV/qK0vlyI=
 github.com/xeonx/timeago v1.0.0-rc5 h1:pwcQGpaH3eLfPtXeyPA4DmHWjoQt0Ea7/++FwpxqLxg=
 github.com/xeonx/timeago v1.0.0-rc5/go.mod h1:qDLrYEFynLO7y5Ho7w3GwgtYgpy5UfhcXIIQvMKVDkA=
 github.com/xrash/smetrics v0.0.0-20231213231151-1d8dd44e695e h1:+SOyEddqYF09QP7vr7CgJ1eti3pY9Fn3LHO1M1r/0sI=
