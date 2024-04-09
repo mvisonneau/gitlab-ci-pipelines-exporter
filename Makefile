@@ -93,8 +93,9 @@ man-pages: ## Generates man pages
 autocomplete-scripts: ## Download CLI autocompletion scripts
 	rm -rf helpers/autocomplete
 	mkdir -p helpers/autocomplete
-	curl -sL https://raw.githubusercontent.com/urfave/cli/v2.5.0/autocomplete/bash_autocomplete > helpers/autocomplete/bash
-	curl -sL https://raw.githubusercontent.com/urfave/cli/v2.5.0/autocomplete/zsh_autocomplete > helpers/autocomplete/zsh
+	curl -sL https://raw.githubusercontent.com/urfave/cli/v2.27.1/autocomplete/bash_autocomplete > helpers/autocomplete/bash
+	curl -sL https://raw.githubusercontent.com/urfave/cli/v2.27.1/autocomplete/zsh_autocomplete > helpers/autocomplete/zsh
+	curl -sL https://raw.githubusercontent.com/urfave/cli/v2.27.1/autocomplete/powershell_autocomplete.ps1 > helpers/autocomplete/ps1
 	
 .PHONY: all
 all: lint test build coverage ## Test, builds and ship package for all supported platforms
