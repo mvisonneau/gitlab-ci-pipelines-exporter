@@ -1,8 +1,9 @@
-NAME          := gitlab-ci-pipelines-exporter
-FILES         := $(shell git ls-files */*.go)
-COVERAGE_FILE := coverage.out
-REPOSITORY    := mvisonneau/$(NAME)
-.DEFAULT_GOAL := help
+NAME           := gitlab-ci-pipelines-exporter
+FILES          := $(shell git ls-files */*.go)
+COVERAGE_FILE  := coverage.out
+REPOSITORY     := mvisonneau/$(NAME)
+.DEFAULT_GOAL  := help
+GOLANG_VERSION := 1.22
 
 .PHONY: fmt
 fmt: ## Format source code
@@ -70,8 +71,12 @@ dev-env: ## Build a local development environment using Docker
 		-v $(shell pwd):/go/src/github.com/mvisonneau/$(NAME) \
 		-w /go/src/github.com/mvisonneau/$(NAME) \
 		-p 8080:8080 \
-		golang:1.20 \
-		/bin/bash -c 'make setup; make install; bash'
+		golang:$(GOLANG_VERSION) \
+		/bin/bash -c '\
+		  git config --global --add safe.directory $$(pwd);\
+		  make install;\
+		  bash\
+		'
 
 .PHONY: is-git-dirty
 is-git-dirty: ## Tests if git is in a dirty state
