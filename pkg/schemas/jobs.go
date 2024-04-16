@@ -8,17 +8,17 @@ import (
 
 // Job ..
 type Job struct {
-	ID                    int
 	Name                  string
 	Stage                 string
+	Status                string
+	TagList               string
+	FailureReason         string
+	Runner                Runner
+	ID                    int
 	Timestamp             float64
 	DurationSeconds       float64
 	QueuedDurationSeconds float64
-	Status                string
-	TagList               string
 	ArtifactSize          float64
-	FailureReason         string
-	Runner                Runner
 }
 
 // Runner ..

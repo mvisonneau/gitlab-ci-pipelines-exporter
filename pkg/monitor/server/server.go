@@ -21,11 +21,10 @@ import (
 // Server ..
 type Server struct {
 	pb.UnimplementedMonitorServer
-
-	gitlabClient             *gitlab.Client
-	cfg                      config.Config
 	store                    store.Store
+	gitlabClient             *gitlab.Client
 	taskSchedulingMonitoring map[schemas.TaskType]*monitor.TaskSchedulingStatus
+	cfg                      config.Config
 }
 
 // NewServer ..

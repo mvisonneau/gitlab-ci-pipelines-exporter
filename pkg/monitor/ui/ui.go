@@ -121,12 +121,12 @@ func max(a, b int) int {
 }
 
 type model struct {
-	version         string
 	client          *client.Client
-	vp              viewport.Model
 	progress        *progress.Model
 	telemetry       *pb.Telemetry
 	telemetryStream chan *pb.Telemetry
+	version         string
+	vp              viewport.Model
 	tabID           int
 }
 

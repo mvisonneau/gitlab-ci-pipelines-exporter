@@ -9,9 +9,8 @@ import (
 
 // Project ..
 type Project struct {
-	config.Project
-
 	Topics string
+	config.Project
 }
 
 // ProjectKey ..

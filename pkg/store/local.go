@@ -9,21 +9,17 @@ import (
 
 // Local ..
 type Local struct {
-	projects      schemas.Projects
-	projectsMutex sync.RWMutex
-
-	environments      schemas.Environments
-	environmentsMutex sync.RWMutex
-
-	refs      schemas.Refs
-	refsMutex sync.RWMutex
-
-	metrics      schemas.Metrics
-	metricsMutex sync.RWMutex
-
+	projects           schemas.Projects
+	environments       schemas.Environments
+	refs               schemas.Refs
+	metrics            schemas.Metrics
 	tasks              schemas.Tasks
-	tasksMutex         sync.RWMutex
 	executedTasksCount uint64
+	projectsMutex      sync.RWMutex
+	environmentsMutex  sync.RWMutex
+	refsMutex          sync.RWMutex
+	metricsMutex       sync.RWMutex
+	tasksMutex         sync.RWMutex
 }
 
 // SetProject ..

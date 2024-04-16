@@ -10,46 +10,46 @@ import (
 
 // Pipeline ..
 type Pipeline struct {
+	Source                string
+	Status                string
+	Variables             string
+	TestReport            TestReport
 	ID                    int
 	Coverage              float64
 	Timestamp             float64
 	DurationSeconds       float64
 	QueuedDurationSeconds float64
-	Source                string
-	Status                string
-	Variables             string
-	TestReport            TestReport
 }
 
 // TestReport ..
 type TestReport struct {
+	TestSuites   []TestSuite
 	TotalTime    float64
 	TotalCount   int
 	SuccessCount int
 	FailedCount  int
 	SkippedCount int
 	ErrorCount   int
-	TestSuites   []TestSuite
 }
 
 // TestSuite ..
 type TestSuite struct {
 	Name         string
+	TestCases    []TestCase
 	TotalTime    float64
 	TotalCount   int
 	SuccessCount int
 	FailedCount  int
 	SkippedCount int
 	ErrorCount   int
-	TestCases    []TestCase
 }
 
 // TestCase ..
 type TestCase struct {
 	Name          string
 	Classname     string
-	ExecutionTime float64
 	Status        string
+	ExecutionTime float64
 }
 
 // NewPipeline ..

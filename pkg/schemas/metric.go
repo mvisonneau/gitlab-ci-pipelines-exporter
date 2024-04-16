@@ -123,9 +123,9 @@ type MetricKind int32
 
 // Metric ..
 type Metric struct {
-	Kind   MetricKind
 	Labels prometheus.Labels
 	Value  float64
+	Kind   MetricKind
 }
 
 // MetricKey ..

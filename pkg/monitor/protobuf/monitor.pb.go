@@ -24,8 +24,8 @@ const (
 
 type Empty struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Empty) Reset() {
@@ -62,10 +62,9 @@ func (*Empty) Descriptor() ([]byte, []int) {
 
 type Config struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	Content       string `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Content string `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Config) Reset() {
@@ -108,20 +107,19 @@ func (x *Config) GetContent() string {
 }
 
 type Telemetry struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	Projects                *Entity `protobuf:"bytes,7,opt,name=projects,proto3" json:"projects,omitempty"`
+	Metrics                 *Entity `protobuf:"bytes,10,opt,name=metrics,proto3" json:"metrics,omitempty"`
+	state                   protoimpl.MessageState
+	Envs                    *Entity `protobuf:"bytes,9,opt,name=envs,proto3" json:"envs,omitempty"`
+	Refs                    *Entity `protobuf:"bytes,8,opt,name=refs,proto3" json:"refs,omitempty"`
+	unknownFields           protoimpl.UnknownFields
 	GitlabApiUsage          float64 `protobuf:"fixed64,1,opt,name=gitlab_api_usage,json=gitlabApiUsage,proto3" json:"gitlab_api_usage,omitempty"`
-	GitlabApiRequestsCount  uint64  `protobuf:"varint,2,opt,name=gitlab_api_requests_count,json=gitlabApiRequestsCount,proto3" json:"gitlab_api_requests_count,omitempty"`
-	GitlabApiRateLimit      float64 `protobuf:"fixed64,3,opt,name=gitlab_api_rate_limit,json=gitlabApiRateLimit,proto3" json:"gitlab_api_rate_limit,omitempty"`
-	GitlabApiLimitRemaining uint64  `protobuf:"varint,4,opt,name=gitlab_api_limit_remaining,json=gitlabApiLimitRemaining,proto3" json:"gitlab_api_limit_remaining,omitempty"`
 	TasksBufferUsage        float64 `protobuf:"fixed64,5,opt,name=tasks_buffer_usage,json=tasksBufferUsage,proto3" json:"tasks_buffer_usage,omitempty"`
 	TasksExecutedCount      uint64  `protobuf:"varint,6,opt,name=tasks_executed_count,json=tasksExecutedCount,proto3" json:"tasks_executed_count,omitempty"`
-	Projects                *Entity `protobuf:"bytes,7,opt,name=projects,proto3" json:"projects,omitempty"`
-	Refs                    *Entity `protobuf:"bytes,8,opt,name=refs,proto3" json:"refs,omitempty"`
-	Envs                    *Entity `protobuf:"bytes,9,opt,name=envs,proto3" json:"envs,omitempty"`
-	Metrics                 *Entity `protobuf:"bytes,10,opt,name=metrics,proto3" json:"metrics,omitempty"`
+	GitlabApiLimitRemaining uint64  `protobuf:"varint,4,opt,name=gitlab_api_limit_remaining,json=gitlabApiLimitRemaining,proto3" json:"gitlab_api_limit_remaining,omitempty"`
+	GitlabApiRateLimit      float64 `protobuf:"fixed64,3,opt,name=gitlab_api_rate_limit,json=gitlabApiRateLimit,proto3" json:"gitlab_api_rate_limit,omitempty"`
+	GitlabApiRequestsCount  uint64  `protobuf:"varint,2,opt,name=gitlab_api_requests_count,json=gitlabApiRequestsCount,proto3" json:"gitlab_api_requests_count,omitempty"`
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *Telemetry) Reset() {
@@ -228,14 +226,13 @@ func (x *Telemetry) GetMetrics() *Entity {
 
 type Entity struct {
 	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	LastGc        *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=last_gc,json=lastGc,proto3" json:"last_gc,omitempty"`
+	LastPull      *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_pull,json=lastPull,proto3" json:"last_pull,omitempty"`
+	NextGc        *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=next_gc,json=nextGc,proto3" json:"next_gc,omitempty"`
+	NextPull      *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=next_pull,json=nextPull,proto3" json:"next_pull,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Count    int64                  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
-	LastGc   *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=last_gc,json=lastGc,proto3" json:"last_gc,omitempty"`
-	LastPull *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_pull,json=lastPull,proto3" json:"last_pull,omitempty"`
-	NextGc   *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=next_gc,json=nextGc,proto3" json:"next_gc,omitempty"`
-	NextPull *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=next_pull,json=nextPull,proto3" json:"next_pull,omitempty"`
+	Count         int64 `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Entity) Reset() {
