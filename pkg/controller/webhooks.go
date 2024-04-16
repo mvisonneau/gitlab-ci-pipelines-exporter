@@ -170,7 +170,7 @@ func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref)
 				}
 
 				if matches {
-					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProject, ref.Project.Name)
+					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProject, ref.Project.Name, ref.Project.Name)
 					log.WithFields(logFields).Info("project ref not currently exported but its configuration matches a wildcard, triggering a pull of the project")
 				} else {
 					log.WithFields(logFields).Debug("project ref not matching wildcard, skipping..")
@@ -284,7 +284,7 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 				}
 
 				if matches {
-					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProject, env.ProjectName)
+					c.ScheduleTask(context.TODO(), schemas.TaskTypePullProject, env.ProjectName, env.ProjectName)
 					log.WithFields(logFields).Info("project environment not currently exported but its configuration matches a wildcard, triggering a pull of the project")
 				} else {
 					log.WithFields(logFields).Debug("project ref not matching wildcard, skipping..")
