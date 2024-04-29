@@ -10,13 +10,14 @@ import (
 )
 
 // PullProject ..
-func (c *Controller) PullProject(ctx context.Context, name string) error {
+func (c *Controller) PullProject(ctx context.Context, name string, pull config.ProjectPull) error {
 	gp, err := c.Gitlab.GetProject(ctx, name)
 	if err != nil {
 		return err
 	}
 
 	p := schemas.NewProject(gp.PathWithNamespace)
+	p.Pull = pull
 
 	projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 	if err != nil {

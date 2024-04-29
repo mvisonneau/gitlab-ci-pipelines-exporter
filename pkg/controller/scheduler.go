@@ -72,10 +72,10 @@ func NewTaskController(ctx context.Context, r *redis.Client, maximumJobsQueueSiz
 }
 
 // TaskHandlerPullProject ..
-func (c *Controller) TaskHandlerPullProject(ctx context.Context, name string) error {
+func (c *Controller) TaskHandlerPullProject(ctx context.Context, name string, pull config.ProjectPull) error {
 	defer c.unqueueTask(ctx, schemas.TaskTypePullProject, name)
 
-	return c.PullProject(ctx, name)
+	return c.PullProject(ctx, name, pull)
 }
 
 // TaskHandlerPullProjectsFromWildcard ..
