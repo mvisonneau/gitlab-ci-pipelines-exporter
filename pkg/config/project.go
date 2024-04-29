@@ -172,7 +172,6 @@ type Projects []Project
 
 // NewProject returns a new project composed with the default parameters.
 func NewProject(name string) (p Project) {
-
 	defaults.MustSet(&p)
 	p.Name = name
 
