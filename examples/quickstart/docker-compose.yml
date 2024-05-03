@@ -2,7 +2,7 @@
 version: '3.8'
 services:
   gitlab-ci-pipelines-exporter:
-    image: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.7
+    image: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.8
     # You can comment out the image name and use the following statement
     # to build the image against the current version of the repository
     # build: ../..

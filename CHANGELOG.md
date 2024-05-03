@@ -7,6 +7,15 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+## [v0.5.8] - 2024-05-03
+
+### Changed
+
+* fix(devenv): Fix devenv rule in makefile. by @audig in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/822
+* Add gitlab-health-url flag and envvar by @Thor77 in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/800
+* fix project pull webhook args by @fitz7 in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/828
+* go.mod: updated most dependencies
+
 ## [v0.5.7] - 2024-03-03
 
 ### Changed
@@ -695,7 +704,8 @@ if not seen in a long time.
 - LICENSE
 - README
 
-[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.7...HEAD
+[Unreleased]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/compare/v0.5.8...HEAD
+[v0.5.8]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.8
 [v0.5.7]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.7
 [v0.5.6]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.6
 [v0.5.5]: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/tree/v0.5.5
