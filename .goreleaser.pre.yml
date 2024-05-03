@@ -66,15 +66,16 @@ nfpms:
 release:
   disable: true
 
-snapcrafts:
-  - summary: GitLab CI pipelines exporter (prometheus/open-metrics)
-    description: Monitor GitLab CI pipelines related metrics.
-    license: Apache-2.0
-    confinement: strict
-    grade: devel
-    apps:
-      gitlab-ci-pipelines-exporter:
-        plugs: [home, network, network-bind]
+# Disabling until https://github.com/canonical/snapcraft/issues/4769 is resolved
+#snapcrafts:
+#  - summary: GitLab CI pipelines exporter (prometheus/open-metrics)
+#    description: Monitor GitLab CI pipelines related metrics.
+#    license: Apache-2.0
+#    confinement: strict
+#    grade: devel
+#    apps:
+#      gitlab-ci-pipelines-exporter:
+#        plugs: [home, network, network-bind]
 
 dockers:
   - image_templates:

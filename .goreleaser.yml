@@ -87,14 +87,15 @@ scoops:
       owner: mvisonneau
       name: scoops
 
-snapcrafts:
-  - summary: *description
-    description: Monitor GitLab CI pipelines related metrics.
-    license: *license
-    grade: stable
-    apps:
-      gitlab-ci-pipelines-exporter:
-        plugs: [home, network, network-bind]
+# Disabling until https://github.com/canonical/snapcraft/issues/4769 is resolved
+#snapcrafts:
+#  - summary: *description
+#    description: Monitor GitLab CI pipelines related metrics.
+#    license: *license
+#    grade: stable
+#    apps:
+#      gitlab-ci-pipelines-exporter:
+#        plugs: [home, network, network-bind]
 
 dockers:
   - image_templates:
