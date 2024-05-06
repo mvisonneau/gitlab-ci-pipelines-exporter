@@ -28,7 +28,7 @@ require (
 	github.com/vmihailenco/taskq/memqueue/v4 v4.0.0-beta.4
 	github.com/vmihailenco/taskq/redisq/v4 v4.0.0-beta.4
 	github.com/vmihailenco/taskq/v4 v4.0.0-beta.4
-	github.com/xanzy/go-gitlab v0.103.0
+	github.com/xanzy/go-gitlab v0.104.0
 	github.com/xeonx/timeago v1.0.0-rc5
 	go.openly.dev/pointy v1.3.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.51.0
