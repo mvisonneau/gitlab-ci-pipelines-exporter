@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"reflect"
 
@@ -100,7 +100,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload, err := ioutil.ReadAll(r.Body)
+	payload, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.
 			WithError(err).
@@ -133,6 +133,8 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		go c.processPushEvent(ctx, *event)
 	case *gitlab.TagEvent:
 		go c.processTagEvent(ctx, *event)
+	case *gitlab.MergeEvent:
+		go c.processMergeEvent(ctx, *event)
 	default:
 		logger.
 			WithField("event-type", reflect.TypeOf(event).String()).

@@ -124,6 +124,33 @@ func (c *Controller) processTagEvent(ctx context.Context, e goGitlab.TagEvent) {
 	}
 }
 
+func (c *Controller) processMergeEvent(ctx context.Context, e goGitlab.MergeEvent) {
+	ref := schemas.NewRef(
+		schemas.NewProject(e.Project.PathWithNamespace),
+		schemas.RefKindMergeRequest,
+		strconv.Itoa(e.ObjectAttributes.IID),
+	)
+
+	switch e.ObjectAttributes.Action {
+	case "close":
+		c.triggerRefDeletion(ctx, ref)
+	case "merge":
+		c.triggerRefDeletion(ctx, ref)
+	}
+}
+
+func (c *Controller) triggerRefDeletion(ctx context.Context, ref schemas.Ref) {
+	err := c.Store.DelRef(ctx, ref.Key())
+	if err != nil {
+		log.WithContext(ctx).
+			WithFields(log.Fields{
+				"project-name": ref.Project.Name,
+				"ref":          ref.Name,
+			}).
+			Error("failed deleting ref")
+	}
+}
+
 func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref) {
 	logFields := log.Fields{
 		"project-name": ref.Project.Name,
