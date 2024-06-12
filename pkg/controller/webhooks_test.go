@@ -55,29 +55,3 @@ func TestTriggerEnvironmentMetricsPull(t *testing.T) {
 	c.triggerEnvironmentMetricsPull(ctx, env1)
 	c.triggerEnvironmentMetricsPull(ctx, env2)
 }
-
-func TestTriggerRefDeletion(t *testing.T) {
-	ctx, c, _, srv := newTestController(config.Config{})
-	srv.Close()
-
-	ref1 := schemas.Ref{
-		Project: schemas.NewProject("group/foo"),
-		Name:    "main",
-	}
-
-	p2 := schemas.NewProject("group/bar")
-	ref2 := schemas.Ref{
-		Project: p2,
-		Name:    "main",
-	}
-
-	assert.NoError(t, c.Store.SetRef(ctx, ref1))
-	assert.NoError(t, c.Store.SetRef(ctx, ref2))
-	assert.NoError(t, c.Store.SetProject(ctx, p2))
-
-	c.triggerRefDeletion(ctx, ref1)
-	c.triggerRefDeletion(ctx, ref2)
-
-	assert.Nil(t, c.Store.GetRef(ctx, &ref1))
-	assert.Nil(t, c.Store.GetRef(ctx, &ref2))
-}
