@@ -141,7 +141,6 @@ func (c *Controller) processMergeEvent(ctx context.Context, e goGitlab.MergeEven
 			WithField("merge-request-event-type", e.ObjectAttributes.Action).
 			Debug("received a non supported merge-request event type as a webhook")
 	}
-
 }
 
 func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref) {
