@@ -69,6 +69,12 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		}
 	}
 
+	if len(pipelines) == 0 {
+		log.WithFields(logFields).Debug("could not find any pipeline for the ref")
+
+		return nil
+	}
+
 	pipeline, err := c.Gitlab.GetRefPipeline(ctx, ref, pipelines[0].ID)
 	if err != nil {
 		return err
