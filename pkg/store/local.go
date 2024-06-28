@@ -26,6 +26,21 @@ type Local struct {
 	executedTasksCount uint64
 }
 
+// HasProjectExpired ..
+func (l *Local) HasProjectExpired(ctx context.Context, key schemas.ProjectKey) bool {
+	return false
+}
+
+// HasRefExpired ..
+func (l *Local) HasRefExpired(ctx context.Context, key schemas.RefKey) bool {
+	return false
+}
+
+// HasMetricExpired ..
+func (l *Local) HasMetricExpired(ctx context.Context, key schemas.MetricKey) bool {
+	return false
+}
+
 // SetProject ..
 func (l *Local) SetProject(_ context.Context, p schemas.Project) error {
 	l.projectsMutex.Lock()

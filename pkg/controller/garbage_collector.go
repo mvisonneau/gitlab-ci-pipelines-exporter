@@ -169,6 +169,13 @@ func (c *Controller) GarbageCollectRefs(ctx context.Context) error {
 	}
 
 	for _, ref := range storedRefs {
+		if c.Store.HasRefExpired(ctx, ref.Key()) {
+			if err = deleteRef(ctx, c.Store, ref, "expired"); err != nil {
+				return err
+			}
+		}
+
+		// Check Project Still Exist
 		projectExists, err := c.Store.ProjectExists(ctx, ref.Project.Key())
 		if err != nil {
 			return err
@@ -276,6 +283,11 @@ func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 	}
 
 	for k, m := range storedMetrics {
+		if c.Store.HasMetricExpired(ctx, m.Key()) {
+			if err = deleteMetric(ctx, c.Store, m, "expired"); err != nil {
+				return err
+			}
+		}
 		// In order to save some memory space we chose to have to recompose
 		// the Ref the metric belongs to
 		metricLabelProject, metricLabelProjectExists := m.Labels["project"]
@@ -283,15 +295,9 @@ func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 		metricLabelEnvironment, metricLabelEnvironmentExists := m.Labels["environment"]
 
 		if !metricLabelProjectExists || (!metricLabelRefExists && !metricLabelEnvironmentExists) {
-			if err = c.Store.DelMetric(ctx, k); err != nil {
+			if err = deleteMetric(ctx, c.Store, m, "project-or-ref-and-environment-label-undefined"); err != nil {
 				return err
 			}
-
-			log.WithFields(log.Fields{
-				"metric-kind":   m.Kind,
-				"metric-labels": m.Labels,
-				"reason":        "project-or-ref-and-environment-label-undefined",
-			}).Info("deleted metric from the store")
 		}
 
 		if metricLabelRefExists && !metricLabelEnvironmentExists {
@@ -435,6 +441,20 @@ func deleteRef(ctx context.Context, s store.Store, ref schemas.Ref, reason strin
 		"ref-kind":     ref.Kind,
 		"reason":       reason,
 	}).Info("deleted ref from the store")
+
+	return
+}
+
+func deleteMetric(ctx context.Context, s store.Store, m schemas.Metric, reason string) (err error) {
+	if err = s.DelMetric(ctx, m.Key()); err != nil {
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"metric-kind":   m.Kind,
+		"metric-labels": m.Labels,
+		"reason":        reason,
+	}).Info("deleted metric from the store")
 
 	return
 }

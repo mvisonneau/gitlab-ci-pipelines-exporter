@@ -23,7 +23,7 @@ func newTestRedisStore(t *testing.T) (mr *miniredis.Miniredis, r Store) {
 		mr.Close()
 	})
 
-	return mr, NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()})).(*Redis)
+	return mr, NewRedisStore(redis.NewClient(&redis.Options{Addr: mr.Addr()}))
 }
 
 func TestRedisProjectFunctions(t *testing.T) {

@@ -37,8 +37,9 @@ func TestNew(t *testing.T) {
 	assert.IsType(t, &Local{}, localStore)
 
 	redisClient := redis.NewClient(&redis.Options{})
-	redisStore := New(testCtx, redisClient, config.Projects{})
-	assert.IsType(t, &Redis{}, redisStore)
+	redisStore := NewRedisStore(redisClient)
+	store := New(testCtx, redisStore, config.Projects{})
+	assert.IsType(t, &Redis{}, store)
 
 	localStore = New(testCtx, nil, config.Projects{
 		{
