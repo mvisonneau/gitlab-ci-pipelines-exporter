@@ -168,7 +168,9 @@ func (c *Controller) GarbageCollectRefs(ctx context.Context) error {
 		return err
 	}
 
-	for _, ref := range storedRefs {
+	storedRefsLen := len(storedRefs)
+	for i, ref := range storedRefs {
+		log.WithFields(log.Fields{"progress": i, "total": storedRefsLen}).Debug("ongoing 'refs' garbage collection")
 		if c.Store.HasRefExpired(ctx, ref.Key()) {
 			if err = deleteRef(ctx, c.Store, ref, "expired"); err != nil {
 				return err
@@ -284,7 +286,9 @@ func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 		return err
 	}
 
+	storedMetricsLen := len(storedMetrics)
 	for k, m := range storedMetrics {
+		log.WithFields(log.Fields{"progress": k, "total": storedMetricsLen}).Debug("ongoing 'metrics' garbage collection")
 		if c.Store.HasMetricExpired(ctx, m.Key()) {
 			if err = deleteMetric(ctx, c.Store, m, "expired"); err != nil {
 				return err
