@@ -173,6 +173,8 @@ func (c *Controller) GarbageCollectRefs(ctx context.Context) error {
 			if err = deleteRef(ctx, c.Store, ref, "expired"); err != nil {
 				return err
 			}
+
+			continue
 		}
 
 		// Check Project Still Exist
@@ -287,6 +289,8 @@ func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 			if err = deleteMetric(ctx, c.Store, m, "expired"); err != nil {
 				return err
 			}
+
+			continue
 		}
 		// In order to save some memory space we chose to have to recompose
 		// the Ref the metric belongs to
@@ -380,16 +384,9 @@ func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 
 			// If the ref does not exist anymore, delete the metric
 			if !envExists {
-				if err = c.Store.DelMetric(ctx, k); err != nil {
+				if err = deleteMetric(ctx, c.Store, m, "non-existent-environment"); err != nil {
 					return err
 				}
-
-				log.WithFields(log.Fields{
-					"metric-kind":   m.Kind,
-					"metric-labels": m.Labels,
-					"reason":        "non-existent-environment",
-				}).Info("deleted metric from the store")
-
 				continue
 			}
 
@@ -397,15 +394,9 @@ func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 			switch m.Kind {
 			case schemas.MetricKindEnvironmentDeploymentStatus:
 				if env.OutputSparseStatusMetrics && m.Value != 1 {
-					if err = c.Store.DelMetric(ctx, k); err != nil {
+					if err = deleteMetric(ctx, c.Store, m, "output-sparse-metrics-enabled-on-environment"); err != nil {
 						return err
 					}
-
-					log.WithFields(log.Fields{
-						"metric-kind":   m.Kind,
-						"metric-labels": m.Labels,
-						"reason":        "output-sparse-metrics-enabled-on-environment",
-					}).Info("deleted metric from the store")
 
 					continue
 				}

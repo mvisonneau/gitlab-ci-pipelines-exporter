@@ -64,7 +64,8 @@ func NewLocalStore() Store {
 // NewRedisStore ..
 func NewRedisStore(client *redis.Client, opts ...RedisStoreOptions) *Redis {
 	r := &Redis{
-		Client: client,
+		Client:      client,
+		StoreConfig: &RedisStoreConfig{},
 	}
 
 	for _, opt := range opts {
