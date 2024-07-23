@@ -80,7 +80,7 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 		DurationSeconds:       float64(gp.Duration),
 		QueuedDurationSeconds: float64(gp.QueuedDuration),
 		Source:                gp.Source,
-		Status:                gp.Status,
+		Status:                gp.DetailedStatus.Group,
 	}
 }
 
