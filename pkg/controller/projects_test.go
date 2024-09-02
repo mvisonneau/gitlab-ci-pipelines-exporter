@@ -24,7 +24,7 @@ func TestPullProjectsFromWildcard(t *testing.T) {
 	assert.NoError(t, c.PullProjectsFromWildcard(ctx, w))
 
 	projects, _ := c.Store.Projects(ctx)
-	p1 := schemas.NewProject("bar")
+	p1 := schemas.NewProject("bar", []string{})
 
 	expectedProjects := schemas.Projects{
 		p1.Key(): p1,

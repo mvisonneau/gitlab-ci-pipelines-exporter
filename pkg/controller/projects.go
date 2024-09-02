@@ -16,7 +16,7 @@ func (c *Controller) PullProject(ctx context.Context, name string, pull config.P
 		return err
 	}
 
-	p := schemas.NewProject(gp.PathWithNamespace)
+	p := schemas.NewProject(gp.PathWithNamespace, gp.Topics)
 	p.Pull = pull
 
 	projectExists, err := c.Store.ProjectExists(ctx, p.Key())

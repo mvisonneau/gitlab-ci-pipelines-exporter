@@ -30,7 +30,7 @@ func TestGetRefs(t *testing.T) {
 			fmt.Fprint(w, `[{"ref":"refs/merge-requests/1234/head"}]`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Pull.Refs.Branches.Regexp = `^m`
 	p.Pull.Refs.Tags.Regexp = `^v`
 	p.Pull.Refs.MergeRequests.Enabled = true
@@ -68,7 +68,7 @@ func TestPullRefsFromProject(t *testing.T) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	p1 := schemas.NewProject("foo")
+	p1 := schemas.NewProject("foo", []string{})
 	assert.NoError(t, c.PullRefsFromProject(ctx, p1))
 
 	ref1 := schemas.NewRef(p1, schemas.RefKindBranch, "main")

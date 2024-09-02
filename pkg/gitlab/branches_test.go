@@ -43,7 +43,7 @@ func TestGetProjectBranches(t *testing.T) {
 			w.WriteHeader(http.StatusNotFound)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	expectedRef := schemas.NewRef(p, schemas.RefKindBranch, "main")
 	refs, err := c.GetProjectBranches(ctx, p)
 	assert.NoError(t, err)

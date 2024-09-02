@@ -25,7 +25,7 @@ func TestGetRefPipeline(t *testing.T) {
 		})
 
 	ref := schemas.Ref{
-		Project: schemas.NewProject("foo"),
+		Project: schemas.NewProject("foo", []string{}),
 		Name:    "yay",
 	}
 
@@ -71,7 +71,7 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 			fmt.Fprint(w, `[{"key":"foo","value":"bar"},{"key":"bar","value":"baz"}]`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Pull.Pipeline.Variables.Enabled = true
 	p.Pull.Pipeline.Variables.Regexp = `[`
 	ref := schemas.Ref{
@@ -135,7 +135,7 @@ func TestGetRefsFromPipelines(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"},{"id":3,"ref":"donotkeep_0.0.1"},{"id":4,"ref":"keep_0.0.2"},{"id":5,"ref":"refs/merge-requests/1234/head"}]`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 
 	// Branches
 	p.Pull.Refs.Branches.Regexp = `[` // invalid regexp pattern
@@ -186,7 +186,7 @@ func TestGetRefPipelineTestReport(t *testing.T) {
 			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 
 	ref := schemas.Ref{
 		Project: p,
@@ -244,7 +244,7 @@ func TestGetRefPipelineFailedTestReport(t *testing.T) {
 			fmt.Fprint(w, `{"total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "failed", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": "Failed message", "stack_trace": null}]}]}`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 
 	ref := schemas.Ref{
 		Project: p,
@@ -320,7 +320,7 @@ func TestGetRefPipelineWithParentChildTestReport(t *testing.T) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 
 	p.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled = true
 
@@ -415,7 +415,7 @@ func TestGetRefPipelineWithMultiProjectTestReport(t *testing.T) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 
 	p.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled = true
 
@@ -498,7 +498,7 @@ func TestGetRefPipelineWithNoChildrenTestReport(t *testing.T) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 
 	p.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled = true
 

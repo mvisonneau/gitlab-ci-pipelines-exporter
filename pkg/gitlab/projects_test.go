@@ -44,13 +44,14 @@ func TestListUserProjects(t *testing.T) {
 	mux.HandleFunc(fmt.Sprintf("/api/v4/users/%s/projects", w.Owner.Name),
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			_, _ = fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar"},{"id":2,"path_with_namespace":"bar/baz"}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"path_with_namespace":"foo/bar", "topics":["foo","bar"]},{"id":2,"path_with_namespace":"bar/baz"}]`)
 		})
 
 	projects, err := c.ListProjects(ctx, w)
 	assert.NoError(t, err)
 	assert.Len(t, projects, 1)
 	assert.Equal(t, "foo/bar", projects[0].Name)
+	assert.Equal(t, "foo,bar", projects[0].Topics)
 }
 
 func TestListGroupProjects(t *testing.T) {
