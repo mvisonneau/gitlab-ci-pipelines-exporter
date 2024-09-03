@@ -7,7 +7,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
@@ -33,24 +32,12 @@ func TestNewRedisStore(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	localStore := New(testCtx, nil, config.Projects{})
+	localStore := New(testCtx, nil)
 	assert.IsType(t, &Local{}, localStore)
 
 	redisClient := redis.NewClient(&redis.Options{})
-	redisStore := New(testCtx, redisClient, config.Projects{})
+	redisStore := New(testCtx, redisClient)
 	assert.IsType(t, &Redis{}, redisStore)
 
-	localStore = New(testCtx, nil, config.Projects{
-		{
-			Name: "foo",
-		},
-		{
-			Name: "foo",
-		},
-		{
-			Name: "bar",
-		},
-	})
-	count, _ := localStore.ProjectsCount(testCtx)
-	assert.Equal(t, int64(2), count)
+	localStore = New(testCtx, nil)
 }
