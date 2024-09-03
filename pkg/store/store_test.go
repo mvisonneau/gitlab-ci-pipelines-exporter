@@ -39,5 +39,5 @@ func TestNew(t *testing.T) {
 	redisStore := New(testCtx, redisClient)
 	assert.IsType(t, &Redis{}, redisStore)
 
-	localStore = New(testCtx, nil)
+	New(testCtx, nil)
 }
