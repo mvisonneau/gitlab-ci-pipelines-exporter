@@ -10,33 +10,30 @@ import (
 )
 
 // PullProject ..
-func (c *Controller) PullProject(ctx context.Context, name string, pull config.ProjectPull) error {
-	gp, err := c.Gitlab.GetProject(ctx, name)
+func (c *Controller) PullProject(ctx context.Context, project config.Project) error {
+	gp, err := c.Gitlab.GetProject(ctx, project.Name)
 	if err != nil {
 		return err
 	}
 
-	p := schemas.NewProject(gp.PathWithNamespace, gp.Topics)
-	p.Pull = pull
-
-	projectExists, err := c.Store.ProjectExists(ctx, p.Key())
+	projectExists, err := c.Store.ProjectExists(ctx, gp.Key())
 	if err != nil {
 		return err
 	}
 
 	if !projectExists {
 		log.WithFields(log.Fields{
-			"project-name": p.Name,
+			"project-name": gp.Name,
 		}).Info("discovered new project")
 
-		if err := c.Store.SetProject(ctx, p); err != nil {
+		if err := c.Store.SetProject(ctx, gp); err != nil {
 			log.WithContext(ctx).
 				WithError(err).
 				Error()
 		}
 
-		c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(p.Key()), p)
-		c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentsFromProject, string(p.Key()), p)
+		c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(gp.Key()), gp)
+		c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentsFromProject, string(gp.Key()), gp)
 	}
 
 	return nil

@@ -4,10 +4,8 @@ import (
 	"context"
 
 	"github.com/redis/go-redis/v9"
-	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
@@ -68,7 +66,6 @@ func NewRedisStore(client *redis.Client) Store {
 func New(
 	ctx context.Context,
 	r *redis.Client,
-	projects config.Projects,
 ) (s Store) {
 	ctx, span := otel.Tracer("gitlab-ci-pipelines-exporter").Start(ctx, "store:New")
 	defer span.End()
@@ -77,32 +74,6 @@ func New(
 		s = NewRedisStore(r)
 	} else {
 		s = NewLocalStore()
-	}
-
-	// Load all the configured projects in the store
-	for _, p := range projects {
-		sp := schemas.Project{Project: p}
-
-		exists, err := s.ProjectExists(ctx, sp.Key())
-		if err != nil {
-			log.WithContext(ctx).
-				WithFields(log.Fields{
-					"project-name": p.Name,
-				}).
-				WithError(err).
-				Error("reading project from the store")
-		}
-
-		if !exists {
-			if err = s.SetProject(ctx, sp); err != nil {
-				log.WithContext(ctx).
-					WithFields(log.Fields{
-						"project-name": p.Name,
-					}).
-					WithError(err).
-					Error("writing project in the store")
-			}
-		}
 	}
 
 	return

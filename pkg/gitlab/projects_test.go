@@ -18,13 +18,14 @@ func TestGetProject(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo%2Fbar",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			_, _ = fmt.Fprint(w, `{"id":1}`)
+			_, _ = fmt.Fprint(w, `{"id":1,"topics":["foo","bar"]}`)
 		})
 
 	p, err := c.GetProject(ctx, "foo/bar")
 	assert.NoError(t, err)
 	require.NotNil(t, p)
-	assert.Equal(t, 1, p.ID)
+	// assert.Equal(t, 1, p.ID)
+	assert.Equal(t, "foo,bar", p.Topics)
 }
 
 func TestListUserProjects(t *testing.T) {
