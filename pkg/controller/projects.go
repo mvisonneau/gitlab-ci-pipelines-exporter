@@ -34,6 +34,17 @@ func (c *Controller) PullProject(ctx context.Context, project config.Project) er
 
 		c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(gp.Key()), gp)
 		c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentsFromProject, string(gp.Key()), gp)
+	} else {
+		log.WithFields(log.Fields{
+			"project-name": gp.Name,
+		}).Info("updating project")
+
+		if err := c.Store.SetProject(ctx, gp); err != nil {
+			log.WithContext(ctx).
+				WithError(err).
+				Error()
+		}
+
 	}
 
 	return nil
@@ -70,6 +81,21 @@ func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wild
 
 			c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(p.Key()), p)
 			c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentsFromProject, string(p.Key()), p)
+		} else {
+			log.WithFields(log.Fields{
+				"wildcard-search":                  w.Search,
+				"wildcard-owner-kind":              w.Owner.Kind,
+				"wildcard-owner-name":              w.Owner.Name,
+				"wildcard-owner-include-subgroups": w.Owner.IncludeSubgroups,
+				"wildcard-archived":                w.Archived,
+				"project-name":                     p.Name,
+			}).Info("updating project")
+
+			if err := c.Store.SetProject(ctx, p); err != nil {
+				log.WithContext(ctx).
+					WithError(err).
+					Error()
+			}
 		}
 	}
 
