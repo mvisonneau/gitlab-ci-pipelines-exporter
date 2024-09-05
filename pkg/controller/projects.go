@@ -44,7 +44,6 @@ func (c *Controller) PullProject(ctx context.Context, project config.Project) er
 				WithError(err).
 				Error()
 		}
-
 	}
 
 	return nil
