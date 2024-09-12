@@ -88,16 +88,18 @@ func (c *Controller) PullRefsFromProject(ctx context.Context, p schemas.Project)
 			return err
 		}
 
+		// We need to set the ref in the store regardless of it being new or not
+		// to ensure any project updates e.g. Topics are correctly reflected
+		if err = c.Store.SetRef(ctx, ref); err != nil {
+			return err
+		}
+
 		if !refExists {
 			log.WithFields(log.Fields{
 				"project-name": ref.Project.Name,
 				"ref":          ref.Name,
 				"ref-kind":     ref.Kind,
 			}).Info("discovered new ref")
-
-			if err = c.Store.SetRef(ctx, ref); err != nil {
-				return err
-			}
 
 			c.ScheduleTask(ctx, schemas.TaskTypePullRefMetrics, string(ref.Key()), ref)
 		}
