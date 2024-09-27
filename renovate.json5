@@ -1,0 +1,18 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:best-practices"],
+
+  postUpdateOptions: [
+    "gomodTidy", // Run go mod tidy after Go module updates.
+  ],
+
+  packageRules: [
+    // Group all patch updates into a single PR, potentially set automerging on at some point
+    {
+      groupName: "all patch and minor",
+      matchPackageNames: ["*"],
+      matchUpdateTypes: ["minor", "patch", "digest"],
+      automerge: true,
+    },
+  ],
+}
