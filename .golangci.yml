@@ -1,25 +1,19 @@
 linters:
   enable-all: true
   disable:
-    # Deprecated ones
-    - golint
-    - ifshort
-    - interfacer
-    - maligned
-    - nosnakecase
-    - scopelint
+    # Deprecated
+    - gomnd
 
     # We don't want these ones
-    - exhaustivestruct
     - forcetypeassert
     - gochecknoglobals
     - godox
-    - goerr113
     - ireturn
     - nakedret
     - testpackage
     - varnamelen
     - interfacebloat
+    - wsl
 
     # TODO
     - tagliatelle
@@ -29,7 +23,7 @@ linters:
     - gomoddirectives
     - forbidigo
     - goconst
-    - gomnd
+    - mnd
     - lll
     - dupl
     - depguard

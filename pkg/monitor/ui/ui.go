@@ -287,12 +287,14 @@ func (m *model) View() string {
 	// TABS
 	{
 		renderedTabs := []string{}
+
 		for tabID, t := range tabs {
 			if m.tabID == tabID {
 				renderedTabs = append(renderedTabs, activeTab.Render(string(t)))
 
 				continue
 			}
+
 			renderedTabs = append(renderedTabs, inactiveTab.Render(string(t)))
 		}
 

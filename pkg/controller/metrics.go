@@ -230,6 +230,7 @@ func emitStatusMetric(ctx context.Context, s store.Store, metricKind schemas.Met
 
 				continue
 			}
+
 			statusMetric.Value = 0
 		}
 

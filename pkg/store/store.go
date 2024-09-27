@@ -13,37 +13,37 @@ import (
 
 // Store ..
 type Store interface {
-	SetProject(context.Context, schemas.Project) error
-	DelProject(context.Context, schemas.ProjectKey) error
-	GetProject(context.Context, *schemas.Project) error
-	ProjectExists(context.Context, schemas.ProjectKey) (bool, error)
-	Projects(context.Context) (schemas.Projects, error)
-	ProjectsCount(context.Context) (int64, error)
-	SetEnvironment(context.Context, schemas.Environment) error
-	DelEnvironment(context.Context, schemas.EnvironmentKey) error
-	GetEnvironment(context.Context, *schemas.Environment) error
-	EnvironmentExists(context.Context, schemas.EnvironmentKey) (bool, error)
-	Environments(context.Context) (schemas.Environments, error)
-	EnvironmentsCount(context.Context) (int64, error)
-	SetRef(context.Context, schemas.Ref) error
-	DelRef(context.Context, schemas.RefKey) error
-	GetRef(context.Context, *schemas.Ref) error
-	RefExists(context.Context, schemas.RefKey) (bool, error)
-	Refs(context.Context) (schemas.Refs, error)
-	RefsCount(context.Context) (int64, error)
-	SetMetric(context.Context, schemas.Metric) error
-	DelMetric(context.Context, schemas.MetricKey) error
-	GetMetric(context.Context, *schemas.Metric) error
-	MetricExists(context.Context, schemas.MetricKey) (bool, error)
-	Metrics(context.Context) (schemas.Metrics, error)
-	MetricsCount(context.Context) (int64, error)
+	SetProject(ctx context.Context, p schemas.Project) error
+	DelProject(ctx context.Context, pk schemas.ProjectKey) error
+	GetProject(ctx context.Context, p *schemas.Project) error
+	ProjectExists(ctx context.Context, pk schemas.ProjectKey) (bool, error)
+	Projects(ctx context.Context) (schemas.Projects, error)
+	ProjectsCount(ctx context.Context) (int64, error)
+	SetEnvironment(ctx context.Context, e schemas.Environment) error
+	DelEnvironment(ctx context.Context, ek schemas.EnvironmentKey) error
+	GetEnvironment(ctx context.Context, e *schemas.Environment) error
+	EnvironmentExists(ctx context.Context, ek schemas.EnvironmentKey) (bool, error)
+	Environments(ctx context.Context) (schemas.Environments, error)
+	EnvironmentsCount(ctx context.Context) (int64, error)
+	SetRef(ctx context.Context, r schemas.Ref) error
+	DelRef(ctx context.Context, rk schemas.RefKey) error
+	GetRef(ctx context.Context, r *schemas.Ref) error
+	RefExists(ctx context.Context, rk schemas.RefKey) (bool, error)
+	Refs(ctx context.Context) (schemas.Refs, error)
+	RefsCount(ctx context.Context) (int64, error)
+	SetMetric(ctx context.Context, m schemas.Metric) error
+	DelMetric(ctx context.Context, mk schemas.MetricKey) error
+	GetMetric(ctx context.Context, m *schemas.Metric) error
+	MetricExists(ctx context.Context, mk schemas.MetricKey) (bool, error)
+	Metrics(ctx context.Context) (schemas.Metrics, error)
+	MetricsCount(ctx context.Context) (int64, error)
 
 	// Helpers to keep track of currently queued tasks and avoid scheduling them
 	// twice at the risk of ending up with loads of dangling goroutines being locked
-	QueueTask(context.Context, schemas.TaskType, string, string) (bool, error)
-	UnqueueTask(context.Context, schemas.TaskType, string) error
-	CurrentlyQueuedTasksCount(context.Context) (uint64, error)
-	ExecutedTasksCount(context.Context) (uint64, error)
+	QueueTask(ctx context.Context, tt schemas.TaskType, taskUUID, processUUID string) (bool, error)
+	UnqueueTask(ctx context.Context, tt schemas.TaskType, taskUUID string) error
+	CurrentlyQueuedTasksCount(ctx context.Context) (uint64, error)
+	ExecutedTasksCount(ctx context.Context) (uint64, error)
 }
 
 // NewLocalStore ..

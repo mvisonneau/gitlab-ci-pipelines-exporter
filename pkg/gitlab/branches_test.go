@@ -21,7 +21,9 @@ func TestGetProjectBranches(t *testing.T) {
 			assert.Equal(t, []string{"100"}, r.URL.Query()["per_page"])
 			currentPage, err := strconv.Atoi(r.URL.Query()["page"][0])
 			assert.NoError(t, err)
+
 			nextPage := currentPage + 1
+
 			if currentPage == 2 {
 				nextPage = currentPage
 			}
