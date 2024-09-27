@@ -3,7 +3,7 @@ FILES          := $(shell git ls-files */*.go)
 COVERAGE_FILE  := coverage.out
 REPOSITORY     := mvisonneau/$(NAME)
 .DEFAULT_GOAL  := help
-GOLANG_VERSION := 1.22
+GOLANG_VERSION := 1.23
 
 .PHONY: fmt
 fmt: ## Format source code
