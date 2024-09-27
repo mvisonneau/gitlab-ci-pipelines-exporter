@@ -112,14 +112,6 @@ var (
 	docStyle = lipgloss.NewStyle()
 )
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-
-	return b
-}
-
 type model struct {
 	version         string
 	client          *client.Client
