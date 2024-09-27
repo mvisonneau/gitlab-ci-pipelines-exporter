@@ -7,7 +7,7 @@
   ],
 
   packageRules: [
-    // Group all patch updates into a single PR, potentially set automerging on at some point
+    // Group all patch updates into a single PR
     {
       groupName: "all patch and minor",
       matchPackageNames: ["*"],
