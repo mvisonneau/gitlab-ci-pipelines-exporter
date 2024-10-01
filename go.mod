@@ -2,7 +2,7 @@ module github.com/mvisonneau/gitlab-ci-pipelines-exporter
 
 go 1.23.0
 
-toolchain go1.23.1
+toolchain go1.23.2
 
 require (
 	dario.cat/mergo v1.0.1
