@@ -55,7 +55,7 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 	c.TaskController = NewTaskController(ctx, c.Redis, cfg.Gitlab.MaximumJobsQueueSize)
 	c.registerTasks()
 
-	c.Store = store.New(ctx, c.Redis, c.Config.Projects)
+	c.Store = store.New(ctx, c.Redis)
 
 	if err = c.configureGitlab(cfg.Gitlab, version); err != nil {
 		return
@@ -78,6 +78,7 @@ func (c *Controller) registerTasks() {
 		schemas.TaskTypePullEnvironmentsFromProjects: c.TaskHandlerPullEnvironmentsFromProjects,
 		schemas.TaskTypePullMetrics:                  c.TaskHandlerPullMetrics,
 		schemas.TaskTypePullProject:                  c.TaskHandlerPullProject,
+		schemas.TaskTypePullProjects:                 c.TaskHandlerPullProjects,
 		schemas.TaskTypePullProjectsFromWildcard:     c.TaskHandlerPullProjectsFromWildcard,
 		schemas.TaskTypePullProjectsFromWildcards:    c.TaskHandlerPullProjectsFromWildcards,
 		schemas.TaskTypePullRefMetrics:               c.TaskHandlerPullRefMetrics,

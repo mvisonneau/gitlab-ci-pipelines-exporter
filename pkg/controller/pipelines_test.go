@@ -40,7 +40,7 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 		})
 
 	// Metrics pull shall succeed
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Pull.Pipeline.Variables.Enabled = true
 	p.Pull.Pipeline.TestReports.Enabled = true
 	p.Pull.Pipeline.TestReports.TestCases.Enabled = true
@@ -130,7 +130,7 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 		})
 
 	// Metrics pull shall succeed
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Pull.Pipeline.Variables.Enabled = true
 	p.Pull.Pipeline.TestReports.Enabled = true
 	p.Pull.Pipeline.TestReports.TestCases.Enabled = true
@@ -281,7 +281,7 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 		})
 
 	// Metrics pull shall succeed
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Pull.Pipeline.Variables.Enabled = true
 
 	assert.NoError(t, c.PullRefMetrics(

@@ -71,11 +71,25 @@ func NewTaskController(ctx context.Context, r *redis.Client, maximumJobsQueueSiz
 	return
 }
 
-// TaskHandlerPullProject ..
-func (c *Controller) TaskHandlerPullProject(ctx context.Context, name string, pull config.ProjectPull) error {
-	defer c.unqueueTask(ctx, schemas.TaskTypePullProject, name)
+func (c *Controller) TaskHandlerPullProjects(ctx context.Context) {
+	defer c.unqueueTask(ctx, schemas.TaskTypePullProjects, "_")
+	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypePullProjects)
 
-	return c.PullProject(ctx, name, pull)
+	log.WithFields(
+		log.Fields{
+			"projects-count": len(c.Config.Projects),
+		},
+	).Info("scheduling projects pull")
+
+	for id, p := range c.Config.Projects {
+		c.ScheduleTask(ctx, schemas.TaskTypePullProject, strconv.Itoa(id), p)
+	}
+}
+
+func (c *Controller) TaskHandlerPullProject(ctx context.Context, project config.Project) error {
+	defer c.unqueueTask(ctx, schemas.TaskTypePullProjects, project.Name)
+
+	return c.PullProject(ctx, project)
 }
 
 // TaskHandlerPullProjectsFromWildcard ..
@@ -319,6 +333,7 @@ func (c *Controller) Schedule(ctx context.Context, pull config.Pull, gc config.G
 	}()
 
 	for tt, cfg := range map[schemas.TaskType]config.SchedulerConfig{
+		schemas.TaskTypePullProjects:                 config.SchedulerConfig(pull.Projects),
 		schemas.TaskTypePullProjectsFromWildcards:    config.SchedulerConfig(pull.ProjectsFromWildcards),
 		schemas.TaskTypePullEnvironmentsFromProjects: config.SchedulerConfig(pull.EnvironmentsFromProjects),
 		schemas.TaskTypePullRefsFromProjects:         config.SchedulerConfig(pull.RefsFromProjects),

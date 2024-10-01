@@ -32,7 +32,7 @@ func (c *Controller) processPipelineEvent(ctx context.Context, e goGitlab.Pipeli
 	}
 
 	c.triggerRefMetricsPull(ctx, schemas.NewRef(
-		schemas.NewProject(e.Project.PathWithNamespace),
+		schemas.NewProject(e.Project.PathWithNamespace, []string{}),
 		refKind,
 		refName,
 	))
@@ -60,7 +60,7 @@ func (c *Controller) processJobEvent(ctx context.Context, e goGitlab.JobEvent) {
 	}
 
 	c.triggerRefMetricsPull(ctx, schemas.NewRef(
-		schemas.NewProject(project.PathWithNamespace),
+		schemas.NewProject(project.PathWithNamespace, project.Topics),
 		refKind,
 		refName,
 	))
@@ -88,7 +88,7 @@ func (c *Controller) processPushEvent(ctx context.Context, e goGitlab.PushEvent)
 		}
 
 		_ = deleteRef(ctx, c.Store, schemas.NewRef(
-			schemas.NewProject(e.Project.PathWithNamespace),
+			schemas.NewProject(e.Project.PathWithNamespace, []string{}),
 			refKind,
 			refName,
 		), "received branch deletion push event from webhook")
@@ -117,7 +117,7 @@ func (c *Controller) processTagEvent(ctx context.Context, e goGitlab.TagEvent) {
 		}
 
 		_ = deleteRef(ctx, c.Store, schemas.NewRef(
-			schemas.NewProject(e.Project.PathWithNamespace),
+			schemas.NewProject(e.Project.PathWithNamespace, []string{}),
 			refKind,
 			refName,
 		), "received tag deletion tag event from webhook")
@@ -126,7 +126,7 @@ func (c *Controller) processTagEvent(ctx context.Context, e goGitlab.TagEvent) {
 
 func (c *Controller) processMergeEvent(ctx context.Context, e goGitlab.MergeEvent) {
 	ref := schemas.NewRef(
-		schemas.NewProject(e.Project.PathWithNamespace),
+		schemas.NewProject(e.Project.PathWithNamespace, []string{}),
 		schemas.RefKindMergeRequest,
 		strconv.Itoa(e.ObjectAttributes.IID),
 	)
@@ -162,7 +162,7 @@ func (c *Controller) triggerRefMetricsPull(ctx context.Context, ref schemas.Ref)
 
 	// Let's try to see if the project is configured to export this ref
 	if !refExists {
-		p := schemas.NewProject(ref.Project.Name)
+		p := schemas.NewProject(ref.Project.Name, strings.Split(ref.Project.Topics, ","))
 
 		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 		if err != nil {
@@ -276,7 +276,7 @@ func (c *Controller) triggerEnvironmentMetricsPull(ctx context.Context, env sche
 	}
 
 	if !envExists {
-		p := schemas.NewProject(env.ProjectName)
+		p := schemas.NewProject(env.ProjectName, []string{})
 
 		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 		if err != nil {

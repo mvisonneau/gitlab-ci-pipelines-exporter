@@ -16,7 +16,7 @@ import (
 )
 
 // GetProject ..
-func (c *Client) GetProject(ctx context.Context, name string) (*goGitlab.Project, error) {
+func (c *Client) GetProject(ctx context.Context, name string) (schemas.Project, error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetProject")
 	defer span.End()
 	span.SetAttributes(attribute.String("project_name", name))
@@ -29,7 +29,7 @@ func (c *Client) GetProject(ctx context.Context, name string) (*goGitlab.Project
 	p, resp, err := c.Projects.GetProject(name, &goGitlab.GetProjectOptions{}, goGitlab.WithContext(ctx))
 	c.requestsRemaining(resp)
 
-	return p, err
+	return schemas.NewProject(p.PathWithNamespace, p.Topics), err
 }
 
 // ListProjects ..
@@ -134,7 +134,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 				continue
 			}
 
-			p := schemas.NewProject(gp.PathWithNamespace)
+			p := schemas.NewProject(gp.PathWithNamespace, gp.Topics)
 			p.ProjectParameters = w.ProjectParameters
 			projects = append(projects, p)
 		}

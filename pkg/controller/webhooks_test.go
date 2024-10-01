@@ -14,11 +14,11 @@ func TestTriggerRefMetricsPull(t *testing.T) {
 	srv.Close()
 
 	ref1 := schemas.Ref{
-		Project: schemas.NewProject("group/foo"),
+		Project: schemas.NewProject("group/foo", []string{"topicFoo"}),
 		Name:    "main",
 	}
 
-	p2 := schemas.NewProject("group/bar")
+	p2 := schemas.NewProject("group/bar", []string{"topicBar"})
 	ref2 := schemas.Ref{
 		Project: p2,
 		Name:    "main",
@@ -36,7 +36,7 @@ func TestTriggerEnvironmentMetricsPull(t *testing.T) {
 	ctx, c, _, srv := newTestController(config.Config{})
 	srv.Close()
 
-	p1 := schemas.NewProject("foo/bar")
+	p1 := schemas.NewProject("foo/bar", []string{})
 	env1 := schemas.Environment{
 		ProjectName: p1.Name,
 		Name:        "dev",
