@@ -29,13 +29,11 @@ func (c *Controller) HealthCheckHandler(ctx context.Context) (h healthcheck.Hand
 }
 
 // MetricsHandler ..
-func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) http.Handler {
 	ctx := r.Context()
 	span := trace.SpanFromContext(ctx)
 
 	defer span.End()
-
-	registry := NewRegistry(ctx)
 
 	metrics, err := c.Store.Metrics(ctx)
 	if err != nil {
@@ -44,7 +42,7 @@ func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 			Error()
 	}
 
-	if err := registry.ExportInternalMetrics(
+	if err := c.Registry.ExportInternalMetrics(
 		ctx,
 		c.Gitlab,
 		c.Store,
@@ -54,9 +52,14 @@ func (c *Controller) MetricsHandler(w http.ResponseWriter, r *http.Request) {
 			Warn()
 	}
 
-	registry.ExportMetrics(metrics)
+	c.Registry.ExportMetrics(metrics)
 
-	otelhttp.NewHandler(
+	return promhttp.HandlerFor(c.Registry, promhttp.HandlerOpts{
+		Registry:          c.Registry,
+		EnableOpenMetrics: c.Config.Server.Metrics.EnableOpenmetricsEncoding,
+	})
+
+	return otelhttp.NewHandler(
 		promhttp.HandlerFor(registry, promhttp.HandlerOpts{
 			Registry:          registry,
 			EnableOpenMetrics: c.Config.Server.Metrics.EnableOpenmetricsEncoding,
