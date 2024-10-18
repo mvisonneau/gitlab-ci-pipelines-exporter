@@ -14,10 +14,10 @@ import (
 )
 
 func TestGarbageCollectProjects(t *testing.T) {
-	p1 := schemas.NewProject("cfg/p1")
-	p2 := schemas.NewProject("cfg/p2")
-	p3 := schemas.NewProject("wc/p3")
-	p4 := schemas.NewProject("wc/p4")
+	p1 := schemas.NewProject("cfg/p1", []string{})
+	p2 := schemas.NewProject("cfg/p2", []string{})
+	p3 := schemas.NewProject("wc/p3", []string{})
+	p4 := schemas.NewProject("wc/p4", []string{})
 
 	ctx, c, mux, srv := newTestController(config.Config{
 		Projects: []config.Project{p1.Project},
@@ -62,7 +62,7 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 			fmt.Fprint(w, `[{"name": "main"}]`)
 		})
 
-	p2 := schemas.NewProject("p2")
+	p2 := schemas.NewProject("p2", []string{})
 	p2.Pull.Environments.Enabled = true
 	p2.Pull.Environments.Regexp = "^main$"
 
@@ -103,10 +103,10 @@ func TestGarbageCollectRefs(t *testing.T) {
 			fmt.Fprint(w, `[{"name": "main"}]`)
 		})
 
-	pr1dev := schemas.NewRef(schemas.NewProject("p1"), schemas.RefKindBranch, "dev")
-	pr1main := schemas.NewRef(schemas.NewProject("p1"), schemas.RefKindBranch, "main")
+	pr1dev := schemas.NewRef(schemas.NewProject("p1", []string{}), schemas.RefKindBranch, "dev")
+	pr1main := schemas.NewRef(schemas.NewProject("p1", []string{}), schemas.RefKindBranch, "main")
 
-	p2 := schemas.NewProject("p2")
+	p2 := schemas.NewProject("p2", []string{})
 	p2.Pull.Environments.Regexp = "^main$"
 
 	pr2dev := schemas.NewRef(p2, schemas.RefKindBranch, "dev")
@@ -133,7 +133,7 @@ func TestGarbageCollectMetrics(t *testing.T) {
 	ctx, c, _, srv := newTestController(config.Config{})
 	srv.Close()
 
-	p1 := schemas.NewProject("p1")
+	p1 := schemas.NewProject("p1", []string{})
 	p1.Pull.Pipeline.Jobs.Enabled = true
 
 	ref1 := schemas.NewRef(p1, schemas.RefKindBranch, "foo")

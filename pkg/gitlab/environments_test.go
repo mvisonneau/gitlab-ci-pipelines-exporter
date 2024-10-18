@@ -53,7 +53,7 @@ func TestGetProjectEnvironments(t *testing.T) {
 		},
 	)
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Pull.Environments.Regexp = "^dev"
 	p.Pull.Environments.ExcludeStopped = false
 

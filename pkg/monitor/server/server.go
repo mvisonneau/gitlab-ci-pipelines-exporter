@@ -171,6 +171,11 @@ func (s *Server) GetTelemetry(_ *pb.Empty, ts pb.Monitor_GetTelemetryServer) (er
 			return
 		}
 
+		if _, ok := s.taskSchedulingMonitoring[schemas.TaskTypePullProjects]; ok {
+			telemetry.Projects.LastPull = timestamppb.New(s.taskSchedulingMonitoring[schemas.TaskTypePullProjects].Last)
+			telemetry.Projects.NextPull = timestamppb.New(s.taskSchedulingMonitoring[schemas.TaskTypePullProjects].Next)
+		}
+
 		if _, ok := s.taskSchedulingMonitoring[schemas.TaskTypePullProjectsFromWildcards]; ok {
 			telemetry.Projects.LastPull = timestamppb.New(s.taskSchedulingMonitoring[schemas.TaskTypePullProjectsFromWildcards].Last)
 			telemetry.Projects.NextPull = timestamppb.New(s.taskSchedulingMonitoring[schemas.TaskTypePullProjectsFromWildcards].Next)
