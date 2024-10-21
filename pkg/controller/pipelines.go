@@ -34,9 +34,8 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 	}
 
 	pipelines, _, err := c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
-		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
-			PerPage: 10, // TODO configure this maybe dependent on pull interval
+			PerPage: int(ref.Project.Pull.Pipeline.PerRef),
 			Page:    1,
 			OrderBy: "updated_at",
 			Sort:    "desc",
@@ -53,11 +52,15 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		return nil
 	}
 
-	// TODO loop over results
 	slices.Reverse(pipelines)
 	for _, apiPipeline := range pipelines {
-		// TODO error handling
-		c.ProcessPipelinesMetrics(ctx, ref, apiPipeline)
+		err := c.ProcessPipelinesMetrics(ctx, ref, apiPipeline)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"pipeline": apiPipeline.ID,
+				"error":    err,
+			}).Error("processing pipeline metrics failed")
+		}
 	}
 
 	return nil
