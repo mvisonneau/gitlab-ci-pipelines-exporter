@@ -21,6 +21,9 @@ type Local struct {
 	metrics      schemas.Metrics
 	metricsMutex sync.RWMutex
 
+	pipelineVariables       map[float64]string
+	pipelineVariablesMutext sync.RWMutex
+
 	tasks              schemas.Tasks
 	tasksMutex         sync.RWMutex
 	executedTasksCount uint64
@@ -284,6 +287,39 @@ func (l *Local) MetricsCount(_ context.Context) (int64, error) {
 	defer l.metricsMutex.RUnlock()
 
 	return int64(len(l.metrics)), nil
+}
+
+func (l *Local) SetPipelineVariables(_ context.Context, pipeline schemas.Pipeline, variables string) error {
+	l.pipelineVariablesMutext.RLock()
+	defer l.pipelineVariablesMutext.RUnlock()
+
+	l.pipelineVariables[float64(pipeline.ID)] = variables
+
+	return nil
+}
+
+func (l *Local) GetPipelineVariables(_ context.Context, pipeline schemas.Pipeline) (string, error) {
+	l.pipelineVariablesMutext.RLock()
+
+	value, ok := l.pipelineVariables[float64(pipeline.ID)]
+
+	l.pipelineVariablesMutext.RUnlock()
+
+	if ok {
+		return value, nil
+	}
+
+	return "", nil
+}
+
+func (l *Local) PipelineVariablesExist(_ context.Context, pipeline schemas.Pipeline) (bool, error) {
+	l.pipelineVariablesMutext.RLock()
+
+	_, ok := l.pipelineVariables[float64(pipeline.ID)]
+
+	l.pipelineVariablesMutext.RUnlock()
+
+	return ok, nil
 }
 
 // isTaskAlreadyQueued assess if a task is already queued or not.

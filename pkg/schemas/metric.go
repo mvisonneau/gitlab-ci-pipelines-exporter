@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	// MetricKindCoverage refers to the coerage of a job/pipeline.
+	// MetricKindCoverage refers to the coverage of a job/pipeline.
 	MetricKindCoverage MetricKind = iota
 
 	// MetricKindDurationSeconds ..
@@ -145,6 +145,7 @@ func (m Metric) Key() MetricKey {
 			m.Labels["kind"],
 			m.Labels["ref"],
 			m.Labels["source"],
+			m.Labels["variables"],
 		})
 
 	case MetricKindJobArtifactSizeBytes, MetricKindJobDurationSeconds, MetricKindJobID, MetricKindJobQueuedDurationSeconds, MetricKindJobRunCount, MetricKindJobStatus, MetricKindJobTimestamp:
