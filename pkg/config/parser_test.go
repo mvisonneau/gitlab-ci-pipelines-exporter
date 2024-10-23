@@ -116,6 +116,7 @@ project_defaults:
       variables:
         enabled: true
         regexp: "^CI_"
+      per_ref: 3
 
 projects:
   - name: foo/project
@@ -128,6 +129,8 @@ projects:
         branches:
           regexp: "^foo$"
           max_age_seconds: 2
+      pipeline:
+        per_ref: 10
 
 wildcards:
   - owner:
@@ -228,6 +231,7 @@ wildcards:
 	xcfg.ProjectDefaults.Pull.Pipeline.Jobs.Enabled = true
 	xcfg.ProjectDefaults.Pull.Pipeline.Variables.Enabled = true
 	xcfg.ProjectDefaults.Pull.Pipeline.Variables.Regexp = `^CI_`
+	xcfg.ProjectDefaults.Pull.Pipeline.PerRef = 3
 
 	p1 := NewProject("foo/project")
 	p1.ProjectParameters = xcfg.ProjectDefaults
@@ -239,6 +243,7 @@ wildcards:
 	p2.Pull.Environments.Regexp = `^foo$`
 	p2.Pull.Refs.Branches.Regexp = `^foo$`
 	p2.Pull.Refs.Branches.MaxAgeSeconds = 2
+	p2.Pull.Pipeline.PerRef = 10
 
 	xcfg.Projects = []Project{p1, p2}
 
