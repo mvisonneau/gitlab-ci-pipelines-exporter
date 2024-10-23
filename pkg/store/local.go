@@ -21,8 +21,8 @@ type Local struct {
 	metrics      schemas.Metrics
 	metricsMutex sync.RWMutex
 
-	pipelineVariables       map[float64]string
-	pipelineVariablesMutext sync.RWMutex
+	pipelineVariables      map[float64]string
+	pipelineVariablesMutex sync.RWMutex
 
 	tasks              schemas.Tasks
 	tasksMutex         sync.RWMutex
@@ -290,8 +290,8 @@ func (l *Local) MetricsCount(_ context.Context) (int64, error) {
 }
 
 func (l *Local) SetPipelineVariables(_ context.Context, pipeline schemas.Pipeline, variables string) error {
-	l.pipelineVariablesMutext.RLock()
-	defer l.pipelineVariablesMutext.RUnlock()
+	l.pipelineVariablesMutex.RLock()
+	defer l.pipelineVariablesMutex.RUnlock()
 
 	l.pipelineVariables[float64(pipeline.ID)] = variables
 
@@ -299,11 +299,11 @@ func (l *Local) SetPipelineVariables(_ context.Context, pipeline schemas.Pipelin
 }
 
 func (l *Local) GetPipelineVariables(_ context.Context, pipeline schemas.Pipeline) (string, error) {
-	l.pipelineVariablesMutext.RLock()
+	l.pipelineVariablesMutex.RLock()
 
 	value, ok := l.pipelineVariables[float64(pipeline.ID)]
 
-	l.pipelineVariablesMutext.RUnlock()
+	l.pipelineVariablesMutex.RUnlock()
 
 	if ok {
 		return value, nil
@@ -313,11 +313,11 @@ func (l *Local) GetPipelineVariables(_ context.Context, pipeline schemas.Pipelin
 }
 
 func (l *Local) PipelineVariablesExist(_ context.Context, pipeline schemas.Pipeline) (bool, error) {
-	l.pipelineVariablesMutext.RLock()
+	l.pipelineVariablesMutex.RLock()
 
 	_, ok := l.pipelineVariables[float64(pipeline.ID)]
 
-	l.pipelineVariablesMutext.RUnlock()
+	l.pipelineVariablesMutex.RUnlock()
 
 	return ok, nil
 }
