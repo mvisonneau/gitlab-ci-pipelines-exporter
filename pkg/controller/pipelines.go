@@ -50,7 +50,10 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		return nil
 	}
 
+	// Reverse result list to have `ref`'s `LatestPipeline` untouched (compared to
+	// default behavior) after looping over list
 	slices.Reverse(pipelines)
+
 	for _, apiPipeline := range pipelines {
 		err := c.ProcessPipelinesMetrics(ctx, ref, apiPipeline)
 		if err != nil {
