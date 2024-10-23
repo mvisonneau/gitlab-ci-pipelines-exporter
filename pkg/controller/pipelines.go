@@ -37,8 +37,6 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		ListOptions: goGitlab.ListOptions{
 			PerPage: int(ref.Project.Pull.Pipeline.PerRef),
 			Page:    1,
-			OrderBy: "updated_at",
-			Sort:    "desc",
 		},
 		Ref: &refName,
 	})
