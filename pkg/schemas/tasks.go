@@ -45,6 +45,9 @@ const (
 
 	// TaskTypeGarbageCollectMetrics ..
 	TaskTypeGarbageCollectMetrics TaskType = "GarbageCollectMetrics"
+
+	// TaskTypeAddWebhooks ..
+	TaskTypeAddWebhooks TaskType = "AddWebhooks"
 )
 
 // Tasks can be used to keep track of tasks.
