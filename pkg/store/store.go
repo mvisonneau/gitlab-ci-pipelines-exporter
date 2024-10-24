@@ -38,9 +38,12 @@ type Store interface {
 	Metrics(ctx context.Context) (schemas.Metrics, error)
 	MetricsCount(ctx context.Context) (int64, error)
 
+	SetPipeline(ctx context.Context, pipeline schemas.Pipeline) error
+	GetPipeline(ctx context.Context, pipeline *schemas.Pipeline) error
+	PipelineExists(ctx context.Context, key schemas.PipelineKey) (bool, error)
 	SetPipelineVariables(ctx context.Context, pipeline schemas.Pipeline, variables string) error
 	GetPipelineVariables(ctx context.Context, pipeline schemas.Pipeline) (string, error)
-	PipelineVariablesExist(ctx context.Context, pipeline schemas.Pipeline) (bool, error)
+	PipelineVariablesExists(ctx context.Context, pipeline schemas.Pipeline) (bool, error)
 
 	// Helpers to keep track of currently queued tasks and avoid scheduling them
 	// twice at the risk of ending up with loads of dangling goroutines being locked
@@ -57,7 +60,8 @@ func NewLocalStore() Store {
 		environments:      make(schemas.Environments),
 		refs:              make(schemas.Refs),
 		metrics:           make(schemas.Metrics),
-		pipelineVariables: make(map[float64]string),
+		pipelines:         make(schemas.Pipelines),
+		pipelineVariables: make(map[schemas.PipelineKey]string),
 	}
 }
 

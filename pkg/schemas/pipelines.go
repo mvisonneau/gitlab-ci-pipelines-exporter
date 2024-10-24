@@ -21,6 +21,14 @@ type Pipeline struct {
 	TestReport            TestReport
 }
 
+type PipelineKey int
+
+type Pipelines map[PipelineKey]Pipeline
+
+func (pipeline Pipeline) Key() PipelineKey {
+	return PipelineKey(pipeline.ID)
+}
+
 // TestReport ..
 type TestReport struct {
 	TotalTime    float64

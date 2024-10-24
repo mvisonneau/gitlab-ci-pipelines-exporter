@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -82,7 +83,7 @@ func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Re
 
 	// fetch pipeline variables
 	if ref.Project.Pull.Pipeline.Variables.Enabled {
-		if exists, _ := c.Store.PipelineVariablesExist(ctx, pipeline); !exists {
+		if exists, _ := c.Store.PipelineVariablesExists(ctx, pipeline); !exists {
 			variables, err := c.Gitlab.GetRefPipelineVariablesAsConcatenatedString(ctx, ref, pipeline)
 			c.Store.SetPipelineVariables(ctx, pipeline, variables)
 			pipeline.Variables = variables
@@ -95,18 +96,15 @@ func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Re
 		}
 	}
 
-	idMetric := schemas.Metric{
-		Kind:   schemas.MetricKindID,
-		Labels: ref.DefaultLabelsValues(pipeline),
-		Value:  float64(pipeline.ID),
-	}
+	var cachedPipeline schemas.Pipeline
 
-	// TODO this comparison is a mistake
-	// we should compare the whole pipeline object (as it was before) instead of
-	// just the ID since properties like the status are likely to change
-	if c.Store.GetMetric(ctx, &idMetric); ref.LatestPipeline.ID == 0 || idMetric.Value != float64(pipeline.ID) {
+	if c.Store.GetPipeline(ctx, &cachedPipeline); cachedPipeline.ID == 0 || !reflect.DeepEqual(pipeline, cachedPipeline) {
 		formerPipeline := ref.LatestPipeline
 		ref.LatestPipeline = pipeline
+
+		if err = c.Store.SetPipeline(ctx, pipeline); err != nil {
+			return err
+		}
 
 		// Update the ref in the store
 		if err = c.Store.SetRef(ctx, ref); err != nil {
