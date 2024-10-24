@@ -101,6 +101,9 @@ func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Re
 		Value:  float64(pipeline.ID),
 	}
 
+	// TODO this comparison is a mistake
+	// we should compare the whole pipeline object (as it was before) instead of
+	// just the ID since properties like the status are likely to change
 	if c.Store.GetMetric(ctx, &idMetric); ref.LatestPipeline.ID == 0 || idMetric.Value != float64(pipeline.ID) {
 		formerPipeline := ref.LatestPipeline
 		ref.LatestPipeline = pipeline
