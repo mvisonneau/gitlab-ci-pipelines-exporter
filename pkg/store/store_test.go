@@ -19,7 +19,8 @@ func TestNewLocalStore(t *testing.T) {
 		environments:      make(schemas.Environments),
 		refs:              make(schemas.Refs),
 		metrics:           make(schemas.Metrics),
-		pipelineVariables: make(map[float64]string),
+		pipelines:         make(schemas.Pipelines),
+		pipelineVariables: make(map[schemas.PipelineKey]string),
 	}
 	assert.Equal(t, expectedValue, NewLocalStore())
 }

@@ -101,6 +101,127 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	assert.Equal(t, status, metrics[status.Key()])
 }
 
+func TestPullRefMetricsUpdatingPipeline(t *testing.T) {
+	// given
+	ctx, c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
+	apiPipeline := `{
+		"id":1,
+		"created_at":"2016-08-11T11:27:00.085Z",
+		"started_at":"2016-08-11T11:28:00.085Z",
+		"duration":300,
+		"queued_duration":60,
+		"status":"running",
+		"coverage":"30.2",
+		"source":"pipeline"
+	}`
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "bar", r.URL.Query().Get("ref"))
+			fmt.Fprint(w, `[{"id":1}]`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
+		func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprint(w, apiPipeline)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "GET", r.Method)
+			fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
+		})
+
+	p := schemas.NewProject("foo")
+	p.Pull.Pipeline.Variables.Enabled = true
+
+	labels := map[string]string{
+		"kind":      string(schemas.RefKindBranch),
+		"project":   "foo",
+		"ref":       "bar",
+		"topics":    "",
+		"variables": "foo:bar",
+		"source":    "pipeline",
+	}
+
+	// when
+	assert.NoError(t, c.PullRefMetrics(
+		ctx,
+		schemas.NewRef(
+			p,
+			schemas.RefKindBranch,
+			"bar",
+		)))
+
+	metrics, _ := c.Store.Metrics(ctx)
+
+	// then
+	runID := schemas.Metric{
+		Kind:   schemas.MetricKindID,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, runID, metrics[runID.Key()])
+
+	labels["status"] = "running"
+	status := schemas.Metric{
+		Kind:   schemas.MetricKindStatus,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, status, metrics[status.Key()])
+
+	// given again
+	apiPipeline = `{
+		"id":1,
+		"created_at":"2016-08-11T11:27:00.085Z",
+		"started_at":"2016-08-11T11:28:00.085Z",
+		"duration":300,
+		"queued_duration":60,
+		"status":"failed",
+		"coverage":"30.2",
+		"source":"pipeline"
+	}`
+
+	labels = map[string]string{
+		"kind":      string(schemas.RefKindBranch),
+		"project":   "foo",
+		"ref":       "bar",
+		"topics":    "",
+		"variables": "foo:bar",
+		"source":    "pipeline",
+	}
+
+	// when again
+	assert.NoError(t, c.PullRefMetrics(
+		ctx,
+		schemas.NewRef(
+			p,
+			schemas.RefKindBranch,
+			"bar",
+		)))
+
+	metrics, _ = c.Store.Metrics(ctx)
+
+	// then again
+	runID = schemas.Metric{
+		Kind:   schemas.MetricKindID,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, runID, metrics[runID.Key()])
+
+	labels["status"] = "failed"
+	status = schemas.Metric{
+		Kind:   schemas.MetricKindStatus,
+		Labels: labels,
+		Value:  1,
+	}
+	assert.Equal(t, status, metrics[status.Key()])
+
+}
+
 func TestPullRefTestReportMetrics(t *testing.T) {
 	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
