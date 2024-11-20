@@ -11,7 +11,7 @@ apk add --no-cache ca-certificates
 # RELEASE CONTAINER
 ##
 
-FROM busybox:1.37-glibc@sha256:3757a0aac2f46c8f8f96dae75b7f2b633d745252ef9d46bdce9c588a564cfc84
+FROM busybox:1.37-glibc@sha256:2cb319231cfb0d116e9f83bdfef4c460431fd007c6def3703c9567efbaaa13b3
 
 WORKDIR /
 
