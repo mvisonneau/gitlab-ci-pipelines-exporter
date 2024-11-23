@@ -20,7 +20,7 @@ func TestPullRefPipelineJobsMetrics(t *testing.T) {
 			fmt.Fprint(w, `[{"id":1,"created_at":"2016-08-11T11:28:34.085Z","started_at":"2016-08-11T11:28:56.085Z"},{"id":2,"created_at":"2016-08-11T11:28:34.085Z","started_at":"2016-08-11T11:28:58.085Z"}]`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled = false
 
 	ref := schemas.NewRef(p, schemas.RefKindBranch, "bar")
@@ -42,7 +42,7 @@ func TestPullRefMostRecentJobsMetrics(t *testing.T) {
 		})
 
 	ref := schemas.Ref{
-		Project: schemas.NewProject("foo"),
+		Project: schemas.NewProject("foo", []string{}),
 		Name:    "bar",
 		LatestJobs: schemas.Jobs{
 			"bar": {
@@ -85,7 +85,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		},
 	}
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Topics = "first,second"
 	p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `foo-(.*)-bar`
 

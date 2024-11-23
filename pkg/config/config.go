@@ -135,6 +135,13 @@ type Redis struct {
 
 // Pull ..
 type Pull struct {
+	// Projects configuration
+	Projects struct {
+		OnInit          bool `default:"true" yaml:"on_init"`
+		Scheduled       bool `default:"true" yaml:"scheduled"`
+		IntervalSeconds int  `default:"1800" validate:"gte=1" yaml:"interval_seconds"`
+	} `yaml:"projects"`
+
 	// ProjectsFromWildcards configuration
 	ProjectsFromWildcards struct {
 		OnInit          bool `default:"true" yaml:"on_init"`
