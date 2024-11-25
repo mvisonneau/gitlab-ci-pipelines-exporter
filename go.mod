@@ -8,7 +8,7 @@ require (
 	dario.cat/mergo v1.0.1
 	github.com/alicebob/miniredis/v2 v2.33.0
 	github.com/charmbracelet/bubbles v0.20.0
-	github.com/charmbracelet/bubbletea v1.2.3
+	github.com/charmbracelet/bubbletea v1.2.4
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/creasty/defaults v1.8.0
 	github.com/go-logr/stdr v1.2.2
