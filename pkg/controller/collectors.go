@@ -271,7 +271,7 @@ func NewCollectorJobDurationSeconds() prometheus.Collector {
 func NewCollectorJobDurationHistogram() prometheus.Collector {
 	return prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "duration_seconds",
+			Name:    "gitlab_ci_pipeline_job_histogram_duration_seconds",
 			Help:    "Histogram of duration (seconds) of finished gitlab jobs",
 			Buckets: latencyHistogramBuckets,
 		},

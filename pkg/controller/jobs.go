@@ -167,6 +167,7 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 
 	if jobRunCountExists && ((lastJob.ID != job.ID && jobTriggered) || (lastJob.ID == job.ID && jobTriggered && !lastJobTriggered)) {
 		storeGetMetric(ctx, c.Store, &jobRunCount)
+
 		jobRunCount.Value++
 	}
 

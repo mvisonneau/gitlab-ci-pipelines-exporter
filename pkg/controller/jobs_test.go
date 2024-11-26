@@ -179,3 +179,106 @@ func TestProcessJobMetrics(t *testing.T) {
 	}
 	assert.Equal(t, status, metrics[status.Key()])
 }
+
+func TestProcessJobHistogramMetrics(t *testing.T) {
+	ctx, c, _, srv := newTestController(config.Config{})
+	srv.Close()
+
+	oldJob := schemas.Job{
+		ID:        1,
+		Name:      "foo",
+		Timestamp: 1,
+	}
+
+	job1 := schemas.Job{
+		ID:              2,
+		Name:            "foo",
+		Timestamp:       2,
+		DurationSeconds: 15,
+		Status:          "failed",
+		Stage:           "🚀",
+		TagList:         "",
+		ArtifactSize:    150,
+		Runner: schemas.Runner{
+			Description: "foo-123-bar",
+		},
+	}
+
+	job2 := schemas.Job{
+		ID:              3,
+		Name:            "foo",
+		Timestamp:       2,
+		DurationSeconds: 20,
+		Status:          "failed",
+		Stage:           "🚀",
+		TagList:         "",
+		ArtifactSize:    150,
+		Runner: schemas.Runner{
+			Description: "foo-123-bar",
+		},
+	}
+	p := schemas.NewProject("foo")
+	p.Topics = "first,second"
+	p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `foo-(.*)-bar`
+
+	ref := schemas.NewRef(p, schemas.RefKindBranch, "foo")
+	ref.LatestPipeline.ID = 1
+	ref.LatestPipeline.Variables = "none"
+	ref.LatestJobs = schemas.Jobs{
+		"foo": oldJob,
+	}
+
+	c.Store.SetRef(ctx, ref)
+
+	// If we run it against the same job, nothing should change in the store
+	c.ProcessJobMetrics(ctx, ref, oldJob)
+	refs, _ := c.Store.Refs(ctx)
+	assert.Equal(t, schemas.Jobs{
+		"foo": oldJob,
+	}, refs[ref.Key()].LatestJobs)
+
+	// Update the ref job 1
+	c.ProcessJobMetrics(ctx, ref, job1)
+	refs, _ = c.Store.Refs(ctx)
+	assert.Equal(t, schemas.Jobs{
+		"foo": job1,
+	}, refs[ref.Key()].LatestJobs)
+
+	// Check if all the metrics exist
+	metrics, _ := c.Store.Metrics(ctx)
+	labels := map[string]string{
+		"project":            ref.Project.Name,
+		"topics":             ref.Project.Topics,
+		"ref":                ref.Name,
+		"kind":               string(ref.Kind),
+		"variables":          ref.LatestPipeline.Variables,
+		"source":             ref.LatestPipeline.Source,
+		"stage":              job1.Stage,
+		"tag_list":           job1.TagList,
+		"failure_reason":     job1.FailureReason,
+		"job_name":           job1.Name,
+		"runner_description": ref.Project.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp,
+	}
+	jobDurationHistogram := schemas.Metric{
+		Kind:   schemas.MetricKindJobDurationHistogram,
+		Labels: labels,
+		Value:  job1.DurationSeconds,
+	}
+
+	assert.Equal(t, jobDurationHistogram, metrics[jobDurationHistogram.Key()])
+
+	// Update the ref job 2
+	c.ProcessJobMetrics(ctx, ref, job2)
+	refs, _ = c.Store.Refs(ctx)
+	assert.Equal(t, schemas.Jobs{
+		"foo": job2,
+	}, refs[ref.Key()].LatestJobs)
+	jobDurationHistogram = schemas.Metric{
+		Kind:   schemas.MetricKindJobDurationHistogram,
+		Labels: labels,
+		Value:  job2.DurationSeconds,
+	}
+
+	assert.Equal(t, jobDurationHistogram, metrics[jobDurationHistogram.Key()])
+
+}

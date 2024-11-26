@@ -150,7 +150,7 @@ func (m Metric) Key() MetricKey {
 			m.Labels["source"],
 		})
 
-	case MetricKindJobArtifactSizeBytes, MetricKindJobDurationSeconds, MetricKindJobID, MetricKindJobQueuedDurationSeconds, MetricKindJobRunCount, MetricKindJobStatus, MetricKindJobTimestamp:
+	case MetricKindJobArtifactSizeBytes, MetricKindJobDurationSeconds, MetricKindJobDurationHistogram, MetricKindJobID, MetricKindJobQueuedDurationSeconds, MetricKindJobRunCount, MetricKindJobStatus, MetricKindJobTimestamp:
 		key += fmt.Sprintf("%v", []string{
 			m.Labels["project"],
 			m.Labels["kind"],

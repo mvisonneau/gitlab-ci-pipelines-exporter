@@ -322,6 +322,7 @@ func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 			switch m.Kind {
 			case schemas.MetricKindJobArtifactSizeBytes,
 				schemas.MetricKindJobDurationSeconds,
+				schemas.MetricKindJobDurationHistogram,
 				schemas.MetricKindJobID,
 				schemas.MetricKindJobRunCount,
 				schemas.MetricKindJobStatus,

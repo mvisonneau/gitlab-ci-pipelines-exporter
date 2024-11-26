@@ -1,0 +1,28 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:best-practices"],
+
+  postUpdateOptions: [
+    "gomodTidy", // Run go mod tidy after Go module updates.
+  ],
+
+  customManagers: [
+    // Update Makefile's go dependencies
+    {
+      customType: "regex",
+      fileMatch: ["^Makefile$"],
+      matchStrings: ["go run (?<depName>.*?)@(?<currentValue>.*?) "],
+      datasourceTemplate: "go",
+    },
+  ],
+
+  packageRules: [
+    // Group all patch updates into a single PR
+    {
+      groupName: "all patch and minor",
+      matchPackageNames: ["*"],
+      matchUpdateTypes: ["minor", "patch", "digest"],
+      automerge: true,
+    },
+  ],
+}

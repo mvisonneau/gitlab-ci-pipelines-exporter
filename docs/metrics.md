@@ -163,6 +163,7 @@ This flag affect every `_status$` metrics:
 - `gitlab_ci_pipeline_environment_deployment_status`
 - `gitlab_ci_pipeline_job_status`
 - `gitlab_ci_pipeline_status`
+- `gitlab_ci_pipeline_test_case_status`
 
 [available]: #available
 [current_commit_short_id]: #current-commit-short-id

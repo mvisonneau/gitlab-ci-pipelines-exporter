@@ -112,14 +112,6 @@ var (
 	docStyle = lipgloss.NewStyle()
 )
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-
-	return b
-}
-
 type model struct {
 	version         string
 	client          *client.Client
@@ -295,12 +287,14 @@ func (m *model) View() string {
 	// TABS
 	{
 		renderedTabs := []string{}
+
 		for tabID, t := range tabs {
 			if m.tabID == tabID {
 				renderedTabs = append(renderedTabs, activeTab.Render(string(t)))
 
 				continue
 			}
+
 			renderedTabs = append(renderedTabs, inactiveTab.Render(string(t)))
 		}
 

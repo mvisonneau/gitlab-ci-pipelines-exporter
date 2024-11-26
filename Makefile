@@ -3,16 +3,16 @@ FILES          := $(shell git ls-files */*.go)
 COVERAGE_FILE  := coverage.out
 REPOSITORY     := mvisonneau/$(NAME)
 .DEFAULT_GOAL  := help
-GOLANG_VERSION := 1.22
+GOLANG_VERSION := 1.23
 
 .PHONY: fmt
 fmt: ## Format source code
-	go run mvdan.cc/gofumpt@v0.5.0 -w $(shell git ls-files **/*.go)
-	go run github.com/daixiang0/gci@v0.11.2 write -s standard -s default -s "prefix(github.com/mvisonneau)" .
+	go run mvdan.cc/gofumpt@v0.7.0 -w $(shell git ls-files **/*.go)
+	go run github.com/daixiang0/gci@v0.13.5 write -s standard -s default -s "prefix(github.com/mvisonneau)" .
 
 .PHONY: lint
 lint: ## Run all lint related tests upon the codebase
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.54.2 run -v --fast
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2 run -v --fast
 
 .PHONY: test
 test: ## Run the tests against the codebase

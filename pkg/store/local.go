@@ -331,6 +331,7 @@ func (l *Local) UnqueueTask(_ context.Context, tt schemas.TaskType, uniqueID str
 		defer l.tasksMutex.Unlock()
 
 		delete(l.tasks[tt], uniqueID)
+
 		l.executedTasksCount++
 	}
 

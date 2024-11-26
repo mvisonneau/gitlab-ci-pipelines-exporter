@@ -7,7 +7,7 @@ import (
 
 // Limiter ..
 type Limiter interface {
-	Take(context.Context) time.Duration
+	Take(ctx context.Context) time.Duration
 }
 
 // Take ..

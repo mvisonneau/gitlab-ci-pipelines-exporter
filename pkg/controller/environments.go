@@ -130,6 +130,7 @@ func (c *Controller) PullEnvironmentMetrics(ctx context.Context, env schemas.Env
 			if err = c.Store.GetMetric(ctx, &behindCommitsCountMetric); err != nil {
 				return err
 			}
+
 			envBehindCommitCount = behindCommitsCountMetric.Value
 		}
 	}

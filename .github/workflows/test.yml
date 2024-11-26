@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-22.04
+          - ubuntu-24.04
           - macos-13
           - windows-2022
 
@@ -24,23 +24,23 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5
         with:
-          go-version: '1.22'
+          go-version: '1.23'
 
       - name: Lint
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
         run: make lint
 
       - name: Test
         run: make test
 
       - name: Publish coverage to coveralls.io
-        uses: shogo82148/actions-goveralls@v1
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        uses: shogo82148/actions-goveralls@785c9d68212c91196d3994652647f8721918ba11 # v1
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
         with:
           path-to-profile: coverage.out
 
