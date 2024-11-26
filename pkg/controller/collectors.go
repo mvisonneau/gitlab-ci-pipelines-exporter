@@ -11,6 +11,7 @@ var (
 	testSuiteLabels              = []string{"test_suite_name"}
 	testCaseLabels               = []string{"test_case_name", "test_case_classname"}
 	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled", "error"}
+	latencyHistogramBuckets      = []float64{.1, .25, .5, 1, 2.5, 5, 10, 15, 20, 30, 40, 50, 60, 90, 150, 210, 270, 330, 390, 450, 500, 600, 1200, 1800, 2700, 3600}
 )
 
 // NewInternalCollectorCurrentlyQueuedTasksCount returns a new collector for the gcpe_currently_queued_tasks_count metric.
@@ -261,6 +262,18 @@ func NewCollectorJobDurationSeconds() prometheus.Collector {
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_job_duration_seconds",
 			Help: "Duration in seconds of the most recent job",
+		},
+		append(defaultLabels, jobLabels...),
+	)
+}
+
+// NewCollectorJobDurationHistogram returns a new collector for the gitlab_ci_pipeline_job_duration_seconds histogram metrics.
+func NewCollectorJobDurationHistogram() prometheus.Collector {
+	return prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "duration_seconds",
+			Help:    "Histogram of duration (seconds) of finished gitlab jobs",
+			Buckets: latencyHistogramBuckets,
 		},
 		append(defaultLabels, jobLabels...),
 	)

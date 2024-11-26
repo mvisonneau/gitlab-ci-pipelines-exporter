@@ -48,6 +48,9 @@ const (
 	// MetricKindJobDurationSeconds ..
 	MetricKindJobDurationSeconds
 
+	// MetricKindJobDurationHistogram ..
+	MetricKindJobDurationHistogram
+
 	// MetricKindJobID ..
 	MetricKindJobID
 

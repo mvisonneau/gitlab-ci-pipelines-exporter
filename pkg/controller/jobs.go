@@ -129,6 +129,12 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 	})
 
 	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindJobDurationHistogram,
+		Labels: labels,
+		Value:  job.DurationSeconds,
+	})
+
+	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobQueuedDurationSeconds,
 		Labels: labels,
 		Value:  job.QueuedDurationSeconds,

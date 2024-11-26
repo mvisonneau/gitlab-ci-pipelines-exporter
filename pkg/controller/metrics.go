@@ -53,6 +53,7 @@ func NewRegistry(ctx context.Context) *Registry {
 			schemas.MetricKindID:                                   NewCollectorID(),
 			schemas.MetricKindJobArtifactSizeBytes:                 NewCollectorJobArtifactSizeBytes(),
 			schemas.MetricKindJobDurationSeconds:                   NewCollectorJobDurationSeconds(),
+			schemas.MetricKindJobDurationHistogram:                 NewCollectorJobDurationHistogram(),
 			schemas.MetricKindJobID:                                NewCollectorJobID(),
 			schemas.MetricKindJobQueuedDurationSeconds:             NewCollectorJobQueuedDurationSeconds(),
 			schemas.MetricKindJobRunCount:                          NewCollectorJobRunCount(),

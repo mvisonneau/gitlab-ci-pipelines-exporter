@@ -149,6 +149,14 @@ func TestProcessJobMetrics(t *testing.T) {
 	}
 	assert.Equal(t, lastRunJobDuration, metrics[lastRunJobDuration.Key()])
 
+	jobDurationHistogram := schemas.Metric{
+		Kind:   schemas.MetricKindJobDurationHistogram,
+		Labels: labels,
+		Value:  newJob.DurationSeconds,
+	}
+
+	assert.Equal(t, jobDurationHistogram, metrics[jobDurationHistogram.Key()])
+
 	jobRunCount := schemas.Metric{
 		Kind:   schemas.MetricKindJobRunCount,
 		Labels: labels,
