@@ -87,19 +87,19 @@ func (c *Client) GetProjectPipelines(
 }
 
 // GetRefPipelineVariablesAsConcatenatedString ..
-func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context, ref schemas.Ref) (string, error) {
+func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context, ref schemas.Ref, pipeline schemas.Pipeline) (string, error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipelineVariablesAsConcatenatedString")
 	defer span.End()
 	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
 	span.SetAttributes(attribute.String("ref_name", ref.Name))
 
-	if reflect.DeepEqual(ref.LatestPipeline, (schemas.Pipeline{})) {
+	if reflect.DeepEqual(pipeline, (schemas.Pipeline{})) {
 		log.WithFields(
 			log.Fields{
 				"project-name": ref.Project.Name,
 				"ref":          ref.Name,
 			},
-		).Debug("most recent pipeline not defined, exiting..")
+		).Debug("pipeline not defined, exiting..")
 
 		return "", nil
 	}
@@ -108,7 +108,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context
 		log.Fields{
 			"project-name": ref.Project.Name,
 			"ref":          ref.Name,
-			"pipeline-id":  ref.LatestPipeline.ID,
+			"pipeline-id":  pipeline.ID,
 		},
 	).Debug("fetching pipeline variables")
 
@@ -123,9 +123,9 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context
 
 	c.rateLimit(ctx)
 
-	variables, resp, err := c.Pipelines.GetPipelineVariables(ref.Project.Name, ref.LatestPipeline.ID, goGitlab.WithContext(ctx))
+	variables, resp, err := c.Pipelines.GetPipelineVariables(ref.Project.Name, pipeline.ID, goGitlab.WithContext(ctx))
 	if err != nil {
-		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", ref.LatestPipeline.ID, err.Error())
+		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", pipeline.ID, err.Error())
 	}
 
 	c.requestsRemaining(resp)
