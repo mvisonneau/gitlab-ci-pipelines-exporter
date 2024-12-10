@@ -72,6 +72,20 @@ func NewApp(version string, start time.Time) (app *cli.App) {
 			},
 		},
 		{
+			Name:   "validate",
+			Usage:  "validate the configuration file",
+			Action: cmd.ExecWrapper(cmd.Validate),
+			Flags: cli.FlagsByName{
+				&cli.StringFlag{
+					Name:    "config",
+					Aliases: []string{"c"},
+					EnvVars: []string{"GCPE_CONFIG"},
+					Usage:   "config `file`",
+					Value:   "./gitlab-ci-pipelines-exporter.yml",
+				},
+			},
+		},
+		{
 			Name:   "monitor",
 			Usage:  "display information about the currently running exporter",
 			Action: cmd.ExecWrapper(cmd.Monitor),
