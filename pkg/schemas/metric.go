@@ -15,6 +15,9 @@ const (
 	// MetricKindDurationSeconds ..
 	MetricKindDurationSeconds
 
+	// MetricKindDurationTotal ..
+	MetricKindDurationTotal
+
 	// MetricKindEnvironmentBehindCommitsCount ..
 	MetricKindEnvironmentBehindCommitsCount
 
@@ -47,6 +50,9 @@ const (
 
 	// MetricKindJobDurationSeconds ..
 	MetricKindJobDurationSeconds
+
+	// MetricKindJobDurationTotal ..
+	MetricKindJobDurationTotal
 
 	// MetricKindJobID ..
 	MetricKindJobID
@@ -139,7 +145,7 @@ func (m Metric) Key() MetricKey {
 	key := strconv.Itoa(int(m.Kind))
 
 	switch m.Kind {
-	case MetricKindCoverage, MetricKindDurationSeconds, MetricKindID, MetricKindQueuedDurationSeconds, MetricKindRunCount, MetricKindStatus, MetricKindTimestamp, MetricKindTestReportTotalCount, MetricKindTestReportErrorCount, MetricKindTestReportFailedCount, MetricKindTestReportSkippedCount, MetricKindTestReportSuccessCount, MetricKindTestReportTotalTime:
+	case MetricKindCoverage, MetricKindDurationSeconds, MetricKindJobDurationTotal, MetricKindID, MetricKindQueuedDurationSeconds, MetricKindRunCount, MetricKindStatus, MetricKindTimestamp, MetricKindTestReportTotalCount, MetricKindTestReportErrorCount, MetricKindTestReportFailedCount, MetricKindTestReportSkippedCount, MetricKindTestReportSuccessCount, MetricKindTestReportTotalTime:
 		key += fmt.Sprintf("%v", []string{
 			m.Labels["project"],
 			m.Labels["kind"],

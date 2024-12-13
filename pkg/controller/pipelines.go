@@ -127,6 +127,8 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 			Value:  pipeline.DurationSeconds,
 		})
 
+		incrementMetric(ctx, c.Store, schemas.MetricKindDurationTotal, labels, pipeline.DurationSeconds, logFields)
+
 		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindQueuedDurationSeconds,
 			Labels: labels,

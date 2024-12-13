@@ -45,6 +45,8 @@ func TestNewCollectorFunctions(t *testing.T) {
 		NewCollectorJobRunCount,
 		NewCollectorRunCount,
 		NewCollectorEnvironmentDeploymentCount,
+		NewCollectorDurationTotal,
+		NewCollectorJobDurationTotal,
 	} {
 		c := f()
 		assert.NotNil(t, c)
