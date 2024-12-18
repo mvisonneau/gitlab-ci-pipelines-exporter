@@ -268,14 +268,16 @@ USAGE:
    gitlab-ci-pipelines-exporter [global options] command [command options] [arguments...]
 
 COMMANDS:
-   run      start the exporter
-   monitor  display information about the currently running exporter
-   help, h  Shows a list of commands or help for one command
+   run       start the exporter
+   validate  validate the configuration file
+   monitor   display information about the currently running exporter
+   help, h   Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --internal-monitoring-listener-address value, -m value  internal monitoring listener address [$GCPE_INTERNAL_MONITORING_LISTENER_ADDRESS]
-   --help, -h                                              show help (default: false)
-   --version, -v                                           print the version (default: false)
+   --help, -h                                              show help
+   --version, -v                                           print the version
+
 ```
 
 ### run
@@ -294,6 +296,21 @@ OPTIONS:
    --gitlab-token token          GitLab API access token (overrides config file parameter) [$GCPE_GITLAB_TOKEN]
    --webhook-secret-token token  token used to authenticate legitimate requests (overrides config file parameter) [$GCPE_WEBHOOK_SECRET_TOKEN]
    --help, -h                    show help (default: false)
+```
+
+### validate
+
+```bash
+~$ gitlab-ci-pipelines-exporter validate --help
+NAME:
+   gitlab-ci-pipelines-exporter validate - validate the configuration file
+
+USAGE:
+   gitlab-ci-pipelines-exporter validate [command options] [arguments...]
+
+OPTIONS:
+   --config file, -c file  config file (default: "./gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
+   --help, -h              show help
 ```
 
 ### monitor
