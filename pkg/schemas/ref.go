@@ -53,14 +53,21 @@ func (refs Refs) Count() int {
 }
 
 // DefaultLabelsValues ..
-func (ref Ref) DefaultLabelsValues() map[string]string {
+func (ref Ref) DefaultLabelsValues(input ...Pipeline) map[string]string {
+	var pipeline Pipeline
+	if len(input) > 0 {
+		pipeline = input[0]
+	} else {
+		pipeline = ref.LatestPipeline
+	}
+
 	return map[string]string{
 		"kind":      string(ref.Kind),
 		"project":   ref.Project.Name,
 		"ref":       ref.Name,
 		"topics":    ref.Project.Topics,
-		"variables": ref.LatestPipeline.Variables,
-		"source":    ref.LatestPipeline.Source,
+		"variables": pipeline.Variables,
+		"source":    pipeline.Source,
 	}
 }
 

@@ -78,9 +78,12 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 		Project: p,
 		Name:    "yay",
 	}
+	pipeline := schemas.Pipeline{
+		ID: 1,
+	}
 
 	// Should return right away as MostRecentPipeline is not defined
-	variables, err := c.GetRefPipelineVariablesAsConcatenatedString(ctx, ref)
+	variables, err := c.GetRefPipelineVariablesAsConcatenatedString(ctx, ref, schemas.Pipeline{})
 	assert.NoError(t, err)
 	assert.Equal(t, "", variables)
 
@@ -89,14 +92,14 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	}
 
 	// Should fail as we have an invalid regexp pattern
-	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ctx, ref)
+	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ctx, ref, pipeline)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "the provided filter regex for pipeline variables is invalid")
 	assert.Equal(t, "", variables)
 
 	// Should work
 	ref.Project.Pull.Pipeline.Variables.Regexp = `.*`
-	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ctx, ref)
+	variables, err = c.GetRefPipelineVariablesAsConcatenatedString(ctx, ref, pipeline)
 	assert.NoError(t, err)
 	assert.Equal(t, "foo:bar,bar:baz", variables)
 }
