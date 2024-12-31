@@ -28,6 +28,7 @@ func TestNewProject(t *testing.T) {
 	p.Pull.Pipeline.Jobs.RunnerDescription.Enabled = true
 	p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `shared-runners-manager-(\d*)\.gitlab\.com`
 	p.Pull.Pipeline.Variables.Regexp = `.*`
+	p.Pull.Pipeline.PerRef = 1
 
 	assert.Equal(t, p, NewProject("foo/bar"))
 }
