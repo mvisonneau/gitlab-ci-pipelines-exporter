@@ -29,7 +29,7 @@ func newTestRedisStore(t *testing.T) (mr *miniredis.Miniredis, r Store) {
 func TestRedisProjectFunctions(t *testing.T) {
 	_, r := newTestRedisStore(t)
 
-	p := schemas.NewProject("foo/bar")
+	p := schemas.NewProject("foo/bar", []string{})
 	p.OutputSparseStatusMetrics = false
 
 	// Set project
@@ -45,7 +45,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	assert.True(t, exists)
 
 	// GetProject should succeed
-	newProject := schemas.NewProject("foo/bar")
+	newProject := schemas.NewProject("foo/bar", []string{})
 	assert.NoError(t, r.GetProject(testCtx, &newProject))
 	assert.Equal(t, p, newProject)
 
@@ -65,7 +65,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	assert.False(t, exists)
 
 	// GetProject should not update the var this time
-	newProject = schemas.NewProject("foo/bar")
+	newProject = schemas.NewProject("foo/bar", []string{})
 	assert.NoError(t, r.GetProject(testCtx, &newProject))
 	assert.NotEqual(t, p, newProject)
 }
@@ -127,7 +127,7 @@ func TestRedisEnvironmentFunctions(t *testing.T) {
 func TestRedisRefFunctions(t *testing.T) {
 	_, r := newTestRedisStore(t)
 
-	p := schemas.NewProject("foo/bar")
+	p := schemas.NewProject("foo/bar", []string{})
 	p.Topics = "salty"
 	ref := schemas.NewRef(
 		p,
@@ -149,7 +149,7 @@ func TestRedisRefFunctions(t *testing.T) {
 
 	// GetRef should succeed
 	newRef := schemas.Ref{
-		Project: schemas.NewProject("foo/bar"),
+		Project: schemas.NewProject("foo/bar", []string{}),
 		Kind:    schemas.RefKindBranch,
 		Name:    "sweet",
 	}
@@ -174,7 +174,7 @@ func TestRedisRefFunctions(t *testing.T) {
 	// GetRef should not update the var this time
 	newRef = schemas.Ref{
 		Kind:    schemas.RefKindBranch,
-		Project: schemas.NewProject("foo/bar"),
+		Project: schemas.NewProject("foo/bar", []string{}),
 		Name:    "sweet",
 	}
 	assert.NoError(t, r.GetRef(testCtx, &newRef))

@@ -26,7 +26,7 @@ func TestGetProjectTags(t *testing.T) {
 			fmt.Fprint(w, `[{"name":"foo"},{"name":"bar"}]`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Pull.Refs.Tags.Regexp = `^f`
 
 	expectedRef := schemas.NewRef(p, schemas.RefKindTag, "foo")

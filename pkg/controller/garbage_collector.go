@@ -70,7 +70,7 @@ func (c *Controller) GarbageCollectEnvironments(ctx context.Context) error {
 	envProjects := make(map[schemas.Project]bool)
 
 	for _, env := range storedEnvironments {
-		p := schemas.NewProject(env.ProjectName)
+		p := schemas.NewProject(env.ProjectName, []string{})
 
 		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
 		if err != nil {
@@ -296,7 +296,7 @@ func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 
 		if metricLabelRefExists && !metricLabelEnvironmentExists {
 			refKey := schemas.NewRef(
-				schemas.NewProject(metricLabelProject),
+				schemas.NewProject(metricLabelProject, []string{}),
 				schemas.RefKind(m.Labels["kind"]),
 				metricLabelRef,
 			).Key()
