@@ -85,7 +85,6 @@ func TestNewPipeline(t *testing.T) {
 			assert.Equal(t, expectedPipeline, NewPipeline(context.Background(), gitlabPipeline))
 		})
 	}
-
 }
 
 func TestNewTestReport(t *testing.T) {

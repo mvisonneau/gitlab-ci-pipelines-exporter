@@ -10,9 +10,11 @@ func Validate(cliCtx *cli.Context) (int, error) {
 
 	if _, err := configure(cliCtx); err != nil {
 		log.WithError(err).Error("Failed to configure")
+
 		return 1, err
 	}
 
 	log.Debug("Configuration is valid")
+
 	return 0, nil
 }
