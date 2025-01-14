@@ -7,6 +7,9 @@ const (
 	// TaskTypePullProject ..
 	TaskTypePullProject TaskType = "PullProject"
 
+	// TaskTypePullProject ..
+	TaskTypePullProjects TaskType = "PullProjects"
+
 	// TaskTypePullProjectsFromWildcard ..
 	TaskTypePullProjectsFromWildcard TaskType = "PullProjectsFromWildcard"
 

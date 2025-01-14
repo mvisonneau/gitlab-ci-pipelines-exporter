@@ -8,7 +8,7 @@ import (
 
 func TestRefKey(t *testing.T) {
 	assert.Equal(t, RefKey("1690074537"), NewRef(
-		NewProject("foo/bar"),
+		NewProject("foo/bar", []string{}),
 		RefKindBranch,
 		"baz",
 	).Key())
@@ -22,7 +22,7 @@ func TestRefsCount(t *testing.T) {
 }
 
 func TestRefDefaultLabelsValues(t *testing.T) {
-	p := NewProject("foo/bar")
+	p := NewProject("foo/bar", []string{})
 	p.Topics = "amazing,project"
 	ref := Ref{
 		Project: p,
@@ -48,8 +48,7 @@ func TestRefDefaultLabelsValues(t *testing.T) {
 }
 
 func TestNewRef(t *testing.T) {
-	p := NewProject("foo/bar")
-	p.Topics = "bar,baz"
+	p := NewProject("foo/bar", []string{"bar", "baz"})
 	p.OutputSparseStatusMetrics = false
 	p.Pull.Pipeline.Jobs.Enabled = true
 	p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled = false

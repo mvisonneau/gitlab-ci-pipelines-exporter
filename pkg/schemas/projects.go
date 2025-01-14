@@ -3,6 +3,7 @@ package schemas
 import (
 	"hash/crc32"
 	"strconv"
+	"strings"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 )
@@ -26,6 +27,9 @@ func (p Project) Key() ProjectKey {
 }
 
 // NewProject ..
-func NewProject(name string) Project {
-	return Project{Project: config.NewProject(name)}
+func NewProject(name string, topics []string) Project {
+	return Project{
+		Project: config.NewProject(name),
+		Topics:  strings.Join(topics, ","),
+	}
 }

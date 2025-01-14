@@ -30,7 +30,7 @@ func TestGetRefs(t *testing.T) {
 			fmt.Fprint(w, `[{"ref":"refs/merge-requests/1234/head"}]`)
 		})
 
-	p := schemas.NewProject("foo")
+	p := schemas.NewProject("foo", []string{})
 	p.Pull.Refs.Branches.Regexp = `^m`
 	p.Pull.Refs.Tags.Regexp = `^v`
 	p.Pull.Refs.MergeRequests.Enabled = true
@@ -53,11 +53,6 @@ func TestPullRefsFromProject(t *testing.T) {
 	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
-	mux.HandleFunc("/api/v4/projects/foo",
-		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `{"name":"foo"}`)
-		})
-
 	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/branches"),
 		func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, `[{"name":"main"},{"name":"nope"}]`)
@@ -68,14 +63,25 @@ func TestPullRefsFromProject(t *testing.T) {
 			fmt.Fprint(w, `[]`)
 		})
 
-	p1 := schemas.NewProject("foo")
+	p1 := schemas.NewProject("foo", []string{"foo", "bar"})
 	assert.NoError(t, c.PullRefsFromProject(ctx, p1))
 
 	ref1 := schemas.NewRef(p1, schemas.RefKindBranch, "main")
-	expectedRefs := schemas.Refs{
+	expectedRefs1 := schemas.Refs{
 		ref1.Key(): ref1,
 	}
 
-	projectsRefs, _ := c.Store.Refs(ctx)
-	assert.Equal(t, expectedRefs, projectsRefs)
+	projectsRefs1, _ := c.Store.Refs(ctx)
+	assert.Equal(t, expectedRefs1, projectsRefs1)
+
+	p2 := schemas.NewProject("foo", []string{"foo"})
+	assert.NoError(t, c.PullRefsFromProject(ctx, p2))
+
+	ref2 := schemas.NewRef(p2, schemas.RefKindBranch, "main")
+	expectedRefs2 := schemas.Refs{
+		ref2.Key(): ref2,
+	}
+
+	projectsRefs2, _ := c.Store.Refs(ctx)
+	assert.Equal(t, expectedRefs2, projectsRefs2)
 }

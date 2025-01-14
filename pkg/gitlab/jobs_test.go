@@ -16,7 +16,7 @@ func TestListRefPipelineJobs(t *testing.T) {
 	defer server.Close()
 
 	ref := schemas.Ref{
-		Project: schemas.NewProject("foo"),
+		Project: schemas.NewProject("foo", []string{}),
 		Name:    "yay",
 	}
 
@@ -167,7 +167,7 @@ func TestListRefMostRecentJobs(t *testing.T) {
 			}
 
 			ref := schemas.Ref{
-				Project: schemas.NewProject("foo"),
+				Project: schemas.NewProject("foo", []string{}),
 				Name:    "yay",
 			}
 
