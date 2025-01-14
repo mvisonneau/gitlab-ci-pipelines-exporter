@@ -73,15 +73,22 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 		timestamp = float64(gp.UpdatedAt.Unix())
 	}
 
-	return Pipeline{
+	pipeline := Pipeline{
 		ID:                    gp.ID,
 		Coverage:              coverage,
 		Timestamp:             timestamp,
 		DurationSeconds:       float64(gp.Duration),
 		QueuedDurationSeconds: float64(gp.QueuedDuration),
 		Source:                gp.Source,
-		Status:                gp.DetailedStatus.Group,
 	}
+
+	if gp.DetailedStatus != nil {
+		pipeline.Status = gp.DetailedStatus.Group
+	} else {
+		pipeline.Status = gp.Status
+	}
+
+	return pipeline
 }
 
 // NewTestReport ..
