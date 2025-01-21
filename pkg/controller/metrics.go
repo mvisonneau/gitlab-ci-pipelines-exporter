@@ -53,6 +53,7 @@ func NewRegistry(ctx context.Context) *Registry {
 			schemas.MetricKindID:                                   NewCollectorID(),
 			schemas.MetricKindJobArtifactSizeBytes:                 NewCollectorJobArtifactSizeBytes(),
 			schemas.MetricKindJobDurationSeconds:                   NewCollectorJobDurationSeconds(),
+			schemas.MetricKindJobDurationHistogram:                 NewCollectorJobDurationHistogram(),
 			schemas.MetricKindJobID:                                NewCollectorJobID(),
 			schemas.MetricKindJobQueuedDurationSeconds:             NewCollectorJobQueuedDurationSeconds(),
 			schemas.MetricKindJobRunCount:                          NewCollectorJobRunCount(),
@@ -194,6 +195,8 @@ func (r *Registry) ExportMetrics(metrics schemas.Metrics) {
 			c.With(m.Labels).Set(m.Value)
 		case *prometheus.CounterVec:
 			c.With(m.Labels).Add(m.Value)
+		case *prometheus.HistogramVec:
+			c.With(m.Labels).Observe(m.Value)
 		default:
 			log.Errorf("unsupported collector type : %v", reflect.TypeOf(c))
 		}

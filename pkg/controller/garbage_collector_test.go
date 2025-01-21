@@ -141,6 +141,7 @@ func TestGarbageCollectMetrics(t *testing.T) {
 	ref1m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p1", "ref": "foo", "kind": "branch"}}
 	ref1m2 := schemas.Metric{Kind: schemas.MetricKindStatus, Labels: prometheus.Labels{"project": "p1", "ref": "foo", "kind": "branch"}}
 	ref1m3 := schemas.Metric{Kind: schemas.MetricKindJobDurationSeconds, Labels: prometheus.Labels{"project": "p1", "ref": "foo", "kind": "branch"}}
+	ref1m4 := schemas.Metric{Kind: schemas.MetricKindJobDurationHistogram, Labels: prometheus.Labels{"project": "p1", "ref": "foo", "kind": "branch"}}
 
 	ref2m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "p2", "ref": "bar", "kind": "branch"}}
 	ref3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo", "kind": "branch"}}
@@ -150,6 +151,7 @@ func TestGarbageCollectMetrics(t *testing.T) {
 	c.Store.SetMetric(ctx, ref1m1)
 	c.Store.SetMetric(ctx, ref1m2)
 	c.Store.SetMetric(ctx, ref1m3)
+	c.Store.SetMetric(ctx, ref1m4)
 	c.Store.SetMetric(ctx, ref2m1)
 	c.Store.SetMetric(ctx, ref3m1)
 	c.Store.SetMetric(ctx, ref4m1)
@@ -161,6 +163,7 @@ func TestGarbageCollectMetrics(t *testing.T) {
 	expectedMetrics := schemas.Metrics{
 		ref1m1.Key(): ref1m1,
 		ref1m3.Key(): ref1m3,
+		ref1m4.Key(): ref1m4,
 	}
 	assert.Equal(t, expectedMetrics, storedMetrics)
 }
