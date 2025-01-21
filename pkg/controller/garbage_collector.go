@@ -395,6 +395,7 @@ func (c *Controller) GarbageCollectMetrics(ctx context.Context) error {
 				if err = deleteMetric(ctx, c.Store, m, "non-existent-environment"); err != nil {
 					return err
 				}
+
 				continue
 			}
 

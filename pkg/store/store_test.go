@@ -26,7 +26,8 @@ func TestNewLocalStore(t *testing.T) {
 func TestNewRedisStore(t *testing.T) {
 	redisClient := redis.NewClient(&redis.Options{})
 	expectedValue := &Redis{
-		Client: redisClient,
+		Client:      redisClient,
+		StoreConfig: &RedisStoreConfig{},
 	}
 
 	assert.Equal(t, expectedValue, NewRedisStore(redisClient))

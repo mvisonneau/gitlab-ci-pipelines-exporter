@@ -28,12 +28,12 @@ type Redis struct {
 	StoreConfig *RedisStoreConfig
 }
 
-// RedisStoreConfig allows to fine tune the store behaviour
+// RedisStoreConfig allows to fine tune the store behaviour.
 type RedisStoreConfig struct {
 	TTLConfig *RedisTTLConfig
 }
 
-// RedisTTLConfig allows to set the TTL values for the various fields tracked
+// RedisTTLConfig allows to set the TTL values for the various fields tracked.
 type RedisTTLConfig struct {
 	Project time.Duration
 	Ref     time.Duration

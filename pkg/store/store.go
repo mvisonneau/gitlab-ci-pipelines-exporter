@@ -40,15 +40,15 @@ type Store interface {
 
 	// Helpers to keep track of currently queued tasks and avoid scheduling them
 	// twice at the risk of ending up with loads of dangling goroutines being locked
-	QueueTask(context.Context, schemas.TaskType, string, string) (bool, error)
-	UnqueueTask(context.Context, schemas.TaskType, string) error
-	CurrentlyQueuedTasksCount(context.Context) (uint64, error)
-	ExecutedTasksCount(context.Context) (uint64, error)
+	QueueTask(ctx context.Context, tt schemas.TaskType, taskUUID string, processUUID string) (bool, error)
+	UnqueueTask(ctx context.Context, tt schemas.TaskType, processUUID string) error
+	CurrentlyQueuedTasksCount(ctx context.Context) (uint64, error)
+	ExecutedTasksCount(ctx context.Context) (uint64, error)
 
 	// Garbage collections
-	HasProjectExpired(context.Context, schemas.ProjectKey) bool
-	HasRefExpired(context.Context, schemas.RefKey) bool
-	HasMetricExpired(context.Context, schemas.MetricKey) bool
+	HasProjectExpired(ctx context.Context, projectKey schemas.ProjectKey) bool
+	HasRefExpired(ctx context.Context, refKey schemas.RefKey) bool
+	HasMetricExpired(ctx context.Context, metricKey schemas.MetricKey) bool
 }
 
 // NewLocalStore ..

@@ -63,7 +63,6 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 			},
 			Ref: &refName,
 		})
-
 		if err != nil {
 			return fmt.Errorf("error fetching project pipelines for %s: %v", ref.Project.Name, err)
 		}
