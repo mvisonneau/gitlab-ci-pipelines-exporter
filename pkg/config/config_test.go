@@ -2,6 +2,7 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -71,6 +72,10 @@ func TestNew(t *testing.T) {
 	c.ProjectDefaults.Pull.Pipeline.Jobs.RunnerDescription.Enabled = true
 	c.ProjectDefaults.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `shared-runners-manager-(\d*)\.gitlab\.com`
 	c.ProjectDefaults.Pull.Pipeline.Variables.Regexp = `.*`
+
+	c.Redis.ProjectTTL = 168 * time.Hour
+	c.Redis.RefTTL = 1 * time.Hour
+	c.Redis.MetricTTL = 1 * time.Hour
 
 	assert.Equal(t, c, New())
 }
