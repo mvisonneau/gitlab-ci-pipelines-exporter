@@ -109,7 +109,7 @@ I believe it would be more interesting for you to be monitoring your own project
 
 ```bash
 # Edit the configuration file for the exporter
-~$ vi ./gitlab-ci-pipelines-exporter/config.yml
+~$ vi ./gitlab-ci-pipelines-exporter.yml
 
 # Restart the exporter container
 ~$ docker-compose restart gitlab-ci-pipelines-exporter
