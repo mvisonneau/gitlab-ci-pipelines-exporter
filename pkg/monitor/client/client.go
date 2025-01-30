@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"net/url"
 
 	log "github.com/sirupsen/logrus"
@@ -17,12 +16,17 @@ type Client struct {
 }
 
 // NewClient ..
-func NewClient(ctx context.Context, endpoint *url.URL) *Client {
+func NewClient(endpoint *url.URL) *Client {
 	log.WithField("endpoint", endpoint.String()).Debug("establishing gRPC connection to the server..")
 
-	conn, err := grpc.DialContext(
-		ctx,
-		endpoint.String(),
+	target_address := endpoint.String()
+	if endpoint.Scheme != "unix" {
+		// Drop the schema and just use "host:port" if we're dealing with local addresses
+		target_address = endpoint.Host
+	}
+
+	conn, err := grpc.NewClient(
+		target_address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
