@@ -144,7 +144,7 @@ func (s *Server) GetTelemetry(_ *pb.Empty, ts pb.Monitor_GetTelemetryServer) (er
 			return
 		}
 
-		telemetry.TasksBufferUsage = float64(queuedTasks) / 1000
+		telemetry.TasksBufferUsage = float64(queuedTasks) / float64(s.cfg.Gitlab.MaximumJobsQueueSize)
 
 		telemetry.TasksExecutedCount, err = s.store.ExecutedTasksCount(ctx)
 		if err != nil {
