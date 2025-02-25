@@ -3,6 +3,7 @@ package schemas
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "github.com/xanzy/go-gitlab"
@@ -83,7 +84,7 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 	}
 
 	if gp.DetailedStatus != nil {
-		pipeline.Status = gp.DetailedStatus.Group
+		pipeline.Status = strings.ReplaceAll(gp.DetailedStatus.Group, "-", "_")
 	} else {
 		pipeline.Status = gp.Status
 	}
