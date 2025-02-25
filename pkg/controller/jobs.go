@@ -173,13 +173,18 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 		Value:  job.ArtifactSize,
 	})
 
+	jobStatus := job.Status
+	if jobStatus == "failed" && job.AllowFailure {
+		jobStatus = "success_with_warnings"
+	}
+
 	emitStatusMetric(
 		ctx,
 		c.Store,
 		schemas.MetricKindJobStatus,
 		labels,
 		statusesList[:],
-		job.Status,
+		jobStatus,
 		ref.Project.OutputSparseStatusMetrics,
 	)
 }

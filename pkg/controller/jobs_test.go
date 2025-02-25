@@ -80,6 +80,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		Stage:           "🚀",
 		TagList:         "",
 		ArtifactSize:    150,
+		AllowFailure:    true,
 		Runner: schemas.Runner{
 			Description: "foo-123-bar",
 		},
@@ -163,7 +164,7 @@ func TestProcessJobMetrics(t *testing.T) {
 	}
 	assert.Equal(t, artifactSize, metrics[artifactSize.Key()])
 
-	labels["status"] = newJob.Status
+	labels["status"] = "success_with_warnings"
 	status := schemas.Metric{
 		Kind:   schemas.MetricKindJobStatus,
 		Labels: labels,
