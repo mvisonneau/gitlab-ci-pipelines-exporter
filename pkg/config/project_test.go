@@ -24,6 +24,8 @@ func TestNewProject(t *testing.T) {
 	p.Pull.Refs.Tags.Regexp = `.*`
 	p.Pull.Refs.Tags.ExcludeDeleted = true
 
+	p.Pull.Refs.MergeRequests.Regexp = `.*`
+
 	p.Pull.Pipeline.Jobs.FromChildPipelines.Enabled = true
 	p.Pull.Pipeline.Jobs.RunnerDescription.Enabled = true
 	p.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `shared-runners-manager-(\d*)\.gitlab\.com`

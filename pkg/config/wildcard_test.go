@@ -22,6 +22,8 @@ func TestNewWildcard(t *testing.T) {
 	w.Pull.Refs.Tags.Regexp = `.*`
 	w.Pull.Refs.Tags.ExcludeDeleted = true
 
+	w.Pull.Refs.MergeRequests.Regexp = `.*`
+
 	w.Pull.Pipeline.Jobs.FromChildPipelines.Enabled = true
 	w.Pull.Pipeline.Jobs.RunnerDescription.Enabled = true
 	w.Pull.Pipeline.Jobs.RunnerDescription.AggregationRegexp = `shared-runners-manager-(\d*)\.gitlab\.com`
