@@ -27,7 +27,7 @@ mkdir -p ${HOME}/.cache/snapcraft/{download,stage-packages}
 # Build the binaries using a prerelease tag
 git tag -d edge
 git tag -f ${PRERELEASE_TAG}
-goreleaser release \
+go tool github.com/goreleaser/goreleaser/v2 release \
     --clean \
     --skip=validate \
     -f .goreleaser.pre.yml

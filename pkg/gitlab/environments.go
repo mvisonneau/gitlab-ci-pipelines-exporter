@@ -5,11 +5,12 @@ import (
 	"regexp"
 
 	log "github.com/sirupsen/logrus"
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/utils"
 )
 
 // GetProjectEnvironments ..
@@ -31,7 +32,7 @@ func (c *Client) GetProjectEnvironments(ctx context.Context, p schemas.Project) 
 	}
 
 	if p.Pull.Environments.ExcludeStopped {
-		options.States = goGitlab.String("available")
+		options.States = utils.Ptr("available")
 	}
 
 	re, err := regexp.Compile(p.Pull.Environments.Regexp)

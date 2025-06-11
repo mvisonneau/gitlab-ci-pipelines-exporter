@@ -34,13 +34,13 @@ func TestGarbageCollectProjects(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/groups/wc/projects",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1, "path_with_namespace": "wc/p3", "jobs_enabled": true}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1, "path_with_namespace": "wc/p3", "jobs_enabled": true}]`)
 		})
 
-	c.Store.SetProject(ctx, p1)
-	c.Store.SetProject(ctx, p2)
-	c.Store.SetProject(ctx, p3)
-	c.Store.SetProject(ctx, p4)
+	_ = c.Store.SetProject(ctx, p1)
+	_ = c.Store.SetProject(ctx, p2)
+	_ = c.Store.SetProject(ctx, p3)
+	_ = c.Store.SetProject(ctx, p4)
 
 	assert.NoError(t, c.GarbageCollectProjects(context.Background()))
 	storedProjects, err := c.Store.Projects(ctx)
@@ -59,7 +59,7 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/p2/environments",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name": "main"}]`)
+			_, _ = fmt.Fprint(w, `[{"name": "main"}]`)
 		})
 
 	p2 := schemas.NewProject("p2")
@@ -70,10 +70,10 @@ func TestGarbageCollectEnvironments(t *testing.T) {
 	envp2dev := schemas.Environment{ProjectName: "p2", Name: "dev"}
 	envp2main := schemas.Environment{ProjectName: "p2", Name: "main"}
 
-	c.Store.SetProject(ctx, p2)
-	c.Store.SetEnvironment(ctx, envp1main)
-	c.Store.SetEnvironment(ctx, envp2dev)
-	c.Store.SetEnvironment(ctx, envp2main)
+	_ = c.Store.SetProject(ctx, p2)
+	_ = c.Store.SetEnvironment(ctx, envp1main)
+	_ = c.Store.SetEnvironment(ctx, envp2dev)
+	_ = c.Store.SetEnvironment(ctx, envp2main)
 
 	assert.NoError(t, c.GarbageCollectEnvironments(context.Background()))
 	storedEnvironments, err := c.Store.Environments(ctx)
@@ -95,12 +95,12 @@ func TestGarbageCollectRefs(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/p2/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name": "main"}]`)
+			_, _ = fmt.Fprint(w, `[{"name": "main"}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/p2/repository/tags",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name": "main"}]`)
+			_, _ = fmt.Fprint(w, `[{"name": "main"}]`)
 		})
 
 	pr1dev := schemas.NewRef(schemas.NewProject("p1"), schemas.RefKindBranch, "dev")
@@ -112,11 +112,11 @@ func TestGarbageCollectRefs(t *testing.T) {
 	pr2dev := schemas.NewRef(p2, schemas.RefKindBranch, "dev")
 	pr2main := schemas.NewRef(p2, schemas.RefKindBranch, "main")
 
-	c.Store.SetProject(ctx, p2)
-	c.Store.SetRef(ctx, pr1dev)
-	c.Store.SetRef(ctx, pr1main)
-	c.Store.SetRef(ctx, pr2dev)
-	c.Store.SetRef(ctx, pr2main)
+	_ = c.Store.SetProject(ctx, p2)
+	_ = c.Store.SetRef(ctx, pr1dev)
+	_ = c.Store.SetRef(ctx, pr1main)
+	_ = c.Store.SetRef(ctx, pr2dev)
+	_ = c.Store.SetRef(ctx, pr2main)
 
 	assert.NoError(t, c.GarbageCollectRefs(context.Background()))
 	storedRefs, err := c.Store.Refs(ctx)
@@ -146,13 +146,13 @@ func TestGarbageCollectMetrics(t *testing.T) {
 	ref3m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"project": "foo", "kind": "branch"}}
 	ref4m1 := schemas.Metric{Kind: schemas.MetricKindCoverage, Labels: prometheus.Labels{"ref": "bar", "kind": "branch"}}
 
-	c.Store.SetRef(ctx, ref1)
-	c.Store.SetMetric(ctx, ref1m1)
-	c.Store.SetMetric(ctx, ref1m2)
-	c.Store.SetMetric(ctx, ref1m3)
-	c.Store.SetMetric(ctx, ref2m1)
-	c.Store.SetMetric(ctx, ref3m1)
-	c.Store.SetMetric(ctx, ref4m1)
+	_ = c.Store.SetRef(ctx, ref1)
+	_ = c.Store.SetMetric(ctx, ref1m1)
+	_ = c.Store.SetMetric(ctx, ref1m2)
+	_ = c.Store.SetMetric(ctx, ref1m3)
+	_ = c.Store.SetMetric(ctx, ref2m1)
+	_ = c.Store.SetMetric(ctx, ref3m1)
+	_ = c.Store.SetMetric(ctx, ref4m1)
 
 	assert.NoError(t, c.GarbageCollectMetrics(context.Background()))
 	storedMetrics, err := c.Store.Metrics(ctx)

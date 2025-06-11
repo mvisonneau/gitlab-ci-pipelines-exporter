@@ -10,7 +10,7 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -85,7 +85,7 @@ func (c *Controller) WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("X-Gitlab-Token") != c.Config.Server.Webhook.SecretToken {
 		logger.Debug("invalid token provided for a webhook request")
 		w.WriteHeader(http.StatusForbidden)
-		fmt.Fprint(w, "{\"error\": \"invalid token\"}")
+		_, _ = fmt.Fprint(w, "{\"error\": \"invalid token\"}")
 
 		return
 	}

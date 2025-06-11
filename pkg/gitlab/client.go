@@ -12,7 +12,7 @@ import (
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/paulbellamy/ratecounter"
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.opentelemetry.io/otel"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
@@ -56,8 +56,10 @@ type ClientConfig struct {
 // NewHTTPClient ..
 func NewHTTPClient(disableTLSVerify bool) *http.Client {
 	// http.DefaultTransport contains useful settings such as the correct values for the picking
-	// up proxy informations from env variables
+	// up proxy information from env variables
 	transport := http.DefaultTransport.(*http.Transport).Clone()
+
+	// nolint:gosec
 	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: disableTLSVerify}
 
 	return &http.Client{
@@ -125,7 +127,7 @@ func (c *Client) ReadinessCheck(ctx context.Context) healthcheck.Check {
 		if resp == nil {
 			return fmt.Errorf("HTTP error: empty response")
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if err == nil && resp.StatusCode != http.StatusOK {
 			return fmt.Errorf("HTTP error: %d", resp.StatusCode)

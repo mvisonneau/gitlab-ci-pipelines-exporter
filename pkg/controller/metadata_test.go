@@ -51,7 +51,7 @@ func TestGetGitLabMetadataSuccess(t *testing.T) {
 
 			mux.HandleFunc("/api/v4/metadata",
 				func(w http.ResponseWriter, r *http.Request) {
-					fmt.Fprint(w, tc.data)
+					_, _ = fmt.Fprint(w, tc.data)
 				})
 
 			assert.NoError(t, c.GetGitLabMetadata(ctx))

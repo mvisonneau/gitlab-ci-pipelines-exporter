@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 // Pipeline ..
@@ -79,7 +79,7 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 		Timestamp:             timestamp,
 		DurationSeconds:       float64(gp.Duration),
 		QueuedDurationSeconds: float64(gp.QueuedDuration),
-		Source:                gp.Source,
+		Source:                string(gp.Source),
 	}
 
 	if gp.DetailedStatus != nil {

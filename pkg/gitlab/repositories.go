@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	log "github.com/sirupsen/logrus"
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.openly.dev/pointy"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"

@@ -15,7 +15,7 @@ func TestGetProjectOpenMergeRequests(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/merge_requests"),
+	mux.HandleFunc("/api/v4/projects/foo/merge_requests",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, []string{"100"}, r.URL.Query()["per_page"])
@@ -32,15 +32,15 @@ func TestGetProjectOpenMergeRequests(t *testing.T) {
 			w.Header().Add("X-Next-Page", strconv.Itoa(nextPage))
 
 			if currentPage == 1 {
-				fmt.Fprint(w, `[{"title":"Open MR", "reference":"!1"}]`)
+				_, _ = fmt.Fprint(w, `[{"title":"Open MR", "iid":1}]`)
 
 				return
 			}
 
-			fmt.Fprint(w, `[]`)
+			_, _ = fmt.Fprint(w, `[]`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/0/merge_requests"),
+	mux.HandleFunc("/api/v4/projects/0/merge_requests",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 		})

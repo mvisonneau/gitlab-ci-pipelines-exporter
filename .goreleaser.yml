@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - make man-pages
@@ -19,6 +20,9 @@ builds:
     goarm: [6, 7]
     flags:
       - -trimpath
+    ignore:
+      - { goos: darwin, goarch: 386 }
+      - { goos: darwin, goarch: arm }
 
 universal_binaries:
   - {}
@@ -51,7 +55,7 @@ nfpms:
         file_info:
           mode: 0644
       - src: ./helpers/autocomplete/zsh
-        dst:  /usr/share/zsh/vendor-completions/_{{ .ProjectName }}
+        dst: /usr/share/zsh/vendor-completions/_{{ .ProjectName }}
         file_info:
           mode: 0644
       - src: ./helpers/manpages/{{ .ProjectName }}.1.gz
@@ -67,7 +71,7 @@ brews:
   - description: *description
     homepage: *homepage
     license: *license
-    folder: Formula
+    directory: Formula
     repository:
       owner: mvisonneau
       name: homebrew-tap
@@ -87,15 +91,14 @@ scoops:
       owner: mvisonneau
       name: scoops
 
-# Disabling until https://github.com/canonical/snapcraft/issues/4769 is resolved
-#snapcrafts:
-#  - summary: *description
-#    description: Monitor GitLab CI pipelines related metrics.
-#    license: *license
-#    grade: stable
-#    apps:
-#      gitlab-ci-pipelines-exporter:
-#        plugs: [home, network, network-bind]
+snapcrafts:
+  - summary: *description
+    description: Monitor GitLab CI pipelines related metrics.
+    license: *license
+    grade: stable
+    apps:
+      gitlab-ci-pipelines-exporter:
+        plugs: [home, network, network-bind]
 
 dockers:
   - image_templates:

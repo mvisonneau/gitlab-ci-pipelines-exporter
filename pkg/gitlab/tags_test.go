@@ -23,7 +23,7 @@ func TestGetProjectTags(t *testing.T) {
 				"per_page": []string{"100"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
-			fmt.Fprint(w, `[{"name":"foo"},{"name":"bar"}]`)
+			_, _ = fmt.Fprint(w, `[{"name":"foo"},{"name":"bar"}]`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -53,7 +53,7 @@ func TestGetProjectMostRecentTagCommit(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/tags"),
+	mux.HandleFunc("/api/v4/projects/foo/repository/tags",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
@@ -61,7 +61,7 @@ func TestGetProjectMostRecentTagCommit(t *testing.T) {
 				"per_page": []string{"100"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
-			fmt.Fprint(w, `
+			_, _ = fmt.Fprint(w, `
 [
 	{
 		"name": "foo",

@@ -3,7 +3,6 @@ package cmd
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -34,13 +33,13 @@ func TestConfigure(t *testing.T) {
 		err error
 	)
 
-	f, err := ioutil.TempFile(".", "test-*.yml")
+	f, err := os.CreateTemp(".", "test-*.yml")
 	assert.NoError(t, err)
 
-	defer os.Remove(f.Name())
+	defer func() { _ = os.Remove(f.Name()) }()
 
 	// Webhook endpoint enabled
-	ioutil.WriteFile(f.Name(), []byte(`wildcards: [{}]`), 0o644)
+	_ = os.WriteFile(f.Name(), []byte(`wildcards: [{}]`), 0o600)
 
 	ctx, flags := NewTestContext()
 	flags.String("log-format", "text", "")
@@ -54,25 +53,25 @@ func TestConfigure(t *testing.T) {
 	assert.Error(t, err)
 
 	// Valid configuration
-	flags.Set("gitlab-token", "secret")
+	_ = flags.Set("gitlab-token", "secret")
 
 	cfg, err = configure(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, "secret", cfg.Gitlab.Token)
 
 	// Invalid config file syntax
-	ioutil.WriteFile(f.Name(), []byte("["), 0o644)
+	_ = os.WriteFile(f.Name(), []byte("["), 0o600)
 
 	cfg, err = configure(ctx)
 	assert.Error(t, err)
 
 	// Webhook endpoint enabled
-	ioutil.WriteFile(f.Name(), []byte(`
+	_ = os.WriteFile(f.Name(), []byte(`
 wildcards: [{}]
 server:
   webhook:
     enabled: true
-`), 0o644)
+`), 0o600)
 
 	// No secret token defined for the webhook endpoint
 	cfg, err = configure(ctx)

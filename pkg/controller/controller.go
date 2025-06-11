@@ -15,7 +15,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
-	"google.golang.org/grpc"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
@@ -117,7 +116,7 @@ func configureTracing(ctx context.Context, grpcEndpoint string) error {
 	traceClient := otlptracegrpc.NewClient(
 		otlptracegrpc.WithInsecure(),
 		otlptracegrpc.WithEndpoint(grpcEndpoint),
-		otlptracegrpc.WithDialOption(grpc.WithBlock()))
+	)
 
 	traceExp, err := otlptrace.New(ctx, traceClient)
 	if err != nil {

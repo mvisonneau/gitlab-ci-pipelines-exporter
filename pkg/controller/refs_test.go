@@ -17,17 +17,17 @@ func TestGetRefs(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name":"dev"},{"name":"main"}]`)
+			_, _ = fmt.Fprint(w, `[{"name":"dev"},{"name":"main"}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/repository/tags",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name":"0.0.1"},{"name":"v0.0.2"}]`)
+			_, _ = fmt.Fprint(w, `[{"name":"0.0.1"},{"name":"v0.0.2"}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"ref":"refs/merge-requests/1234/head"}]`)
+			_, _ = fmt.Fprint(w, `[{"ref":"refs/merge-requests/1234/head"}]`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -55,17 +55,17 @@ func TestPullRefsFromProject(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `{"name":"foo"}`)
+			_, _ = fmt.Fprint(w, `{"name":"foo"}`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/branches"),
+	mux.HandleFunc("/api/v4/projects/foo/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name":"main"},{"name":"nope"}]`)
+			_, _ = fmt.Fprint(w, `[{"name":"main"},{"name":"nope"}]`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/tags"),
+	mux.HandleFunc("/api/v4/projects/foo/repository/tags",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[]`)
+			_, _ = fmt.Fprint(w, `[]`)
 		})
 
 	p1 := schemas.NewProject("foo")

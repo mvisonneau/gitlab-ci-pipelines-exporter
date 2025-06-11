@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -39,7 +39,7 @@ func TestWebhookHandler(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
 
 	// Provide an invalid body
-	req.Body = ioutil.NopCloser(strings.NewReader(`[`))
+	req.Body = io.NopCloser(strings.NewReader(`[`))
 
 	// Test with invalid body, should return a 400
 	w = httptest.NewRecorder()
@@ -47,7 +47,7 @@ func TestWebhookHandler(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
 
 	// Provide an invalid event type
-	req.Body = ioutil.NopCloser(strings.NewReader(`{"object_kind": "wiki_page"}`))
+	req.Body = io.NopCloser(strings.NewReader(`{"object_kind": "wiki_page"}`))
 	req.Header.Set("X-Gitlab-Event", "Wiki Page Hook")
 
 	// Test with invalid event type, should return a 422
@@ -55,8 +55,8 @@ func TestWebhookHandler(t *testing.T) {
 	c.WebhookHandler(w, req)
 	assert.Equal(t, http.StatusUnprocessableEntity, w.Result().StatusCode)
 
-	// Provide an valid event type: pipeline
-	req.Body = ioutil.NopCloser(strings.NewReader(`{"object_kind": "pipeline"}`))
+	// Provide a valid event type: pipeline
+	req.Body = io.NopCloser(strings.NewReader(`{"object_kind": "pipeline"}`))
 	req.Header.Set("X-Gitlab-Event", "Pipeline Hook")
 
 	// Test with pipeline event type, should return a 200
@@ -64,8 +64,8 @@ func TestWebhookHandler(t *testing.T) {
 	c.WebhookHandler(w, req)
 	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
 
-	// Provide an valid event type: deployment
-	req.Body = ioutil.NopCloser(strings.NewReader(`{"object_kind": "deployment"}`))
+	// Provide a valid event type: deployment
+	req.Body = io.NopCloser(strings.NewReader(`{"object_kind": "deployment"}`))
 	req.Header.Set("X-Gitlab-Event", "Deployment Hook")
 
 	// Test with deployment event type, should return a 200

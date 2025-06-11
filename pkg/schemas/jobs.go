@@ -3,7 +3,7 @@ package schemas
 import (
 	"strings"
 
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 // Job ..

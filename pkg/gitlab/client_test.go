@@ -10,7 +10,7 @@ import (
 
 	"github.com/paulbellamy/ratecounter"
 	"github.com/stretchr/testify/assert"
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 )
@@ -54,7 +54,7 @@ func TestNewClient(t *testing.T) {
 	c, err := NewClient(cfg)
 	assert.NoError(t, err)
 	assert.NotNil(t, c.Client)
-	assert.Equal(t, "gitlab-ci-pipelines-exporter-0.0.0", c.Client.UserAgent)
+	assert.Equal(t, "gitlab-ci-pipelines-exporter-0.0.0", c.UserAgent)
 	assert.Equal(t, "https", c.Client.BaseURL().Scheme)
 	assert.Equal(t, "gitlab.example.com", c.Client.BaseURL().Host)
 	assert.Equal(t, "https://gitlab.example.com/amialive", c.Readiness.URL)

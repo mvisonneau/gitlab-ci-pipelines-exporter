@@ -96,7 +96,7 @@ func (s *Server) Serve() {
 		}
 	}
 
-	defer l.Close()
+	defer func() { _ = l.Close() }()
 
 	if err = grpcServer.Serve(l); err != nil {
 		log.WithError(err).Fatal()
@@ -211,13 +211,13 @@ func (s *Server) GetTelemetry(_ *pb.Empty, ts pb.Monitor_GetTelemetryServer) (er
 			telemetry.Metrics.NextGc = timestamppb.New(s.taskSchedulingMonitoring[schemas.TaskTypeGarbageCollectMetrics].Next)
 		}
 
-		ts.Send(telemetry)
+		_ = ts.Send(telemetry)
 
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			time.Sleep(1)
+			time.Sleep(time.Second)
 		}
 	}
 }

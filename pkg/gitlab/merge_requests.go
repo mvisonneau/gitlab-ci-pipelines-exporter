@@ -3,12 +3,14 @@ package gitlab
 import (
 	"context"
 	"regexp"
+	"strconv"
 
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/utils"
 )
 
 // GetProjectOpenMergeRequests ..
@@ -23,7 +25,7 @@ func (c *Client) GetProjectOpenMergeRequests(ctx context.Context, p schemas.Proj
 	mrs = make(schemas.Refs)
 
 	options := &goGitlab.ListProjectMergeRequestsOptions{
-		State: goGitlab.String("opened"),
+		State: utils.Ptr("opened"),
 		ListOptions: goGitlab.ListOptions{
 			Page:    1,
 			PerPage: 100,
@@ -40,7 +42,7 @@ func (c *Client) GetProjectOpenMergeRequests(ctx context.Context, p schemas.Proj
 		c.rateLimit(ctx)
 
 		var (
-			mrsList []*goGitlab.MergeRequest
+			mrsList []*goGitlab.BasicMergeRequest
 			resp    *goGitlab.Response
 		)
 
@@ -53,10 +55,8 @@ func (c *Client) GetProjectOpenMergeRequests(ctx context.Context, p schemas.Proj
 
 		for _, mr := range mrsList {
 			if re.MatchString(mr.Title) {
-				// Here the reference comes in with the ! prefix that we need to remove.
-				ref := mr.Reference[1:]
-				mr := schemas.NewRef(p, schemas.RefKindMergeRequest, ref)
-				mrs[mr.Key()] = mr
+				ref := schemas.NewRef(p, schemas.RefKindMergeRequest, strconv.Itoa(mr.IID))
+				mrs[ref.Key()] = ref
 			}
 		}
 

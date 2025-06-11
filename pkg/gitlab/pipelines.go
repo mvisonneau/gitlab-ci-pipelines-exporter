@@ -10,11 +10,12 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
+	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/utils"
 )
 
 // GetRefPipeline ..
@@ -157,7 +158,7 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 			Page:    1,
 			PerPage: 100,
 		},
-		OrderBy: goGitlab.String("updated_at"),
+		OrderBy: utils.Ptr("updated_at"),
 	}
 
 	var re *regexp.Regexp
@@ -185,7 +186,7 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 			}
 		}
 	case schemas.RefKindBranch:
-		options.Scope = goGitlab.String("branches")
+		options.Scope = utils.Ptr("branches")
 		maxAgeSeconds = p.Pull.Refs.Branches.MaxAgeSeconds
 		mostRecent = p.Pull.Refs.Branches.MostRecent
 
@@ -197,7 +198,7 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 			}
 		}
 	case schemas.RefKindTag:
-		options.Scope = goGitlab.String("tags")
+		options.Scope = utils.Ptr("tags")
 		maxAgeSeconds = p.Pull.Refs.Tags.MaxAgeSeconds
 		mostRecent = p.Pull.Refs.Tags.MostRecent
 

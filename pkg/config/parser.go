@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v3"
@@ -31,7 +31,7 @@ func ParseFile(filename string) (c Config, err error) {
 	}
 
 	// Read the content of the config file
-	fileBytes, err = ioutil.ReadFile(filepath.Clean(filename))
+	fileBytes, err = os.ReadFile(filepath.Clean(filename))
 	if err != nil {
 		return
 	}

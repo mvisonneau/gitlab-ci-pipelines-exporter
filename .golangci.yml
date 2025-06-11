@@ -1,50 +1,53 @@
+---
+version: "2"
+
 linters:
-  enable-all: true
-  disable:
-    # Deprecated
-    - gomnd
+  default: none
+  enable:
+    - errcheck
+    - gosec
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
 
-    # We don't want these ones
-    - forcetypeassert
-    - gochecknoglobals
-    - godox
-    - ireturn
-    - nakedret
-    - testpackage
-    - varnamelen
-    - interfacebloat
-    - wsl
+  settings:
+    funlen:
+      lines: -1 # (disabled)
+      statements: 100
 
-    # TODO
-    - tagliatelle
-    - promlinter
-    - paralleltest
-    - gocognit
-    - gomoddirectives
-    - forbidigo
-    - goconst
-    - mnd
-    - lll
-    - dupl
-    - depguard
-    - tagalign
+    cyclop:
+      max-complexity: 20
 
-linters-settings:
-  funlen:
-    lines: -1 # (disabled)
-    statements: 100
-  
-  cyclop:
-    max-complexity: 20
+    lll:
+      line-length: 140
 
-  lll:
-    line-length: 140
-  
-  nestif:
-    min-complexity: 18
-  
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/mvisonneau)
+    nestif:
+      min-complexity: 18
+
+    gosec:
+      excludes:
+        # https://github.com/golangci/golangci-lint/discussions/4939
+        # Disabled by default in golangci because it's too noisy, too many false positives
+        - G115
+    staticcheck:
+      checks:
+        - all
+        # Seems buggy
+        - -ST1000
+        # Not personally fond of having to remove those embedded field calls.
+        - -QF1008
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/mvisonneau)

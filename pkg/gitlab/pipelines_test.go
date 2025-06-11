@@ -8,7 +8,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.openly.dev/pointy"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
@@ -21,7 +21,7 @@ func TestGetRefPipeline(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `{"id":1}`)
+			_, _ = fmt.Fprint(w, `{"id":1}`)
 		})
 
 	ref := schemas.Ref{
@@ -39,7 +39,7 @@ func TestGetProjectPipelines(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/pipelines"),
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			expectedQueryParams := url.Values{
@@ -49,7 +49,7 @@ func TestGetProjectPipelines(t *testing.T) {
 				"scope":    []string{"bar"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
-			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
 	pipelines, _, err := c.GetProjectPipelines(ctx, "foo", &gitlab.ListProjectPipelinesOptions{
@@ -68,7 +68,7 @@ func TestGetRefPipelineVariablesAsConcatenatedString(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `[{"key":"foo","value":"bar"},{"key":"bar","value":"baz"}]`)
+			_, _ = fmt.Fprint(w, `[{"key":"foo","value":"bar"},{"key":"bar","value":"baz"}]`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -106,11 +106,9 @@ func TestGetRefsFromPipelines(t *testing.T) {
 	defer server.Close()
 	log.SetLevel(log.TraceLevel)
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/branches"),
+	mux.HandleFunc("/api/v4/projects/foo/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name":"keep_main"}]`)
-
-			return
+			_, _ = fmt.Fprint(w, `[{"name":"keep_main"}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
@@ -121,18 +119,18 @@ func TestGetRefsFromPipelines(t *testing.T) {
 			assert.Equal(t, []string{"100"}, urlValues["per_page"])
 
 			if scope, ok := urlValues["scope"]; ok && len(scope) == 1 && scope[0] == "branches" {
-				fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"}]`)
+				_, _ = fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"}]`)
 
 				return
 			}
 
 			if scope, ok := urlValues["scope"]; ok && len(scope) == 1 && scope[0] == "tags" {
-				fmt.Fprint(w, `[{"id":3,"ref":"donotkeep_0.0.1"},{"id":4,"ref":"keep_0.0.2"}]`)
+				_, _ = fmt.Fprint(w, `[{"id":3,"ref":"donotkeep_0.0.1"},{"id":4,"ref":"keep_0.0.2"}]`)
 
 				return
 			}
 
-			fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"},{"id":3,"ref":"donotkeep_0.0.1"},{"id":4,"ref":"keep_0.0.2"},{"id":5,"ref":"refs/merge-requests/1234/head"}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"ref":"keep_dev"},{"id":2,"ref":"keep_main"},{"id":3,"ref":"donotkeep_0.0.1"},{"id":4,"ref":"keep_0.0.2"},{"id":5,"ref":"refs/merge-requests/1234/head"}]`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -183,7 +181,7 @@ func TestGetRefPipelineTestReport(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+			_, _ = fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -241,7 +239,7 @@ func TestGetRefPipelineFailedTestReport(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `{"total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "failed", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": "Failed message", "stack_trace": null}]}]}`)
+			_, _ = fmt.Fprint(w, `{"total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 2, "success_count": 1, "failed_count": 1, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "failed", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": "Failed message", "stack_trace": null}]}]}`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -299,25 +297,25 @@ func TestGetRefPipelineWithParentChildTestReport(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+			_, _ = fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 1}}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 1}}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/1/pipelines/2/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `{"total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 3, "system_output": null, "stack_trace": null}]}]}`)
+			_, _ = fmt.Fprint(w, `{"total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 3, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/1/pipelines/2/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `[]`)
+			_, _ = fmt.Fprint(w, `[]`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -394,25 +392,25 @@ func TestGetRefPipelineWithMultiProjectTestReport(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+			_, _ = fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 11}}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 11}}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/11/pipelines/2/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `{"total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 3, "system_output": null, "stack_trace": null}]}]}`)
+			_, _ = fmt.Fprint(w, `{"total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 3, "total_count": 3, "success_count": 3, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 3, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/11/pipelines/2/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `[]`)
+			_, _ = fmt.Fprint(w, `[]`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -489,13 +487,13 @@ func TestGetRefPipelineWithNoChildrenTestReport(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
+			_, _ = fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `[]`)
+			_, _ = fmt.Fprint(w, `[]`)
 		})
 
 	p := schemas.NewProject("foo")

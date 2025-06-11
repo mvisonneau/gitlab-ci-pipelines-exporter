@@ -73,20 +73,20 @@ var (
 			BorderForeground(highlight).
 			Padding(0, 1)
 
-	activeTab = inactiveTab.Copy().Border(activeTabBorder, true)
+	activeTab = inactiveTab.Border(activeTabBorder, true)
 
-	tabGap = inactiveTab.Copy().
+	tabGap = inactiveTab.
 		BorderTop(false).
 		BorderLeft(false).
 		BorderRight(false)
 
-	// List.
+	// List
 
 	entityStyle = lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder(), true, false, false, false).
 			BorderForeground(subtle)
 
-	// Status Bar.
+	// Status Bar
 
 	statusStyle = lipgloss.NewStyle().
 			Inherit(statusBarStyle).
@@ -105,10 +105,9 @@ var (
 
 	statusText = lipgloss.NewStyle().Inherit(statusBarStyle)
 
-	versionStyle = statusNugget.Copy().
-			Background(lipgloss.Color("#0062cc"))
+	versionStyle = statusNugget.Background(lipgloss.Color("#0062cc"))
 
-	// Page.
+	// Page
 	docStyle = lipgloss.NewStyle()
 )
 
@@ -218,7 +217,7 @@ func prettyTimeago(t time.Time) string {
 }
 
 func newModel(version string, endpoint *url.URL) (m *model) {
-	p := progress.NewModel(progress.WithScaledGradient("#80c904", "#ff9d5c"))
+	p := progress.New(progress.WithScaledGradient("#80c904", "#ff9d5c"))
 
 	m = &model{
 		version:         version,
@@ -304,16 +303,16 @@ func (m *model) View() string {
 		doc.WriteString(row + "\n")
 	}
 
-	// Pane.
+	// Pane
 	{
 		doc.WriteString(m.vp.View() + "\n")
 	}
 
-	// Status bar.
+	// Status bar
 	{
 		bar := lipgloss.JoinHorizontal(lipgloss.Top,
 			statusStyle.Render("github.com/mvisonneau/gitlab-ci-pipelines-exporter"),
-			statusText.Copy().
+			statusText.
 				Width(max(0, m.vp.Width-(55+len(m.version)))).
 				Render(""),
 			versionStyle.Render(m.version),
@@ -353,10 +352,10 @@ func waitForTelemetryUpdate(t chan *pb.Telemetry) tea.Cmd {
 
 // Start ..
 func Start(version string, listenerAddress *url.URL) {
-	if err := tea.NewProgram(
+	if _, err := tea.NewProgram(
 		newModel(version, listenerAddress),
 		tea.WithAltScreen(),
-	).Start(); err != nil {
+	).Run(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}
