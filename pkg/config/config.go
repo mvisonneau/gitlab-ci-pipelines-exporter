@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
@@ -131,6 +132,10 @@ type Redis struct {
 	// URL used to connect onto the redis endpoint
 	// format: redis[s]://[:password@]host[:port][/db-number][?option=value])
 	URL string `yaml:"url"`
+
+	ProjectTTL time.Duration `default:"168h" yaml:"project_ttl"`
+	RefTTL     time.Duration `default:"1h" yaml:"ref_ttl"`
+	MetricTTL  time.Duration `default:"1h" yaml:"metric_ttl"`
 }
 
 // Pull ..
