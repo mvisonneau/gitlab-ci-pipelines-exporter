@@ -125,6 +125,7 @@ func (c *Client) ReadinessCheck(ctx context.Context) healthcheck.Check {
 		if resp == nil {
 			return fmt.Errorf("HTTP error: empty response")
 		}
+		defer resp.Body.Close()
 
 		if err == nil && resp.StatusCode != http.StatusOK {
 			return fmt.Errorf("HTTP error: %d", resp.StatusCode)
