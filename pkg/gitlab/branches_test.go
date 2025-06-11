@@ -15,7 +15,7 @@ func TestGetProjectBranches(t *testing.T) {
 	ctx, mux, server, c := getMockedClient()
 	defer server.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/repository/branches"),
+	mux.HandleFunc("/api/v4/projects/foo/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			assert.Equal(t, []string{"100"}, r.URL.Query()["per_page"])
@@ -32,15 +32,15 @@ func TestGetProjectBranches(t *testing.T) {
 			w.Header().Add("X-Next-Page", strconv.Itoa(nextPage))
 
 			if currentPage == 1 {
-				fmt.Fprint(w, `[{"name":"main"},{"name":"dev"}]`)
+				_, _ = fmt.Fprint(w, `[{"name":"main"},{"name":"dev"}]`)
 
 				return
 			}
 
-			fmt.Fprint(w, `[]`)
+			_, _ = fmt.Fprint(w, `[]`)
 		})
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/0/repository/branches"),
+	mux.HandleFunc("/api/v4/projects/0/repository/branches",
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 		})
@@ -73,7 +73,7 @@ func TestGetBranchLatestCommit(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/1/repository/branches/main",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `
+			_, _ = fmt.Fprint(w, `
 {
 	"commit": {
 		"short_id": "7b5c3cc",

@@ -27,32 +27,32 @@ func TestListRefPipelineJobs(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":10}]`)
+			_, _ = fmt.Fprint(w, `[{"id":10}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/11/pipelines/2/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":20}]`)
+			_, _ = fmt.Fprint(w, `[{"id":20}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/12/pipelines/3/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":30}]`)
+			_, _ = fmt.Fprint(w, `[{"id":30}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 11}}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":2, "project_id": 11}}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/11/pipelines/2/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":3, "project_id": 12}}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"downstream_pipeline":{"id":3, "project_id": 12}}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/12/pipelines/3/bridges",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[]`)
+			_, _ = fmt.Fprint(w, `[]`)
 		})
 
 	ref.LatestPipeline = schemas.Pipeline{
@@ -85,7 +85,7 @@ func TestListPipelineJobs(t *testing.T) {
 				"per_page": []string{"100"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
-			fmt.Fprint(w, `[{"id":1},{"id":2}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1},{"id":2}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/bar/pipelines/1/jobs",
@@ -114,7 +114,7 @@ func TestListPipelineBridges(t *testing.T) {
 				"per_page": []string{"100"},
 			}
 			assert.Equal(t, expectedQueryParams, r.URL.Query())
-			fmt.Fprint(w, `[{"id":1,"pipeline":{"id":100}}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"pipeline":{"id":100}}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/bar/pipelines/1/bridges",
@@ -179,10 +179,10 @@ func TestListRefMostRecentJobs(t *testing.T) {
 				func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, "GET", r.Method)
 					assert.Equal(t, tc.expectedQueryParams, r.URL.Query())
-					fmt.Fprint(w, `[{"id":3,"name":"foo","ref":"yay"},{"id":4,"name":"bar","ref":"yay"}]`)
+					_, _ = fmt.Fprint(w, `[{"id":3,"name":"foo","ref":"yay"},{"id":4,"name":"bar","ref":"yay"}]`)
 				})
 
-			mux.HandleFunc(fmt.Sprintf("/api/v4/projects/bar/jobs"),
+			mux.HandleFunc("/api/v4/projects/bar/jobs",
 				func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(http.StatusNotFound)
 				})

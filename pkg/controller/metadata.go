@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/gitlab"
 )

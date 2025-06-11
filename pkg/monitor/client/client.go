@@ -19,14 +19,14 @@ type Client struct {
 func NewClient(endpoint *url.URL) *Client {
 	log.WithField("endpoint", endpoint.String()).Debug("establishing gRPC connection to the server..")
 
-	target_address := endpoint.String()
+	targetAddress := endpoint.String()
 	if endpoint.Scheme != "unix" {
 		// Drop the schema and just use "host:port" if we're dealing with local addresses
-		target_address = endpoint.Host
+		targetAddress = endpoint.Host
 	}
 
 	conn, err := grpc.NewClient(
-		target_address,
+		targetAddress,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {

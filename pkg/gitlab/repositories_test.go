@@ -15,12 +15,12 @@ func TestGetCommitCountBetweenRefs(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/repository/compare",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `{"commits":[{},{},{}]}`)
+			_, _ = fmt.Fprint(w, `{"commits":[{},{},{}]}`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/bar/repository/compare",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `{`)
+			_, _ = fmt.Fprint(w, `{`)
 		})
 
 	commitCount, err := c.GetCommitCountBetweenRefs(ctx, "foo", "bar", "baz")

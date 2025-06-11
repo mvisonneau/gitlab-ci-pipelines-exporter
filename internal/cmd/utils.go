@@ -87,11 +87,13 @@ func parseGlobalFlags(ctx *cli.Context) (cfg config.Global, err error) {
 }
 
 func exit(exitCode int, err error) cli.ExitCoder {
-	defer log.WithFields(
-		log.Fields{
-			"execution-time": time.Since(start),
-		},
-	).Debug("exited..")
+	defer func() {
+		log.WithFields(
+			log.Fields{
+				"execution-time": time.Since(start),
+			},
+		).Debug("exited..")
+	}()
 
 	if err != nil {
 		log.WithError(err).Error()

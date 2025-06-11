@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	log "github.com/sirupsen/logrus"
-	goGitlab "github.com/xanzy/go-gitlab"
+	goGitlab "gitlab.com/gitlab-org/api/client-go"
 	"golang.org/x/exp/slices"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"

@@ -202,7 +202,7 @@ func TestLocalMetricFunctions(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	// Delete Metric
-	l.DelMetric(testCtx, m.Key())
+	_ = l.DelMetric(testCtx, m.Key())
 	metrics, err = l.Metrics(testCtx)
 	assert.NoError(t, err)
 	assert.NotContains(t, metrics, m.Key())

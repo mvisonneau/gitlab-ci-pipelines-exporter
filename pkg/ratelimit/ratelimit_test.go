@@ -2,6 +2,7 @@ package ratelimit
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"testing"
@@ -56,11 +57,11 @@ func TestRedisTakeError(t *testing.T) {
 		return
 	}
 
-	cmd := exec.Command(os.Args[0], "-test.run=TestRedisTakeError")
+	cmd := exec.Command(os.Args[0], "-test.run=TestRedisTakeError") //nolint:gosec
 	cmd.Env = append(os.Environ(), "SHOULD_ERROR=1")
 
-	err := cmd.Run()
-	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+	var e *exec.ExitError
+	if errors.As(cmd.Run(), &e) && !e.Success() {
 		return
 	}
 

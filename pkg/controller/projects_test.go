@@ -17,7 +17,7 @@ func TestPullProjectsFromWildcard(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":2,"path_with_namespace":"bar","jobs_enabled":true}]`)
+			_, _ = fmt.Fprint(w, `[{"id":2,"path_with_namespace":"bar","jobs_enabled":true}]`)
 		})
 
 	w := config.NewWildcard()

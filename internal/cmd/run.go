@@ -49,8 +49,9 @@ func Run(cliCtx *cli.Context) (int, error) {
 	// HTTP server
 	mux := http.NewServeMux()
 	srv := &http.Server{
-		Addr:    cfg.Server.ListenAddress,
-		Handler: mux,
+		Addr:              cfg.Server.ListenAddress,
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	// health endpoints

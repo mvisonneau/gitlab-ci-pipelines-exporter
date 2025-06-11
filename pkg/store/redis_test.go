@@ -33,7 +33,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	p.OutputSparseStatusMetrics = false
 
 	// Set project
-	r.SetProject(testCtx, p)
+	_ = r.SetProject(testCtx, p)
 	projects, err := r.Projects(testCtx)
 	assert.NoError(t, err)
 	assert.Contains(t, projects, p.Key())
@@ -55,7 +55,7 @@ func TestRedisProjectFunctions(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	// Delete project
-	r.DelProject(testCtx, p.Key())
+	_ = r.DelProject(testCtx, p.Key())
 	projects, err = r.Projects(testCtx)
 	assert.NoError(t, err)
 	assert.NotContains(t, projects, p.Key())
@@ -80,7 +80,7 @@ func TestRedisEnvironmentFunctions(t *testing.T) {
 	}
 
 	// Set project
-	r.SetEnvironment(testCtx, environment)
+	_ = r.SetEnvironment(testCtx, environment)
 	environments, err := r.Environments(testCtx)
 	assert.NoError(t, err)
 	assert.Contains(t, environments, environment.Key())
@@ -106,7 +106,7 @@ func TestRedisEnvironmentFunctions(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	// Delete Environment
-	r.DelEnvironment(testCtx, environment.Key())
+	_ = r.DelEnvironment(testCtx, environment.Key())
 	environments, err = r.Environments(testCtx)
 	assert.NoError(t, err)
 	assert.NotContains(t, environments, environment.Key())
@@ -136,7 +136,7 @@ func TestRedisRefFunctions(t *testing.T) {
 	)
 
 	// Set project
-	r.SetRef(testCtx, ref)
+	_ = r.SetRef(testCtx, ref)
 	projectsRefs, err := r.Refs(testCtx)
 	assert.NoError(t, err)
 	assert.Contains(t, projectsRefs, ref.Key())
@@ -162,7 +162,7 @@ func TestRedisRefFunctions(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	// Delete Ref
-	r.DelRef(testCtx, ref.Key())
+	_ = r.DelRef(testCtx, ref.Key())
 	projectsRefs, err = r.Refs(testCtx)
 	assert.NoError(t, err)
 	assert.NotContains(t, projectsRefs, ref.Key())
@@ -193,7 +193,7 @@ func TestRedisMetricFunctions(t *testing.T) {
 	}
 
 	// Set metric
-	r.SetMetric(testCtx, m)
+	_ = r.SetMetric(testCtx, m)
 	metrics, err := r.Metrics(testCtx)
 	assert.NoError(t, err)
 	assert.Contains(t, metrics, m.Key())
@@ -220,7 +220,7 @@ func TestRedisMetricFunctions(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 
 	// Delete Metric
-	r.DelMetric(testCtx, m.Key())
+	_ = r.DelMetric(testCtx, m.Key())
 	metrics, err = r.Metrics(testCtx)
 	assert.NoError(t, err)
 	assert.NotContains(t, metrics, m.Key())
@@ -266,7 +266,7 @@ func TestGetRedisQueueKey(t *testing.T) {
 func TestRedisQueueTask(t *testing.T) {
 	mr, r := newTestRedisStore(t)
 
-	r.(*Redis).SetKeepalive(testCtx, "controller1", time.Second)
+	_, _ = r.(*Redis).SetKeepalive(testCtx, "controller1", time.Second)
 
 	ok, err := r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "controller1")
 	assert.True(t, ok)
@@ -288,7 +288,7 @@ func TestRedisQueueTask(t *testing.T) {
 func TestRedisUnqueueTask(t *testing.T) {
 	_, r := newTestRedisStore(t)
 
-	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
+	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
 	count, _ := r.ExecutedTasksCount(testCtx)
 	assert.Equal(t, uint64(0), count)
 
@@ -300,13 +300,13 @@ func TestRedisUnqueueTask(t *testing.T) {
 func TestRedisCurrentlyQueuedTasksCount(t *testing.T) {
 	_, r := newTestRedisStore(t)
 
-	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
-	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "bar", "")
-	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "baz", "")
+	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
+	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "bar", "")
+	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "baz", "")
 
 	count, _ := r.CurrentlyQueuedTasksCount(testCtx)
 	assert.Equal(t, uint64(3), count)
-	r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	_ = r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
 	count, _ = r.CurrentlyQueuedTasksCount(testCtx)
 	assert.Equal(t, uint64(2), count)
 }
@@ -314,10 +314,10 @@ func TestRedisCurrentlyQueuedTasksCount(t *testing.T) {
 func TestRedisExecutedTasksCount(t *testing.T) {
 	_, r := newTestRedisStore(t)
 
-	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
-	r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "bar", "")
-	r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
-	r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
+	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "bar", "")
+	_ = r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	_ = r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
 
 	count, _ := r.ExecutedTasksCount(testCtx)
 	assert.Equal(t, uint64(1), count)

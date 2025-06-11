@@ -15,14 +15,14 @@ func TestPullEnvironmentsFromProject(t *testing.T) {
 	ctx, c, mux, srv := newTestController(config.Config{})
 	defer srv.Close()
 
-	mux.HandleFunc(fmt.Sprintf("/api/v4/projects/foo/environments"),
+	mux.HandleFunc("/api/v4/projects/foo/environments",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"name":"main"},{"id":1337,"name":"prod"}]`)
+			_, _ = fmt.Fprint(w, `[{"name":"main"},{"id":1337,"name":"prod"}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/environments/1337",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `
+			_, _ = fmt.Fprint(w, `
 {
 	"id": 1,
 	"name": "prod",
@@ -81,7 +81,7 @@ func TestPullEnvironmentMetricsSucceed(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/environments/1",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `
+			_, _ = fmt.Fprint(w, `
 {
 	"id": 1,
 	"name": "prod",
@@ -108,7 +108,7 @@ func TestPullEnvironmentMetricsSucceed(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/repository/branches/bar",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `
+			_, _ = fmt.Fprint(w, `
 {
 	"commit": {
 		"short_id": "416d8ea1",

@@ -17,7 +17,7 @@ func TestPullRefPipelineJobsMetrics(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1,"created_at":"2016-08-11T11:28:34.085Z","started_at":"2016-08-11T11:28:56.085Z"},{"id":2,"created_at":"2016-08-11T11:28:34.085Z","started_at":"2016-08-11T11:28:58.085Z"}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"created_at":"2016-08-11T11:28:34.085Z","started_at":"2016-08-11T11:28:56.085Z"},{"id":2,"created_at":"2016-08-11T11:28:34.085Z","started_at":"2016-08-11T11:28:58.085Z"}]`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -38,7 +38,7 @@ func TestPullRefMostRecentJobsMetrics(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/jobs",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, `[{"id":1,"created_at":"2016-08-11T11:28:34.085Z"},{"id":2,"created_at":"2016-08-11T11:28:34.085Z"}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1,"created_at":"2016-08-11T11:28:34.085Z"},{"id":2,"created_at":"2016-08-11T11:28:34.085Z"}]`)
 		})
 
 	ref := schemas.Ref{
@@ -96,7 +96,7 @@ func TestProcessJobMetrics(t *testing.T) {
 		"foo": oldJob,
 	}
 
-	c.Store.SetRef(ctx, ref)
+	_ = c.Store.SetRef(ctx, ref)
 
 	// If we run it against the same job, nothing should change in the store
 	c.ProcessJobMetrics(ctx, ref, oldJob)

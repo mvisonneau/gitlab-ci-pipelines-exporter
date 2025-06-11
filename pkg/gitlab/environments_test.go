@@ -31,18 +31,18 @@ func TestGetProjectEnvironments(t *testing.T) {
 			w.Header().Add("X-Next-Page", strconv.Itoa(nextPage))
 
 			if scope, ok := r.URL.Query()["states"]; ok && len(scope) == 1 && scope[0] == "available" {
-				fmt.Fprint(w, `[{"id":1338,"name":"main"}]`)
+				_, _ = fmt.Fprint(w, `[{"id":1338,"name":"main"}]`)
 
 				return
 			}
 
 			if currentPage == 1 {
-				fmt.Fprint(w, `[{"id":1338,"name":"main"},{"id":1337,"name":"dev"}]`)
+				_, _ = fmt.Fprint(w, `[{"id":1338,"name":"main"},{"id":1337,"name":"dev"}]`)
 
 				return
 			}
 
-			fmt.Fprint(w, `[]`)
+			_, _ = fmt.Fprint(w, `[]`)
 		},
 	)
 
@@ -109,7 +109,7 @@ func TestGetEnvironment(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/environments/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, r.Method, "GET")
-			fmt.Fprint(w, `
+			_, _ = fmt.Fprint(w, `
 {
 	"id": 1,
 	"name": "foo",

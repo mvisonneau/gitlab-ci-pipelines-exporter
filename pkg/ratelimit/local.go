@@ -24,11 +24,11 @@ func NewLocalLimiter(maximumRPS, burstableRPS int) Limiter {
 func (l Local) Take(ctx context.Context) time.Duration {
 	start := time.Now()
 
-	if err := l.Limiter.Wait(ctx); err != nil {
+	if err := l.Wait(ctx); err != nil {
 		log.WithContext(ctx).
 			WithError(err).
 			Fatal()
 	}
 
-	return start.Sub(time.Now())
+	return time.Until(start)
 }

@@ -315,7 +315,7 @@ func (c *Controller) Schedule(ctx context.Context, pull config.Pull, gc config.G
 	defer span.End()
 
 	go func() {
-		c.GetGitLabMetadata(ctx)
+		_ = c.GetGitLabMetadata(ctx)
 	}()
 
 	for tt, cfg := range map[schemas.TaskType]config.SchedulerConfig{

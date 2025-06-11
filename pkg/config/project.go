@@ -152,13 +152,13 @@ type ProjectPullPipelineTestReports struct {
 	TestCases          ProjectPullPipelineTestReportsTestCases          `yaml:"test_cases"`
 }
 
-// ProjectPullPipelineJobsFromChildPipelines ..
+// ProjectPullPipelineTestReportsFromChildPipelines ..
 type ProjectPullPipelineTestReportsFromChildPipelines struct {
 	// Enabled set to true will pull pipeline jobs from child/downstream pipelines related metrics.
 	Enabled bool `default:"false" yaml:"enabled"`
 }
 
-// ProjectPullPipelineTestCases ..
+// ProjectPullPipelineTestReportsTestCases ..
 type ProjectPullPipelineTestReportsTestCases struct {
 	// Enabled set to true will attempt to retrieve the test report included in the pipeline.
 	Enabled bool `default:"false" yaml:"enabled"`

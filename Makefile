@@ -3,16 +3,18 @@ FILES          := $(shell git ls-files */*.go)
 COVERAGE_FILE  := coverage.out
 REPOSITORY     := mvisonneau/$(NAME)
 .DEFAULT_GOAL  := help
-GOLANG_VERSION := 1.23
+
+GOLANG_VERSION := 1.24
+GOLANGCI_LINT := go tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+GORELEASER    := go tool github.com/goreleaser/goreleaser/v2
 
 .PHONY: fmt
 fmt: ## Format source code
-	go run mvdan.cc/gofumpt@v0.8.0 -w $(shell git ls-files **/*.go)
-	go run github.com/daixiang0/gci@v0.13.6 write -s standard -s default -s "prefix(github.com/mvisonneau)" .
+	$(GOLANGCI_LINT) fmt -v
 
 .PHONY: lint
 lint: ## Run all lint related tests upon the codebase
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 run -v --fast
+	$(GOLANGCI_LINT) run -v
 
 .PHONY: test
 test: ## Run the tests against the codebase
@@ -29,15 +31,15 @@ install: ## Build and install locally the binary (dev purpose)
 	go install ./cmd/$(NAME)
 
 .PHONY: build
-build: ## Build the binaries using local GOOS
-	go build ./cmd/$(NAME)
+build: ## Build the binaries
+	$(GORELEASER) build --clean --snapshot
 
 .PHONY: release
 release: ## Build & release the binaries (stable)
 	mkdir -p ${HOME}/.cache/snapcraft/download
 	mkdir -p ${HOME}/.cache/snapcraft/stage-packages
 	git tag -d edge
-	goreleaser release --clean
+	$(GORELEASER) release --clean
 	find dist -type f -name "*.snap" -exec snapcraft upload --release stable,edge '{}' \;
 
 .PHONY: protoc
