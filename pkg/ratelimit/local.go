@@ -30,5 +30,5 @@ func (l Local) Take(ctx context.Context) time.Duration {
 			Fatal()
 	}
 
-	return start.Sub(time.Now())
+	return time.Since(start)
 }

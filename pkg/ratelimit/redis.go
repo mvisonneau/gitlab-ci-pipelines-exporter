@@ -49,5 +49,5 @@ func (r Redis) Take(ctx context.Context) time.Duration {
 		}
 	}
 
-	return start.Sub(time.Now())
+	return time.Since(start)
 }
