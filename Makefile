@@ -12,7 +12,7 @@ fmt: ## Format source code
 
 .PHONY: lint
 lint: ## Run all lint related tests upon the codebase
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 run -v --fast
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v2.1.6 run -v --fast
 
 .PHONY: test
 test: ## Run the tests against the codebase
