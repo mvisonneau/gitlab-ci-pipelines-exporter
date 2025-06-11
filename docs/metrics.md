@@ -84,17 +84,17 @@ Those are not fetched by default, you need to set `project_defaults.pull.pipelin
 ### Test Suite Name
 
 Name of the test suite.
-This is not fetched by default, you need to set `project_default.pull.pipeline.test_reports.enabled` to **true**
+This is not fetched by default, you need to set `project_defaults.pull.pipeline.test_reports.enabled` to **true**
 
 ### Test Case Name
 
 Name of the test case.
-This is not fetched by default, you need to set `project_default.pull.pipeline.test_reports.test_cases.enabled` to **true**
+This is not fetched by default, you need to set `project_defaults.pull.pipeline.test_reports.test_cases.enabled` to **true**
 
 ### Test Case ClassName
 
 Name of the test case classname.
-This is not fetched by default, you need to set `project_default.pull.pipeline.test_reports.test_cases.enabled` to **true**
+This is not fetched by default, you need to set `project_defaults.pull.pipeline.test_reports.test_cases.enabled` to **true**
 
 ### Environment
 
