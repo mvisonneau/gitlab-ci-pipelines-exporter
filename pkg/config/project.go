@@ -87,12 +87,18 @@ type ProjectPullRefsMergeRequests struct {
 	// Monitor pipelines related to project merge requests.
 	Enabled bool `yaml:"enabled"`
 
+	// Filter for MRs to include (by title).
+	Regexp string `default:".*" yaml:"regexp"`
+
 	// Only keep most 'n' recently updated merge requests.
 	MostRecent uint `default:"0" yaml:"most_recent"`
 
 	// If the most recent pipeline for the merge request was last updated at
 	// time greater than this value the metrics won't be exported.
 	MaxAgeSeconds uint `default:"0" yaml:"max_age_seconds"`
+
+	// Prevent exporting metrics for MRs that are not opened.
+	ExcludeNonOpened bool `default:"false" yaml:"exclude_non_opened"`
 }
 
 // ProjectPullPipeline ..

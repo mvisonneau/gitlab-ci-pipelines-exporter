@@ -167,15 +167,23 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 	}
 
 	var (
-		mostRecent, maxAgeSeconds         uint
-		limitToMostRecent, excludeDeleted bool
-		existingRefs                      schemas.Refs
+		mostRecent, maxAgeSeconds                           uint
+		limitToMostRecent, excludeDeleted, excludeNonOpened bool
+		existingRefs                                        schemas.Refs
 	)
 
 	switch refKind {
 	case schemas.RefKindMergeRequest:
 		maxAgeSeconds = p.Pull.Refs.MergeRequests.MaxAgeSeconds
 		mostRecent = p.Pull.Refs.MergeRequests.MostRecent
+
+		if p.Pull.Refs.MergeRequests.ExcludeNonOpened {
+			excludeNonOpened = true
+
+			if existingRefs, err = c.GetProjectOpenMergeRequests(ctx, p); err != nil {
+				return
+			}
+		}
 	case schemas.RefKindBranch:
 		options.Scope = goGitlab.String("branches")
 		maxAgeSeconds = p.Pull.Refs.Branches.MaxAgeSeconds
@@ -252,7 +260,7 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 				refName,
 			)
 
-			if excludeDeleted {
+			if excludeDeleted || excludeNonOpened {
 				if _, refExists := existingRefs[ref.Key()]; !refExists {
 					log.WithFields(log.Fields{
 						"project-name": ref.Project.Name,
