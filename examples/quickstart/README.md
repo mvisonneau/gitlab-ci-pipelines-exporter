@@ -14,7 +14,7 @@
 ~$ cd gitlab-ci-pipelines-exporter/examples/quickstart
 
 # Provide your personal GitLab API access token (needs read_api permissions)
-~$ sed -i 's/<your_token>/xXF_xxjV_xxyzxzz/' gitlab-ci-pipelines-exporter.yml
+~$ GITLAB_PAT="<Replace with PAT>"; sed -i "s/<your_token>/${GITLAB_PAT}/" gitlab-ci-pipelines-exporter.yml
 
 # Start gitlab-ci-pipelines-exporter, prometheus and grafana containers !
 ~$ docker-compose up -d
@@ -45,7 +45,7 @@ b3500bff6038        prom/prometheus:latest                          "/bin/promet
 ### Check logs from the gitlab-ci-pipelines-exporter container
 
 ```bash
-~$ docker logs -f quickstart_gitlab-ci-pipelines-exporter_1
+~$ docker logs -f quickstart-gitlab-ci-pipelines-exporter-1
 time="2020-04-28T23:09:01Z" level=info msg="starting exporter" discover-projects-refs-interval=300s discover-wildcard-projects-interval=1800s gitlab-endpoint="https://gitlab.com" on-init-fetch-refs-from-pipelines=false pulling-projects-refs-interval=30s rate-limit=10rps
 time="2020-04-28T23:09:01Z" level=info msg="started, now serving requests" listen-address=":8080"
 time="2020-04-28T23:09:01Z" level=info msg="discover wildcards" count=0
@@ -77,13 +77,13 @@ You can open this URL in your browser and should see the exporter is being confi
 
 You should then be able to see the following metrics under the `gitlab_ci_` prefix:
 
-[http://localhost:9090/new/graph](http://localhost:9090/new/graph)
+[http://localhost:9090/graph](http://localhost:9090/graph)
 
 ![prometheus_metrics_list](/docs/images/prometheus_metrics_list_example.png)
 
 You can then validate that you get the expected values for your projects metrics, eg `gitlab_ci_pipeline_status`:
 
-[http://localhost:9090/new/graph?g0.expr=gitlab_ci_pipeline_status&g0.tab=1&g0.stacked=0&g0.range_input=1h](http://localhost:9090/new/graph?g0.expr=gitlab_ci_pipeline_status&g0.tab=1&g0.stacked=0&g0.range_input=1h)
+[http://localhost:9090/graph?g0.expr=gitlab_ci_pipeline_status&g0.tab=1&g0.stacked=0&g0.range_input=1h](http://localhost:9090/graph?g0.expr=gitlab_ci_pipeline_status&g0.tab=1&g0.stacked=0&g0.range_input=1h)
 
 ![prometheus_pipeline_status_metric_example](/docs/images/prometheus_pipeline_status_metric_example.png)
 
@@ -109,7 +109,7 @@ I believe it would be more interesting for you to be monitoring your own project
 
 ```bash
 # Edit the configuration file for the exporter
-~$ vi ./gitlab-ci-pipelines-exporter/config.yml
+~$ vi ./gitlab-ci-pipelines-exporter.yml
 
 # Restart the exporter container
 ~$ docker-compose restart gitlab-ci-pipelines-exporter
