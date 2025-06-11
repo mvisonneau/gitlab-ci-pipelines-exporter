@@ -106,6 +106,7 @@ type ProjectPullPipeline struct {
 	Jobs        ProjectPullPipelineJobs        `yaml:"jobs"`
 	Variables   ProjectPullPipelineVariables   `yaml:"variables"`
 	TestReports ProjectPullPipelineTestReports `yaml:"test_reports"`
+	PerRef      uint                           `default:"1" yaml:"per_ref"`
 }
 
 // ProjectPullPipelineJobs ..
