@@ -7,12 +7,12 @@ GOLANG_VERSION := 1.23
 
 .PHONY: fmt
 fmt: ## Format source code
-	go run mvdan.cc/gofumpt@v0.7.0 -w $(shell git ls-files **/*.go)
-	go run github.com/daixiang0/gci@v0.13.5 write -s standard -s default -s "prefix(github.com/mvisonneau)" .
+	go run mvdan.cc/gofumpt@v0.8.0 -w $(shell git ls-files **/*.go)
+	go run github.com/daixiang0/gci@v0.13.6 write -s standard -s default -s "prefix(github.com/mvisonneau)" .
 
 .PHONY: lint
 lint: ## Run all lint related tests upon the codebase
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2 run -v --fast
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 run -v --fast
 
 .PHONY: test
 test: ## Run the tests against the codebase
