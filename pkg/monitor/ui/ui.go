@@ -225,7 +225,7 @@ func newModel(version string, endpoint *url.URL) (m *model) {
 		vp:              viewport.Model{},
 		telemetryStream: make(chan *pb.Telemetry),
 		progress:        &p,
-		client:          client.NewClient(context.TODO(), endpoint),
+		client:          client.NewClient(endpoint),
 	}
 
 	return

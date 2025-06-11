@@ -346,14 +346,15 @@ To use it, you have to start your exporter with the following flag `--internal-m
 You can whether use a TCP or UNIX socket eg:
 
 ```
-~$ gitlab-ci-pipelines-exporter -m 'unix://gcpe-monitor.sock' run
+~$ gitlab-ci-pipelines-exporter -m 'unix:///gcpe-monitor.sock' run
 ~$ gitlab-ci-pipelines-exporter -m 'tcp://127.0.0.1:9000' run
 ```
 
-To use the monitor CLI, you need to be able to access the monitoring socket and reuse the same flag:
+Unix socket address format is denoted here: https://github.com/grpc/grpc/blob/master/doc/naming.md#detailed-design
 
+To use the monitor CLI, you need to be able to access the monitoring socket and reuse the same flag:
 ```
-export GCPE_INTERNAL_MONITORING_LISTENER_ADDRESS='unix://gcpe-monitor.sock'
+export GCPE_INTERNAL_MONITORING_LISTENER_ADDRESS='unix:///gcpe-monitor.sock'
 ~$ gitlab-ci-pipelines-exporter run &
 ~$ gitlab-ci-pipelines-exporter monitor
 ```
