@@ -53,7 +53,7 @@ func TestNewPipeline(t *testing.T) {
 				Label: "passed with warnings",
 				Group: "success-with-warnings",
 			},
-			"success-with-warnings",
+			"success_with_warnings",
 		},
 	}
 
