@@ -90,6 +90,19 @@ type ServerWebhook struct {
 
 	// Secret token to authenticate legitimate webhook requests coming from the GitLab server
 	SecretToken string `validate:"required_if=Enabled true" yaml:"secret_token"`
+
+	// Schedule the addition of webhooks to all seleceted projects
+	AddWebhooks struct {
+		OnInit          bool `default:"false" yaml:"on_init"`
+		Scheduled       bool `default:"false" yaml:"scheduled"`
+		IntervalSeconds int  `default:"43200" validate:"gte=1" yaml:"interval_seconds"`
+	} `yaml:"add_webhooks"`
+
+	// Webhook URL
+	URL string `validate:"required_if=AddWebhooks.Scheduled true" yaml:"webhook_url"`
+
+	// Remove webhooks on shutdown
+	RemoveHooks bool `default:"false" yaml:"remove_webhooks"`
 }
 
 // Gitlab ..
