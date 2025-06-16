@@ -10,7 +10,7 @@ var (
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "username"}
 	testSuiteLabels              = []string{"test_suite_name"}
 	testCaseLabels               = []string{"test_case_name", "test_case_classname"}
-	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled", "error"}
+	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled", "error", "success_with_warnings"}
 )
 
 // NewInternalCollectorCurrentlyQueuedTasksCount returns a new collector for the gcpe_currently_queued_tasks_count metric.
