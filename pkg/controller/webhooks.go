@@ -133,13 +133,25 @@ func (c *Controller) processMergeEvent(ctx context.Context, e goGitlab.MergeEven
 
 	switch e.ObjectAttributes.Action {
 	case "close":
-		_ = deleteRef(ctx, c.Store, ref, "received merge request close event from webhook")
+		c.triggerRefDeletion(ctx, ref)
 	case "merge":
-		_ = deleteRef(ctx, c.Store, ref, "received merge request merge event from webhook")
+		c.triggerRefDeletion(ctx, ref)
 	default:
 		log.
 			WithField("merge-request-event-type", e.ObjectAttributes.Action).
 			Debug("received a non supported merge-request event type as a webhook")
+	}
+}
+
+func (c *Controller) triggerRefDeletion(ctx context.Context, ref schemas.Ref) {
+	err := c.Store.DelRef(ctx, ref.Key())
+	if err != nil {
+		log.WithContext(ctx).
+			WithFields(log.Fields{
+				"project-name": ref.Project.Name,
+				"ref":          ref.Name,
+			}).
+			Error("failed deleting ref")
 	}
 }
 

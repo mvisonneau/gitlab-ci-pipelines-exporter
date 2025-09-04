@@ -47,14 +47,23 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 		return
 	}
 
-	if err = c.configureRedis(ctx, cfg.Redis.URL); err != nil {
+	if err = c.configureRedis(ctx, &cfg.Redis); err != nil {
 		return
 	}
 
 	c.TaskController = NewTaskController(ctx, c.Redis, cfg.Gitlab.MaximumJobsQueueSize)
 	c.registerTasks()
 
-	c.Store = store.New(ctx, c.Redis, c.Config.Projects)
+	var redisStore *store.Redis
+	if c.Redis != nil {
+		redisStore = store.NewRedisStore(c.Redis, store.WithTTLConfig(&store.RedisTTLConfig{
+			Project: cfg.Redis.ProjectTTL,
+			Ref:     cfg.Redis.RefTTL,
+			Metric:  cfg.Redis.MetricTTL,
+		}))
+	}
+
+	c.Store = store.New(ctx, redisStore, c.Config.Projects)
 
 	if err = c.configureGitlab(cfg.Gitlab, version); err != nil {
 		return
@@ -169,11 +178,11 @@ func (c *Controller) configureGitlab(cfg config.Gitlab, version string) (err err
 	return
 }
 
-func (c *Controller) configureRedis(ctx context.Context, url string) (err error) {
+func (c *Controller) configureRedis(ctx context.Context, config *config.Redis) (err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:configureRedis")
 	defer span.End()
 
-	if len(url) <= 0 {
+	if len(config.URL) <= 0 {
 		log.Debug("redis url is not configured, skipping configuration & using local driver")
 
 		return
@@ -183,7 +192,7 @@ func (c *Controller) configureRedis(ctx context.Context, url string) (err error)
 
 	var opt *redis.Options
 
-	if opt, err = redis.ParseURL(url); err != nil {
+	if opt, err = redis.ParseURL(config.URL); err != nil {
 		return
 	}
 

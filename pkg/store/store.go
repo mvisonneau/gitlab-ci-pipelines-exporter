@@ -40,10 +40,15 @@ type Store interface {
 
 	// Helpers to keep track of currently queued tasks and avoid scheduling them
 	// twice at the risk of ending up with loads of dangling goroutines being locked
-	QueueTask(ctx context.Context, tt schemas.TaskType, taskUUID, processUUID string) (bool, error)
-	UnqueueTask(ctx context.Context, tt schemas.TaskType, taskUUID string) error
+	QueueTask(ctx context.Context, tt schemas.TaskType, taskUUID string, processUUID string) (bool, error)
+	UnqueueTask(ctx context.Context, tt schemas.TaskType, processUUID string) error
 	CurrentlyQueuedTasksCount(ctx context.Context) (uint64, error)
 	ExecutedTasksCount(ctx context.Context) (uint64, error)
+
+	// Garbage collections
+	HasProjectExpired(ctx context.Context, projectKey schemas.ProjectKey) bool
+	HasRefExpired(ctx context.Context, refKey schemas.RefKey) bool
+	HasMetricExpired(ctx context.Context, metricKey schemas.MetricKey) bool
 }
 
 // NewLocalStore ..
@@ -57,24 +62,31 @@ func NewLocalStore() Store {
 }
 
 // NewRedisStore ..
-func NewRedisStore(client *redis.Client) Store {
-	return &Redis{
-		Client: client,
+func NewRedisStore(client *redis.Client, opts ...RedisStoreOptions) *Redis {
+	r := &Redis{
+		Client:      client,
+		StoreConfig: &RedisStoreConfig{},
 	}
+
+	for _, opt := range opts {
+		opt(r.StoreConfig)
+	}
+
+	return r
 }
 
 // New creates a new store and populates it with
 // provided []schemas.Project.
 func New(
 	ctx context.Context,
-	r *redis.Client,
+	r *Redis,
 	projects config.Projects,
 ) (s Store) {
 	ctx, span := otel.Tracer("gitlab-ci-pipelines-exporter").Start(ctx, "store:New")
 	defer span.End()
 
 	if r != nil {
-		s = NewRedisStore(r)
+		s = r
 	} else {
 		s = NewLocalStore()
 	}

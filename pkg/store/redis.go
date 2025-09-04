@@ -25,7 +25,28 @@ const (
 // Redis ..
 type Redis struct {
 	*redis.Client
+	StoreConfig *RedisStoreConfig
 }
+
+// RedisStoreConfig allows to fine tune the store behaviour.
+type RedisStoreConfig struct {
+	TTLConfig *RedisTTLConfig
+}
+
+// RedisTTLConfig allows to set the TTL values for the various fields tracked.
+type RedisTTLConfig struct {
+	Project time.Duration
+	Ref     time.Duration
+	Metric  time.Duration
+}
+
+func WithTTLConfig(opt *RedisTTLConfig) func(*RedisStoreConfig) {
+	return func(cfg *RedisStoreConfig) {
+		cfg.TTLConfig = opt
+	}
+}
+
+type RedisStoreOptions func(opts *RedisStoreConfig)
 
 // SetProject ..
 func (r *Redis) SetProject(ctx context.Context, p schemas.Project) error {
@@ -35,6 +56,13 @@ func (r *Redis) SetProject(ctx context.Context, p schemas.Project) error {
 	}
 
 	_, err = r.HSet(ctx, redisProjectsKey, string(p.Key()), marshalledProject).Result()
+	if err != nil {
+		return err
+	}
+
+	if r.StoreConfig.TTLConfig != nil {
+		_, err = r.Set(ctx, getTTLProjectKey(p.Key()), true, r.StoreConfig.TTLConfig.Project).Result()
+	}
 
 	return err
 }
@@ -183,6 +211,13 @@ func (r *Redis) SetRef(ctx context.Context, ref schemas.Ref) error {
 	}
 
 	_, err = r.HSet(ctx, redisRefsKey, string(ref.Key()), marshalledRef).Result()
+	if err != nil {
+		return err
+	}
+
+	if r.StoreConfig.TTLConfig != nil {
+		_, err = r.Set(ctx, getTTLRefKey(ref.Key()), true, r.StoreConfig.TTLConfig.Ref).Result()
+	}
 
 	return err
 }
@@ -257,6 +292,13 @@ func (r *Redis) SetMetric(ctx context.Context, m schemas.Metric) error {
 	}
 
 	_, err = r.HSet(ctx, redisMetricsKey, string(m.Key()), marshalledMetric).Result()
+	if err != nil {
+		return err
+	}
+
+	if r.StoreConfig.TTLConfig != nil {
+		_, err = r.Set(ctx, getTTLMetricKey(m.Key()), true, r.StoreConfig.TTLConfig.Metric).Result()
+	}
 
 	return err
 }
@@ -417,4 +459,46 @@ func (r *Redis) ExecutedTasksCount(ctx context.Context) (uint64, error) {
 	c, err := strconv.Atoi(countString)
 
 	return uint64(c), err
+}
+
+// HasProjectExpired ..
+func (r *Redis) HasProjectExpired(ctx context.Context, key schemas.ProjectKey) bool {
+	reply, err := r.Exists(ctx, getTTLProjectKey(key)).Result()
+	if err != nil {
+		return false
+	}
+
+	return reply > 0
+}
+
+func getTTLProjectKey(key schemas.ProjectKey) string {
+	return fmt.Sprintf("%s:%s", redisProjectsKey, key)
+}
+
+// HasRefExpired ..
+func (r *Redis) HasRefExpired(ctx context.Context, key schemas.RefKey) bool {
+	reply, err := r.Exists(ctx, getTTLRefKey(key)).Result()
+	if err != nil {
+		return false
+	}
+
+	return reply > 0
+}
+
+func getTTLRefKey(key schemas.RefKey) string {
+	return fmt.Sprintf("%s:%s", redisRefsKey, key)
+}
+
+// HasMetricExpired ..
+func (r *Redis) HasMetricExpired(ctx context.Context, key schemas.MetricKey) bool {
+	reply, err := r.Exists(ctx, getTTLMetricKey(key)).Result()
+	if err != nil {
+		return false
+	}
+
+	return reply > 0
+}
+
+func getTTLMetricKey(key schemas.MetricKey) string {
+	return fmt.Sprintf("%s:%s", redisMetricsKey, key)
 }

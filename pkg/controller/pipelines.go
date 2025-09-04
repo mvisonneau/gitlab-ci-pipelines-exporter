@@ -53,6 +53,21 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.Project.Name, err)
 	}
 
+	if len(pipelines) == 0 && ref.Kind == schemas.RefKindMergeRequest {
+		refName = fmt.Sprintf("refs/merge-requests/%s/merge", ref.Name)
+		pipelines, _, err = c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
+			// We only need the most recent pipeline
+			ListOptions: goGitlab.ListOptions{
+				PerPage: 1,
+				Page:    1,
+			},
+			Ref: &refName,
+		})
+		if err != nil {
+			return fmt.Errorf("error fetching project pipelines for %s: %v", ref.Project.Name, err)
+		}
+	}
+
 	if len(pipelines) == 0 {
 		log.WithFields(logFields).Debug("could not find any pipeline for the ref")
 
