@@ -17,6 +17,8 @@ const (
 	redisEnvironmentsKey       string = `environments`
 	redisRefsKey               string = `refs`
 	redisMetricsKey            string = `metrics`
+	redisPipelinesKey          string = `pipelines`
+	redisPipelineVariablesKey  string = `pipelineVariables`
 	redisTaskKey               string = `task`
 	redisTasksExecutedCountKey string = `tasksExecutedCount`
 	redisKeepaliveKey          string = `keepalive`
@@ -363,6 +365,81 @@ func (r *Redis) Metrics(ctx context.Context) (schemas.Metrics, error) {
 // MetricsCount ..
 func (r *Redis) MetricsCount(ctx context.Context) (int64, error) {
 	return r.HLen(ctx, redisMetricsKey).Result()
+}
+
+func (r *Redis) SetPipeline(ctx context.Context, pipeline schemas.Pipeline) error {
+	marshalledPipeline, err := msgpack.Marshal(pipeline)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.HSet(ctx, redisPipelinesKey, fmt.Sprintf("%d", pipeline.Key()), marshalledPipeline).Result()
+
+	return err
+}
+
+func (r *Redis) GetPipeline(ctx context.Context, pipeline *schemas.Pipeline) error {
+	exists, err := r.PipelineExists(ctx, pipeline.Key())
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		k := pipeline.Key()
+
+		marshalledPipeline, err := r.HGet(ctx, redisPipelinesKey, fmt.Sprintf("%d", k)).Result()
+		if err != nil {
+			return err
+		}
+
+		if err = msgpack.Unmarshal([]byte(marshalledPipeline), pipeline); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *Redis) PipelineExists(ctx context.Context, key schemas.PipelineKey) (bool, error) {
+	return r.HExists(ctx, redisPipelinesKey, fmt.Sprintf("%d", key)).Result()
+}
+
+func (r *Redis) SetPipelineVariables(ctx context.Context, pipeline schemas.Pipeline, variables string) error {
+	marshalledVariables, err := msgpack.Marshal(variables)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.HSet(ctx, redisPipelineVariablesKey, fmt.Sprintf("%d", pipeline.ID), marshalledVariables).Result()
+
+	return err
+}
+
+func (r *Redis) GetPipelineVariables(ctx context.Context, pipeline schemas.Pipeline) (string, error) {
+	exists, err := r.PipelineVariablesExists(ctx, pipeline)
+	if err != nil {
+		return "", err
+	}
+
+	if exists {
+		k := fmt.Sprintf("%d", pipeline.ID)
+
+		marshalledVariables, err := r.HGet(ctx, redisPipelineVariablesKey, string(k)).Result()
+		if err != nil {
+			return "", err
+		}
+		var variables string
+
+		if err = msgpack.Unmarshal([]byte(marshalledVariables), variables); err != nil {
+			return variables, err
+		}
+	}
+
+	return "", err
+}
+
+func (r *Redis) PipelineVariablesExists(ctx context.Context, pipeline schemas.Pipeline) (bool, error) {
+	return r.HExists(ctx, redisPipelineVariablesKey, fmt.Sprintf("%d", pipeline.ID)).Result()
 }
 
 // SetKeepalive sets a key with an UUID corresponding to the currently running process.

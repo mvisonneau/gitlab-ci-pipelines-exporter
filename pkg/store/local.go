@@ -21,6 +21,12 @@ type Local struct {
 	metrics      schemas.Metrics
 	metricsMutex sync.RWMutex
 
+	pipelines      schemas.Pipelines
+	pipelinesMutex sync.RWMutex
+
+	pipelineVariables      map[schemas.PipelineKey]string
+	pipelineVariablesMutex sync.RWMutex
+
 	tasks              schemas.Tasks
 	tasksMutex         sync.RWMutex
 	executedTasksCount uint64
@@ -299,6 +305,69 @@ func (l *Local) MetricsCount(_ context.Context) (int64, error) {
 	defer l.metricsMutex.RUnlock()
 
 	return int64(len(l.metrics)), nil
+}
+
+func (l *Local) SetPipeline(_ context.Context, pipeline schemas.Pipeline) error {
+	l.pipelinesMutex.Lock()
+	defer l.pipelinesMutex.Unlock()
+
+	l.pipelines[pipeline.Key()] = pipeline
+
+	return nil
+}
+
+func (l *Local) GetPipeline(ctx context.Context, pipeline *schemas.Pipeline) error {
+	exists, _ := l.PipelineExists(ctx, pipeline.Key())
+
+	if exists {
+		l.pipelinesMutex.RLock()
+		*pipeline = l.pipelines[pipeline.Key()]
+		l.pipelinesMutex.RUnlock()
+	}
+
+	return nil
+}
+
+func (l *Local) PipelineExists(_ context.Context, key schemas.PipelineKey) (bool, error) {
+	l.pipelinesMutex.RLock()
+	defer l.pipelinesMutex.RUnlock()
+
+	_, ok := l.pipelines[key]
+
+	return ok, nil
+}
+
+func (l *Local) SetPipelineVariables(_ context.Context, pipeline schemas.Pipeline, variables string) error {
+	l.pipelineVariablesMutex.Lock()
+	defer l.pipelineVariablesMutex.Unlock()
+
+	l.pipelineVariables[pipeline.Key()] = variables
+
+	return nil
+}
+
+func (l *Local) GetPipelineVariables(_ context.Context, pipeline schemas.Pipeline) (string, error) {
+	l.pipelineVariablesMutex.RLock()
+
+	value, ok := l.pipelineVariables[pipeline.Key()]
+
+	l.pipelineVariablesMutex.RUnlock()
+
+	if ok {
+		return value, nil
+	}
+
+	return "", nil
+}
+
+func (l *Local) PipelineVariablesExists(_ context.Context, pipeline schemas.Pipeline) (bool, error) {
+	l.pipelineVariablesMutex.RLock()
+
+	_, ok := l.pipelineVariables[pipeline.Key()]
+
+	l.pipelineVariablesMutex.RUnlock()
+
+	return ok, nil
 }
 
 // isTaskAlreadyQueued assess if a task is already queued or not.

@@ -15,10 +15,12 @@ var testCtx = context.Background()
 
 func TestNewLocalStore(t *testing.T) {
 	expectedValue := &Local{
-		projects:     make(schemas.Projects),
-		environments: make(schemas.Environments),
-		refs:         make(schemas.Refs),
-		metrics:      make(schemas.Metrics),
+		projects:          make(schemas.Projects),
+		environments:      make(schemas.Environments),
+		refs:              make(schemas.Refs),
+		metrics:           make(schemas.Metrics),
+		pipelines:         make(schemas.Pipelines),
+		pipelineVariables: make(map[schemas.PipelineKey]string),
 	}
 	assert.Equal(t, expectedValue, NewLocalStore())
 }

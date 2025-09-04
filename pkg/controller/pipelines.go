@@ -14,13 +14,6 @@ import (
 
 // PullRefMetrics ..
 func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error {
-	finishedStatusesList := []string{
-		"success",
-		"failed",
-		"skipped",
-		"cancelled",
-	}
-
 	// At scale, the scheduled ref may be behind the actual state being stored
 	// to avoid issues, we refresh it from the store before manipulating it
 	if err := c.Store.GetRef(ctx, &ref); err != nil {
@@ -42,9 +35,8 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 	}
 
 	pipelines, _, err := c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
-		// We only need the most recent pipeline
 		ListOptions: goGitlab.ListOptions{
-			PerPage: 1,
+			PerPage: int(ref.Project.Pull.Pipeline.PerRef),
 			Page:    1,
 		},
 		Ref: &refName,
@@ -74,21 +66,59 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		return nil
 	}
 
-	pipeline, err := c.Gitlab.GetRefPipeline(ctx, ref, pipelines[0].ID)
+	// Reverse result list to have `ref`'s `LatestPipeline` untouched (compared to
+	// default behavior) after looping over list
+	slices.Reverse(pipelines)
+
+	for _, apiPipeline := range pipelines {
+		err := c.ProcessPipelinesMetrics(ctx, ref, apiPipeline)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"pipeline": apiPipeline.ID,
+				"error":    err,
+			}).Error("processing pipeline metrics failed")
+		}
+	}
+
+	return nil
+}
+
+func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Ref, apiPipeline *goGitlab.PipelineInfo) error {
+	finishedStatusesList := []string{
+		"success",
+		"failed",
+		"skipped",
+		"cancelled",
+	}
+
+	pipeline, err := c.Gitlab.GetRefPipeline(ctx, ref, apiPipeline.ID)
 	if err != nil {
 		return err
 	}
 
-	if ref.LatestPipeline.ID == 0 || !reflect.DeepEqual(pipeline, ref.LatestPipeline) {
-		formerPipeline := ref.LatestPipeline
-		ref.LatestPipeline = pipeline
-
-		// fetch pipeline variables
-		if ref.Project.Pull.Pipeline.Variables.Enabled {
-			ref.LatestPipeline.Variables, err = c.Gitlab.GetRefPipelineVariablesAsConcatenatedString(ctx, ref)
+	// fetch pipeline variables
+	if ref.Project.Pull.Pipeline.Variables.Enabled {
+		if exists, _ := c.Store.PipelineVariablesExists(ctx, pipeline); !exists {
+			variables, err := c.Gitlab.GetRefPipelineVariablesAsConcatenatedString(ctx, ref, pipeline)
+			c.Store.SetPipelineVariables(ctx, pipeline, variables)
+			pipeline.Variables = variables
 			if err != nil {
 				return err
 			}
+		} else {
+			variables, _ := c.Store.GetPipelineVariables(ctx, pipeline)
+			pipeline.Variables = variables
+		}
+	}
+
+	var cachedPipeline schemas.Pipeline
+
+	if c.Store.GetPipeline(ctx, &cachedPipeline); cachedPipeline.ID == 0 || !reflect.DeepEqual(pipeline, cachedPipeline) {
+		formerPipeline := ref.LatestPipeline
+		ref.LatestPipeline = pipeline
+
+		if err = c.Store.SetPipeline(ctx, pipeline); err != nil {
+			return err
 		}
 
 		// Update the ref in the store
