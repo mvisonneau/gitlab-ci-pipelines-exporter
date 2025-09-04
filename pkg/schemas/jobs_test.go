@@ -19,6 +19,7 @@ func TestNewJob(t *testing.T) {
 		StartedAt:      &startedAt,
 		Duration:       15,
 		QueuedDuration: 10,
+		AllowFailure:   true,
 		Status:         "failed",
 		Stage:          "🚀",
 		TagList:        []string{"test-tag"},
@@ -56,6 +57,7 @@ func TestNewJob(t *testing.T) {
 		Status:                "failed",
 		TagList:               "test-tag",
 		ArtifactSize:          150,
+		AllowFailure:          true,
 
 		Runner: Runner{
 			Description: "xxx",
