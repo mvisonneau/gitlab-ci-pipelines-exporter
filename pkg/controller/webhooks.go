@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/openlyinc/pointy"
 	log "github.com/sirupsen/logrus"
 	goGitlab "gitlab.com/gitlab-org/api/client-go"
 
@@ -443,4 +444,96 @@ func isEnvMatchingWilcard(w config.Wildcard, env schemas.Environment) (matches b
 
 	// Then we check if the ref matches the project pull parameters
 	return isEnvMatchingProjectPullEnvironments(w.Pull.Environments, env)
+}
+
+// Add a webhook to every project matching the wildcards.
+func (c *Controller) addWebhooks(ctx context.Context) error {
+	for _, w := range c.Config.Wildcards {
+		projects, err := c.Gitlab.ListProjects(ctx, w)
+		if err != nil {
+			return err
+		}
+
+		if len(projects) == 0 { // if no wildcards read config.projects
+			for _, p := range c.Config.Projects {
+				sp := schemas.Project{Project: p}
+				projects = append(projects, sp)
+			}
+		}
+
+		for _, p := range projects {
+			hooks, err := c.Gitlab.GetProjectHooks(ctx, p.Name)
+			if err != nil {
+				return err
+			}
+
+			WURL := c.Config.Server.Webhook.URL
+			opts := goGitlab.AddProjectHookOptions{ // options for hook
+				PushEvents:            pointy.Bool(false),
+				PipelineEvents:        pointy.Bool(true),
+				DeploymentEvents:      pointy.Bool(true),
+				EnableSSLVerification: pointy.Bool(false),
+				URL:                   &WURL,
+				Token:                 &c.Config.Server.Webhook.SecretToken,
+			}
+
+			if len(hooks) == 0 { // if no hooks
+				_, err := c.Gitlab.AddProjectHook(ctx, p.Name, &opts)
+				if err != nil {
+					return err
+				}
+			} else {
+				exists := false
+				for _, h := range hooks {
+					if h.URL == WURL {
+						exists = true
+					}
+				}
+				if exists == false {
+					_, err := c.Gitlab.AddProjectHook(ctx, p.Name, &opts)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *Controller) RemoveWebhooks(ctx context.Context) error {
+	for _, w := range c.Config.Wildcards {
+		projects, err := c.Gitlab.ListProjects(ctx, w)
+		if err != nil {
+			return err
+		}
+
+		if len(projects) == 0 { // if no wildcards read config.projects
+			for _, p := range c.Config.Projects {
+				sp := schemas.Project{Project: p}
+				projects = append(projects, sp)
+			}
+		}
+
+		for _, p := range projects {
+			hooks, err := c.Gitlab.GetProjectHooks(ctx, p.Name)
+			if err != nil {
+				return err
+			}
+
+			WURL := c.Config.Server.Webhook.URL
+
+			for _, h := range hooks {
+				if h.URL == WURL {
+					err := c.Gitlab.RemoveProjectHook(ctx, p.Name, h.ID)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }

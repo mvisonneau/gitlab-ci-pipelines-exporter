@@ -70,7 +70,7 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 	}
 
 	// Start the scheduler
-	c.Schedule(ctx, cfg.Pull, cfg.GarbageCollect)
+	c.Schedule(ctx, cfg.Pull, cfg.GarbageCollect, cfg.Server.Webhook)
 
 	return
 }
@@ -91,6 +91,7 @@ func (c *Controller) registerTasks() {
 		schemas.TaskTypePullRefMetrics:               c.TaskHandlerPullRefMetrics,
 		schemas.TaskTypePullRefsFromProject:          c.TaskHandlerPullRefsFromProject,
 		schemas.TaskTypePullRefsFromProjects:         c.TaskHandlerPullRefsFromProjects,
+		schemas.TaskTypeAddWebhooks:                  c.TaskHandlerAddWebhooks,
 	} {
 		_, _ = c.TaskController.TaskMap.Register(string(n), &taskq.TaskConfig{
 			Handler:    h,
