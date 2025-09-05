@@ -29,7 +29,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: Lint
         if: ${{ matrix.os == 'ubuntu-24.04' }}
@@ -39,7 +39,7 @@ jobs:
         run: make test
 
       - name: Publish coverage to coveralls.io
-        uses: shogo82148/actions-goveralls@e6875f831db61e6abffbd8df91a2eb6cd24b46c9 # v1
+        uses: shogo82148/actions-goveralls@25f5320d970fb565100cf1993ada29be1bb196a1 # v1
         if: ${{ matrix.os == 'ubuntu-24.04' }}
         with:
           path-to-profile: coverage.out
