@@ -6,6 +6,7 @@ var (
 	defaultLabels                = []string{"project", "topics", "kind", "ref", "source", "variables"}
 	jobLabels                    = []string{"stage", "job_name", "runner_description", "tag_list", "failure_reason"}
 	statusLabels                 = []string{"status"}
+	commitLabels                 = []string{"commit"}
 	environmentLabels            = []string{"project", "environment"}
 	environmentInformationLabels = []string{"environment_id", "external_url", "kind", "ref", "latest_commit_short_id", "current_commit_short_id", "available", "username"}
 	testSuiteLabels              = []string{"test_suite_name"}
@@ -307,6 +308,17 @@ func NewCollectorJobStatus() prometheus.Collector {
 			Help: "Status of the most recent job",
 		},
 		append(defaultLabels, append(jobLabels, statusLabels...)...),
+	)
+}
+
+// NewCollectorFailedJobsCount returns a new collector for the gitlab_ci_pipeline_failed_jobs_count metric.
+func NewCollectorFailedJobsCount() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gitlab_ci_pipeline_failed_jobs_count",
+			Help: "Number of failed jobs",
+		},
+		append(defaultLabels, append(jobLabels, commitLabels...)...),
 	)
 }
 

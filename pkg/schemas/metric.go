@@ -60,6 +60,9 @@ const (
 	// MetricKindJobStatus ..
 	MetricKindJobStatus
 
+	// MetricKindFailedJobsCount ..
+	MetricKindFailedJobsCount
+
 	// MetricKindJobTimestamp ..
 	MetricKindJobTimestamp
 
@@ -148,7 +151,7 @@ func (m Metric) Key() MetricKey {
 			m.Labels["variables"],
 		})
 
-	case MetricKindJobArtifactSizeBytes, MetricKindJobDurationSeconds, MetricKindJobID, MetricKindJobQueuedDurationSeconds, MetricKindJobRunCount, MetricKindJobStatus, MetricKindJobTimestamp:
+	case MetricKindJobArtifactSizeBytes, MetricKindJobDurationSeconds, MetricKindJobID, MetricKindJobQueuedDurationSeconds, MetricKindJobRunCount, MetricKindJobStatus, MetricKindFailedJobsCount, MetricKindJobTimestamp:
 		key += fmt.Sprintf("%v", []string{
 			m.Labels["project"],
 			m.Labels["kind"],
@@ -187,6 +190,9 @@ func (m Metric) Key() MetricKey {
 	switch m.Kind {
 	case MetricKindJobStatus, MetricKindEnvironmentDeploymentStatus, MetricKindStatus, MetricKindTestCaseStatus:
 		key += m.Labels["status"]
+
+	case MetricKindFailedJobsCount:
+		key += m.Labels["commit"]
 	}
 
 	return MetricKey(strconv.Itoa(int(crc32.ChecksumIEEE([]byte(key)))))

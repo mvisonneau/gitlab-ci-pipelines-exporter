@@ -187,4 +187,31 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 		jobStatus,
 		ref.Project.OutputSparseStatusMetrics,
 	)
+
+	if job.Status == "failed" {
+		labels["commit"] = job.Commit
+
+		failedJobsCount := schemas.Metric{
+			Kind:   schemas.MetricKindFailedJobsCount,
+			Labels: labels,
+		}
+
+		failedJobsCountExists, err := c.Store.MetricExists(ctx, failedJobsCount.Key())
+		if err != nil {
+			log.WithContext(ctx).
+				WithFields(projectRefLogFields).
+				WithError(err).
+				Error("checking if metric exists in the store")
+
+			return
+		}
+
+		if failedJobsCountExists && ((lastJob.ID != job.ID) || (lastJob.ID == job.ID && !lastJobTriggered)) {
+			storeGetMetric(ctx, c.Store, &failedJobsCount)
+
+			failedJobsCount.Value++
+		}
+
+		storeSetMetric(ctx, c.Store, failedJobsCount)
+	}
 }
