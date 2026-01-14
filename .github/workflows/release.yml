@@ -10,7 +10,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
 
     env:
       DOCKER_CLI_EXPERIMENTAL: 'enabled'
