@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: Install Go
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
         with:
           go-version: '1.25'
 
@@ -39,7 +39,7 @@ jobs:
         run: make test
 
       - name: Publish coverage to coveralls.io
-        uses: shogo82148/actions-goveralls@e6875f831db61e6abffbd8df91a2eb6cd24b46c9 # v1
+        uses: shogo82148/actions-goveralls@25f5320d970fb565100cf1993ada29be1bb196a1 # v1
         if: ${{ matrix.os == 'ubuntu-24.04' }}
         with:
           path-to-profile: coverage.out
