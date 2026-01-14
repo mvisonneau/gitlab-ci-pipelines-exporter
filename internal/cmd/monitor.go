@@ -1,20 +1,22 @@
 package cmd
 
 import (
-	"github.com/urfave/cli/v2"
+	"context"
+
+	"github.com/urfave/cli/v3"
 
 	monitorUI "github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/ui"
 )
 
 // Monitor ..
-func Monitor(ctx *cli.Context) (int, error) {
-	cfg, err := parseGlobalFlags(ctx)
+func Monitor(_ context.Context, cmd *cli.Command) (int, error) {
+	cfg, err := parseGlobalFlags(cmd)
 	if err != nil {
 		return 1, err
 	}
 
 	monitorUI.Start(
-		ctx.App.Version,
+		appVersion,
 		cfg.InternalMonitoringListenerAddress,
 	)
 

@@ -10,23 +10,23 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/controller"
 	monitoringServer "github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/monitor/server"
 )
 
 // Run launches the exporter.
-func Run(cliCtx *cli.Context) (int, error) {
-	cfg, err := configure(cliCtx)
+func Run(ctx context.Context, cliCmd *cli.Command) (int, error) {
+	cfg, err := configure(cliCmd)
 	if err != nil {
 		return 1, err
 	}
 
-	ctx, ctxCancel := context.WithCancel(context.Background())
+	ctx, ctxCancel := context.WithCancel(ctx)
 	defer ctxCancel()
 
-	c, err := controller.New(ctx, cfg, cliCtx.App.Version)
+	c, err := controller.New(ctx, cfg, appVersion)
 	if err != nil {
 		return 1, err
 	}

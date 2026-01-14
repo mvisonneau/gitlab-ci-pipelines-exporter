@@ -1,14 +1,16 @@
 package cmd
 
 import (
+	"context"
+
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
-func Validate(cliCtx *cli.Context) (int, error) {
+func Validate(_ context.Context, cliCmd *cli.Command) (int, error) {
 	log.Debug("Validating configuration..")
 
-	if _, err := configure(cliCtx); err != nil {
+	if _, err := configure(cliCmd); err != nil {
 		log.WithError(err).Error("Failed to configure")
 
 		return 1, err

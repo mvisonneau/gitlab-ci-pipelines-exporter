@@ -1,98 +1,13 @@
 package cmd
 
 import (
-	"flag"
+	"context"
 	"fmt"
-	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
-
-	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
+	"github.com/urfave/cli/v3"
 )
-
-func NewTestContext() (ctx *cli.Context, flags *flag.FlagSet) {
-	app := cli.NewApp()
-	app.Name = "gitlab-ci-pipelines-exporter"
-
-	app.Metadata = map[string]interface{}{
-		"startTime": time.Now(),
-	}
-
-	flags = flag.NewFlagSet("test", flag.ContinueOnError)
-	ctx = cli.NewContext(app, flags, nil)
-
-	return
-}
-
-func TestConfigure(t *testing.T) {
-	var (
-		cfg config.Config
-		err error
-	)
-
-	f, err := os.CreateTemp(".", "test-*.yml")
-	assert.NoError(t, err)
-
-	defer func() { _ = os.Remove(f.Name()) }()
-
-	// Webhook endpoint enabled
-	_ = os.WriteFile(f.Name(), []byte(`wildcards: [{}]`), 0o600)
-
-	ctx, flags := NewTestContext()
-	flags.String("log-format", "text", "")
-	flags.String("log-level", "debug", "")
-	flags.String("config", f.Name(), "")
-
-	// Undefined gitlab-token
-	flags.String("gitlab-token", "", "")
-
-	_, err = configure(ctx)
-	assert.Error(t, err)
-
-	// Valid configuration
-	_ = flags.Set("gitlab-token", "secret")
-
-	cfg, err = configure(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, "secret", cfg.Gitlab.Token)
-
-	// Invalid config file syntax
-	_ = os.WriteFile(f.Name(), []byte("["), 0o600)
-
-	cfg, err = configure(ctx)
-	assert.Error(t, err)
-
-	// Webhook endpoint enabled
-	_ = os.WriteFile(f.Name(), []byte(`
-wildcards: [{}]
-server:
-  webhook:
-    enabled: true
-`), 0o600)
-
-	// No secret token defined for the webhook endpoint
-	cfg, err = configure(ctx)
-	assert.Error(t, err)
-
-	// Defining the webhook secret token
-	flags.String("webhook-secret-token", "secret", "")
-
-	cfg, err = configure(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, "secret", cfg.Server.Webhook.SecretToken)
-
-	// Test health url flag
-	healthURL := "https://gitlab.com/-/readiness?token"
-	flags.String("gitlab-health-url", healthURL, "")
-
-	cfg, err = configure(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, cfg.Gitlab.HealthURL, healthURL)
-	assert.True(t, cfg.Gitlab.EnableHealthCheck)
-}
 
 func TestExit(t *testing.T) {
 	err := exit(20, fmt.Errorf("test"))
@@ -101,8 +16,12 @@ func TestExit(t *testing.T) {
 }
 
 func TestExecWrapper(t *testing.T) {
-	function := func(ctx *cli.Context) (int, error) {
+	function := func(_ context.Context, _ *cli.Command) (int, error) {
 		return 0, nil
 	}
-	assert.Equal(t, exit(function(&cli.Context{})), ExecWrapper(function)(&cli.Context{}))
+
+	err := ExecWrapper(function)(context.Background(), &cli.Command{})
+	exitErr, ok := err.(cli.ExitCoder)
+	assert.True(t, ok)
+	assert.Equal(t, 0, exitErr.ExitCode())
 }

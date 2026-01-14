@@ -1,7 +1,6 @@
 version: 2
 before:
   hooks:
-    - make man-pages
     - make autocomplete-scripts
 
 builds:
@@ -20,6 +19,8 @@ builds:
     goarm: [6, 7]
     flags:
       - -trimpath
+    ldflags:
+      - -s -w -X github.com/mvisonneau/gitlab-ci-pipelines-exporter/internal/app.Version={{.Version}}
     ignore:
       - { goos: darwin, goarch: 386 }
       - { goos: darwin, goarch: arm }
@@ -58,16 +59,12 @@ nfpms:
         dst: /usr/share/zsh/vendor-completions/_{{ .ProjectName }}
         file_info:
           mode: 0644
-      - src: ./helpers/manpages/{{ .ProjectName }}.1.gz
-        dst: /usr/share/man/man1/{{ .ProjectName }}.1.gz
-        file_info:
-          mode: 0644
       - src: ./LICENSE
         dst: /usr/share/doc/{{ .ProjectName }}/copyright
         file_info:
           mode: 0644
 
-brews:
+homebrew_casks:
   - description: *description
     homepage: *homepage
     license: *license
@@ -75,13 +72,10 @@ brews:
     repository:
       owner: mvisonneau
       name: homebrew-tap
-    test: |
-      system "#{bin}/{{ .ProjectName }} -v"
-    install: |-
-      bin.install "{{ .ProjectName }}"
-      bash_completion.install "./helpers/autocomplete/bash" => "{{ .ProjectName }}"
-      zsh_completion.install "./helpers/autocomplete/zsh" => "_{{ .ProjectName }}"
-      man1.install "./helpers/manpages/{{ .ProjectName }}.1.gz"
+    completions:
+      bash: helpers/autocomplete/bash
+      zsh: helpers/autocomplete/zsh
+      fish: helpers/autocomplete/fish
 
 scoops:
   - description: *description
