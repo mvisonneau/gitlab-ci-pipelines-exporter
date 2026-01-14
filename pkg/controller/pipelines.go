@@ -100,7 +100,7 @@ func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Re
 	if ref.Project.Pull.Pipeline.Variables.Enabled {
 		if exists, _ := c.Store.PipelineVariablesExists(ctx, pipeline); !exists {
 			variables, err := c.Gitlab.GetRefPipelineVariablesAsConcatenatedString(ctx, ref, pipeline)
-			c.Store.SetPipelineVariables(ctx, pipeline, variables)
+			_ = c.Store.SetPipelineVariables(ctx, pipeline, variables)
 			pipeline.Variables = variables
 			if err != nil {
 				return err
@@ -113,7 +113,7 @@ func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Re
 
 	var cachedPipeline schemas.Pipeline
 
-	if c.Store.GetPipeline(ctx, &cachedPipeline); cachedPipeline.ID == 0 || !reflect.DeepEqual(pipeline, cachedPipeline) {
+	if _ = c.Store.GetPipeline(ctx, &cachedPipeline); cachedPipeline.ID == 0 || !reflect.DeepEqual(pipeline, cachedPipeline) {
 		formerPipeline := ref.LatestPipeline
 		ref.LatestPipeline = pipeline
 

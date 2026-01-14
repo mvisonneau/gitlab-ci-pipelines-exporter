@@ -119,18 +119,18 @@ func TestPullRefMetricsUpdatingPipeline(t *testing.T) {
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "bar", r.URL.Query().Get("ref"))
-			fmt.Fprint(w, `[{"id":1}]`)
+			_, _ = fmt.Fprint(w, `[{"id":1}]`)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, apiPipeline)
+			_, _ = fmt.Fprint(w, apiPipeline)
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
-			fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
+			_, _ = fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
 		})
 
 	p := schemas.NewProject("foo")
@@ -219,7 +219,6 @@ func TestPullRefMetricsUpdatingPipeline(t *testing.T) {
 		Value:  1,
 	}
 	assert.Equal(t, status, metrics[status.Key()])
-
 }
 
 func TestPullRefTestReportMetrics(t *testing.T) {
