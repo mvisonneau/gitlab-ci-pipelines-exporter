@@ -11,3 +11,4 @@ coverage.out
 .*.sock
 .idea
 .gocache
+.gomodcache

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	stdlibLog "log"
 	"net/url"
@@ -10,31 +11,38 @@ import (
 	"github.com/go-logr/stdr"
 	log "github.com/sirupsen/logrus"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"github.com/vmihailenco/taskq/v4"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/go-helpers/logger"
 )
 
-var start time.Time
+var (
+	start      time.Time
+	appVersion string
+)
 
-func configure(ctx *cli.Context) (cfg config.Config, err error) {
-	start = ctx.App.Metadata["startTime"].(time.Time)
+// Init sets runtime metadata needed by command handlers (timings, version).
+func Init(version string, startTime time.Time) {
+	appVersion = version
+	start = startTime
+}
 
-	assertStringVariableDefined(ctx, "config")
+func configure(cmd *cli.Command) (cfg config.Config, err error) {
+	assertStringVariableDefined(cmd, "config")
 
-	cfg, err = config.ParseFile(ctx.String("config"))
+	cfg, err = config.ParseFile(cmd.String("config"))
 	if err != nil {
 		return
 	}
 
-	cfg.Global, err = parseGlobalFlags(ctx)
+	cfg.Global, err = parseGlobalFlags(cmd)
 	if err != nil {
 		return
 	}
 
-	configCliOverrides(ctx, &cfg)
+	configCliOverrides(cmd, &cfg)
 
 	if err = cfg.Validate(); err != nil {
 		return
@@ -78,8 +86,8 @@ func configure(ctx *cli.Context) (cfg config.Config, err error) {
 	return
 }
 
-func parseGlobalFlags(ctx *cli.Context) (cfg config.Global, err error) {
-	if listenerAddr := ctx.String("internal-monitoring-listener-address"); listenerAddr != "" {
+func parseGlobalFlags(cmd *cli.Command) (cfg config.Global, err error) {
+	if listenerAddr := cmd.String("internal-monitoring-listener-address"); listenerAddr != "" {
 		cfg.InternalMonitoringListenerAddress, err = url.Parse(listenerAddr)
 	}
 
@@ -103,37 +111,35 @@ func exit(exitCode int, err error) cli.ExitCoder {
 }
 
 // ExecWrapper gracefully logs and exits our `run` functions.
-func ExecWrapper(f func(ctx *cli.Context) (int, error)) cli.ActionFunc {
-	return func(ctx *cli.Context) error {
-		return exit(f(ctx))
+func ExecWrapper(f func(ctx context.Context, cmd *cli.Command) (int, error)) cli.ActionFunc {
+	return func(ctx context.Context, cmd *cli.Command) error {
+		return exit(f(ctx, cmd))
 	}
 }
 
-func configCliOverrides(ctx *cli.Context, cfg *config.Config) {
-	if ctx.String("gitlab-token") != "" {
-		cfg.Gitlab.Token = ctx.String("gitlab-token")
+func configCliOverrides(cmd *cli.Command, cfg *config.Config) {
+	if cmd.String("gitlab-token") != "" {
+		cfg.Gitlab.Token = cmd.String("gitlab-token")
 	}
 
 	if cfg.Server.Webhook.Enabled {
-		if ctx.String("webhook-secret-token") != "" {
-			cfg.Server.Webhook.SecretToken = ctx.String("webhook-secret-token")
+		if cmd.String("webhook-secret-token") != "" {
+			cfg.Server.Webhook.SecretToken = cmd.String("webhook-secret-token")
 		}
 	}
 
-	if ctx.String("redis-url") != "" {
-		cfg.Redis.URL = ctx.String("redis-url")
+	if cmd.String("redis-url") != "" {
+		cfg.Redis.URL = cmd.String("redis-url")
 	}
 
-	if healthURL := ctx.String("gitlab-health-url"); healthURL != "" {
+	if healthURL := cmd.String("gitlab-health-url"); healthURL != "" {
 		cfg.Gitlab.HealthURL = healthURL
 		cfg.Gitlab.EnableHealthCheck = true
 	}
 }
 
-func assertStringVariableDefined(ctx *cli.Context, k string) {
-	if len(ctx.String(k)) == 0 {
-		_ = cli.ShowAppHelp(ctx)
-
+func assertStringVariableDefined(cmd *cli.Command, k string) {
+	if len(cmd.String(k)) == 0 {
 		log.Errorf("'--%s' must be set!", k)
 		os.Exit(2)
 	}
