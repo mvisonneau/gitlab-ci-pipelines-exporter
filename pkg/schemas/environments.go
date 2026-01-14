@@ -8,7 +8,7 @@ import (
 // Environment ..
 type Environment struct {
 	ProjectName      string
-	ID               int
+	ID               int64
 	Name             string
 	ExternalURL      string
 	Available        bool
@@ -44,7 +44,7 @@ func (e Environment) DefaultLabelsValues() map[string]string {
 // InformationLabelsValues ..
 func (e Environment) InformationLabelsValues() (v map[string]string) {
 	v = e.DefaultLabelsValues()
-	v["environment_id"] = strconv.Itoa(e.ID)
+	v["environment_id"] = strconv.FormatInt(e.ID, 10)
 	v["external_url"] = e.ExternalURL
 	v["kind"] = string(e.LatestDeployment.RefKind)
 	v["ref"] = e.LatestDeployment.RefName

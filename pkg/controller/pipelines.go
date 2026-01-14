@@ -36,7 +36,7 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 
 	pipelines, _, err := c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
 		ListOptions: goGitlab.ListOptions{
-			PerPage: int(ref.Project.Pull.Pipeline.PerRef),
+			PerPage: int64(ref.Project.Pull.Pipeline.PerRef),
 			Page:    1,
 		},
 		Ref: &refName,

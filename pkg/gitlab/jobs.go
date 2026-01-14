@@ -52,11 +52,11 @@ func (c *Client) ListRefPipelineJobs(ctx context.Context, ref schemas.Ref) (jobs
 }
 
 // ListPipelineJobs ..
-func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, pipelineID int) (jobs []schemas.Job, err error) {
+func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, pipelineID int64) (jobs []schemas.Job, err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListPipelineJobs")
 	defer span.End()
 	span.SetAttributes(attribute.String("project_name_or_id", projectNameOrID))
-	span.SetAttributes(attribute.Int("pipeline_id", pipelineID))
+	span.SetAttributes(attribute.Int64("pipeline_id", pipelineID))
 
 	var (
 		foundJobs []*goGitlab.Job
@@ -103,11 +103,11 @@ func (c *Client) ListPipelineJobs(ctx context.Context, projectNameOrID string, p
 }
 
 // ListPipelineBridges ..
-func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string, pipelineID int) (bridges []*goGitlab.Bridge, err error) {
+func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string, pipelineID int64) (bridges []*goGitlab.Bridge, err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListPipelineBridges")
 	defer span.End()
 	span.SetAttributes(attribute.String("project_name_or_id", projectNameOrID))
-	span.SetAttributes(attribute.Int("pipeline_id", pipelineID))
+	span.SetAttributes(attribute.Int64("pipeline_id", pipelineID))
 
 	var (
 		foundBridges []*goGitlab.Bridge
@@ -152,15 +152,15 @@ func (c *Client) ListPipelineBridges(ctx context.Context, projectNameOrID string
 }
 
 // ListPipelineChildJobs ..
-func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID string, parentPipelineID int) (jobs []schemas.Job, err error) {
+func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID string, parentPipelineID int64) (jobs []schemas.Job, err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListPipelineChildJobs")
 	defer span.End()
 	span.SetAttributes(attribute.String("project_name_or_id", projectNameOrID))
-	span.SetAttributes(attribute.Int("parent_pipeline_id", parentPipelineID))
+	span.SetAttributes(attribute.Int64("parent_pipeline_id", parentPipelineID))
 
 	type pipelineDef struct {
 		projectNameOrID string
-		pipelineID      int
+		pipelineID      int64
 	}
 
 	pipelines := []pipelineDef{{projectNameOrID, parentPipelineID}}
@@ -190,11 +190,11 @@ func (c *Client) ListPipelineChildJobs(ctx context.Context, projectNameOrID stri
 				continue
 			}
 
-			pipelines = append(pipelines, pipelineDef{strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID})
+			pipelines = append(pipelines, pipelineDef{strconv.FormatInt(foundBridge.DownstreamPipeline.ProjectID, 10), foundBridge.DownstreamPipeline.ID})
 
 			var foundJobs []schemas.Job
 
-			foundJobs, err = c.ListPipelineJobs(ctx, strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID)
+			foundJobs, err = c.ListPipelineJobs(ctx, strconv.FormatInt(foundBridge.DownstreamPipeline.ProjectID, 10), foundBridge.DownstreamPipeline.ID)
 			if err != nil {
 				return
 			}

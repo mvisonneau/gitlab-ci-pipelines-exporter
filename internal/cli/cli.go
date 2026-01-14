@@ -10,7 +10,7 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/internal/cmd"
 )
 
-// Run handles the instanciation of the CLI application.
+// Run handles the instantiation of the CLI application.
 func Run(version string, args []string) {
 	err := NewApp(version, time.Now()).Run(args)
 	if err != nil {

@@ -24,7 +24,7 @@ func TestNewJob(t *testing.T) {
 		Stage:          "🚀",
 		TagList:        []string{"test-tag"},
 		Runner: struct {
-			ID          int    "json:\"id\""
+			ID          int64  "json:\"id\""
 			Description string "json:\"description\""
 			Active      bool   "json:\"active\""
 			IsShared    bool   "json:\"is_shared\""
@@ -32,12 +32,7 @@ func TestNewJob(t *testing.T) {
 		}{
 			Description: "xxx",
 		},
-		Artifacts: []struct {
-			FileType   string "json:\"file_type\""
-			Filename   string "json:\"filename\""
-			Size       int    "json:\"size\""
-			FileFormat string "json:\"file_format\""
-		}{
+		Artifacts: []goGitlab.JobArtifact{
 			{
 				Size: 100,
 			},

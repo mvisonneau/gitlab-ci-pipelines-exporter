@@ -86,7 +86,7 @@ func (c *Client) GetProjectEnvironments(ctx context.Context, p schemas.Project) 
 func (c *Client) GetEnvironment(
 	ctx context.Context,
 	project string,
-	environmentID int,
+	environmentID int64,
 ) (
 	environment schemas.Environment,
 	err error,
@@ -94,7 +94,7 @@ func (c *Client) GetEnvironment(
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetEnvironment")
 	defer span.End()
 	span.SetAttributes(attribute.String("project_name", project))
-	span.SetAttributes(attribute.Int("environment_id", environmentID))
+	span.SetAttributes(attribute.Int64("environment_id", environmentID))
 
 	environment = schemas.Environment{
 		ProjectName: project,

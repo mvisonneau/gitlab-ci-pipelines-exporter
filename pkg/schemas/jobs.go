@@ -8,7 +8,7 @@ import (
 
 // Job ..
 type Job struct {
-	ID                    int
+	ID                    int64
 	Name                  string
 	Stage                 string
 	Timestamp             float64

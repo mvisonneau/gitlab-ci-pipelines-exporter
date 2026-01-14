@@ -10,3 +10,4 @@ gitlab-ci-pipelines-exporter
 coverage.out
 .*.sock
 .idea
+.gocache
