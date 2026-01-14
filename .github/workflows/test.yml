@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - ubuntu-slim
+          - ubuntu-latest
           - macos-latest
           - windows-latest
 
@@ -32,7 +32,7 @@ jobs:
           go-version: '1.25'
 
       - name: Lint
-        if: ${{ matrix.os == 'ubuntu-24.04' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: make lint
 
       - name: Test
@@ -40,9 +40,9 @@ jobs:
 
       - name: Publish coverage to coveralls.io
         uses: shogo82148/actions-goveralls@25f5320d970fb565100cf1993ada29be1bb196a1 # v1
-        if: ${{ matrix.os == 'ubuntu-24.04' }}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         with:
           path-to-profile: coverage.out
 
       - name: Build
-        run: make build
+        run: go build ./cmd/gitlab-ci-pipelines-exporter

@@ -23,3 +23,8 @@ jobs:
           exempt-issue-labels: keep-open
           exempt-pr-labels: keep-open
           delete-branch: true
+          operations-per-run: 500
+          stale-issue-label: stale
+          stale-pr-label: stale
+          stale-issue-message: 'This issue has been inactive for ${{ env.days_before_stale}} and is scheduled to close in ${{ env.days_before_close}} days.'
+          stale-pr-message: 'This PR has been inactive for ${{ env.days_before_stale}} days and is scheduled to close in ${{ env.days_before_close}} days.'

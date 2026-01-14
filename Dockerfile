@@ -16,7 +16,8 @@ FROM busybox:1.37-glibc@sha256:3bf024f5b91b256d55fcecaa910a7f671bdd2b6bb5bb22ac6
 WORKDIR /
 
 COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY gitlab-ci-pipelines-exporter /usr/local/bin/
+ARG TARGETPLATFORM
+COPY ${TARGETPLATFORM}/gitlab-ci-pipelines-exporter /usr/local/bin/
 
 # Run as nobody user
 USER 65534

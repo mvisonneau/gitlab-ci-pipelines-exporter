@@ -100,102 +100,28 @@ snapcrafts:
       gitlab-ci-pipelines-exporter:
         plugs: [home, network, network-bind]
 
-dockers:
-  - image_templates:
-      - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64'
-      - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64'
-      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64'
-    ids: [gitlab-ci-pipelines-exporter]
-    goarch: amd64
-    use: buildx
-    build_flag_templates:
-      - --platform=linux/amd64
-      - --label=org.opencontainers.image.title={{ .ProjectName }}
-      - --label=org.opencontainers.image.description={{ .ProjectName }}
-      - --label=org.opencontainers.image.url=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
-      - --label=org.opencontainers.image.source=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
-      - --label=org.opencontainers.image.version={{ .Version }}
-      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
-      - --label=org.opencontainers.image.revision={{ .FullCommit }}
-      - --label=org.opencontainers.image.licenses=Apache-2.0
-
-  - image_templates:
-      - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64'
-      - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64'
-      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64'
-    ids: [gitlab-ci-pipelines-exporter]
-    goarch: arm64
-    use: buildx
-    build_flag_templates:
-      - --platform=linux/arm64
-      - --label=org.opencontainers.image.title={{ .ProjectName }}
-      - --label=org.opencontainers.image.description={{ .ProjectName }}
-      - --label=org.opencontainers.image.url=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
-      - --label=org.opencontainers.image.source=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
-      - --label=org.opencontainers.image.version={{ .Version }}
-      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
-      - --label=org.opencontainers.image.revision={{ .FullCommit }}
-      - --label=org.opencontainers.image.licenses=Apache-2.0
-
-  - image_templates:
-      - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv6'
-      - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv6'
-      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv6'
-    ids: [gitlab-ci-pipelines-exporter]
-    goarch: arm
-    goarm: 6
-    use: buildx
-    build_flag_templates:
-      - --platform=linux/arm/v6
-      - --label=org.opencontainers.image.title={{ .ProjectName }}
-      - --label=org.opencontainers.image.description={{ .ProjectName }}
-      - --label=org.opencontainers.image.url=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
-      - --label=org.opencontainers.image.source=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
-      - --label=org.opencontainers.image.version={{ .Version }}
-      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
-      - --label=org.opencontainers.image.revision={{ .FullCommit }}
-      - --label=org.opencontainers.image.licenses=Apache-2.0
-
-  - image_templates:
-      - 'docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7'
-      - 'ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7'
-      - 'quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7'
-    ids: [gitlab-ci-pipelines-exporter]
-    goarch: arm
-    goarm: 7
-    use: buildx
-    build_flag_templates:
-      - --platform=linux/arm/v7
-      - --label=org.opencontainers.image.title={{ .ProjectName }}
-      - --label=org.opencontainers.image.description={{ .ProjectName }}
-      - --label=org.opencontainers.image.url=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
-      - --label=org.opencontainers.image.source=https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
-      - --label=org.opencontainers.image.version={{ .Version }}
-      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
-      - --label=org.opencontainers.image.revision={{ .FullCommit }}
-      - --label=org.opencontainers.image.licenses=Apache-2.0
-
-docker_manifests:
-  - name_template: docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}
-    image_templates:
-      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64
-      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64
-      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv6
-      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7
-
-  - name_template: ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}
-    image_templates:
-      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64
-      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64
-      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv6
-      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7
-
-  - name_template: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}
-    image_templates:
-      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-amd64
-      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-arm64
-      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv6
-      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter:{{ .Tag }}-armv7
+dockers_v2:
+  - images:
+      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter
+      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter
+      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter
+    tags:
+      - "{{ .Tag }}"
+    dockerfile: Dockerfile
+    platforms:
+      - linux/amd64
+      - linux/arm64
+      - linux/arm/v6
+      - linux/arm/v7
+    labels:
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.description: "{{ .ProjectName }}"
+      org.opencontainers.image.url: "https://github.com/mvisonneau/gitlab-ci-pipelines-exporter"
+      org.opencontainers.image.source: "https://github.com/mvisonneau/gitlab-ci-pipelines-exporter"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.created: "{{ .Date }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.licenses: "Apache-2.0"
 
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Tag }}_sha512sums.txt'
