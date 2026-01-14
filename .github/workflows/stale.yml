@@ -1,0 +1,25 @@
+name: 'Close stale issues and PRs'
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '30 1 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-slim
+    
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
+    
+    steps:
+      - uses: actions/stale@v10
+        with:
+          exempt-all-pr-assignees: true
+          days-before-stale: 180
+          days-before-close: 270
+          exempt-issue-labels: keep-open
+          exempt-pr-labels: keep-open
+          delete-branch: true
