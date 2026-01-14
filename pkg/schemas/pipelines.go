@@ -11,7 +11,7 @@ import (
 
 // Pipeline ..
 type Pipeline struct {
-	ID                    int
+	ID                    int64
 	Coverage              float64
 	Timestamp             float64
 	DurationSeconds       float64
@@ -33,11 +33,11 @@ func (pipeline Pipeline) Key() PipelineKey {
 // TestReport ..
 type TestReport struct {
 	TotalTime    float64
-	TotalCount   int
-	SuccessCount int
-	FailedCount  int
-	SkippedCount int
-	ErrorCount   int
+	TotalCount   int64
+	SuccessCount int64
+	FailedCount  int64
+	SkippedCount int64
+	ErrorCount   int64
 	TestSuites   []TestSuite
 }
 
@@ -45,11 +45,11 @@ type TestReport struct {
 type TestSuite struct {
 	Name         string
 	TotalTime    float64
-	TotalCount   int
-	SuccessCount int
-	FailedCount  int
-	SkippedCount int
-	ErrorCount   int
+	TotalCount   int64
+	SuccessCount int64
+	FailedCount  int64
+	SkippedCount int64
+	ErrorCount   int64
 	TestCases    []TestCase
 }
 
@@ -102,7 +102,7 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 
 // NewTestReport ..
 func NewTestReport(gtr goGitlab.PipelineTestReport) TestReport {
-	testSuites := []TestSuite{}
+	var testSuites []TestSuite
 
 	for _, x := range gtr.TestSuites {
 		testSuites = append(testSuites, NewTestSuite(x))

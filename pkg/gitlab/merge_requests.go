@@ -55,7 +55,7 @@ func (c *Client) GetProjectOpenMergeRequests(ctx context.Context, p schemas.Proj
 
 		for _, mr := range mrsList {
 			if re.MatchString(mr.Title) {
-				ref := schemas.NewRef(p, schemas.RefKindMergeRequest, strconv.Itoa(mr.IID))
+				ref := schemas.NewRef(p, schemas.RefKindMergeRequest, strconv.FormatInt(mr.IID, 10))
 				mrs[ref.Key()] = ref
 			}
 		}

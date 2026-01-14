@@ -2,7 +2,7 @@ package schemas
 
 // Deployment ..
 type Deployment struct {
-	JobID           int
+	JobID           int64
 	RefKind         RefKind
 	RefName         string
 	Username        string

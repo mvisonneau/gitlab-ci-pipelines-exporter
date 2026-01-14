@@ -14,6 +14,7 @@ import (
 	"github.com/paulbellamy/ratecounter"
 	goGitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.opentelemetry.io/otel"
+	"golang.org/x/oauth2"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/ratelimit"
 )
@@ -75,7 +76,8 @@ func NewClient(cfg ClientConfig) (*Client, error) {
 		goGitlab.WithoutRetries(),
 	}
 
-	gc, err := goGitlab.NewOAuthClient(cfg.Token, opts...)
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cfg.Token})
+	gc, err := goGitlab.NewAuthSourceClient(goGitlab.OAuthTokenSource{TokenSource: ts}, opts...)
 	if err != nil {
 		return nil, err
 	}

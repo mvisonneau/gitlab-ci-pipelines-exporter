@@ -19,12 +19,12 @@ import (
 )
 
 // GetRefPipeline ..
-func (c *Client) GetRefPipeline(ctx context.Context, ref schemas.Ref, pipelineID int) (p schemas.Pipeline, err error) {
+func (c *Client) GetRefPipeline(ctx context.Context, ref schemas.Ref, pipelineID int64) (p schemas.Pipeline, err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipeline")
 	defer span.End()
 	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
 	span.SetAttributes(attribute.String("ref_name", ref.Name))
-	span.SetAttributes(attribute.Int("pipeline_id", pipelineID))
+	span.SetAttributes(attribute.Int64("pipeline_id", pipelineID))
 
 	c.rateLimit(ctx)
 
@@ -331,7 +331,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 
 	type pipelineDef struct {
 		projectNameOrID string
-		pipelineID      int
+		pipelineID      int64
 	}
 
 	var currentPipeline pipelineDef
@@ -384,7 +384,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 					continue
 				}
 
-				childPipelines = append(childPipelines, pipelineDef{strconv.Itoa(foundBridge.DownstreamPipeline.ProjectID), foundBridge.DownstreamPipeline.ID})
+				childPipelines = append(childPipelines, pipelineDef{strconv.FormatInt(foundBridge.DownstreamPipeline.ProjectID, 10), foundBridge.DownstreamPipeline.ID})
 			}
 		}
 	}

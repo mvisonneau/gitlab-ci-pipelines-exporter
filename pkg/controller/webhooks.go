@@ -24,7 +24,7 @@ func (c *Controller) processPipelineEvent(ctx context.Context, e goGitlab.Pipeli
 	// that it is actually a merge request ref
 	if e.MergeRequest.IID != 0 {
 		refKind = schemas.RefKindMergeRequest
-		refName = strconv.Itoa(e.MergeRequest.IID)
+		refName = strconv.FormatInt(e.MergeRequest.IID, 10)
 	} else if e.ObjectAttributes.Tag {
 		refKind = schemas.RefKindTag
 	} else {
@@ -128,7 +128,7 @@ func (c *Controller) processMergeEvent(ctx context.Context, e goGitlab.MergeEven
 	ref := schemas.NewRef(
 		schemas.NewProject(e.Project.PathWithNamespace),
 		schemas.RefKindMergeRequest,
-		strconv.Itoa(e.ObjectAttributes.IID),
+		strconv.FormatInt(e.ObjectAttributes.IID, 10),
 	)
 
 	switch e.ObjectAttributes.Action {
