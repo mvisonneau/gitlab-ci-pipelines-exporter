@@ -24,7 +24,7 @@ func TestGetProject(t *testing.T) {
 	p, err := c.GetProject(ctx, "foo/bar")
 	assert.NoError(t, err)
 	require.NotNil(t, p)
-	assert.Equal(t, 1, p.ID)
+	assert.Equal(t, int64(1), p.ID)
 }
 
 func TestListUserProjects(t *testing.T) {

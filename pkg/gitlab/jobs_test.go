@@ -201,8 +201,8 @@ func TestListRefMostRecentJobs(t *testing.T) {
 			jobs, err = c.ListRefMostRecentJobs(ctx, ref)
 			assert.NoError(t, err)
 			assert.Len(t, jobs, 2)
-			assert.Equal(t, 3, jobs[0].ID)
-			assert.Equal(t, 4, jobs[1].ID)
+			assert.Equal(t, int64(3), jobs[0].ID)
+			assert.Equal(t, int64(4), jobs[1].ID)
 
 			ref.LatestJobs["baz"] = schemas.Job{
 				ID:   5,
@@ -212,8 +212,8 @@ func TestListRefMostRecentJobs(t *testing.T) {
 			jobs, err = c.ListRefMostRecentJobs(ctx, ref)
 			assert.NoError(t, err)
 			assert.Len(t, jobs, 2)
-			assert.Equal(t, 3, jobs[0].ID)
-			assert.Equal(t, 4, jobs[1].ID)
+			assert.Equal(t, int64(3), jobs[0].ID)
+			assert.Equal(t, int64(4), jobs[1].ID)
 
 			// Test invalid project id
 			ref.Project.Name = "bar"

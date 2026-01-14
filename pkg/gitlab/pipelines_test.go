@@ -32,7 +32,7 @@ func TestGetRefPipeline(t *testing.T) {
 	pipeline, err := c.GetRefPipeline(ctx, ref, 1)
 	assert.NoError(t, err)
 	assert.NotNil(t, pipeline)
-	assert.Equal(t, 1, pipeline.ID)
+	assert.Equal(t, int64(1), pipeline.ID)
 }
 
 func TestGetProjectPipelines(t *testing.T) {
