@@ -172,6 +172,8 @@ func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Re
 			Value:  pipeline.DurationSeconds,
 		})
 
+		incrementMetric(ctx, c.Store, schemas.MetricKindDurationTotal, labels, pipeline.DurationSeconds, logFields)
+
 		storeSetMetric(ctx, c.Store, schemas.Metric{
 			Kind:   schemas.MetricKindQueuedDurationSeconds,
 			Labels: labels,
