@@ -1,0 +1,7 @@
+apiVersion: 1
+
+providers:
+  - name: Default # A uniquely identifiable name for the provider
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards
