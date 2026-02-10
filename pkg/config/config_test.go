@@ -80,6 +80,9 @@ func TestNew(t *testing.T) {
 	c.Redis.RefTTL = 1 * time.Hour
 	c.Redis.MetricTTL = 1 * time.Hour
 
+	c.Server.Webhook.AddWebhooks.IntervalSeconds = 43200
+	c.Server.Webhook.AddWebhooks.Scheduled = false
+
 	assert.Equal(t, c, New())
 }
 

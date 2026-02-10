@@ -99,6 +99,15 @@ func Run(ctx context.Context, cliCmd *cli.Command) (int, error) {
 
 	<-onShutdown
 	log.Info("received signal, attempting to gracefully exit..")
+
+	if c.Config.Server.Webhook.RemoveHooks == true {
+		if err := c.RemoveWebhooks(ctx); err != nil {
+			log.WithContext(ctx).WithError(err)
+		} else {
+			log.Info("Cleaning up webhooks")
+		}
+	}
+
 	ctxCancel()
 
 	httpServerContext, forceHTTPServerShutdown := context.WithTimeout(context.Background(), 5*time.Second)

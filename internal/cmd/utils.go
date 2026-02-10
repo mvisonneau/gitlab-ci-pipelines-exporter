@@ -78,6 +78,8 @@ func configure(cmd *cli.Command) (cfg config.Config, err error) {
 	log.WithFields(config.SchedulerConfig(cfg.Pull.RefsFromProjects).Log()).Info("pull refs from projects")
 	log.WithFields(config.SchedulerConfig(cfg.Pull.Metrics).Log()).Info("pull metrics")
 
+	log.WithFields(config.SchedulerConfig(cfg.Server.Webhook.AddWebhooks).Log()).Info("add webhooks")
+
 	log.WithFields(config.SchedulerConfig(cfg.GarbageCollect.Projects).Log()).Info("garbage collect projects")
 	log.WithFields(config.SchedulerConfig(cfg.GarbageCollect.Environments).Log()).Info("garbage collect environments")
 	log.WithFields(config.SchedulerConfig(cfg.GarbageCollect.Refs).Log()).Info("garbage collect refs")
