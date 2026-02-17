@@ -17,6 +17,16 @@
       ],
       datasourceTemplate: 'go',
     },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/example/quickstart/docker-compose\\.ya?ml$/',
+      ],
+      matchStrings: [
+        'image:\\s+(?<depName>[^:]+):(?<currentValue>[^\\s]+)',
+      ],
+      datasourceTemplate: 'docker',
+    },
   ],
   packageRules: [
     {
