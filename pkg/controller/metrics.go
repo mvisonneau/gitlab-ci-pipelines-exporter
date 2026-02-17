@@ -42,6 +42,7 @@ func NewRegistry(ctx context.Context) *Registry {
 		Collectors: RegistryCollectors{
 			schemas.MetricKindCoverage:                             NewCollectorCoverage(),
 			schemas.MetricKindDurationSeconds:                      NewCollectorDurationSeconds(),
+			schemas.MetricKindDurationTotal:                      NewCollectorDurationTotal(),
 			schemas.MetricKindEnvironmentBehindCommitsCount:        NewCollectorEnvironmentBehindCommitsCount(),
 			schemas.MetricKindEnvironmentBehindDurationSeconds:     NewCollectorEnvironmentBehindDurationSeconds(),
 			schemas.MetricKindEnvironmentDeploymentCount:           NewCollectorEnvironmentDeploymentCount(),
@@ -53,6 +54,7 @@ func NewRegistry(ctx context.Context) *Registry {
 			schemas.MetricKindID:                                   NewCollectorID(),
 			schemas.MetricKindJobArtifactSizeBytes:                 NewCollectorJobArtifactSizeBytes(),
 			schemas.MetricKindJobDurationSeconds:                   NewCollectorJobDurationSeconds(),
+			schemas.MetricKindJobDurationTotal:                     NewCollectorJobDurationTotal(),
 			schemas.MetricKindJobID:                                NewCollectorJobID(),
 			schemas.MetricKindJobQueuedDurationSeconds:             NewCollectorJobQueuedDurationSeconds(),
 			schemas.MetricKindJobRunCount:                          NewCollectorJobRunCount(),
@@ -236,4 +238,29 @@ func emitStatusMetric(ctx context.Context, s store.Store, metricKind schemas.Met
 
 		storeSetMetric(ctx, s, statusMetric)
 	}
+}
+
+// incrementMetric increments a counter metric by pulling the current value from the store
+func incrementMetric(ctx context.Context, store store.Store, kind schemas.MetricKind, labels prometheus.Labels, inc float64, logFields log.Fields) {
+	metric := schemas.Metric{
+		Kind:   kind,
+		Labels: labels,
+	}
+
+	// Increase the metric
+	metricExists, err := store.MetricExists(ctx, metric.Key())
+	if err != nil {
+		log.WithContext(ctx).
+			WithFields(logFields).
+			WithError(err).
+			Error("checking if metric exists in the store")
+
+		return
+	}
+	if metricExists {
+		storeGetMetric(ctx, store, &metric)
+	}
+	metric.Value += inc
+	storeSetMetric(ctx, store, metric)
+
 }
