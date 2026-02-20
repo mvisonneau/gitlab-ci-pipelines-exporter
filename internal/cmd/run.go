@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -61,7 +63,16 @@ func Run(ctx context.Context, cliCmd *cli.Command) (int, error) {
 
 	// metrics endpoint
 	if cfg.Server.Metrics.Enabled {
+		otelhttp.NewHandler(
+			promhttp.HandlerFor(registry, promhttp.HandlerOpts{
+				Registry:          registry,
+				EnableOpenMetrics: c.Config.Server.Metrics.EnableOpenmetricsEncoding,
+			}),
+			"/metrics",
+		)
+
 		mux.HandleFunc("/metrics", c.MetricsHandler)
+		//mux.Handle("/metrics", c.MetricsHandler)
 	}
 
 	// pprof/debug endpoints

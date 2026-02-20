@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/extra/redisotel/v9"
@@ -32,6 +31,7 @@ type Controller struct {
 	Gitlab         *gitlab.Client
 	Store          store.Store
 	TaskController TaskController
+	Registry       *Registry
 
 	// UUID is used to identify this controller/process amongst others when
 	// the exporter is running in cluster mode, leveraging Redis.
@@ -68,6 +68,9 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 	if err = c.configureGitlab(cfg.Gitlab, version); err != nil {
 		return
 	}
+
+	// Initialize the OpenMetrics registry
+	c.Registry = NewRegistry(ctx)
 
 	// Start the scheduler
 	c.Schedule(ctx, cfg.Pull, cfg.GarbageCollect)
