@@ -1,5 +1,5 @@
 ---
-version: '3.8'
+version: "3.8"
 services:
   gitlab-ci-pipelines-exporter:
     image: quay.io/mvisonneau/gitlab-ci-pipelines-exporter:v0.5.10
@@ -31,7 +31,7 @@ services:
     ports:
       - 3000:3000
     environment:
-      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_INSTALL_PLUGINS: grafana-polystat-panel,yesoreyeram-boomtable-panel
     links:
       - prometheus
