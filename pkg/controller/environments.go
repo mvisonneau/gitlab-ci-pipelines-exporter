@@ -10,6 +10,15 @@ import (
 
 // PullEnvironmentsFromProject ..
 func (c *Controller) PullEnvironmentsFromProject(ctx context.Context, p schemas.Project) (err error) {
+	if p.ID == 0 {
+		if err := c.resolveProjectID(ctx, &p); err != nil {
+			log.WithContext(ctx).
+				WithField("project-name", p.Name).
+				WithError(err).
+				Warn("failed to resolve project ID from GitLab API")
+		}
+	}
+
 	var envs schemas.Environments
 
 	envs, err = c.Gitlab.GetProjectEnvironments(ctx, p)

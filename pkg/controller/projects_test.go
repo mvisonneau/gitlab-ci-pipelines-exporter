@@ -25,6 +25,7 @@ func TestPullProjectsFromWildcard(t *testing.T) {
 
 	projects, _ := c.Store.Projects(ctx)
 	p1 := schemas.NewProject("bar")
+	p1.ID = 2
 
 	expectedProjects := schemas.Projects{
 		p1.Key(): p1,

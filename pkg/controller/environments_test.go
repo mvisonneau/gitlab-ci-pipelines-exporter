@@ -130,6 +130,7 @@ func TestPullEnvironmentMetricsSucceed(t *testing.T) {
 	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
 		"project":     "foo",
+		"project_id":  "0",
 		"environment": "prod",
 	}
 

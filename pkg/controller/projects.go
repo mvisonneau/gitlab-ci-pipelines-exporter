@@ -9,6 +9,19 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
 )
 
+// resolveProjectID fetches the project ID from the GitLab API and updates
+// both the provided project and the store.
+func (c *Controller) resolveProjectID(ctx context.Context, p *schemas.Project) error {
+	gp, err := c.Gitlab.GetProject(ctx, p.Name)
+	if err != nil {
+		return err
+	}
+
+	p.ID = gp.ID
+
+	return c.Store.SetProject(ctx, *p)
+}
+
 // PullProject ..
 func (c *Controller) PullProject(ctx context.Context, name string, pull config.ProjectPull) error {
 	gp, err := c.Gitlab.GetProject(ctx, name)
@@ -17,6 +30,7 @@ func (c *Controller) PullProject(ctx context.Context, name string, pull config.P
 	}
 
 	p := schemas.NewProject(gp.PathWithNamespace)
+	p.ID = gp.ID
 	p.Pull = pull
 
 	projectExists, err := c.Store.ProjectExists(ctx, p.Key())
