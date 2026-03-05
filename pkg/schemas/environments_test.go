@@ -25,11 +25,13 @@ func TestEnvironmentsCount(t *testing.T) {
 func TestEnvironmentDefaultLabelsValues(t *testing.T) {
 	e := Environment{
 		ProjectName: "foo",
+		ProjectID:   42,
 		Name:        "bar",
 	}
 
 	expectedValue := map[string]string{
 		"project":     "foo",
+		"project_id":  "42",
 		"environment": "bar",
 	}
 
@@ -39,6 +41,7 @@ func TestEnvironmentDefaultLabelsValues(t *testing.T) {
 func TestEnvironmentInformationLabelsValues(t *testing.T) {
 	e := Environment{
 		ProjectName: "foo",
+		ProjectID:   42,
 		Name:        "bar",
 		ID:          10,
 		ExternalURL: "http://genial",
@@ -53,6 +56,7 @@ func TestEnvironmentInformationLabelsValues(t *testing.T) {
 
 	expectedValue := map[string]string{
 		"project":                 "foo",
+		"project_id":              "42",
 		"environment":             "bar",
 		"environment_id":          "10",
 		"external_url":            "http://genial",

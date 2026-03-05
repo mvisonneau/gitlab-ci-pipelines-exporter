@@ -59,6 +59,7 @@ func (c *Client) GetProjectEnvironments(ctx context.Context, p schemas.Project) 
 			if re.MatchString(glenv.Name) {
 				env := schemas.Environment{
 					ProjectName:               p.Name,
+					ProjectID:                 p.ID,
 					ID:                        glenv.ID,
 					Name:                      glenv.Name,
 					OutputSparseStatusMetrics: p.OutputSparseStatusMetrics,
