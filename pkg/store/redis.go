@@ -40,6 +40,7 @@ type RedisTTLConfig struct {
 	Project time.Duration
 	Ref     time.Duration
 	Metric  time.Duration
+	Task    time.Duration
 }
 
 func WithTTLConfig(opt *RedisTTLConfig) func(*RedisStoreConfig) {
@@ -464,7 +465,7 @@ func (r *Redis) QueueTask(ctx context.Context, tt schemas.TaskType, taskUUID, pr
 	k := getRedisQueueKey(tt, taskUUID)
 
 	// We attempt to set the key, if it already exists, we do not overwrite it
-	set, err = r.SetNX(ctx, k, processUUID, 0).Result()
+	set, err = r.SetNX(ctx, k, processUUID, r.StoreConfig.TTLConfig.Task).Result()
 	if err != nil || set {
 		return
 	}
@@ -487,7 +488,7 @@ func (r *Redis) QueueTask(ctx context.Context, tt schemas.TaskType, taskUUID, pr
 		}
 
 		if !uuidIsAlive {
-			if _, err = r.Set(ctx, k, processUUID, 0).Result(); err != nil {
+			if _, err = r.Set(ctx, k, processUUID, r.StoreConfig.TTLConfig.Task).Result(); err != nil {
 				return
 			}
 
