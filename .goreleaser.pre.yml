@@ -10,9 +10,7 @@ builds:
     goos:
       - darwin
       - linux
-      - windows
     goarch:
-      - 386
       - amd64
       - arm
       - arm64
@@ -20,9 +18,7 @@ builds:
     flags:
       - -trimpath
     ignore:
-      - { goos: darwin, goarch: 386 }
       - { goos: darwin, goarch: arm }
-      - { goos: windows, goarch: arm }
 
 universal_binaries:
   - {}
@@ -37,49 +33,12 @@ archives:
       - LICENSE
       - helpers/*
 
-nfpms:
-  - maintainer: &author Maxime VISONNEAU <maxime.visonneau@gmail.com>
-    description: &description GitLab CI pipelines exporter (prometheus/open-metrics)
-    license: &license Apache-2.0
-    homepage: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
-    vendor: *author
-    file_name_template: '{{ .ProjectName }}_edge_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-    bindir: /usr/local/bin
-    formats:
-      - apk
-      - deb
-      - rpm
-    contents:
-      - src: ./helpers/autocomplete/bash
-        dst: /usr/share/bash-completion/completions/{{ .ProjectName }}
-        file_info:
-          mode: 0644
-      - src: ./helpers/autocomplete/zsh
-        dst: /usr/share/zsh/vendor-completions/_{{ .ProjectName }}
-        file_info:
-          mode: 0644
-      - src: ./LICENSE
-        dst: /usr/share/doc/{{ .ProjectName }}/copyright
-        file_info:
-          mode: 0644
-
 release:
   disable: true
 
-snapcrafts:
-  - summary: *description
-    description: Monitor GitLab CI pipelines related metrics.
-    license: *license
-    grade: devel
-    apps:
-      gitlab-ci-pipelines-exporter:
-        plugs: [home, network, network-bind]
-
 dockers_v2:
   - images:
-      - docker.io/mvisonneau/gitlab-ci-pipelines-exporter
-      - ghcr.io/mvisonneau/gitlab-ci-pipelines-exporter
-      - quay.io/mvisonneau/gitlab-ci-pipelines-exporter
+      - ghcr.io/einstux/gitlab-ci-pipelines-exporter
     tags:
       - latest
     dockerfile: Dockerfile
@@ -91,24 +50,12 @@ dockers_v2:
     labels:
       org.opencontainers.image.title: "{{ .ProjectName }}"
       org.opencontainers.image.description: "{{ .ProjectName }}"
-      org.opencontainers.image.url: "https://github.com/mvisonneau/gitlab-ci-pipelines-exporter"
-      org.opencontainers.image.source: "https://github.com/mvisonneau/gitlab-ci-pipelines-exporter"
+      org.opencontainers.image.url: "https://github.com/einstux/gitlab-ci-pipelines-exporter"
+      org.opencontainers.image.source: "https://github.com/einstux/gitlab-ci-pipelines-exporter"
       org.opencontainers.image.version: "{{ .Version }}"
       org.opencontainers.image.created: "{{ .Date }}"
       org.opencontainers.image.revision: "{{ .FullCommit }}"
       org.opencontainers.image.licenses: "Apache-2.0"
-
-signs:
-  - artifacts: checksum
-    args:
-      [
-        '-u',
-        'C09CA9F71C5C988E65E3E5FCADEA38EDC46F25BE',
-        '--output',
-        '${signature}',
-        '--detach-sign',
-        '${artifact}',
-      ]
 
 checksum:
   name_template: '{{ .ProjectName }}_edge_sha512sums.txt'
