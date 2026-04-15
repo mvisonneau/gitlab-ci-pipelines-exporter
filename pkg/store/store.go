@@ -100,29 +100,18 @@ func New(
 		s = NewLocalStore()
 	}
 
-	// Load all the configured projects in the store
+	// Load all the configured projects in the store, always updating
+	// their configuration to ensure config changes are propagated
 	for _, p := range projects {
 		sp := schemas.Project{Project: p}
 
-		exists, err := s.ProjectExists(ctx, sp.Key())
-		if err != nil {
+		if err := s.SetProject(ctx, sp); err != nil {
 			log.WithContext(ctx).
 				WithFields(log.Fields{
 					"project-name": p.Name,
 				}).
 				WithError(err).
-				Error("reading project from the store")
-		}
-
-		if !exists {
-			if err = s.SetProject(ctx, sp); err != nil {
-				log.WithContext(ctx).
-					WithFields(log.Fields{
-						"project-name": p.Name,
-					}).
-					WithError(err).
-					Error("writing project in the store")
-			}
+				Error("writing project in the store")
 		}
 	}
 

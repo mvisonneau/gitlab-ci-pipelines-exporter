@@ -24,16 +24,16 @@ func (c *Controller) PullProject(ctx context.Context, name string, pull config.P
 		return err
 	}
 
+	if err := c.Store.SetProject(ctx, p); err != nil {
+		log.WithContext(ctx).
+			WithError(err).
+			Error()
+	}
+
 	if !projectExists {
 		log.WithFields(log.Fields{
 			"project-name": p.Name,
 		}).Info("discovered new project")
-
-		if err := c.Store.SetProject(ctx, p); err != nil {
-			log.WithContext(ctx).
-				WithError(err).
-				Error()
-		}
 
 		c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(p.Key()), p)
 		c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentsFromProject, string(p.Key()), p)
@@ -55,6 +55,12 @@ func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wild
 			return err
 		}
 
+		if err := c.Store.SetProject(ctx, p); err != nil {
+			log.WithContext(ctx).
+				WithError(err).
+				Error()
+		}
+
 		if !projectExists {
 			log.WithFields(log.Fields{
 				"wildcard-search":                  w.Search,
@@ -64,12 +70,6 @@ func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wild
 				"wildcard-archived":                w.Archived,
 				"project-name":                     p.Name,
 			}).Info("discovered new project")
-
-			if err := c.Store.SetProject(ctx, p); err != nil {
-				log.WithContext(ctx).
-					WithError(err).
-					Error()
-			}
 
 			c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(p.Key()), p)
 			c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentsFromProject, string(p.Key()), p)
