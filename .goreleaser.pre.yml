@@ -12,7 +12,11 @@ builds:
       - linux
       - windows
     goarch:
+      - 386
       - amd64
+      - arm
+      - arm64
+    goarm: [6, 7]
     flags:
       - -trimpath
     ignore:
@@ -24,10 +28,10 @@ universal_binaries:
   - {}
 
 archives:
-  - name_template: "{{ .ProjectName }}_edge_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  - name_template: '{{ .ProjectName }}_edge_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     format_overrides:
       - goos: windows
-        formats: ["zip"]
+        formats: [ 'zip' ]
     files:
       - README.md
       - LICENSE
@@ -39,7 +43,7 @@ nfpms:
     license: &license Apache-2.0
     homepage: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter
     vendor: *author
-    file_name_template: "{{ .ProjectName }}_edge_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    file_name_template: '{{ .ProjectName }}_edge_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     bindir: /usr/local/bin
     formats:
       - apk
@@ -98,16 +102,16 @@ signs:
   - artifacts: checksum
     args:
       [
-        "-u",
-        "C09CA9F71C5C988E65E3E5FCADEA38EDC46F25BE",
-        "--output",
-        "${signature}",
-        "--detach-sign",
-        "${artifact}",
+        '-u',
+        'C09CA9F71C5C988E65E3E5FCADEA38EDC46F25BE',
+        '--output',
+        '${signature}',
+        '--detach-sign',
+        '${artifact}',
       ]
 
 checksum:
-  name_template: "{{ .ProjectName }}_edge_sha512sums.txt"
+  name_template: '{{ .ProjectName }}_edge_sha512sums.txt'
   algorithm: sha512
 
 changelog:
