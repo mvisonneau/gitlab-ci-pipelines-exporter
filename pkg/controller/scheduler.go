@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/taskq/memqueue/v4"
@@ -28,7 +29,7 @@ type TaskController struct {
 }
 
 // NewTaskController initializes and returns a new TaskController object.
-func NewTaskController(ctx context.Context, r *redis.Client, maximumJobsQueueSize int) (t TaskController) {
+func NewTaskController(ctx context.Context, r *redis.Client, maximumJobsQueueSize int, reservationTimeout time.Duration) (t TaskController) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "controller:NewTaskController")
 	defer span.End()
 
@@ -39,6 +40,7 @@ func NewTaskController(ctx context.Context, r *redis.Client, maximumJobsQueueSiz
 		PauseErrorsThreshold: 3,
 		Handler:              t.TaskMap,
 		BufferSize:           maximumJobsQueueSize,
+		ReservationTimeout:   reservationTimeout,
 	}
 
 	if r != nil {
@@ -282,7 +284,11 @@ func (c *Controller) TaskHandlerGarbageCollectProjects(ctx context.Context) erro
 	defer c.unqueueTask(ctx, schemas.TaskTypeGarbageCollectProjects, "_")
 	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypeGarbageCollectProjects)
 
-	return c.GarbageCollectProjects(ctx)
+	start := time.Now()
+	execErr := c.GarbageCollectProjects(ctx)
+	gcDurationSeconds.(*prometheus.GaugeVec).With(prometheus.Labels{"type": string(schemas.TaskTypeGarbageCollectProjects)}).Set(time.Since(start).Seconds())
+
+	return execErr
 }
 
 // TaskHandlerGarbageCollectEnvironments ..
@@ -290,7 +296,11 @@ func (c *Controller) TaskHandlerGarbageCollectEnvironments(ctx context.Context) 
 	defer c.unqueueTask(ctx, schemas.TaskTypeGarbageCollectEnvironments, "_")
 	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypeGarbageCollectEnvironments)
 
-	return c.GarbageCollectEnvironments(ctx)
+	start := time.Now()
+	execErr := c.GarbageCollectEnvironments(ctx)
+	gcDurationSeconds.(*prometheus.GaugeVec).With(prometheus.Labels{"type": string(schemas.TaskTypeGarbageCollectEnvironments)}).Set(time.Since(start).Seconds())
+
+	return execErr
 }
 
 // TaskHandlerGarbageCollectRefs ..
@@ -298,7 +308,11 @@ func (c *Controller) TaskHandlerGarbageCollectRefs(ctx context.Context) error {
 	defer c.unqueueTask(ctx, schemas.TaskTypeGarbageCollectRefs, "_")
 	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypeGarbageCollectRefs)
 
-	return c.GarbageCollectRefs(ctx)
+	start := time.Now()
+	execErr := c.GarbageCollectRefs(ctx)
+	gcDurationSeconds.(*prometheus.GaugeVec).With(prometheus.Labels{"type": string(schemas.TaskTypeGarbageCollectRefs)}).Set(time.Since(start).Seconds())
+
+	return execErr
 }
 
 // TaskHandlerGarbageCollectMetrics ..
@@ -306,7 +320,11 @@ func (c *Controller) TaskHandlerGarbageCollectMetrics(ctx context.Context) error
 	defer c.unqueueTask(ctx, schemas.TaskTypeGarbageCollectMetrics, "_")
 	defer c.TaskController.monitorLastTaskScheduling(schemas.TaskTypeGarbageCollectMetrics)
 
-	return c.GarbageCollectMetrics(ctx)
+	start := time.Now()
+	execErr := c.GarbageCollectMetrics(ctx)
+	gcDurationSeconds.(*prometheus.GaugeVec).With(prometheus.Labels{"type": string(schemas.TaskTypeGarbageCollectMetrics)}).Set(time.Since(start).Seconds())
+
+	return execErr
 }
 
 // Schedule ..

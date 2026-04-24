@@ -125,6 +125,11 @@ type Gitlab struct {
 	// - leverage webhooks instead of polling schedules
 	//
 	MaximumJobsQueueSize int `default:"1000" validate:"gte=10" yaml:"maximum_jobs_queue_size"`
+
+	// Time after which a task message reserved by a worker is returned to the queue
+	// for reprocessing. Increase this if long-running tasks (e.g. garbage collection)
+	// are being re-delivered before they complete.
+	MaximumTaskExecutionTime time.Duration `default:"5m" yaml:"maximum_task_execution_time"`
 }
 
 // Redis ..
