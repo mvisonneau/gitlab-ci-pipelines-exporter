@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	dario.cat/mergo v1.0.2
 	github.com/alicebob/miniredis/v2 v2.37.0
-	github.com/charmbracelet/bubbles v0.21.1
+	github.com/charmbracelet/bubbles/v2 v2.1.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/creasty/defaults v1.8.0
