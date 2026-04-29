@@ -26,6 +26,7 @@ func TestNew(t *testing.T) {
 	c.Gitlab.MaximumRequestsPerSecond = 1
 	c.Gitlab.BurstableRequestsPerSecond = 5
 	c.Gitlab.MaximumJobsQueueSize = 1000
+	c.Gitlab.MaximumTaskExecutionTime = 5 * time.Minute
 
 	c.Pull.ProjectsFromWildcards.OnInit = true
 	c.Pull.ProjectsFromWildcards.Scheduled = true

@@ -105,6 +105,10 @@ gitlab:
   # (optional, default: 1000)
   maximum_jobs_queue_size: 1000
 
+  # Time after which a task message is returned to the queue for reprocessing.
+  # Increase if GC tasks take longer than this to complete (default: 5m)
+  maximum_task_execution_time: 5m
+
 pull:
   projects_from_wildcards:
     # Whether to trigger a discovery or not when the
