@@ -136,6 +136,7 @@ type Redis struct {
 	ProjectTTL time.Duration `default:"168h" yaml:"project_ttl"`
 	RefTTL     time.Duration `default:"1h" yaml:"ref_ttl"`
 	MetricTTL  time.Duration `default:"1h" yaml:"metric_ttl"`
+	TaskTTL    time.Duration `default:"0" yaml:"task_ttl"`
 }
 
 // Pull ..
