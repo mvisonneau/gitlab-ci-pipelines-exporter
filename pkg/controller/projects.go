@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-
+	"sync"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
@@ -49,13 +49,28 @@ func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wild
 		return err
 	}
 
-	for _, p := range foundProjects {
-		projectExists, err := c.Store.ProjectExists(ctx, p.Key())
-		if err != nil {
-			return err
-		}
+	// Process project discovery in parallel using a bounded worker pool.
+	// maxWorkers limits concurrent store operations to avoid overwhelming the store.
+	const maxWorkers = 20
+	sem := make(chan struct{}, maxWorkers)
+	var wg sync.WaitGroup
 
-		if !projectExists {
+	for _, p := range foundProjects {
+		p := p // capture loop variable for goroutine
+		wg.Add(1)
+		sem <- struct{}{}
+		go func() {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			projectExists, err := c.Store.ProjectExists(ctx, p.Key())
+			if err != nil || projectExists {
+				if err != nil {
+					log.WithContext(ctx).WithError(err).Error()
+				}
+				return
+			}
+
 			log.WithFields(log.Fields{
 				"wildcard-search":                  w.Search,
 				"wildcard-owner-kind":              w.Owner.Kind,
@@ -66,15 +81,16 @@ func (c *Controller) PullProjectsFromWildcard(ctx context.Context, w config.Wild
 			}).Info("discovered new project")
 
 			if err := c.Store.SetProject(ctx, p); err != nil {
-				log.WithContext(ctx).
-					WithError(err).
-					Error()
+				log.WithContext(ctx).WithError(err).Error()
+				return
 			}
 
+			// Schedule ref + environment discovery immediately for new projects
 			c.ScheduleTask(ctx, schemas.TaskTypePullRefsFromProject, string(p.Key()), p)
 			c.ScheduleTask(ctx, schemas.TaskTypePullEnvironmentsFromProject, string(p.Key()), p)
-		}
+		}()
 	}
 
+	wg.Wait()
 	return nil
 }
