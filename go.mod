@@ -7,7 +7,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/charmbracelet/bubbles v0.21.1
 	github.com/charmbracelet/bubbletea v1.3.10
-	github.com/charmbracelet/lipgloss v1.1.0
+	github.com/charmbracelet/lipgloss/v2 v2.0.3
 	github.com/creasty/defaults v1.8.0
 	github.com/go-logr/stdr v1.2.2
 	github.com/go-playground/validator/v10 v10.30.2
