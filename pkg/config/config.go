@@ -133,6 +133,18 @@ type Redis struct {
 	// format: redis[s]://[:password@]host[:port][/db-number][?option=value])
 	URL string `yaml:"url"`
 
+	// DisableIdentity suppresses the CLIENT SETINFO and CLIENT MAINT_NOTIFICATIONS
+	// commands that go-redis v9 sends during connection initialisation.
+	// CLIENT SETINFO requires Redis 7.2.0+ and is not supported by AWS
+	// Elasticache (which ships Redis 7.1.x) or other Redis-compatible services
+	// that have not yet implemented it. Sending unsupported CLIENT subcommands
+	// during init causes subsequent commands (such as PING) to read a stale
+	// error response, producing spurious "NOAUTH" failures even when
+	// credentials are correct. Set this to true when targeting AWS Elasticache
+	// or any Redis-compatible service that does not support CLIENT SETINFO.
+	// See also: https://github.com/redis/go-redis/issues/2911
+	DisableIdentity bool `default:"false" yaml:"disable_identity"`
+
 	ProjectTTL time.Duration `default:"168h" yaml:"project_ttl"`
 	RefTTL     time.Duration `default:"1h" yaml:"ref_ttl"`
 	MetricTTL  time.Duration `default:"1h" yaml:"metric_ttl"`
