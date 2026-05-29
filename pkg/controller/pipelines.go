@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 
 	log "github.com/sirupsen/logrus"
 	goGitlab "gitlab.com/gitlab-org/api/client-go"
@@ -26,31 +27,20 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		"ref-kind":     ref.Kind,
 	}
 
-	// We need a different syntax if the ref is a merge-request
-	var refName string
+	refNames := []string{ref.Name}
 	if ref.Kind == schemas.RefKindMergeRequest {
-		refName = fmt.Sprintf("refs/merge-requests/%s/head", ref.Name)
-	} else {
-		refName = ref.Name
+		refNames = []string{
+			fmt.Sprintf("refs/merge-requests/%s/head", ref.Name),
+			fmt.Sprintf("refs/merge-requests/%s/merge", ref.Name),
+			fmt.Sprintf("refs/merge-requests/%s/train", ref.Name),
+		}
 	}
 
-	pipelines, _, err := c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
-		ListOptions: goGitlab.ListOptions{
-			PerPage: int64(ref.Project.Pull.Pipeline.PerRef),
-			Page:    1,
-		},
-		Ref: &refName,
-	})
-	if err != nil {
-		return fmt.Errorf("error fetching project pipelines for %s: %v", ref.Project.Name, err)
-	}
-
-	if len(pipelines) == 0 && ref.Kind == schemas.RefKindMergeRequest {
-		refName = fmt.Sprintf("refs/merge-requests/%s/merge", ref.Name)
-		pipelines, _, err = c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
-			// We only need the most recent pipeline
+	var pipelines []*goGitlab.PipelineInfo
+	for _, refName := range refNames {
+		refPipelines, _, err := c.Gitlab.GetProjectPipelines(ctx, ref.Project.Name, &goGitlab.ListProjectPipelinesOptions{
 			ListOptions: goGitlab.ListOptions{
-				PerPage: 1,
+				PerPage: int64(ref.Project.Pull.Pipeline.PerRef),
 				Page:    1,
 			},
 			Ref: &refName,
@@ -58,6 +48,8 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		if err != nil {
 			return fmt.Errorf("error fetching project pipelines for %s: %v", ref.Project.Name, err)
 		}
+
+		pipelines = append(pipelines, refPipelines...)
 	}
 
 	if len(pipelines) == 0 {
@@ -66,9 +58,11 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 		return nil
 	}
 
-	// Reverse result list to have `ref`'s `LatestPipeline` untouched (compared to
-	// default behavior) after looping over list
-	slices.Reverse(pipelines)
+	// Process pipelines from oldest to newest so the newest pipeline remains the ref's LatestPipeline.
+	// For merge requests, this also lets active merge-train pipelines supersede stale head/merge pipelines.
+	sort.SliceStable(pipelines, func(i, j int) bool {
+		return pipelineInfoBefore(pipelines[i], pipelines[j])
+	})
 
 	for _, apiPipeline := range pipelines {
 		err := c.ProcessPipelinesMetrics(ctx, ref, apiPipeline)
@@ -81,6 +75,18 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 	}
 
 	return nil
+}
+
+func pipelineInfoBefore(a, b *goGitlab.PipelineInfo) bool {
+	if a.UpdatedAt != nil && b.UpdatedAt != nil && !a.UpdatedAt.Equal(*b.UpdatedAt) {
+		return a.UpdatedAt.Before(*b.UpdatedAt)
+	}
+
+	if a.CreatedAt != nil && b.CreatedAt != nil && !a.CreatedAt.Equal(*b.CreatedAt) {
+		return a.CreatedAt.Before(*b.CreatedAt)
+	}
+
+	return a.ID < b.ID
 }
 
 func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Ref, apiPipeline *goGitlab.PipelineInfo) error {
