@@ -292,9 +292,41 @@ func TestRedisUnqueueTask(t *testing.T) {
 	count, _ := r.ExecutedTasksCount(testCtx)
 	assert.Equal(t, uint64(0), count)
 
-	assert.NoError(t, r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo"))
+	requeue, err := r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	assert.NoError(t, err)
+	assert.False(t, requeue)
 	count, _ = r.ExecutedTasksCount(testCtx)
 	assert.Equal(t, uint64(1), count)
+}
+
+func TestRedisUnqueueTaskRequeuesWhenDirty(t *testing.T) {
+	_, r := newTestRedisStore(t)
+
+	// First caller wins the lock.
+	ok, err := r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "controller1")
+	assert.True(t, ok)
+	assert.NoError(t, err)
+
+	// A keepalive is required for the "still alive" branch to be exercised.
+	_, _ = r.(*Redis).SetKeepalive(testCtx, "controller1", time.Minute)
+
+	// Second caller (or a second webhook handled by the same controller) finds
+	// it already queued and marks it dirty instead of being dropped.
+	ok, err = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "controller1")
+	assert.False(t, ok)
+	assert.NoError(t, err)
+
+	requeue, err := r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	assert.NoError(t, err)
+	assert.True(t, requeue)
+
+	// The dirty flag is consumed: a second unqueue does not request another reschedule.
+	ok, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "controller1")
+	assert.True(t, ok)
+
+	requeue, err = r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	assert.NoError(t, err)
+	assert.False(t, requeue)
 }
 
 func TestRedisCurrentlyQueuedTasksCount(t *testing.T) {
@@ -306,9 +338,24 @@ func TestRedisCurrentlyQueuedTasksCount(t *testing.T) {
 
 	count, _ := r.CurrentlyQueuedTasksCount(testCtx)
 	assert.Equal(t, uint64(3), count)
-	_ = r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	_, err := r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	assert.NoError(t, err)
 	count, _ = r.CurrentlyQueuedTasksCount(testCtx)
 	assert.Equal(t, uint64(2), count)
+}
+
+// TestRedisCurrentlyQueuedTasksCountIgnoresDirtyMarkers ensures the dirty-task
+// bookkeeping keys introduced alongside QueueTask/UnqueueTask are not picked up
+// by the `task:*` SCAN used to report currently queued tasks.
+func TestRedisCurrentlyQueuedTasksCountIgnoresDirtyMarkers(t *testing.T) {
+	_, r := newTestRedisStore(t)
+
+	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "controller1")
+	_, _ = r.(*Redis).SetKeepalive(testCtx, "controller1", time.Minute)
+	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "controller1")
+
+	count, _ := r.CurrentlyQueuedTasksCount(testCtx)
+	assert.Equal(t, uint64(1), count)
 }
 
 func TestRedisExecutedTasksCount(t *testing.T) {
@@ -316,8 +363,8 @@ func TestRedisExecutedTasksCount(t *testing.T) {
 
 	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
 	_, _ = r.QueueTask(testCtx, schemas.TaskTypePullMetrics, "bar", "")
-	_ = r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
-	_ = r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	_, _ = r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	_, _ = r.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
 
 	count, _ := r.ExecutedTasksCount(testCtx)
 	assert.Equal(t, uint64(1), count)

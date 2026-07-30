@@ -46,9 +46,12 @@ type Store interface {
 	PipelineVariablesExists(ctx context.Context, pipeline schemas.Pipeline) (bool, error)
 
 	// Helpers to keep track of currently queued tasks and avoid scheduling them
-	// twice at the risk of ending up with loads of dangling goroutines being locked
+	// twice at the risk of ending up with loads of dangling goroutines being locked.
+	// If QueueTask is called while a task is already queued/running, it marks it
+	// dirty; UnqueueTask then reports whether it should be rescheduled because
+	// its inputs may have changed since the in-flight execution started.
 	QueueTask(ctx context.Context, tt schemas.TaskType, taskUUID string, processUUID string) (bool, error)
-	UnqueueTask(ctx context.Context, tt schemas.TaskType, processUUID string) error
+	UnqueueTask(ctx context.Context, tt schemas.TaskType, taskUUID string) (requeue bool, err error)
 	CurrentlyQueuedTasksCount(ctx context.Context) (uint64, error)
 	ExecutedTasksCount(ctx context.Context) (uint64, error)
 

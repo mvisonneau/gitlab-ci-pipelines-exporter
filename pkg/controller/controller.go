@@ -99,8 +99,14 @@ func (c *Controller) registerTasks() {
 	}
 }
 
-func (c *Controller) unqueueTask(ctx context.Context, tt schemas.TaskType, uniqueID string) {
-	if err := c.Store.UnqueueTask(ctx, tt, uniqueID); err != nil {
+// unqueueTask releases the task lock and reports whether the task was marked
+// dirty while it ran, ie. whether it should be rescheduled since its inputs may
+// have changed since the in-flight execution started (see webhooks.go, where
+// pipeline/job events for a ref that is already being pulled are coalesced this
+// way instead of being dropped).
+func (c *Controller) unqueueTask(ctx context.Context, tt schemas.TaskType, uniqueID string) (requeue bool) {
+	requeue, err := c.Store.UnqueueTask(ctx, tt, uniqueID)
+	if err != nil {
 		log.WithContext(ctx).
 			WithFields(log.Fields{
 				"task_type":      tt,
@@ -109,6 +115,8 @@ func (c *Controller) unqueueTask(ctx context.Context, tt schemas.TaskType, uniqu
 			WithError(err).
 			Warn("unqueuing task")
 	}
+
+	return
 }
 
 func configureTracing(ctx context.Context, grpcEndpoint string) error {

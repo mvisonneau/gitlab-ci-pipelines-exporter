@@ -30,6 +30,8 @@ type Local struct {
 	tasks              schemas.Tasks
 	tasksMutex         sync.RWMutex
 	executedTasksCount uint64
+
+	dirtyTasks map[schemas.TaskType]map[string]struct{}
 }
 
 // HasProjectExpired ..
@@ -394,7 +396,9 @@ func (l *Local) isTaskAlreadyQueued(tt schemas.TaskType, uniqueID string) bool {
 }
 
 // QueueTask registers that we are queueing the task.
-// It returns true if it managed to schedule it, false if it was already scheduled.
+// It returns true if it managed to schedule it, false if it was already scheduled,
+// in which case the ongoing execution is marked dirty so that UnqueueTask reports
+// it should be rescheduled once done.
 func (l *Local) QueueTask(_ context.Context, tt schemas.TaskType, uniqueID, _ string) (bool, error) {
 	if !l.isTaskAlreadyQueued(tt, uniqueID) {
 		l.tasksMutex.Lock()
@@ -405,11 +409,26 @@ func (l *Local) QueueTask(_ context.Context, tt schemas.TaskType, uniqueID, _ st
 		return true, nil
 	}
 
+	l.tasksMutex.Lock()
+	defer l.tasksMutex.Unlock()
+
+	if l.dirtyTasks == nil {
+		l.dirtyTasks = make(map[schemas.TaskType]map[string]struct{})
+	}
+
+	if l.dirtyTasks[tt] == nil {
+		l.dirtyTasks[tt] = make(map[string]struct{})
+	}
+
+	l.dirtyTasks[tt][uniqueID] = struct{}{}
+
 	return false, nil
 }
 
-// UnqueueTask removes the task from the tracker.
-func (l *Local) UnqueueTask(_ context.Context, tt schemas.TaskType, uniqueID string) error {
+// UnqueueTask removes the task from the tracker. It returns true if the task was
+// marked dirty while it was queued/running, meaning it should be rescheduled since
+// its inputs may have changed since the in-flight execution started.
+func (l *Local) UnqueueTask(_ context.Context, tt schemas.TaskType, uniqueID string) (requeue bool, err error) {
 	if l.isTaskAlreadyQueued(tt, uniqueID) {
 		l.tasksMutex.Lock()
 		defer l.tasksMutex.Unlock()
@@ -417,9 +436,17 @@ func (l *Local) UnqueueTask(_ context.Context, tt schemas.TaskType, uniqueID str
 		delete(l.tasks[tt], uniqueID)
 
 		l.executedTasksCount++
+
+		if l.dirtyTasks[tt] != nil {
+			if _, dirty := l.dirtyTasks[tt][uniqueID]; dirty {
+				delete(l.dirtyTasks[tt], uniqueID)
+
+				requeue = true
+			}
+		}
 	}
 
-	return nil
+	return
 }
 
 // CurrentlyQueuedTasksCount ..

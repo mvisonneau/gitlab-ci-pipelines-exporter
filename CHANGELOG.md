@@ -7,6 +7,8 @@ and this project adheres to [0ver](https://0ver.org) (more or less).
 
 ## [Unreleased]
 
+* fix: a pipeline/job/deployment webhook received while a pull for the same ref/environment was already in flight is now coalesced into a rescheduled pull instead of being silently dropped, which previously could leave a `running` pipeline status metric stuck forever
+
 ## [v0.5.10] - 2025-01-14
 
 * fix(deps): update module google.golang.org/grpc to v1.67.1 by @renovate in https://github.com/mvisonneau/gitlab-ci-pipelines-exporter/pull/904

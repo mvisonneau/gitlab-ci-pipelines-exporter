@@ -458,8 +458,16 @@ func getRedisQueueKey(tt schemas.TaskType, taskUUID string) string {
 	return fmt.Sprintf("%s:%v:%s", redisTaskKey, tt, taskUUID)
 }
 
+func getRedisDirtyTaskKey(tt schemas.TaskType, taskUUID string) string {
+	// Deliberately not prefixed with "task:" so it does not get picked up by the
+	// `task:*` SCAN used by CurrentlyQueuedTasksCount.
+	return fmt.Sprintf("dirtyTask:%v:%s", tt, taskUUID)
+}
+
 // QueueTask registers that we are queueing the task.
-// It returns true if it managed to schedule it, false if it was already scheduled.
+// It returns true if it managed to schedule it, false if it was already scheduled,
+// in which case the ongoing execution is marked dirty so that UnqueueTask reports
+// it should be rescheduled once done.
 func (r *Redis) QueueTask(ctx context.Context, tt schemas.TaskType, taskUUID, processUUID string) (set bool, err error) {
 	k := getRedisQueueKey(tt, taskUUID)
 
@@ -495,11 +503,19 @@ func (r *Redis) QueueTask(ctx context.Context, tt schemas.TaskType, taskUUID, pr
 		}
 	}
 
-	return
+	// The lock is legitimately held by a live process (possibly this one), meaning
+	// a task for this exact uniqueID is already queued or running. Mark it dirty so
+	// the in-flight execution gets rescheduled once it completes, instead of silently
+	// dropping this request.
+	_, err = r.Set(ctx, getRedisDirtyTaskKey(tt, taskUUID), true, 0).Result()
+
+	return false, err
 }
 
-// UnqueueTask removes the task from the tracker.
-func (r *Redis) UnqueueTask(ctx context.Context, tt schemas.TaskType, taskUUID string) (err error) {
+// UnqueueTask removes the task from the tracker. It returns true if the task was
+// marked dirty while it was queued/running, meaning it should be rescheduled since
+// its inputs may have changed since the in-flight execution started.
+func (r *Redis) UnqueueTask(ctx context.Context, tt schemas.TaskType, taskUUID string) (requeue bool, err error) {
 	var matched int64
 
 	matched, err = r.Del(ctx, getRedisQueueKey(tt, taskUUID)).Result()
@@ -508,8 +524,18 @@ func (r *Redis) UnqueueTask(ctx context.Context, tt schemas.TaskType, taskUUID s
 	}
 
 	if matched > 0 {
-		_, err = r.Incr(ctx, redisTasksExecutedCountKey).Result()
+		if _, err = r.Incr(ctx, redisTasksExecutedCountKey).Result(); err != nil {
+			return
+		}
 	}
+
+	var dirtyDeleted int64
+
+	if dirtyDeleted, err = r.Del(ctx, getRedisDirtyTaskKey(tt, taskUUID)).Result(); err != nil {
+		return
+	}
+
+	requeue = dirtyDeleted > 0
 
 	return
 }

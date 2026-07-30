@@ -242,8 +242,37 @@ func TestLocalUnqueueTask(t *testing.T) {
 	l := NewLocalStore()
 	_, _ = l.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
 	assert.Equal(t, uint64(0), l.(*Local).executedTasksCount)
-	assert.NoError(t, l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo"))
+	requeue, err := l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	assert.NoError(t, err)
+	assert.False(t, requeue)
 	assert.Equal(t, uint64(1), l.(*Local).executedTasksCount)
+}
+
+func TestLocalUnqueueTaskRequeuesWhenDirty(t *testing.T) {
+	l := NewLocalStore()
+
+	// First caller wins the lock.
+	ok, err := l.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
+	assert.True(t, ok)
+	assert.NoError(t, err)
+
+	// Second caller finds it already queued and marks it dirty.
+	ok, err = l.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
+	assert.False(t, ok)
+	assert.NoError(t, err)
+
+	// Unqueueing must report that a reschedule is needed.
+	requeue, err := l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	assert.NoError(t, err)
+	assert.True(t, requeue)
+
+	// The dirty flag is consumed: a second unqueue does not request another reschedule.
+	ok, _ = l.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
+	assert.True(t, ok)
+
+	requeue, err = l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	assert.NoError(t, err)
+	assert.False(t, requeue)
 }
 
 func TestLocalCurrentlyQueuedTasksCount(t *testing.T) {
@@ -254,7 +283,8 @@ func TestLocalCurrentlyQueuedTasksCount(t *testing.T) {
 
 	count, _ := l.CurrentlyQueuedTasksCount(testCtx)
 	assert.Equal(t, uint64(3), count)
-	assert.NoError(t, l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo"))
+	_, err := l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	assert.NoError(t, err)
 	count, _ = l.CurrentlyQueuedTasksCount(testCtx)
 	assert.Equal(t, uint64(2), count)
 }
@@ -263,8 +293,8 @@ func TestLocalExecutedTasksCount(t *testing.T) {
 	l := NewLocalStore()
 	_, _ = l.QueueTask(testCtx, schemas.TaskTypePullMetrics, "foo", "")
 	_, _ = l.QueueTask(testCtx, schemas.TaskTypePullMetrics, "bar", "")
-	_ = l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
-	_ = l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	_, _ = l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
+	_, _ = l.UnqueueTask(testCtx, schemas.TaskTypePullMetrics, "foo")
 
 	count, _ := l.ExecutedTasksCount(testCtx)
 	assert.Equal(t, uint64(1), count)

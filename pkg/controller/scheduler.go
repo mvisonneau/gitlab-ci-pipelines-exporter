@@ -104,7 +104,14 @@ func (c *Controller) TaskHandlerPullEnvironmentsFromProject(ctx context.Context,
 
 // TaskHandlerPullEnvironmentMetrics ..
 func (c *Controller) TaskHandlerPullEnvironmentMetrics(ctx context.Context, env schemas.Environment) {
-	defer c.unqueueTask(ctx, schemas.TaskTypePullEnvironmentMetrics, string(env.Key()))
+	defer func() {
+		// If a deployment event for this environment came in while we were pulling,
+		// it was coalesced into this run rather than dropped: reschedule a pull to
+		// pick up the state it carried.
+		if c.unqueueTask(ctx, schemas.TaskTypePullEnvironmentMetrics, string(env.Key())) {
+			c.ScheduleTask(context.Background(), schemas.TaskTypePullEnvironmentMetrics, string(env.Key()), env)
+		}
+	}()
 
 	// On errors, we do not want to retry these tasks
 	if err := c.PullEnvironmentMetrics(ctx, env); err != nil {
@@ -136,7 +143,16 @@ func (c *Controller) TaskHandlerPullRefsFromProject(ctx context.Context, p schem
 
 // TaskHandlerPullRefMetrics ..
 func (c *Controller) TaskHandlerPullRefMetrics(ctx context.Context, ref schemas.Ref) {
-	defer c.unqueueTask(ctx, schemas.TaskTypePullRefMetrics, string(ref.Key()))
+	defer func() {
+		// If a pipeline/job webhook for this ref came in while we were pulling, it
+		// was coalesced into this run rather than dropped: reschedule a pull to
+		// pick up the state it carried (eg. a "success" webhook received while a
+		// "running" pull was still in flight must not be lost, or the ref's status
+		// metric would be stuck on "running" forever).
+		if c.unqueueTask(ctx, schemas.TaskTypePullRefMetrics, string(ref.Key())) {
+			c.ScheduleTask(context.Background(), schemas.TaskTypePullRefMetrics, string(ref.Key()), ref)
+		}
+	}()
 
 	// On errors, we do not want to retry these tasks
 	if err := c.PullRefMetrics(ctx, ref); err != nil {
@@ -394,9 +410,11 @@ func (c *Controller) ScheduleTask(ctx context.Context, tt schemas.TaskType, uniq
 	}
 
 	if qlen >= c.TaskController.Queue.Options().BufferSize {
+		// This is a silent data loss, not a transient condition: the task is
+		// dropped and nothing will retry it (see gitlab.maximum_jobs_queue_size).
 		log.WithContext(ctx).
 			WithFields(logFields).
-			Warn("queue buffer size exhausted, skipping scheduling of task..")
+			Error("queue buffer size exhausted, skipping scheduling of task..")
 
 		return
 	}
