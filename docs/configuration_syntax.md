@@ -60,6 +60,18 @@ redis:
   # environment variable)
   url: redis://foo:bar@redis.example.net:6379
 
+  # TTL for the project locks
+  project_ttl: 168h
+
+  # TTL for the ref locks
+  ref_ttl: 1h
+  
+  # TTL for the metric locks
+  metric_ttl: 1h
+  
+  # TTL for the task locks
+  task_ttl: 30m
+
 # URL and Token with sufficient permissions to access
 # your GitLab's projects pipelines informations (optional)
 gitlab:

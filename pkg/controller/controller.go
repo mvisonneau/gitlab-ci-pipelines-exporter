@@ -60,6 +60,7 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 			Project: cfg.Redis.ProjectTTL,
 			Ref:     cfg.Redis.RefTTL,
 			Metric:  cfg.Redis.MetricTTL,
+			Task:    cfg.Redis.TaskTTL,
 		}))
 	}
 
