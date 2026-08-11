@@ -50,6 +50,7 @@ gitlab:
 
 redis:
   url: redis://popopo:1337
+  disable_identity: true
 
 pull:
   projects_from_wildcards:
@@ -174,6 +175,7 @@ wildcards:
 	xcfg.Gitlab.MaximumRequestsPerSecond = 2
 
 	xcfg.Redis.URL = "redis://popopo:1337"
+	xcfg.Redis.DisableIdentity = true
 
 	xcfg.Pull.ProjectsFromWildcards.OnInit = false
 	xcfg.Pull.ProjectsFromWildcards.Scheduled = false

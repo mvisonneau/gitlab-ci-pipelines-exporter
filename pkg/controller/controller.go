@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/v9/maintnotifications"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/taskq/v4"
 	"go.opentelemetry.io/otel"
@@ -194,6 +195,20 @@ func (c *Controller) configureRedis(ctx context.Context, config *config.Redis) (
 
 	if opt, err = redis.ParseURL(config.URL); err != nil {
 		return
+	}
+
+	// AWS Elasticache (Redis 7.1.x) and other Redis-compatible services that
+	// predate Redis 7.2.0 do not support CLIENT SETINFO. go-redis v9 also
+	// sends CLIENT MAINT_NOTIFICATIONS, which is Redis Cloud-specific.
+	// Sending unsupported CLIENT subcommands during connection init causes
+	// subsequent commands to read a stale error response, producing spurious
+	// "NOAUTH" failures even when credentials are correct.
+	// disable_identity suppresses both commands. See go-redis issue #2911.
+	if config.DisableIdentity {
+		opt.DisableIdentity = true
+		opt.MaintNotificationsConfig = &maintnotifications.Config{
+			Mode: maintnotifications.ModeDisabled,
+		}
 	}
 
 	c.Redis = redis.NewClient(opt)
