@@ -2,7 +2,7 @@ package controller
 
 import (
 	"context"
-
+	"sync"
 	"dario.cat/mergo"
 	log "github.com/sirupsen/logrus"
 
@@ -82,13 +82,23 @@ func (c *Controller) PullRefsFromProject(ctx context.Context, p schemas.Project)
 		return err
 	}
 
-	for _, ref := range refs {
-		refExists, err := c.Store.RefExists(ctx, ref.Key())
-		if err != nil {
-			return err
-		}
+	const maxWorkers = 10
+	sem := make(chan struct{}, maxWorkers)
+	var wg sync.WaitGroup
 
-		if !refExists {
+	for _, ref := range refs {
+		ref := ref // Capture loop variable for goroutine
+		wg.Add(1)
+		sem <- struct{}{}
+		go func() {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			refExists, err := c.Store.RefExists(ctx, ref.Key())
+			if err != nil || refExists {
+				return
+			}
+
 			log.WithFields(log.Fields{
 				"project-name": ref.Project.Name,
 				"ref":          ref.Name,
@@ -96,12 +106,15 @@ func (c *Controller) PullRefsFromProject(ctx context.Context, p schemas.Project)
 			}).Info("discovered new ref")
 
 			if err = c.Store.SetRef(ctx, ref); err != nil {
-				return err
+				return
 			}
 
+			// Schedule metrics immediately on ref discovery — don't wait for next PullMetrics tick
 			c.ScheduleTask(ctx, schemas.TaskTypePullRefMetrics, string(ref.Key()), ref)
-		}
+		}()
 	}
 
+	wg.Wait()
 	return nil
 }
+

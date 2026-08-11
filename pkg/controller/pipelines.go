@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-
+	"sync"
 	log "github.com/sirupsen/logrus"
 	goGitlab "gitlab.com/gitlab-org/api/client-go"
 	"golang.org/x/exp/slices"
@@ -70,17 +70,41 @@ func (c *Controller) PullRefMetrics(ctx context.Context, ref schemas.Ref) error 
 	// default behavior) after looping over list
 	slices.Reverse(pipelines)
 
+	const maxPipelineWorkers = 5
+	sem := make(chan struct{}, maxPipelineWorkers)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var firstErr error
+
 	for _, apiPipeline := range pipelines {
-		err := c.ProcessPipelinesMetrics(ctx, ref, apiPipeline)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"pipeline": apiPipeline.ID,
-				"error":    err,
-			}).Error("processing pipeline metrics failed")
-		}
+		apiPipeline := apiPipeline
+		wg.Add(1)
+
+		sem <- struct{}{}
+		
+		go func(){
+			defer wg.Done()
+			defer func() { <- sem }()
+
+			err := c.ProcessPipelinesMetrics(ctx, ref, apiPipeline)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"pipeline": apiPipeline.ID,
+					"error":    err,
+				}).Error("processing pipeline metrics failed")
+
+				mu.Lock()
+				if firstErr == nil {
+					firstErr = err
+				}
+				mu.Unlock()
+			}
+		}()
 	}
 
-	return nil
+	wg.Wait()
+
+	return firstErr
 }
 
 func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Ref, apiPipeline *goGitlab.PipelineInfo) error {
