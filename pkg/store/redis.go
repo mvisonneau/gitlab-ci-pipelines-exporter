@@ -539,13 +539,17 @@ func (r *Redis) ExecutedTasksCount(ctx context.Context) (uint64, error) {
 }
 
 // HasProjectExpired ..
+//
+// The TTL marker key is written with `Set ... EX <project_ttl>` whenever a
+// project is stored. While the key still exists the project is fresh; once
+// Redis has dropped it (TTL elapsed), the project is considered expired.
 func (r *Redis) HasProjectExpired(ctx context.Context, key schemas.ProjectKey) bool {
 	reply, err := r.Exists(ctx, getTTLProjectKey(key)).Result()
 	if err != nil {
 		return false
 	}
 
-	return reply > 0
+	return reply <= 0
 }
 
 func getTTLProjectKey(key schemas.ProjectKey) string {
@@ -553,13 +557,15 @@ func getTTLProjectKey(key schemas.ProjectKey) string {
 }
 
 // HasRefExpired ..
+//
+// See HasProjectExpired for the TTL-marker semantics.
 func (r *Redis) HasRefExpired(ctx context.Context, key schemas.RefKey) bool {
 	reply, err := r.Exists(ctx, getTTLRefKey(key)).Result()
 	if err != nil {
 		return false
 	}
 
-	return reply > 0
+	return reply <= 0
 }
 
 func getTTLRefKey(key schemas.RefKey) string {
@@ -567,13 +573,15 @@ func getTTLRefKey(key schemas.RefKey) string {
 }
 
 // HasMetricExpired ..
+//
+// See HasProjectExpired for the TTL-marker semantics.
 func (r *Redis) HasMetricExpired(ctx context.Context, key schemas.MetricKey) bool {
 	reply, err := r.Exists(ctx, getTTLMetricKey(key)).Result()
 	if err != nil {
 		return false
 	}
 
-	return reply > 0
+	return reply <= 0
 }
 
 func getTTLMetricKey(key schemas.MetricKey) string {

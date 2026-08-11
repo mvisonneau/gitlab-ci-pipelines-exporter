@@ -297,6 +297,73 @@ func TestRedisUnqueueTask(t *testing.T) {
 	assert.Equal(t, uint64(1), count)
 }
 
+func newTestRedisStoreWithTTL(t *testing.T, ttl time.Duration) (*miniredis.Miniredis, *Redis) {
+	mr, err := miniredis.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	t.Cleanup(func() {
+		mr.Close()
+	})
+
+	r := NewRedisStore(
+		redis.NewClient(&redis.Options{Addr: mr.Addr()}),
+		WithTTLConfig(&RedisTTLConfig{Project: ttl, Ref: ttl, Metric: ttl}),
+	)
+
+	return mr, r
+}
+
+func TestRedisHasProjectExpired(t *testing.T) {
+	ttl := time.Hour
+	mr, r := newTestRedisStoreWithTTL(t, ttl)
+
+	p := schemas.NewProject("foo/bar")
+	assert.NoError(t, r.SetProject(testCtx, p))
+
+	// A freshly written project must not be reported as expired.
+	assert.False(t, r.HasProjectExpired(testCtx, p.Key()))
+
+	// Once the TTL marker has elapsed, the project must be reported as expired.
+	mr.FastForward(ttl + time.Second)
+	assert.True(t, r.HasProjectExpired(testCtx, p.Key()))
+}
+
+func TestRedisHasRefExpired(t *testing.T) {
+	ttl := time.Hour
+	mr, r := newTestRedisStoreWithTTL(t, ttl)
+
+	ref := schemas.Ref{
+		Kind:    schemas.RefKindBranch,
+		Project: schemas.NewProject("foo/bar"),
+		Name:    "main",
+	}
+	assert.NoError(t, r.SetRef(testCtx, ref))
+
+	assert.False(t, r.HasRefExpired(testCtx, ref.Key()))
+
+	mr.FastForward(ttl + time.Second)
+	assert.True(t, r.HasRefExpired(testCtx, ref.Key()))
+}
+
+func TestRedisHasMetricExpired(t *testing.T) {
+	ttl := time.Hour
+	mr, r := newTestRedisStoreWithTTL(t, ttl)
+
+	m := schemas.Metric{
+		Kind:   schemas.MetricKindCoverage,
+		Labels: prometheus.Labels{"project": "foo/bar"},
+		Value:  5,
+	}
+	assert.NoError(t, r.SetMetric(testCtx, m))
+
+	assert.False(t, r.HasMetricExpired(testCtx, m.Key()))
+
+	mr.FastForward(ttl + time.Second)
+	assert.True(t, r.HasMetricExpired(testCtx, m.Key()))
+}
+
 func TestRedisCurrentlyQueuedTasksCount(t *testing.T) {
 	_, r := newTestRedisStore(t)
 
