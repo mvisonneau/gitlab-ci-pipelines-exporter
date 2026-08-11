@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	mergeRequestRegexp string = `^((\d+)|refs/merge-requests/(\d+)/(?:head|merge))$`
+	mergeRequestRegexp string = `^((\d+)|refs/merge-requests/(\d+)/(?:head|merge|train))$`
 
 	// RefKindBranch refers to a branch.
 	RefKindBranch RefKind = "branch"

@@ -385,8 +385,14 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines",
 		func(w http.ResponseWriter, r *http.Request) {
-			assert.Equal(t, "refs/merge-requests/1234/head", r.URL.Query().Get("ref"))
-			_, _ = fmt.Fprint(w, `[{"id":1}]`)
+			switch r.URL.Query().Get("ref") {
+			case "refs/merge-requests/1234/head":
+				_, _ = fmt.Fprint(w, `[{"id":1}]`)
+			case "refs/merge-requests/1234/merge", "refs/merge-requests/1234/train":
+				_, _ = fmt.Fprint(w, `[]`)
+			default:
+				assert.Failf(t, "unexpected ref", "%s", r.URL.Query().Get("ref"))
+			}
 		})
 
 	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
@@ -411,4 +417,59 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 			schemas.RefKindMergeRequest,
 			"1234",
 		)))
+}
+
+func TestPullRefMetricsMergeRequestPipelineUsesNewestTrainPipeline(t *testing.T) {
+	ctx, c, mux, srv := newTestController(config.Config{})
+	defer srv.Close()
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines",
+		func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Query().Get("ref") {
+			case "refs/merge-requests/1234/head":
+				_, _ = fmt.Fprint(w, `[{"id":1,"updated_at":"2016-08-11T11:28:34.085Z"}]`)
+			case "refs/merge-requests/1234/merge":
+				_, _ = fmt.Fprint(w, `[]`)
+			case "refs/merge-requests/1234/train":
+				_, _ = fmt.Fprint(w, `[{"id":2,"updated_at":"2016-08-11T11:29:34.085Z"}]`)
+			default:
+				assert.Failf(t, "unexpected ref", "%s", r.URL.Query().Get("ref"))
+			}
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
+		func(w http.ResponseWriter, r *http.Request) {
+			_, _ = fmt.Fprint(w, `{"id":1,"updated_at":"2016-08-11T11:28:34.085Z","duration":300,"status":"success","coverage":"30.2","source":"schedule"}`)
+		})
+
+	mux.HandleFunc("/api/v4/projects/foo/pipelines/2",
+		func(w http.ResponseWriter, r *http.Request) {
+			_, _ = fmt.Fprint(w, `{"id":2,"updated_at":"2016-08-11T11:29:34.085Z","duration":300,"status":"running","coverage":"30.2","source":"schedule"}`)
+		})
+
+	p := schemas.NewProject("foo")
+
+	assert.NoError(t, c.PullRefMetrics(
+		ctx,
+		schemas.NewRef(
+			p,
+			schemas.RefKindMergeRequest,
+			"1234",
+		)))
+
+	metrics, _ := c.Store.Metrics(ctx)
+	labels := map[string]string{
+		"kind":      "merge-request",
+		"project":   "foo",
+		"ref":       "1234",
+		"topics":    "",
+		"variables": "",
+		"source":    "schedule",
+	}
+	runID := schemas.Metric{
+		Kind:   schemas.MetricKindID,
+		Labels: labels,
+		Value:  2,
+	}
+	assert.Equal(t, runID, metrics[runID.Key()])
 }
