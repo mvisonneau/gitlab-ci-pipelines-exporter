@@ -51,7 +51,7 @@ func New(ctx context.Context, cfg config.Config, version string) (c Controller, 
 		return
 	}
 
-	c.TaskController = NewTaskController(ctx, c.Redis, cfg.Gitlab.MaximumJobsQueueSize)
+	c.TaskController = NewTaskController(ctx, c.Redis, cfg.Gitlab.MaximumJobsQueueSize, cfg.Gitlab.MaximumTaskExecutionTime)
 	c.registerTasks()
 
 	var redisStore *store.Redis

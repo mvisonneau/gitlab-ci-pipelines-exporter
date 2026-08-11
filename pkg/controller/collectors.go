@@ -13,6 +13,17 @@ var (
 	statusesList                 = [...]string{"created", "waiting_for_resource", "preparing", "pending", "running", "success", "failed", "canceled", "skipped", "manual", "scheduled", "error", "success_with_warnings"}
 )
 
+// NewInternalCollectorGCDurationSeconds returns a new collector for the gcpe_gc_duration_seconds metric.
+func NewInternalCollectorGCDurationSeconds() prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gcpe_gc_duration_seconds",
+			Help: "Duration in seconds of the most recent garbage collection run",
+		},
+		[]string{"type"},
+	)
+}
+
 // NewInternalCollectorCurrentlyQueuedTasksCount returns a new collector for the gcpe_currently_queued_tasks_count metric.
 func NewInternalCollectorCurrentlyQueuedTasksCount() prometheus.Collector {
 	return prometheus.NewGaugeVec(

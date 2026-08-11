@@ -13,6 +13,10 @@ import (
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/store"
 )
 
+// gcDurationSeconds is a package-level singleton so that observations accumulate
+// across the transient Registry instances created on each /metrics scrape.
+var gcDurationSeconds = NewInternalCollectorGCDurationSeconds()
+
 // Registry wraps a pointer of prometheus.Registry.
 type Registry struct {
 	*prometheus.Registry
@@ -21,6 +25,7 @@ type Registry struct {
 		CurrentlyQueuedTasksCount  prometheus.Collector
 		EnvironmentsCount          prometheus.Collector
 		ExecutedTasksCount         prometheus.Collector
+		GCDurationSeconds          prometheus.Collector
 		GitLabAPIRequestsCount     prometheus.Collector
 		GitlabAPIRequestsRemaining prometheus.Collector
 		GitlabAPIRequestsLimit     prometheus.Collector
@@ -94,6 +99,7 @@ func (r *Registry) RegisterInternalCollectors() {
 	r.InternalCollectors.CurrentlyQueuedTasksCount = NewInternalCollectorCurrentlyQueuedTasksCount()
 	r.InternalCollectors.EnvironmentsCount = NewInternalCollectorEnvironmentsCount()
 	r.InternalCollectors.ExecutedTasksCount = NewInternalCollectorExecutedTasksCount()
+	r.InternalCollectors.GCDurationSeconds = gcDurationSeconds
 	r.InternalCollectors.GitLabAPIRequestsCount = NewInternalCollectorGitLabAPIRequestsCount()
 	r.InternalCollectors.GitlabAPIRequestsRemaining = NewInternalCollectorGitLabAPIRequestsRemaining()
 	r.InternalCollectors.GitlabAPIRequestsLimit = NewInternalCollectorGitLabAPIRequestsLimit()
@@ -104,6 +110,7 @@ func (r *Registry) RegisterInternalCollectors() {
 	_ = r.Register(r.InternalCollectors.CurrentlyQueuedTasksCount)
 	_ = r.Register(r.InternalCollectors.EnvironmentsCount)
 	_ = r.Register(r.InternalCollectors.ExecutedTasksCount)
+	_ = r.Register(r.InternalCollectors.GCDurationSeconds)
 	_ = r.Register(r.InternalCollectors.GitLabAPIRequestsCount)
 	_ = r.Register(r.InternalCollectors.GitlabAPIRequestsRemaining)
 	_ = r.Register(r.InternalCollectors.GitlabAPIRequestsLimit)
