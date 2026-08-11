@@ -135,6 +135,7 @@ func (c *Client) ListProjects(ctx context.Context, w config.Wildcard) ([]schemas
 			}
 
 			p := schemas.NewProject(gp.PathWithNamespace)
+			p.ID = gp.ID
 			p.ProjectParameters = w.ProjectParameters
 			projects = append(projects, p)
 		}

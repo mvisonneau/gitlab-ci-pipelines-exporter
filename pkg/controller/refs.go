@@ -77,6 +77,15 @@ func (c *Controller) GetRefs(ctx context.Context, p schemas.Project) (
 
 // PullRefsFromProject ..
 func (c *Controller) PullRefsFromProject(ctx context.Context, p schemas.Project) error {
+	if p.ID == 0 {
+		if err := c.resolveProjectID(ctx, &p); err != nil {
+			log.WithContext(ctx).
+				WithField("project-name", p.Name).
+				WithError(err).
+				Warn("failed to resolve project ID from GitLab API")
+		}
+	}
+
 	refs, err := c.GetRefs(ctx, p)
 	if err != nil {
 		return err

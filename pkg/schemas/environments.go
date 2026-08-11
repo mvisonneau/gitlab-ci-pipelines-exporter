@@ -8,6 +8,7 @@ import (
 // Environment ..
 type Environment struct {
 	ProjectName      string
+	ProjectID        int64
 	ID               int64
 	Name             string
 	ExternalURL      string
@@ -37,6 +38,7 @@ func (envs Environments) Count() int {
 func (e Environment) DefaultLabelsValues() map[string]string {
 	return map[string]string{
 		"project":     e.ProjectName,
+		"project_id":  strconv.FormatInt(e.ProjectID, 10),
 		"environment": e.Name,
 	}
 }

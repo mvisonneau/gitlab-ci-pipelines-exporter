@@ -31,8 +31,11 @@ func (c *Controller) processPipelineEvent(ctx context.Context, e goGitlab.Pipeli
 		refKind = schemas.RefKindBranch
 	}
 
+	p := schemas.NewProject(e.Project.PathWithNamespace)
+	p.ID = e.Project.ID
+
 	c.triggerRefMetricsPull(ctx, schemas.NewRef(
-		schemas.NewProject(e.Project.PathWithNamespace),
+		p,
 		refKind,
 		refName,
 	))
@@ -59,8 +62,11 @@ func (c *Controller) processJobEvent(ctx context.Context, e goGitlab.JobEvent) {
 		return
 	}
 
+	p := schemas.NewProject(project.PathWithNamespace)
+	p.ID = project.ID
+
 	c.triggerRefMetricsPull(ctx, schemas.NewRef(
-		schemas.NewProject(project.PathWithNamespace),
+		p,
 		refKind,
 		refName,
 	))
@@ -87,8 +93,11 @@ func (c *Controller) processPushEvent(ctx context.Context, e goGitlab.PushEvent)
 			return
 		}
 
+		pushProject := schemas.NewProject(e.Project.PathWithNamespace)
+		pushProject.ID = e.Project.ID
+
 		_ = deleteRef(ctx, c.Store, schemas.NewRef(
-			schemas.NewProject(e.Project.PathWithNamespace),
+			pushProject,
 			refKind,
 			refName,
 		), "received branch deletion push event from webhook")
@@ -116,8 +125,11 @@ func (c *Controller) processTagEvent(ctx context.Context, e goGitlab.TagEvent) {
 			return
 		}
 
+		tagProject := schemas.NewProject(e.Project.PathWithNamespace)
+		tagProject.ID = e.Project.ID
+
 		_ = deleteRef(ctx, c.Store, schemas.NewRef(
-			schemas.NewProject(e.Project.PathWithNamespace),
+			tagProject,
 			refKind,
 			refName,
 		), "received tag deletion tag event from webhook")
@@ -125,8 +137,11 @@ func (c *Controller) processTagEvent(ctx context.Context, e goGitlab.TagEvent) {
 }
 
 func (c *Controller) processMergeEvent(ctx context.Context, e goGitlab.MergeEvent) {
+	mergeProject := schemas.NewProject(e.Project.PathWithNamespace)
+	mergeProject.ID = e.Project.ID
+
 	ref := schemas.NewRef(
-		schemas.NewProject(e.Project.PathWithNamespace),
+		mergeProject,
 		schemas.RefKindMergeRequest,
 		strconv.FormatInt(e.ObjectAttributes.IID, 10),
 	)
@@ -266,6 +281,7 @@ func (c *Controller) processDeploymentEvent(ctx context.Context, e goGitlab.Depl
 		ctx,
 		schemas.Environment{
 			ProjectName: e.Project.PathWithNamespace,
+			ProjectID:   e.Project.ID,
 			Name:        e.Environment,
 		},
 	)

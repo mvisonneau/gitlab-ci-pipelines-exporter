@@ -62,12 +62,13 @@ func (ref Ref) DefaultLabelsValues(input ...Pipeline) map[string]string {
 	}
 
 	return map[string]string{
-		"kind":      string(ref.Kind),
-		"project":   ref.Project.Name,
-		"ref":       ref.Name,
-		"topics":    ref.Project.Topics,
-		"variables": pipeline.Variables,
-		"source":    pipeline.Source,
+		"project":    ref.Project.Name,
+		"project_id": strconv.FormatInt(ref.Project.ID, 10),
+		"kind":       string(ref.Kind),
+		"ref":        ref.Name,
+		"topics":     ref.Project.Topics,
+		"variables":  pipeline.Variables,
+		"source":     pipeline.Source,
 	}
 }
 

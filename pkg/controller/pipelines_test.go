@@ -56,12 +56,13 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	// Check if all the metrics exist
 	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "schedule",
+		"kind":       string(schemas.RefKindBranch),
+		"project":    "foo",
+		"project_id": "0",
+		"ref":        "bar",
+		"topics":     "",
+		"variables":  "foo:bar",
+		"source":     "schedule",
 	}
 
 	runCount := schemas.Metric{
@@ -137,12 +138,13 @@ func TestPullRefMetricsUpdatingPipeline(t *testing.T) {
 	p.Pull.Pipeline.Variables.Enabled = true
 
 	labels := map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "pipeline",
+		"kind":       string(schemas.RefKindBranch),
+		"project":    "foo",
+		"project_id": "0",
+		"ref":        "bar",
+		"topics":     "",
+		"variables":  "foo:bar",
+		"source":     "pipeline",
 	}
 
 	// when
@@ -185,12 +187,13 @@ func TestPullRefMetricsUpdatingPipeline(t *testing.T) {
 	}`
 
 	labels = map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "pipeline",
+		"kind":       string(schemas.RefKindBranch),
+		"project":    "foo",
+		"project_id": "0",
+		"ref":        "bar",
+		"topics":     "",
+		"variables":  "foo:bar",
+		"source":     "pipeline",
 	}
 
 	// when again
@@ -266,12 +269,13 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 	// Check if all the metrics exist
 	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "schedule",
+		"kind":       string(schemas.RefKindBranch),
+		"project":    "foo",
+		"project_id": "0",
+		"ref":        "bar",
+		"topics":     "",
+		"variables":  "foo:bar",
+		"source":     "schedule",
 	}
 
 	trTotalTime := schemas.Metric{
