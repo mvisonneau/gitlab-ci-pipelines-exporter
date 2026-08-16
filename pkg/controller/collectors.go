@@ -134,6 +134,17 @@ func NewCollectorDurationSeconds() prometheus.Collector {
 	)
 }
 
+// NewCollectorDurationTotal returns a new collector for the gitlab_ci_pipeline_duration_total metric.
+func NewCollectorDurationTotal() prometheus.Collector {
+	return prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "gitlab_ci_pipeline_duration_total",
+			Help: "Duration in seconds of all the pipelines",
+		},
+		defaultLabels,
+	)
+}
+
 // NewCollectorQueuedDurationSeconds returns a new collector for the gitlab_ci_pipeline_queued_duration_seconds metric.
 func NewCollectorQueuedDurationSeconds() prometheus.Collector {
 	return prometheus.NewGaugeVec(
@@ -250,6 +261,17 @@ func NewCollectorJobArtifactSizeBytes() prometheus.Collector {
 		prometheus.GaugeOpts{
 			Name: "gitlab_ci_pipeline_job_artifact_size_bytes",
 			Help: "Artifact size in bytes (sum of all of them) of the most recent job",
+		},
+		append(defaultLabels, jobLabels...),
+	)
+}
+
+// NewCollectorJobDurationTotal returns a new collector for the gitlab_ci_pipeline_job_duration_total metric.
+func NewCollectorJobDurationTotal() prometheus.Collector {
+	return prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "gitlab_ci_pipeline_job_duration_total",
+			Help: "Duration in seconds of all of the jobs",
 		},
 		append(defaultLabels, jobLabels...),
 	)

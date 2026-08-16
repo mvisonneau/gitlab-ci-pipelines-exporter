@@ -167,6 +167,8 @@ func (c *Controller) ProcessJobMetrics(ctx context.Context, ref schemas.Ref, job
 
 	storeSetMetric(ctx, c.Store, jobRunCount)
 
+	incrementMetric(ctx, c.Store, schemas.MetricKindJobDurationTotal, labels, job.DurationSeconds, projectRefLogFields)
+
 	storeSetMetric(ctx, c.Store, schemas.Metric{
 		Kind:   schemas.MetricKindJobArtifactSizeBytes,
 		Labels: labels,
