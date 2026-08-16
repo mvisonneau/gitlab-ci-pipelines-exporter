@@ -1,67 +1,241 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    },
+    {
+      "name": "VAR_GITLAB_HOST",
+      "type": "constant",
+      "label": "GITLAB_HOST",
+      "value": "gitlab.onzack.io",
+      "description": ""
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.4.2"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
         "builtIn": 1,
-        "datasource": "-- Grafana --",
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
   },
   "description": "This dashboard leverages the Prometheus exporter I wrote to fetch information about GitLab CI pipelines statuses. More information here: https://github.com/mvisonneau/gitlab-ci-pipelines-exporter",
-  "editable": true,
+  "editable": false,
+  "fiscalYearStartMonth": 0,
   "gnetId": 10620,
   "graphTooltip": 0,
-  "iteration": 1604494964194,
+  "id": null,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
+      "collapsed": true,
       "gridPos": {
-        "h": 3,
-        "w": 2,
+        "h": 1,
+        "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 116,
-      "options": {
-        "content": "<p style=\"text-align:center;\"><img src=\"https://about.gitlab.com/images/press/logo/png/gitlab-logo-500.png\" width=100px/></p>",
-        "mode": "html"
-      },
-      "pluginVersion": "7.3.1",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "",
-      "transparent": true,
-      "type": "text"
+      "id": 124,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "links": [
+                {
+                  "targetBlank": true,
+                  "title": "View project: ${__field.labels.project}",
+                  "url": "https://${GITLAB_HOST}/${__field.labels.project}/-/tree/${__field.labels.ref}"
+                }
+              ],
+              "mappings": [
+                {
+                  "options": {
+                    "1": {
+                      "color": "green",
+                      "index": 0,
+                      "text": "SUCCESS"
+                    },
+                    "2": {
+                      "color": "blue",
+                      "index": 1,
+                      "text": "RUNNING"
+                    },
+                    "3": {
+                      "color": "red",
+                      "index": 2,
+                      "text": "FAILED/CANCELED"
+                    },
+                    "4": {
+                      "color": "#808080",
+                      "index": 3,
+                      "text": "UNKNOWN"
+                    }
+                  },
+                  "type": "value"
+                },
+                {
+                  "options": {
+                    "match": "null",
+                    "result": {
+                      "color": "text",
+                      "index": 4,
+                      "text": "NO DATA"
+                    }
+                  },
+                  "type": "special"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 1
+          },
+          "id": 110,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showPercentChange": false,
+            "textMode": "none",
+            "wideLayout": true
+          },
+          "pluginVersion": "10.4.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_PROMETHEUS}"
+              },
+              "expr": "(gitlab_ci_pipeline_status{status=\"success\", project=~\"$PROJECT\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", project=~\"$PROJECT\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status=~\"failed|canceled\", project=~\"$PROJECT\", ref=~\"$REF\"} * 3 > 0) or (gitlab_ci_pipeline_status{status!~\"success|running|failed|canceled\", project=~\"$PROJECT\", ref=~\"$REF\"} * 4 > 0)",
+              "format": "time_series",
+              "hide": false,
+              "instant": true,
+              "interval": "",
+              "intervalFactor": 1,
+              "legendFormat": "{{project}} - {{ref}}",
+              "refId": "A"
+            }
+          ],
+          "transparent": true,
+          "type": "stat"
+        }
+      ],
+      "title": "Overview",
+      "type": "row"
     },
     {
-      "cacheTimeout": null,
-      "datasource": null,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 126,
+      "panels": [],
+      "title": "Details",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "decimals": 0,
           "mappings": [
             {
-              "id": 0,
-              "op": "=",
-              "text": "N/A",
-              "type": 1,
-              "value": "null"
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
             }
           ],
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -81,12 +255,10 @@
       "gridPos": {
         "h": 3,
         "w": 2,
-        "x": 2,
-        "y": 0
+        "x": 0,
+        "y": 2
       },
       "id": 107,
-      "interval": null,
-      "links": [],
       "maxDataPoints": 100,
       "options": {
         "colorMode": "background",
@@ -105,12 +277,18 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "7.3.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(gitlab_ci_pipeline_run_count{project=~\"$PROJECT\", ref=~\"$REF\"})",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -119,28 +297,28 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "PIPELINES #",
       "type": "stat"
     },
     {
-      "cacheTimeout": null,
-      "datasource": null,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "decimals": 0,
           "mappings": [
             {
-              "id": 0,
-              "op": "=",
-              "text": "N/A",
-              "type": 1,
-              "value": "null"
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
             }
           ],
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -164,12 +342,10 @@
       "gridPos": {
         "h": 3,
         "w": 2,
-        "x": 4,
-        "y": 0
+        "x": 2,
+        "y": 2
       },
       "id": 117,
-      "interval": null,
-      "links": [],
       "maxDataPoints": 100,
       "options": {
         "colorMode": "background",
@@ -178,7 +354,7 @@
             "lastNotNull"
           ]
         },
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
@@ -188,12 +364,18 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "7.3.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "count(gitlab_ci_pipeline_status{status=\"failed\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} > 0) or vector(0)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "count(gitlab_ci_pipeline_status{status=\"failed\", project=~\"$PROJECT\", ref=~\"$REF\"} > 0) or vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -202,28 +384,28 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "FAILED PIPELINES #",
       "type": "stat"
     },
     {
-      "cacheTimeout": null,
-      "datasource": null,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "decimals": 0,
           "mappings": [
             {
-              "id": 0,
-              "op": "=",
-              "text": "N/A",
-              "type": 1,
-              "value": "null"
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
             }
           ],
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -242,13 +424,11 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 3,
-        "x": 6,
-        "y": 0
+        "w": 5,
+        "x": 4,
+        "y": 2
       },
       "id": 118,
-      "interval": null,
-      "links": [],
       "maxDataPoints": 100,
       "options": {
         "colorMode": "background",
@@ -267,12 +447,18 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "7.3.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}[1h]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"$PROJECT\", ref=~\"$REF\"}[1h]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -281,22 +467,70 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "RUNS # (in the last hour)",
       "type": "stat"
     },
     {
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a",
-        "#4040a0"
-      ],
-      "datasource": null,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisGridShow": true,
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepBefore",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "noValue": "no pipeline runs in selected time range",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
         },
         "overrides": []
       },
@@ -304,159 +538,59 @@
         "h": 6,
         "w": 15,
         "x": 9,
-        "y": 0
+        "y": 2
       },
-      "id": 110,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
+      "id": 114,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": false
         },
-        {
-          "name": "range to text",
-          "value": 2
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
         }
-      ],
-      "polystat": {
-        "animationSpeed": 2500,
-        "columnAutoSize": true,
-        "columns": "",
-        "defaultClickThrough": "",
-        "defaultClickThroughNewTab": false,
-        "defaultClickThroughSanitize": false,
-        "displayLimit": "",
-        "fontAutoColor": true,
-        "fontAutoScale": true,
-        "fontSize": 4,
-        "fontType": "Roboto",
-        "globalDecimals": 2,
-        "globalDisplayMode": "all",
-        "globalDisplayTextTriggeredEmpty": "OK",
-        "globalOperatorName": "current",
-        "globalThresholds": [
-          {
-            "$$hashKey": "object:618",
-            "color": "#299c46",
-            "state": 0,
-            "value": 1
-          },
-          {
-            "$$hashKey": "object:625",
-            "color": "#3274D9",
-            "state": 3,
-            "value": 2
-          },
-          {
-            "$$hashKey": "object:628",
-            "color": "#d44a3a",
-            "state": 2,
-            "value": 3
-          },
-          {
-            "$$hashKey": "object:631",
-            "color": "#959595",
-            "state": 3,
-            "value": 4
-          }
-        ],
-        "globalUnitFormat": "short",
-        "gradientEnabled": true,
-        "hexagonSortByDirection": 1,
-        "hexagonSortByField": "name",
-        "maxMetrics": 0,
-        "polygonBorderColor": "#10111c",
-        "polygonBorderSize": 1,
-        "polygonGlobalFillColor": "#0a50a1",
-        "radius": "",
-        "radiusAutoSize": true,
-        "rowAutoSize": false,
-        "rows": 4,
-        "shape": "hexagon_pointed_top",
-        "tooltipDisplayMode": "all",
-        "tooltipDisplayTextTriggeredEmpty": "OK",
-        "tooltipFontSize": 12,
-        "tooltipFontType": "Roboto",
-        "tooltipPrimarySortDirection": 2,
-        "tooltipPrimarySortField": "thresholdLevel",
-        "tooltipSecondarySortDirection": 2,
-        "tooltipSecondarySortField": "value",
-        "tooltipTimestampEnabled": false,
-        "valueEnabled": false
       },
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "savedComposites": [],
-      "savedOverrides": [
-        {
-          "$$hashKey": "object:591",
-          "clickThrough": "",
-          "colors": [
-            "#299c46",
-            "#e5ac0e",
-            "#bf1b00",
-            "#ffffff"
-          ],
-          "decimals": "",
-          "enabled": true,
-          "label": "OVERRIDE 1",
-          "metricName": "/.*/",
-          "operatorName": "current",
-          "prefix": "",
-          "sanitizeURLEnabled": true,
-          "scaledDecimals": null,
-          "suffix": "",
-          "unitFormat": "short"
-        }
-      ],
+      "pluginVersion": "9.2.1",
       "targets": [
         {
-          "expr": "(gitlab_ci_pipeline_status{status=\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} * 1 > 0) or (gitlab_ci_pipeline_status{status=\"running\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} * 2 > 0) or (gitlab_ci_pipeline_status{status=~\"failed|canceled\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} * 3 > 0) or (gitlab_ci_pipeline_status{status!~\"success|running|failed|canceled\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"} * 4 > 0)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"$PROJECT\", ref=~\"$REF\"}[5m])) by (project, ref) / sum(increase(gitlab_ci_pipeline_run_count{project=~\"$PROJECT\", ref=~\"$REF\"}[5m])) by (project, ref) > 0",
           "format": "time_series",
-          "hide": false,
-          "instant": true,
+          "instant": false,
           "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "                                          {{project}} - {{ref}}",
+          "legendFormat": "{{ project }} - {{ ref }}",
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "",
-      "transparent": true,
-      "type": "grafana-polystat-panel",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ]
+      "title": "PIPELINE RUNS",
+      "type": "timeseries"
     },
     {
-      "cacheTimeout": null,
-      "datasource": null,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "decimals": 0,
           "mappings": [
             {
-              "id": 0,
-              "op": "=",
-              "text": "N/A",
-              "type": 1,
-              "value": "null"
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
             }
           ],
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -482,11 +616,9 @@
         "h": 3,
         "w": 5,
         "x": 0,
-        "y": 3
+        "y": 5
       },
       "id": 108,
-      "interval": null,
-      "links": [],
       "maxDataPoints": 100,
       "options": {
         "colorMode": "background",
@@ -502,44 +634,52 @@
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^Value$/",
+          "fields": "/^avg_pipeline_frequency$/",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "7.3.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "avg(time() - gitlab_ci_pipeline_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "avg(time() - gitlab_ci_pipeline_timestamp{project=~\"$PROJECT\", ref=~\"$REF\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "",
+          "legendFormat": "avg_pipeline_frequency",
+          "range": true,
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Average Pipeline Run Frequency",
       "type": "stat"
     },
     {
-      "cacheTimeout": null,
-      "datasource": null,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {},
           "decimals": 0,
           "mappings": [
             {
-              "id": 0,
-              "op": "=",
-              "text": "N/A",
-              "type": 1,
-              "value": "null"
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
             }
           ],
-          "nullValueMode": "connected",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -565,11 +705,9 @@
         "h": 3,
         "w": 4,
         "x": 5,
-        "y": 3
+        "y": 5
       },
       "id": 106,
-      "interval": null,
-      "links": [],
       "maxDataPoints": 100,
       "options": {
         "colorMode": "background",
@@ -588,12 +726,18 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "7.3.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "avg(gitlab_ci_pipeline_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"})",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "avg(gitlab_ci_pipeline_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -601,454 +745,29 @@
           "refId": "A"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "Average Pipeline Duration",
       "type": "stat"
     },
     {
-      "aliasColors": {},
-      "bars": true,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {},
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false,
+            "inspect": false
+          },
+          "links": [],
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 0,
-        "y": 6
-      },
-      "hiddenSeries": false,
-      "id": 114,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 1,
-      "nullPointMode": "null as zero",
-      "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "7.3.1",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": true,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum(increase(gitlab_ci_pipeline_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}[1m])) by (project, ref) / sum(increase(gitlab_ci_pipeline_run_count{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}[1m])) by (project, ref)",
-          "format": "time_series",
-          "instant": false,
-          "interval": "",
-          "legendFormat": "{{ project }} - {{ ref }}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "PIPELINE RUNS",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "center",
-            "displayMode": "auto",
-            "filterable": false
-          },
-          "links": [],
-          "mappings": [
-            {
-              "from": "",
-              "id": 1,
-              "text": "",
-              "to": "",
-              "type": 1
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ID"
-            },
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "targetBlank": true,
-                    "title": "View pipeline #${__value.numeric}",
-                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/-/pipelines/${__value.numeric}"
-                  }
-                ]
-              },
-              {
-                "id": "custom.displayMode",
-                "value": "color-background"
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "dark-blue",
-                  "mode": "fixed"
-                }
-              },
-              {
-                "id": "custom.width",
-                "value": 85
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Status"
-            },
-            "properties": [
-              {
-                "id": "custom.displayMode",
-                "value": "color-background"
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "from": "",
-                    "id": 1,
-                    "text": "SUCCESS",
-                    "to": "",
-                    "type": 1,
-                    "value": "1"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Job"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "left"
-              },
-              {
-                "id": "custom.width",
-                "value": 230
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Project"
-            },
-            "properties": [
-              {
-                "id": "custom.align",
-                "value": "left"
-              },
-              {
-                "id": "custom.width",
-                "value": 218
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Ref Kind"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 98
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Ref Name"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 122
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Duration"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dtdurations"
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "light-orange",
-                      "value": 900
-                    },
-                    {
-                      "color": "semi-dark-red",
-                      "value": 1200
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "custom.displayMode",
-                "value": "color-background"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Date"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "dtdurations"
-              },
-              {
-                "id": "custom.displayMode",
-                "value": "color-background"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 26,
-        "w": 12,
-        "x": 12,
-        "y": 6
-      },
-      "id": 122,
-      "links": [],
-      "options": {
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Date"
-          }
-        ]
-      },
-      "pluginVersion": "7.3.1",
-      "targets": [
-        {
-          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "refId": "B"
-        },
-        {
-          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "refId": "C"
-        },
-        {
-          "expr": "max(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
-          "format": "table",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "refId": "D"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "SUCCESSFULLY COMPLETED",
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "Value #A": false,
-              "job_name": false
-            },
-            "indexByName": {
-              "Time": 0,
-              "Value #A": 9,
-              "Value #B": 6,
-              "Value #C": 7,
-              "Value #D": 1,
-              "job_name": 3,
-              "kind": 4,
-              "project": 2,
-              "ref": 5,
-              "status": 8
-            },
-            "renameByName": {
-              "Value #A": "Status",
-              "Value #B": "Date",
-              "Value #C": "Duration",
-              "Value #D": "ID",
-              "job_name": "Job",
-              "kind": "Ref Kind",
-              "project": "Project",
-              "ref": "Ref Name",
-              "status": "Status"
-            }
-          }
-        },
-        {
-          "id": "calculateField",
-          "options": {
-            "alias": "Status",
-            "mode": "reduceRow",
-            "reduce": {
-              "include": [
-                "ID"
-              ],
-              "reducer": "count"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "center",
-            "displayMode": "auto",
-            "filterable": false
-          },
-          "links": [],
-          "mappings": [
-            {
-              "from": "",
-              "id": 1,
-              "text": "",
-              "to": "",
-              "type": 1
-            }
-          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1077,8 +796,11 @@
                 ]
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-background"
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
               },
               {
                 "id": "color",
@@ -1100,8 +822,11 @@
             },
             "properties": [
               {
-                "id": "custom.displayMode",
-                "value": "color-background"
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
               },
               {
                 "id": "color",
@@ -1113,84 +838,39 @@
                 "id": "mappings",
                 "value": [
                   {
-                    "from": "",
-                    "id": 1,
-                    "text": "RUNNING",
-                    "to": "",
-                    "type": 1,
-                    "value": "2"
-                  },
-                  {
-                    "from": "",
-                    "id": 2,
-                    "text": "FAILED",
-                    "to": "",
-                    "type": 1,
-                    "value": "3"
-                  },
-                  {
-                    "from": "",
-                    "id": 3,
-                    "text": "CANCELED",
-                    "to": "",
-                    "type": 1,
-                    "value": "4"
-                  },
-                  {
-                    "from": "",
-                    "id": 4,
-                    "text": "CREATED",
-                    "to": "",
-                    "type": 1,
-                    "value": "5"
-                  },
-                  {
-                    "from": "",
-                    "id": 5,
-                    "text": "WAITING FOR RESOURCE",
-                    "to": "",
-                    "type": 1,
-                    "value": "6"
-                  },
-                  {
-                    "from": "",
-                    "id": 6,
-                    "text": "PREPARING",
-                    "to": "",
-                    "type": 1,
-                    "value": "7"
-                  },
-                  {
-                    "from": "",
-                    "id": 7,
-                    "text": "PENDING",
-                    "to": "",
-                    "type": 1,
-                    "value": "8"
-                  },
-                  {
-                    "from": "",
-                    "id": 8,
-                    "text": "SKIPPED",
-                    "to": "",
-                    "type": 1,
-                    "value": "9"
-                  },
-                  {
-                    "from": "",
-                    "id": 9,
-                    "text": "MANUAL",
-                    "to": "",
-                    "type": 1,
-                    "value": "10"
-                  },
-                  {
-                    "from": "",
-                    "id": 10,
-                    "text": "SCHEDULED",
-                    "to": "",
-                    "type": 1,
-                    "value": "11"
+                    "options": {
+                      "2": {
+                        "text": "RUNNING"
+                      },
+                      "3": {
+                        "text": "FAILED"
+                      },
+                      "4": {
+                        "text": "CANCELED"
+                      },
+                      "5": {
+                        "text": "CREATED"
+                      },
+                      "6": {
+                        "text": "WAITING FOR RESOURCE"
+                      },
+                      "7": {
+                        "text": "PREPARING"
+                      },
+                      "8": {
+                        "text": "PENDING"
+                      },
+                      "9": {
+                        "text": "SKIPPED"
+                      },
+                      "10": {
+                        "text": "MANUAL"
+                      },
+                      "11": {
+                        "text": "SCHEDULED"
+                      }
+                    },
+                    "type": "value"
                   }
                 ]
               },
@@ -1311,8 +991,11 @@
                 }
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-background"
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
               }
             ]
           },
@@ -1327,8 +1010,11 @@
                 "value": "dtdurations"
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-background"
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
               }
             ]
           }
@@ -1338,11 +1024,19 @@
         "h": 22,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 8
       },
       "id": 120,
-      "links": [],
       "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
         "showHeader": true,
         "sortBy": [
           {
@@ -1351,10 +1045,14 @@
           }
         ]
       },
-      "pluginVersion": "7.3.1",
+      "pluginVersion": "10.4.2",
       "targets": [
         {
-          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1364,7 +1062,11 @@
           "refId": "B"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1374,7 +1076,11 @@
           "refId": "C"
         },
         {
-          "expr": "(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"running\"}) by (project, ref, kind) * 2) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"failed\"}) by (project, ref, kind) * 3) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"canceled\"}) by (project, ref, kind) * 4) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"created\"}) by (project, ref, kind) * 5) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"waiting_for_resource\"}) by (project, ref, kind) * 6) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"preparing\"}) by (project, ref, kind) * 7) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"pending\"}) by (project, ref, kind) * 8) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"skipped\"}) by (project, ref, kind) * 9) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"manual\"}) by (project, ref, kind) * 10) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\", status=~\"scheduled\"}) by (project, ref, kind) * 11) > 0",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"running\"}) by (project, ref, kind) * 2) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"failed\"}) by (project, ref, kind) * 3) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"canceled\"}) by (project, ref, kind) * 4) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"created\"}) by (project, ref, kind) * 5) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"waiting_for_resource\"}) by (project, ref, kind) * 6) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"preparing\"}) by (project, ref, kind) * 7) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"pending\"}) by (project, ref, kind) * 8) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"skipped\"}) by (project, ref, kind) * 9) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"manual\"}) by (project, ref, kind) * 10) > 0 or\n(max(gitlab_ci_pipeline_status{project=~\"$PROJECT\", ref=~\"$REF\", status=~\"scheduled\"}) by (project, ref, kind) * 11) > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1384,7 +1090,11 @@
           "refId": "A"
         },
         {
-          "expr": "max(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind, job_name) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"($OWNER).*\",project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind, job_name) > 0)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max(gitlab_ci_pipeline_id{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind, job_name) unless (max(gitlab_ci_pipeline_status{status=~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind, job_name) > 0)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1392,8 +1102,6 @@
           "refId": "D"
         }
       ],
-      "timeFrom": null,
-      "timeShift": null,
       "title": "RUNNING, FAILED OR NOT COMPLETED",
       "transformations": [
         {
@@ -1435,124 +1143,463 @@
         }
       ],
       "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false,
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ID"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "View pipeline #${__value.numeric}",
+                    "url": "https://${GITLAB_HOST}/${__data.fields.project}/pipelines/${__value.numeric}"
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 85
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Status"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "1": {
+                        "text": "SUCCESS"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Job"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 230
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Project"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 218
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Kind"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 98
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Ref Name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 122
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Duration"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "light-orange",
+                      "value": 900
+                    },
+                    {
+                      "color": "semi-dark-red",
+                      "value": 1200
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Date"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 22,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 122,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Date"
+          }
+        ]
+      },
+      "pluginVersion": "10.4.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "-max(time() - gitlab_ci_pipeline_timestamp{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max(gitlab_ci_pipeline_duration_seconds{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max(gitlab_ci_pipeline_id{project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) unless (max(gitlab_ci_pipeline_status{status!~\"success\", project=~\"$PROJECT\", ref=~\"$REF\"}) by (project, ref, kind) > 0)",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "D"
+        }
+      ],
+      "title": "SUCCESSFULLY COMPLETED",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value #A": false,
+              "job_name": false
+            },
+            "indexByName": {
+              "Time": 0,
+              "Value #A": 9,
+              "Value #B": 6,
+              "Value #C": 7,
+              "Value #D": 1,
+              "job_name": 3,
+              "kind": 4,
+              "project": 2,
+              "ref": 5,
+              "status": 8
+            },
+            "renameByName": {
+              "Value #A": "Status",
+              "Value #B": "Date",
+              "Value #C": "Duration",
+              "Value #D": "ID",
+              "job_name": "Job",
+              "kind": "Ref Kind",
+              "project": "Project",
+              "ref": "Ref Name",
+              "status": "Status"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Status",
+            "mode": "reduceRow",
+            "reduce": {
+              "include": [
+                "ID"
+              ],
+              "reducer": "count"
+            }
+          }
+        }
+      ],
+      "type": "table"
     }
   ],
-  "refresh": "10s",
-  "schemaVersion": 26,
-  "style": "dark",
-  "tags": [],
+  "refresh": "5m",
+  "schemaVersion": 39,
+  "tags": [
+    "GitLab"
+  ],
   "templating": {
     "list": [
       {
         "current": {
           "selected": false,
-          "text": "gitlab.com",
-          "value": "gitlab.com"
+          "text": "prometheus",
+          "value": "prometheus"
         },
-        "error": null,
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
         "hide": 2,
-        "label": null,
         "name": "GITLAB_HOST",
+        "query": "${VAR_GITLAB_HOST}",
+        "skipUrlSync": false,
+        "type": "constant",
+        "current": {
+          "value": "${VAR_GITLAB_HOST}",
+          "text": "${VAR_GITLAB_HOST}",
+          "selected": false
+        },
         "options": [
           {
-            "selected": true,
-            "text": "gitlab.com",
-            "value": "gitlab.com"
+            "value": "${VAR_GITLAB_HOST}",
+            "text": "${VAR_GITLAB_HOST}",
+            "selected": false
           }
-        ],
-        "query": "gitlab.com",
-        "skipUrlSync": false,
-        "type": "constant"
+        ]
       },
       {
         "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
         },
-        "datasource": "prometheus",
         "definition": "label_values(gitlab_ci_pipeline_id, project)",
-        "error": null,
         "hide": 0,
         "includeAll": true,
         "label": "owner",
         "multi": true,
         "name": "OWNER",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id, project)",
-        "refresh": 1,
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_id, project)",
+          "refId": "prometheus-OWNER-Variable-Query"
+        },
+        "refresh": 2,
         "regex": "/(.*)\\/.*$/",
         "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allValue": "",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\"}, project)",
-        "error": null,
-        "hide": 0,
-        "includeAll": true,
-        "label": "project",
-        "multi": true,
-        "name": "PROJECT",
-        "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\"}, project)",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "tagValuesQuery": "",
-        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
       },
       {
         "allValue": ".*",
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
         },
-        "datasource": "prometheus",
-        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, ref)",
-        "error": null,
+        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, project)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "project",
+        "multi": true,
+        "name": "PROJECT",
+        "options": [],
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_id{project=~\"$OWNER.*\"}, project)",
+          "refId": "prometheus-PROJECT-Variable-Query"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(gitlab_ci_pipeline_id{project=~\"$PROJECT\"}, ref)",
         "hide": 0,
         "includeAll": true,
         "label": "ref",
         "multi": true,
         "name": "REF",
         "options": [],
-        "query": "label_values(gitlab_ci_pipeline_id{project=~\"($OWNER).*\",project=~\"$PROJECT\"}, ref)",
-        "refresh": 1,
+        "query": {
+          "query": "label_values(gitlab_ci_pipeline_id{project=~\"$PROJECT\"}, ref)",
+          "refId": "prometheus-REF-Variable-Query"
+        },
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
-        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -1588,7 +1635,8 @@
     ]
   },
   "timezone": "",
-  "title": "GitLab CI pipelines",
+  "title": "GitLab CI Pipelines",
   "uid": "gitlab_ci_pipelines",
-  "version": 2
+  "version": 10,
+  "weekStart": ""
 }
