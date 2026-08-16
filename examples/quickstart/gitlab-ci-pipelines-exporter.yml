@@ -3,8 +3,8 @@ log:
   level: debug
 
 gitlab:
-  url: https://gitlab.com
-  token: <your_token>
+  url: https://https://gitlab.cee.redhat.com/
+  token: ${GCPE_GITLAB_TOKEN}
 
 # Pull jobs related metrics on all projects
 project_defaults:
