@@ -21,19 +21,19 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 			_, _ = fmt.Fprint(w, `[{"id":1}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			_, _ = fmt.Fprint(w, `{"id":1,"created_at":"2016-08-11T11:27:00.085Z", "started_at":"2016-08-11T11:28:00.085Z",
 			"duration":300,"queued_duration":60,"status":"running","coverage":"30.2","source":"schedule"}`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/variables",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			_, _ = fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			_, _ = fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
@@ -56,12 +56,13 @@ func TestPullRefMetricsSucceed(t *testing.T) {
 	// Check if all the metrics exist
 	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "schedule",
+		"kind":           string(schemas.RefKindBranch),
+		"project":        "foo",
+		"source_project": "foo",
+		"ref":            "bar",
+		"topics":         "",
+		"variables":      "foo:bar",
+		"source":         "schedule",
 	}
 
 	runCount := schemas.Metric{
@@ -122,12 +123,12 @@ func TestPullRefMetricsUpdatingPipeline(t *testing.T) {
 			_, _ = fmt.Fprint(w, `[{"id":1}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			_, _ = fmt.Fprint(w, apiPipeline)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/variables",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			_, _ = fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
@@ -137,12 +138,13 @@ func TestPullRefMetricsUpdatingPipeline(t *testing.T) {
 	p.Pull.Pipeline.Variables.Enabled = true
 
 	labels := map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "pipeline",
+		"kind":           string(schemas.RefKindBranch),
+		"project":        "foo",
+		"source_project": "foo",
+		"ref":            "bar",
+		"topics":         "",
+		"variables":      "foo:bar",
+		"source":         "pipeline",
 	}
 
 	// when
@@ -185,12 +187,13 @@ func TestPullRefMetricsUpdatingPipeline(t *testing.T) {
 	}`
 
 	labels = map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "pipeline",
+		"kind":           string(schemas.RefKindBranch),
+		"project":        "foo",
+		"source_project": "foo",
+		"ref":            "bar",
+		"topics":         "",
+		"variables":      "foo:bar",
+		"source":         "pipeline",
 	}
 
 	// when again
@@ -231,19 +234,19 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 			_, _ = fmt.Fprint(w, `[{"id":1}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			_, _ = fmt.Fprint(w, `{"id":1,"created_at":"2016-08-11T11:27:00.085Z", "started_at":"2016-08-11T11:28:00.085Z",
 			"duration":300,"queued_duration":60,"status":"success","coverage":"30.2","source":"schedule"}`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/variables",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			_, _ = fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/test_report",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/test_report",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			_, _ = fmt.Fprint(w, `{"total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_suites": [{"name": "Secure", "total_time": 5, "total_count": 1, "success_count": 1, "failed_count": 0, "skipped_count": 0, "error_count": 0, "test_cases": [{"status": "success", "name": "Security Reports can create an auto-remediation MR", "classname": "vulnerability_management_spec", "execution_time": 5, "system_output": null, "stack_trace": null}]}]}`)
@@ -266,12 +269,13 @@ func TestPullRefTestReportMetrics(t *testing.T) {
 	// Check if all the metrics exist
 	metrics, _ := c.Store.Metrics(ctx)
 	labels := map[string]string{
-		"kind":      string(schemas.RefKindBranch),
-		"project":   "foo",
-		"ref":       "bar",
-		"topics":    "",
-		"variables": "foo:bar",
-		"source":    "schedule",
+		"kind":           string(schemas.RefKindBranch),
+		"project":        "foo",
+		"source_project": "foo",
+		"ref":            "bar",
+		"topics":         "",
+		"variables":      "foo:bar",
+		"source":         "schedule",
 	}
 
 	trTotalTime := schemas.Metric{
@@ -389,12 +393,12 @@ func TestPullRefMetricsMergeRequestPipeline(t *testing.T) {
 			_, _ = fmt.Fprint(w, `[{"id":1}]`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1",
 		func(w http.ResponseWriter, r *http.Request) {
 			_, _ = fmt.Fprint(w, `{"id":1,"updated_at":"2016-08-11T11:28:34.085Z","duration":300,"status":"running","coverage":"30.2","source":"schedule"}`)
 		})
 
-	mux.HandleFunc("/api/v4/projects/foo/pipelines/1/variables",
+	mux.HandleFunc("/api/v4/projects/0/pipelines/1/variables",
 		func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "GET", r.Method)
 			_, _ = fmt.Fprint(w, `[{"key":"foo","value":"bar"}]`)

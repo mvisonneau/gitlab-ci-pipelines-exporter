@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	log "github.com/sirupsen/logrus"
 	goGitlab "gitlab.com/gitlab-org/api/client-go"
 	"go.opentelemetry.io/otel"
@@ -19,16 +19,17 @@ import (
 )
 
 // GetRefPipeline ..
-func (c *Client) GetRefPipeline(ctx context.Context, ref schemas.Ref, pipelineID int64) (p schemas.Pipeline, err error) {
+func (c *Client) GetRefPipeline(ctx context.Context, ref schemas.Ref, projectID int64, pipelineID int64) (p schemas.Pipeline, err error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipeline")
 	defer span.End()
 	span.SetAttributes(attribute.String("project_name", ref.Project.Name))
 	span.SetAttributes(attribute.String("ref_name", ref.Name))
+	span.SetAttributes(attribute.Int64("project_id", projectID))
 	span.SetAttributes(attribute.Int64("pipeline_id", pipelineID))
 
 	c.rateLimit(ctx)
 
-	gp, resp, err := c.Pipelines.GetPipeline(ref.Project.Name, pipelineID, goGitlab.WithContext(ctx))
+	gp, resp, err := c.Pipelines.GetPipeline(projectID, pipelineID, goGitlab.WithContext(ctx))
 	if err != nil || gp == nil {
 		return schemas.Pipeline{}, fmt.Errorf("could not read content of pipeline %s - %s | %s", ref.Project.Name, ref.Name, err.Error())
 	}
@@ -87,6 +88,103 @@ func (c *Client) GetProjectPipelines(
 	return pipelines, resp, nil
 }
 
+// ListProjectMergeRequests ..
+func (c *Client) ListProjectMergeRequests(
+	ctx context.Context,
+	projectName string,
+	options *goGitlab.ListProjectMergeRequestsOptions,
+) (
+	[]*goGitlab.BasicMergeRequest,
+	*goGitlab.Response,
+	error,
+) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:ListProjectMergeRequests")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", projectName))
+
+	fields := log.Fields{
+		"project-name": projectName,
+	}
+
+	if options.Page == 0 {
+		options.Page = 1
+	}
+
+	if options.PerPage == 0 {
+		options.PerPage = 100
+	}
+
+	fields["page"] = options.Page
+	log.WithFields(fields).Trace("listing project merge requests")
+
+	c.rateLimit(ctx)
+
+	mrs, resp, err := c.MergeRequests.ListProjectMergeRequests(projectName, options, goGitlab.WithContext(ctx))
+	if err != nil {
+		return nil, resp, fmt.Errorf("error listing project merge requests for project %s: %s", projectName, err.Error())
+	}
+
+	c.requestsRemaining(resp)
+
+	return mrs, resp, nil
+}
+
+// GetMergeRequestPipelines ..
+func (c *Client) GetMergeRequestPipelines(
+	ctx context.Context,
+	projectName string,
+	mergeRequest int64,
+	options *goGitlab.ListOptions,
+) (
+	[]*goGitlab.PipelineInfo,
+	*goGitlab.Response,
+	error,
+) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetMergeRequestPipelines")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", projectName))
+
+	fields := log.Fields{
+		"project-name": projectName,
+	}
+
+	if options.Page == 0 {
+		options.Page = 1
+	}
+
+	if options.PerPage == 0 {
+		options.PerPage = 100
+	}
+
+	fields["page"] = options.Page
+	log.WithFields(fields).Trace("listing merge request pipelines")
+
+	params := map[string]string{
+		"page":     fmt.Sprint(options.Page),
+		"per_page": fmt.Sprint(options.PerPage),
+	}
+	optionFunc := func(req *retryablehttp.Request) error {
+		for k, v := range params {
+			q := req.URL.Query()
+			q.Add(k, v)
+			req.URL.RawQuery = q.Encode()
+		}
+
+		return nil
+	}
+
+	c.rateLimit(ctx)
+
+	pipelines, resp, err := c.MergeRequests.ListMergeRequestPipelines(projectName, mergeRequest, optionFunc, goGitlab.WithContext(ctx))
+	if err != nil {
+		return nil, resp, fmt.Errorf("error merge request project pipelines for project %s!%d: %s", projectName, mergeRequest, err.Error())
+	}
+
+	c.requestsRemaining(resp)
+
+	return pipelines, resp, nil
+}
+
 // GetRefPipelineVariablesAsConcatenatedString ..
 func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context, ref schemas.Ref, pipeline schemas.Pipeline) (string, error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipelineVariablesAsConcatenatedString")
@@ -124,7 +222,7 @@ func (c *Client) GetRefPipelineVariablesAsConcatenatedString(ctx context.Context
 
 	c.rateLimit(ctx)
 
-	variables, resp, err := c.Pipelines.GetPipelineVariables(ref.Project.Name, pipeline.ID, goGitlab.WithContext(ctx))
+	variables, resp, err := c.Pipelines.GetPipelineVariables(ref.Project.ID, pipeline.ID, goGitlab.WithContext(ctx))
 	if err != nil {
 		return "", fmt.Errorf("could not fetch pipeline variables for %d: %s", pipeline.ID, err.Error())
 	}
@@ -301,6 +399,106 @@ func (c *Client) GetRefsFromPipelines(ctx context.Context, p schemas.Project, re
 	return
 }
 
+// GetMergeRequestRefsFromPipelines ..
+func (c *Client) GetMergeRequestRefsFromPipelines(ctx context.Context, p schemas.Project) (refs schemas.Refs, err error) {
+	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetMergeRequestRefsFromPipelines")
+	defer span.End()
+	span.SetAttributes(attribute.String("project_name", p.Name))
+	span.SetAttributes(attribute.String("ref_kind", "merge-request"))
+
+	refs = make(schemas.Refs)
+
+	options := &goGitlab.ListProjectMergeRequestsOptions{
+		ListOptions: goGitlab.ListOptions{
+			Page:    1,
+			PerPage: 100,
+		},
+		OrderBy: utils.Ptr("updated_at"),
+	}
+
+	var (
+		mostRecent, maxAgeSeconds uint
+		limitToMostRecent         bool
+	)
+
+	maxAgeSeconds = p.Pull.Refs.MergeRequests.MaxAgeSeconds
+	mostRecent = p.Pull.Refs.MergeRequests.MostRecent
+
+	if mostRecent > 0 {
+		limitToMostRecent = true
+	}
+
+	if maxAgeSeconds > 0 {
+		t := time.Now().Add(-time.Second * time.Duration(maxAgeSeconds))
+		options.UpdatedAfter = &t
+	}
+
+	for {
+		var (
+			mrs  []*goGitlab.BasicMergeRequest
+			resp *goGitlab.Response
+		)
+
+		mrs, resp, err = c.ListProjectMergeRequests(ctx, p.Name, options)
+		if err != nil {
+			return
+		}
+
+		for _, mr := range mrs {
+			refName := fmt.Sprint(mr.IID)
+
+			ref := schemas.NewRef(
+				p,
+				schemas.RefKindMergeRequest,
+				refName,
+			)
+
+			if mr.SourceProjectID == mr.TargetProjectID {
+				ref.SourceProject = &p
+			} else {
+				var (
+					goProject     *goGitlab.Project
+					sourceProject schemas.Project
+				)
+
+				goProject, err = c.GetProjectByID(ctx, mr.SourceProjectID)
+				if err != nil {
+					return
+				}
+				sourceProject = p
+				sourceProject.Name = goProject.PathWithNamespace
+
+				ref.SourceProject = &sourceProject
+			}
+
+			if _, ok := refs[ref.Key()]; !ok {
+				log.WithFields(log.Fields{
+					"project-name": ref.Project.Name,
+					"ref":          ref.Name,
+					"ref-kind":     ref.Kind,
+				}).Trace("found ref")
+
+				refs[ref.Key()] = ref
+
+				if limitToMostRecent {
+					mostRecent--
+					if mostRecent <= 0 {
+						return
+					}
+				}
+			}
+		}
+
+		if resp.CurrentPage >= resp.NextPage {
+			break
+		}
+
+		options.Page = resp.NextPage
+	}
+
+	return
+}
+
 // GetRefPipelineTestReport ..
 func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) (schemas.TestReport, error) {
 	ctx, span := otel.Tracer(tracerName).Start(ctx, "gitlab:GetRefPipelineTestReport")
@@ -330,8 +528,8 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 	c.rateLimit(ctx)
 
 	type pipelineDef struct {
-		projectNameOrID string
-		pipelineID      int64
+		projectID  int64
+		pipelineID int64
 	}
 
 	var currentPipeline pipelineDef
@@ -345,7 +543,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 		ErrorCount:   0,
 		TestSuites:   []schemas.TestSuite{},
 	}
-	childPipelines := []pipelineDef{{ref.Project.Name, ref.LatestPipeline.ID}}
+	childPipelines := []pipelineDef{{ref.LatestPipeline.ProjectID, ref.LatestPipeline.ID}}
 
 	for {
 		if len(childPipelines) == 0 {
@@ -354,7 +552,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 
 		currentPipeline, childPipelines = childPipelines[0], childPipelines[1:]
 
-		testReport, resp, err := c.Pipelines.GetPipelineTestReport(currentPipeline.projectNameOrID, currentPipeline.pipelineID, goGitlab.WithContext(ctx))
+		testReport, resp, err := c.Pipelines.GetPipelineTestReport(currentPipeline.projectID, currentPipeline.pipelineID, goGitlab.WithContext(ctx))
 		if err != nil {
 			return schemas.TestReport{}, fmt.Errorf("could not fetch test report for %d: %s", ref.LatestPipeline.ID, err.Error())
 		}
@@ -374,7 +572,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 		}
 
 		if ref.Project.Pull.Pipeline.TestReports.FromChildPipelines.Enabled {
-			foundBridges, err := c.ListPipelineBridges(ctx, currentPipeline.projectNameOrID, currentPipeline.pipelineID)
+			foundBridges, err := c.ListPipelineBridges(ctx, currentPipeline.projectID, currentPipeline.pipelineID)
 			if err != nil {
 				return baseTestReport, err
 			}
@@ -384,7 +582,7 @@ func (c *Client) GetRefPipelineTestReport(ctx context.Context, ref schemas.Ref) 
 					continue
 				}
 
-				childPipelines = append(childPipelines, pipelineDef{strconv.FormatInt(foundBridge.DownstreamPipeline.ProjectID, 10), foundBridge.DownstreamPipeline.ID})
+				childPipelines = append(childPipelines, pipelineDef{foundBridge.DownstreamPipeline.ProjectID, foundBridge.DownstreamPipeline.ID})
 			}
 		}
 	}

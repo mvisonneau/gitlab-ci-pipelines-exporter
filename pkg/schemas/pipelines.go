@@ -12,6 +12,7 @@ import (
 // Pipeline ..
 type Pipeline struct {
 	ID                    int64
+	ProjectID             int64
 	Coverage              float64
 	Timestamp             float64
 	DurationSeconds       float64
@@ -84,6 +85,7 @@ func NewPipeline(ctx context.Context, gp goGitlab.Pipeline) Pipeline {
 
 	pipeline := Pipeline{
 		ID:                    gp.ID,
+		ProjectID:             gp.ProjectID,
 		Coverage:              coverage,
 		Timestamp:             timestamp,
 		DurationSeconds:       float64(gp.Duration),

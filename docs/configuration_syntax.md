@@ -284,6 +284,10 @@ project_defaults:
         # (optional, default: false)
         enabled: false
 
+        # Monitor merge request pipelines on source projects as well
+        # (optional, default: false)
+        include_source_pipelines: false
+
         # Only keep most 'n' recently updated merge requests
         # (optional, default: 0 -- disabled/keep every merge request)
         most_recent: 0
