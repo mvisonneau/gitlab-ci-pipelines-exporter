@@ -293,6 +293,10 @@ project_defaults:
         max_age_seconds: 0
 
     pipeline:
+      # Number of most recent pipelines to pull per ref
+      # (optional, default: 1)
+      per_ref: 1
+
       jobs:
         # Whether to attempt retrieving job level metrics from pipelines.
         # Increases the number of outputed metrics significantly!
@@ -408,6 +412,10 @@ projects:
           max_age_seconds: 0
 
       pipeline:
+        # Number of most recent pipelines to pull per ref
+        # (optional, default: 1)
+        per_ref: 1
+
         jobs:
           # Whether to attempt retrieving job level metrics from pipelines.
           # Increases the number of outputed metrics significantly!
@@ -539,6 +547,10 @@ wildcards:
           max_age_seconds: 0
 
       pipeline:
+        # Number of most recent pipelines to pull per ref
+        # (optional, default: 1)
+        per_ref: 1
+
         jobs:
           # Whether to attempt retrieving job level metrics from pipelines.
           # Increases the number of outputed metrics significantly!
