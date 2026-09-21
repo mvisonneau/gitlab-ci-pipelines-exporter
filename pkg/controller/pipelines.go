@@ -111,10 +111,16 @@ func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Re
 		}
 	}
 
-	var cachedPipeline schemas.Pipeline
+	cachedPipeline := schemas.Pipeline{ID: pipeline.ID}
+	currentRef := ref
+	// One poll processes multiple pipelines from the same ref snapshot.
+	if err = c.Store.GetRef(ctx, &currentRef); err != nil {
+		return err
+	}
+	formerPipeline := ref.LatestPipeline
 
-	if _ = c.Store.GetPipeline(ctx, &cachedPipeline); cachedPipeline.ID == 0 || !reflect.DeepEqual(pipeline, cachedPipeline) {
-		formerPipeline := ref.LatestPipeline
+	if err = c.Store.GetPipeline(ctx, &cachedPipeline); err != nil || !reflect.DeepEqual(pipeline, cachedPipeline) ||
+		!reflect.DeepEqual(pipeline, ref.LatestPipeline) || !reflect.DeepEqual(pipeline, currentRef.LatestPipeline) {
 		ref.LatestPipeline = pipeline
 
 		if err = c.Store.SetPipeline(ctx, pipeline); err != nil {
@@ -125,72 +131,72 @@ func (c *Controller) ProcessPipelinesMetrics(ctx context.Context, ref schemas.Re
 		if err = c.Store.SetRef(ctx, ref); err != nil {
 			return err
 		}
+	}
 
-		labels := ref.DefaultLabelsValues()
+	// Metric writes can fail independently after the ref and pipeline cache are stored.
+	ref.LatestPipeline = pipeline
 
-		// If the metric does not exist yet, start with 0 instead of 1
-		// this could cause some false positives in prometheus
-		// when restarting the exporter otherwise
-		runCount := schemas.Metric{
-			Kind:   schemas.MetricKindRunCount,
-			Labels: labels,
-		}
+	labels := ref.DefaultLabelsValues()
 
-		storeGetMetric(ctx, c.Store, &runCount)
+	// If the metric does not exist yet, start with 0 instead of 1
+	// this could cause some false positives in prometheus
+	// when restarting the exporter otherwise
+	runCount := schemas.Metric{
+		Kind:   schemas.MetricKindRunCount,
+		Labels: labels,
+	}
 
-		if formerPipeline.ID != 0 && formerPipeline.ID != ref.LatestPipeline.ID {
-			runCount.Value++
-		}
+	storeGetMetric(ctx, c.Store, &runCount)
 
-		storeSetMetric(ctx, c.Store, runCount)
+	if formerPipeline.ID != 0 && formerPipeline.ID != ref.LatestPipeline.ID {
+		runCount.Value++
+	}
 
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindCoverage,
-			Labels: labels,
-			Value:  pipeline.Coverage,
-		})
+	storeSetMetric(ctx, c.Store, runCount)
 
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindID,
-			Labels: labels,
-			Value:  float64(pipeline.ID),
-		})
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindCoverage,
+		Labels: labels,
+		Value:  pipeline.Coverage,
+	})
 
-		emitStatusMetric(
-			ctx,
-			c.Store,
-			schemas.MetricKindStatus,
-			labels,
-			statusesList[:],
-			pipeline.Status,
-			ref.Project.OutputSparseStatusMetrics,
-		)
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindID,
+		Labels: labels,
+		Value:  float64(pipeline.ID),
+	})
 
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindDurationSeconds,
-			Labels: labels,
-			Value:  pipeline.DurationSeconds,
-		})
+	emitStatusMetric(
+		ctx,
+		c.Store,
+		schemas.MetricKindStatus,
+		labels,
+		statusesList[:],
+		pipeline.Status,
+		ref.Project.OutputSparseStatusMetrics,
+	)
 
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindQueuedDurationSeconds,
-			Labels: labels,
-			Value:  pipeline.QueuedDurationSeconds,
-		})
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindDurationSeconds,
+		Labels: labels,
+		Value:  pipeline.DurationSeconds,
+	})
 
-		storeSetMetric(ctx, c.Store, schemas.Metric{
-			Kind:   schemas.MetricKindTimestamp,
-			Labels: labels,
-			Value:  pipeline.Timestamp,
-		})
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindQueuedDurationSeconds,
+		Labels: labels,
+		Value:  pipeline.QueuedDurationSeconds,
+	})
 
-		if ref.Project.Pull.Pipeline.Jobs.Enabled {
-			if err := c.PullRefPipelineJobsMetrics(ctx, ref); err != nil {
-				return err
-			}
-		}
-	} else {
-		if err := c.PullRefMostRecentJobsMetrics(ctx, ref); err != nil {
+	storeSetMetric(ctx, c.Store, schemas.Metric{
+		Kind:   schemas.MetricKindTimestamp,
+		Labels: labels,
+		Value:  pipeline.Timestamp,
+	})
+
+	// Jobs and downstream bridges can change without changing the parent pipeline summary.
+	if ref.Project.Pull.Pipeline.Jobs.Enabled {
+		if err := c.PullRefPipelineJobsMetrics(ctx, ref); err != nil {
 			return err
 		}
 	}
