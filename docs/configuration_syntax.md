@@ -60,6 +60,14 @@ redis:
   # environment variable)
   url: redis://foo:bar@redis.example.net:6379
 
+  # Duration after which objects which have not been refreshed are
+  # considered expired and removed by the garbage collector
+  # (optional, can also be configured using the --redis-{project,ref,metric}-ttl
+  # flags or $GCPE_REDIS_{PROJECT,REF,METRIC}_TTL environment variables)
+  project_ttl: 168h # (default: 168h)
+  ref_ttl: 1h # (default: 1h)
+  metric_ttl: 1h # (default: 1h)
+
 # URL and Token with sufficient permissions to access
 # your GitLab's projects pipelines informations (optional)
 gitlab:

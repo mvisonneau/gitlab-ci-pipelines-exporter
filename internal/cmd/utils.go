@@ -132,6 +132,18 @@ func configCliOverrides(cmd *cli.Command, cfg *config.Config) {
 		cfg.Redis.URL = cmd.String("redis-url")
 	}
 
+	if cmd.IsSet("redis-project-ttl") {
+		cfg.Redis.ProjectTTL = cmd.Duration("redis-project-ttl")
+	}
+
+	if cmd.IsSet("redis-ref-ttl") {
+		cfg.Redis.RefTTL = cmd.Duration("redis-ref-ttl")
+	}
+
+	if cmd.IsSet("redis-metric-ttl") {
+		cfg.Redis.MetricTTL = cmd.Duration("redis-metric-ttl")
+	}
+
 	if healthURL := cmd.String("gitlab-health-url"); healthURL != "" {
 		cfg.Gitlab.HealthURL = healthURL
 		cfg.Gitlab.EnableHealthCheck = true

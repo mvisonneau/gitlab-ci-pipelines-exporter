@@ -55,6 +55,21 @@ func NewApp(version string, start time.Time) (app *cli.Command) {
 						Sources: cli.EnvVars("GCPE_REDIS_URL"),
 						Usage:   "redis `url` for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) (overrides config file parameter)",
 					},
+					&cli.DurationFlag{
+						Name:    "redis-project-ttl",
+						Sources: cli.EnvVars("GCPE_REDIS_PROJECT_TTL"),
+						Usage:   "`duration` after which projects not refreshed are garbage collected from redis (overrides config file parameter)",
+					},
+					&cli.DurationFlag{
+						Name:    "redis-ref-ttl",
+						Sources: cli.EnvVars("GCPE_REDIS_REF_TTL"),
+						Usage:   "`duration` after which refs not refreshed are garbage collected from redis (overrides config file parameter)",
+					},
+					&cli.DurationFlag{
+						Name:    "redis-metric-ttl",
+						Sources: cli.EnvVars("GCPE_REDIS_METRIC_TTL"),
+						Usage:   "`duration` after which metrics not refreshed are garbage collected from redis (overrides config file parameter)",
+					},
 					&cli.StringFlag{
 						Name:    "gitlab-token",
 						Sources: cli.EnvVars("GCPE_GITLAB_TOKEN"),
