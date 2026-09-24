@@ -293,6 +293,9 @@ USAGE:
 OPTIONS:
    --config file, -c file        config file (default: "./gitlab-ci-pipelines-exporter.yml") [$GCPE_CONFIG]
    --redis-url url               redis url for an HA setup (format: redis[s]://[:password@]host[:port][/db-number][?option=value]) (overrides config file parameter) [$GCPE_REDIS_URL]
+   --redis-project-ttl duration  duration after which projects not refreshed are garbage collected from redis (overrides config file parameter) [$GCPE_REDIS_PROJECT_TTL]
+   --redis-ref-ttl duration      duration after which refs not refreshed are garbage collected from redis (overrides config file parameter) [$GCPE_REDIS_REF_TTL]
+   --redis-metric-ttl duration   duration after which metrics not refreshed are garbage collected from redis (overrides config file parameter) [$GCPE_REDIS_METRIC_TTL]
    --gitlab-token token          GitLab API access token (overrides config file parameter) [$GCPE_GITLAB_TOKEN]
    --webhook-secret-token token  token used to authenticate legitimate requests (overrides config file parameter) [$GCPE_WEBHOOK_SECRET_TOKEN]
    --help, -h                    show help (default: false)
