@@ -2,6 +2,8 @@ package controller
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
 
@@ -239,11 +241,15 @@ func (c *Controller) GarbageCollectRefs(ctx context.Context) error {
 	}
 
 	expectedRefs := make(map[schemas.RefKey]bool)
+	failedProjects := make(map[schemas.ProjectKey]bool)
+	var discoveryErrors []error
 
 	for _, p := range projects {
 		refs, err := c.GetRefs(ctx, p)
 		if err != nil {
-			return err
+			failedProjects[p.Key()] = true
+			discoveryErrors = append(discoveryErrors, fmt.Errorf("getting refs for project %q: %w", p.Name, err))
+			continue
 		}
 
 		for _, ref := range refs {
@@ -258,6 +264,11 @@ func (c *Controller) GarbageCollectRefs(ctx context.Context) error {
 	}
 
 	for k, ref := range storedRefs {
+		// Failed discovery cannot establish which refs are obsolete, even on a 404.
+		if failedProjects[ref.Project.Key()] {
+			continue
+		}
+
 		if _, expected := expectedRefs[k]; !expected {
 			if err = deleteRef(ctx, c.Store, ref, "not-expected"); err != nil {
 				return err
@@ -265,7 +276,7 @@ func (c *Controller) GarbageCollectRefs(ctx context.Context) error {
 		}
 	}
 
-	return nil
+	return errors.Join(discoveryErrors...)
 }
 
 // GarbageCollectMetrics ..

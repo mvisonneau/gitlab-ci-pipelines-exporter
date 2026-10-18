@@ -8,6 +8,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/config"
 	"github.com/mvisonneau/gitlab-ci-pipelines-exporter/pkg/schemas"
@@ -127,6 +128,95 @@ func TestGarbageCollectRefs(t *testing.T) {
 		newPR2main.Key(): newPR2main,
 	}
 	assert.Equal(t, expectedRefs, storedRefs)
+}
+
+func TestGarbageCollectRefsProjectFailureIsolation(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		status  int
+		partial bool
+	}{
+		{name: "not found", status: http.StatusNotFound},
+		{name: "forbidden", status: http.StatusForbidden},
+		{name: "rate limited", status: http.StatusTooManyRequests},
+		{name: "server error", status: http.StatusInternalServerError},
+		{name: "partial discovery", status: http.StatusInternalServerError, partial: true},
+		{name: "empty success", status: http.StatusOK},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, c, mux, srv := newTestController(config.Config{})
+			defer srv.Close()
+
+			healthy := schemas.NewProject("healthy")
+			healthy.Pull.Refs.Branches.Regexp = ".*"
+			healthy.Pull.Refs.Tags.Enabled = false
+			failing := schemas.NewProject("failing")
+			failing.Pull.Refs.Branches.Regexp = ".*"
+			failing.Pull.Refs.Tags.Enabled = tc.partial
+			empty := schemas.NewProject("empty")
+			empty.Pull.Refs.Tags.Enabled = false
+
+			for _, project := range []schemas.Project{healthy, failing, empty} {
+				require.NoError(t, c.Store.SetProject(ctx, project))
+			}
+
+			failedBranch := schemas.NewRef(failing, schemas.RefKindBranch, "main")
+			failedTag := schemas.NewRef(failing, schemas.RefKindTag, "v1")
+			for _, ref := range []schemas.Ref{
+				failedBranch, failedTag,
+				schemas.NewRef(empty, schemas.RefKindBranch, "main"),
+				schemas.NewRef(healthy, schemas.RefKindBranch, "obsolete"),
+			} {
+				require.NoError(t, c.Store.SetRef(ctx, ref))
+			}
+
+			var currentBranch string
+			mux.HandleFunc("/api/v4/projects/healthy/repository/branches", func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = fmt.Fprintf(w, `[{"name": %q}]`, currentBranch)
+			})
+			mux.HandleFunc("/api/v4/projects/empty/repository/branches", func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = fmt.Fprint(w, `[]`)
+			})
+			mux.HandleFunc("/api/v4/projects/failing/repository/branches", func(w http.ResponseWriter, _ *http.Request) {
+				if tc.partial {
+					_, _ = fmt.Fprint(w, `[{"name": "main"}]`)
+					return
+				}
+				w.WriteHeader(tc.status)
+				_, _ = fmt.Fprint(w, `[]`)
+			})
+			mux.HandleFunc("/api/v4/projects/failing/repository/tags", func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(tc.status)
+				_, _ = fmt.Fprint(w, `[]`)
+			})
+
+			// Simulate discovery adding refs between successive GC runs.
+			for cycle := range 3 {
+				currentBranch = fmt.Sprintf("branch-%d", cycle)
+				currentRef := schemas.NewRef(healthy, schemas.RefKindBranch, currentBranch)
+				require.NoError(t, c.Store.SetRef(ctx, currentRef))
+
+				err := c.GarbageCollectRefs(ctx)
+				expected := schemas.Refs{currentRef.Key(): currentRef}
+				if tc.status == http.StatusOK {
+					assert.NoError(t, err)
+				} else {
+					require.Error(t, err)
+					assert.Contains(t, err.Error(), failing.Name)
+					assert.Contains(t, err.Error(), fmt.Sprint(tc.status))
+					expected[failedBranch.Key()] = failedBranch
+					expected[failedTag.Key()] = failedTag
+				}
+
+				storedRefs, err := c.Store.Refs(ctx)
+				require.NoError(t, err)
+				assert.Equal(t, expected, storedRefs)
+				projects, err := c.Store.Projects(ctx)
+				require.NoError(t, err)
+				assert.Contains(t, projects, failing.Key())
+			}
+		})
+	}
 }
 
 func TestGarbageCollectMetrics(t *testing.T) {
